@@ -1,0 +1,81 @@
+{
+  "name": "mediaplayer",
+  "version": "1.0.0",
+  "description": "An Electron application with Svelte and TypeScript",
+  "main": "./out/main/index.js",
+  "author": "example.com",
+  "homepage": "https://electron-vite.org",
+  "scripts": {
+    "format": "prettier --plugin prettier-plugin-svelte --write .",
+    "lint": "eslint --cache .",
+    "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
+    "svelte-check": "svelte-check --tsconfig ./tsconfig.json",
+    "typecheck": "npm run typecheck:node && npm run svelte-check",
+    "start": "electron-vite preview",
+    "dev": "electron-vite dev",
+    "dev:watch": "electron-vite dev --watch",
+    "build": "npm run typecheck && electron-vite build",
+    "build:unpack": "npm run build && electron-builder --dir",
+    "build:win": "npm run build && electron-builder --win",
+    "build:mac": "npm run build && electron-builder --mac",
+    "build:linux": "npm run build && electron-builder --linux"
+  },
+  "dependencies": {
+    "@electron-toolkit/preload": "^3.0.1",
+    "@electron-toolkit/utils": "^4.0.0",
+    "@tailwindcss/vite": "^4.1.7"
+  },
+  "devDependencies": {
+    "@electron-toolkit/eslint-config-prettier": "^3.0.0",
+    "@electron-toolkit/eslint-config-ts": "^3.0.0",
+    "@electron-toolkit/tsconfig": "^1.0.1",
+    "@sveltejs/vite-plugin-svelte": "^5.0.3",
+    "@types/node": "^22.14.1",
+    "autoprefixer": "^10.4.21",
+    "bits-ui": "0.22.0",
+    "clsx": "^2.1.1",
+    "electron": "^35.1.5",
+    "electron-builder": "^25.1.8",
+    "electron-vite": "^3.1.0",
+    "eslint": "^9.27.0",
+    "eslint-config-neon": "^0.2.7",
+    "eslint-plugin-svelte": "^3.5.1",
+    "postcss": "^8.5.3",
+    "prettier": "^3.5.3",
+    "prettier-plugin-svelte": "^3.3.3",
+    "prettier-plugin-tailwindcss": "^0.6.11",
+    "svelte": "^5.26.1",
+    "svelte-check": "^4.1.5",
+    "tailwind-merge": "^3.3.0",
+    "tailwind-variants": "^1.0.0",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.8.3",
+    "vite": "^6.2.6"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "electron",
+      "esbuild"
+    ],
+    "overrides": {
+      "eslint-config-neon>@angular-eslint/eslint-plugin": "@favware/skip-dependency@latest",
+      "eslint-config-neon>@angular-eslint/eslint-plugin-template": "@favware/skip-dependency@latest",
+      "eslint-config-neon>@angular-eslint/template-parser": "@favware/skip-dependency@latest",
+      "eslint-config-neon>@next/eslint-plugin-next": "@favware/skip-dependency@latest",
+      "eslint-config-neon>@stylistic/eslint-plugin-jsx": "@favware/skip-dependency@latest",
+      "eslint-config-neon>astro-eslint-parser": "@favware/skip-dependency@latest",
+      "eslint-config-neon>eslint-mdx": "@favware/skip-dependency@latest",
+      "eslint-config-neon>eslint-plugin-astro": "@favware/skip-dependency@latest",
+      "eslint-config-neon>eslint-plugin-cypress": "@favware/skip-dependency@latest",
+      "eslint-config-neon>eslint-plugin-jsx-a11y": "@favware/skip-dependency@latest",
+      "eslint-config-neon>eslint-plugin-mdx": "@favware/skip-dependency@latest",
+      "eslint-config-neon>eslint-plugin-react": "@favware/skip-dependency@latest",
+      "eslint-config-neon>eslint-plugin-react-hooks": "@favware/skip-dependency@latest",
+      "eslint-config-neon>eslint-plugin-react-refresh": "@favware/skip-dependency@latest",
+      "eslint-config-neon>eslint-plugin-rxjs": "@favware/skip-dependency@latest",
+      "eslint-config-neon>eslint-plugin-rxjs-angular": "@favware/skip-dependency@latest",
+      "eslint-config-neon>eslint-plugin-vue": "@favware/skip-dependency@latest",
+      "eslint-config-neon>vue-eslint-parser": "@favware/skip-dependency@latest"
+    }
+  }
+}
