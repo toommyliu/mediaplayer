@@ -31,15 +31,11 @@
     playerState.error = null;
     playerState.isLoading = true;
 
-    if (filePaths.length === 1) {
-      const filePath = filePaths[0];
-      console.log("Loading video file:", filePath);
+    if (filePaths.length >= 1) {
+      console.log(`Loading video files: ${filePaths}`);
 
-      playerState.videoSrc = `file://${filePath}`;
-      console.log("Video source set to:", playerState.videoSrc);
-    } else if (filePaths.length === 0) {
-      playerState.error = "No valid video files selected";
-      playerState.isLoading = false;
+      playerState.queue.push(...filePaths.slice(1).map((path) => `file://${path}`));
+      playerState.currentIndex = 0;
     }
   });
 
@@ -69,7 +65,7 @@
       {/if}
 
       <VideoPlayer
-        src={playerState.videoSrc}
+        src={playerState.currentVideo}
         onError={handleVideoError}
         onLoading={handleVideoLoading}
         bind:videoElement

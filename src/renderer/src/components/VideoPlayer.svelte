@@ -76,7 +76,7 @@
   }
 
   function handlePlay(): void {
-    if (!videoElement || !playerState.videoSrc) return;
+    if (!videoElement || !playerState.currentVideo) return;
 
     playerState.isPlaying = true;
   }
@@ -187,14 +187,14 @@
   <div
     class={cn(
       "group relative flex h-[90%] w-full flex-1 items-center justify-center bg-black",
-      !playerState.videoSrc && "cursor-pointer transition-all duration-300 hover:bg-gray-800"
+      !playerState.currentVideo && "cursor-pointer transition-all duration-300 hover:bg-gray-800"
     )}
     onmousemove={handleMouseMove}
     onkeydown={handleKeyDown}
     ondblclick={handleDblClick}
     id="video-player"
   >
-    {#if playerState.videoSrc}
+    {#if playerState.currentVideo}
       <video
         bind:this={videoElement}
         {src}

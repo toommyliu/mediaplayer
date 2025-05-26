@@ -5,7 +5,6 @@ export const loadVideoDialog = () => {
 
   playerState.isLoading = true;
   playerState.error = null;
-  playerState.videoSrc = null;
 
   window.electron.ipcRenderer.send("load-video-file");
 };

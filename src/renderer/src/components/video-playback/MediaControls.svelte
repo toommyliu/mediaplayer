@@ -14,7 +14,7 @@
     playerState.currentTime = newTime;
   };
   const togglePlay = () => {
-    if (!videoElement || !playerState.videoSrc) return;
+    if (!videoElement || !playerState.currentVideo) return;
 
     if (playerState.isPlaying) {
       videoElement.pause();
@@ -25,7 +25,7 @@
     }
   };
   const toggleMute = () => {
-    if (!videoElement || !playerState.videoSrc) return;
+    if (!videoElement || !playerState.currentVideo) return;
 
     playerState.isMuted = !playerState.isMuted;
     videoElement.muted = playerState.isMuted;
@@ -33,7 +33,7 @@
     videoElement.volume = playerState.isMuted ? 0 : playerState.volume;
   };
   const changeVolume = (ev: Event) => {
-    if (!videoElement || !playerState.videoSrc) return;
+    if (!videoElement || !playerState.currentVideo) return;
 
     const target = ev.target as HTMLInputElement;
     const newVolume = Number.parseFloat(target.value);
@@ -49,21 +49,21 @@
 </script>
 
 <div
-  class="w-full bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 transition-opacity duration-300 border-t"
+  class="w-full border-t bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 transition-opacity duration-300"
   style="height: 10%"
   class:opacity-0={!playerState.showControls && playerState.isPlaying}
   class:opacity-100={playerState.showControls || !playerState.isPlaying}
   id="media-controls"
 >
-  <div class="flex items-center space-x-4 mb-4">
+  <div class="mb-4 flex items-center space-x-4">
     <!-- Playback progress bar -->
     <div
-      class="flex-1 bg-gray-600 h-1 rounded-full cursor-pointer hover:h-2 transition-all"
+      class="h-1 flex-1 cursor-pointer rounded-full bg-gray-600 transition-all hover:h-2"
       onclick={handleSeek}
       role="slider"
     >
       <div
-        class="bg-blue-500 h-full rounded-full transition-all"
+        class="h-full rounded-full bg-blue-500 transition-all"
         style="width: {playerState.duration > 0
           ? (playerState.currentTime / playerState.duration) * 100
           : 0}%"
@@ -74,7 +74,7 @@
     <div class="flex items-center space-x-2">
       <button
         onclick={toggleMute}
-        class="text-white hover:text-blue-400 text-lg focus:outline-none focus:text-blue-400 transition-colors"
+        class="text-lg text-white transition-colors hover:text-blue-400 focus:text-blue-400 focus:outline-none"
       >
         {playerState.isMuted || playerState.volume === 0
           ? "🔇"
@@ -90,7 +90,7 @@
         step="0.1"
         value={playerState.isMuted ? 0 : playerState.volume}
         oninput={changeVolume}
-        class="w-20 h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer slider"
+        class="slider h-1 w-20 cursor-pointer appearance-none rounded-lg bg-gray-600"
       />
     </div>
   </div>
@@ -99,12 +99,12 @@
     <div class="flex items-center space-x-4">
       <button
         onclick={togglePlay}
-        class="text-white hover:text-blue-400 text-2xl focus:outline-none focus:text-blue-400 transition-colors"
+        class="text-2xl text-white transition-colors hover:text-blue-400 focus:text-blue-400 focus:outline-none"
       >
         {playerState.isPlaying ? "⏸️" : "▶️"}
       </button>
 
-      <div class="text-white text-sm font-mono">
+      <div class="font-mono text-sm text-white">
         <span>{makeTimeString(playerState.currentTime)}</span>
         <span class="mx-1">/</span>
         <span>{makeTimeString(playerState.duration)}</span>
