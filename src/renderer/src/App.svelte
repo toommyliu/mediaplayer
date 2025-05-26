@@ -1,10 +1,10 @@
 <script lang="ts">
-  import VideoPlayer from "./components/VideoPlayer.svelte";
-  import Sidebar from "./components/Sidebar.svelte";
-  import { PaneGroup, Pane, PaneResizer } from "paneforge";
-  import { playerState, sidebarState } from "./state.svelte";
   import AlertTriangle from "lucide-svelte/icons/alert-triangle";
   import X from "lucide-svelte/icons/x";
+  import { Pane, PaneGroup, PaneResizer } from "paneforge";
+  import Sidebar from "./components/Sidebar.svelte";
+  import VideoPlayer from "./components/VideoPlayer.svelte";
+  import { playerState, sidebarState } from "./state.svelte";
   import { playVideo } from "./utils/video-playback";
 
   let videoElement = $state<HTMLVideoElement | null>(null);

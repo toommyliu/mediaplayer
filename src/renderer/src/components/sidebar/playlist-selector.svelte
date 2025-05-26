@@ -1,7 +1,12 @@
 <script lang="ts">
   // import { playlistState } from "@/state.svelte";
   // import { PlaylistManager } from "@/utils/playlist";
-  import { Plus, MoreHorizontal, Copy, Trash2, Edit3, ChevronDown } from "lucide-svelte";
+  import Plus from "lucide-svelte/icons/plus";
+  import MoreHorizontal from "lucide-svelte/icons/more-horizontal";
+  import Copy from "lucide-svelte/icons/copy";
+  import Trash2 from "lucide-svelte/icons/trash-2";
+  import Edit3 from "lucide-svelte/icons/edit-3";
+  import ChevronDown from "lucide-svelte/icons/chevron-down";
   import { ICON_SIZE } from "@/constants";
   import * as DropdownMenu from "../ui/dropdown-menu/index";
   import * as Dialog from "../ui/dialog/index";

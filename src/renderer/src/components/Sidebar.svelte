@@ -2,17 +2,29 @@
   import * as Tabs from "./ui/tabs/index";
   import FileBrowser from "./sidebar/file-browser.svelte";
   import PlaylistSelector from "./sidebar/playlist-selector.svelte";
+  import {
+    FileBrowserContext,
+    setFileBrowserContext,
+    type FileBrowserEvents
+  } from "../utils/file-browser.svelte";
   // import { playlistState, type PlaylistItem } from "../state.svelte";
   // import { PlaylistManager } from "../utils/playlist";
 
   let {
     fileBrowserEvents
   }: {
-    fileBrowserEvents?: {
-      addFile?: (filePath: string) => void;
-      addFolder?: (folderData: any) => void;
-    };
+    fileBrowserEvents?: FileBrowserEvents;
   } = $props();
+
+  // Create and set file browser context
+  const fileBrowserContext = new FileBrowserContext();
+  setFileBrowserContext(fileBrowserContext);
+
+  // Wire up events if provided
+  if (fileBrowserEvents) {
+    fileBrowserEvents.addFile = fileBrowserContext.setFileInFileSystem.bind(fileBrowserContext);
+    fileBrowserEvents.addFolder = fileBrowserContext.setFolderInFileSystem.bind(fileBrowserContext);
+  }
 
   // function handlePlaylistPlay(item: PlaylistItem) {
   //   console.log("Playing:", item);
@@ -49,7 +61,7 @@
       <Tabs.Trigger value="playlist" class="flex-1">Playlist</Tabs.Trigger>
     </Tabs.List>
     <Tabs.Content value="browser" class="mt-4 flex-1 overflow-auto">
-      <FileBrowser {fileBrowserEvents} />
+      <FileBrowser />
     </Tabs.Content>
     <Tabs.Content value="playlist" class="mt-4 flex-1 overflow-auto">
       <div class="space-y-2">
