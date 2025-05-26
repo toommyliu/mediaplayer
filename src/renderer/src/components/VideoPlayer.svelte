@@ -294,8 +294,7 @@
     {/if}
   </div>
 
-  <!-- Media controls -->
-  <MediaControls {videoElement} />
+  <MediaControls bind:videoElement />
 </div>
 
 <style>

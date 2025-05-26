@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { playerState } from "@/state.svelte";
+  import { playerState, sidebarState } from "@/state.svelte";
   import { makeTimeString } from "@/utils/time";
 
   interface Props {
@@ -221,7 +221,6 @@
         aria-valuemax={playerState.duration}
         aria-valuenow={playerState.currentTime}
       >
-        <!-- Buffered and Current progress (layered on top of each other) -->
         <div
           class="absolute inset-0 h-full rounded-full bg-gray-500/50"
           style="width: {bufferedPercentage}%"
@@ -235,7 +234,6 @@
             : 0}%"
         ></div>
 
-        <!-- Seek thumb -->
         {#if playerState.duration > 0}
           <div
             class="absolute top-1/2 h-4 w-4 -translate-y-1/2 rounded-full bg-blue-500 shadow-lg"
@@ -249,14 +247,12 @@
           ></div>
         {/if}
 
-        <!-- Hover time preview -->
         {#if isHovering && !isDragging && playerState.duration > 0}
           <div
             class="absolute bottom-8 rounded bg-black/90 px-2 py-1 text-xs text-white shadow-lg backdrop-blur-sm"
             style="left: {(hoverTime / playerState.duration) * 100}%; transform: translateX(-50%)"
           >
             {makeTimeString(hoverTime)}
-            <!-- Tooltip arrow -->
             <div
               class="absolute left-1/2 top-full h-0 w-0 -translate-x-1/2 border-l-4 border-r-4 border-t-4 border-transparent border-t-black/90"
             ></div>
@@ -304,6 +300,22 @@
         <span class="mx-1">/</span>
         <span>{makeTimeString(playerState.duration)}</span>
       </div>
+    </div>
+
+    <div class="flex items-center">
+      <button
+        onclick={() => (sidebarState.isOpen = !sidebarState.isOpen)}
+        class="rounded-full bg-gray-700/50 p-2 text-white/70 opacity-60 transition-all hover:bg-gray-600/50 hover:text-white hover:opacity-100"
+        title={sidebarState.isOpen ? "Hide sidebar" : "Show sidebar"}
+      >
+        <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+          <path
+            fill-rule="evenodd"
+            d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
+            clip-rule="evenodd"
+          />
+        </svg>
+      </button>
     </div>
   </div>
 </div>

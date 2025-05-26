@@ -2,7 +2,7 @@
   import VideoPlayer from "./components/VideoPlayer.svelte";
   import Sidebar from "./components/Sidebar.svelte";
   import { PaneGroup, Pane, PaneResizer } from "paneforge";
-  import { playerState } from "./state.svelte";
+  import { playerState, sidebarState } from "./state.svelte";
 
   let videoElement = $state<HTMLVideoElement | null>(null);
 
@@ -23,7 +23,7 @@
 <div class="bg-player-bg text-player-text dark flex h-screen flex-col">
   <div class="flex w-full flex-1 overflow-hidden">
     <PaneGroup direction="horizontal">
-      <Pane defaultSize={70}>
+      <Pane defaultSize={80}>
         <main class="relative h-full bg-black">
           {#if playerState.error}
             <div
@@ -43,11 +43,13 @@
 
       <PaneResizer class="w-1 cursor-col-resize bg-gray-600 transition-colors hover:bg-gray-500" />
 
-      <Pane defaultSize={30}>
-        <aside class="h-full border-l border-gray-700 bg-gray-800">
-          <Sidebar />
-        </aside>
-      </Pane>
+      {#if sidebarState.isOpen}
+        <Pane defaultSize={20}>
+          <aside class="h-full border-l border-gray-700 bg-gray-800">
+            <Sidebar />
+          </aside>
+        </Pane>
+      {/if}
     </PaneGroup>
   </div>
 </div>

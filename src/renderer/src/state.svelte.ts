@@ -1,22 +1,4 @@
-type State = {
-  // Playback
-  isPlaying: boolean;
-  currentTime: number;
-  duration: number;
-  isLoading: boolean;
-  error: string | null;
-  showControls: boolean;
-  queue: string[];
-
-  get currentVideo(): string | null;
-  currentIndex: number;
-
-  // Volume control
-  volume: number;
-  isMuted: boolean;
-};
-
-export const playerState = $state<State>({
+export const playerState = $state<PlayerState>({
   // Playback
   isPlaying: false,
   currentTime: 0,
@@ -35,3 +17,31 @@ export const playerState = $state<State>({
   volume: 1,
   isMuted: false
 });
+
+export const sidebarState = $state<SidebarState>({
+  isOpen: true
+  // width: -1
+});
+
+type PlayerState = {
+  // Playback
+  isPlaying: boolean;
+  currentTime: number;
+  duration: number;
+  isLoading: boolean;
+  error: string | null;
+  showControls: boolean;
+  queue: string[];
+
+  get currentVideo(): string | null;
+  currentIndex: number;
+
+  // Volume control
+  volume: number;
+  isMuted: boolean;
+};
+
+type SidebarState = {
+  isOpen: boolean;
+  // width: number;
+};
