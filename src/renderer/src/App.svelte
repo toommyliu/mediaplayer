@@ -3,6 +3,7 @@
   import Sidebar from "./components/Sidebar.svelte";
   import { PaneGroup, Pane, PaneResizer } from "paneforge";
   import { playerState, sidebarState } from "./state.svelte";
+  import { AlertTriangle, X } from "lucide-svelte";
 
   let videoElement = $state<HTMLVideoElement | null>(null);
 
@@ -29,11 +30,14 @@
             <div
               class="bg-player-error absolute left-1/2 top-4 z-50 flex -translate-x-1/2 transform items-center space-x-2 rounded-lg px-4 py-2 text-white shadow-lg"
             >
-              <span>⚠️ {playerState.error}</span>
+              <AlertTriangle size={16} />
+              <span>{playerState.error}</span>
               <button
                 onclick={() => (playerState.error = null)}
-                class="ml-2 rounded px-2 py-1 hover:bg-red-600">✕</button
+                class="ml-2 rounded px-2 py-1 hover:bg-red-600"
               >
+                <X size={14} />
+              </button>
             </div>
           {/if}
 

@@ -1,6 +1,8 @@
 <script lang="ts">
+  import { ICON_SIZE } from "@/constants";
   import { playerState, sidebarState } from "@/state.svelte";
   import { makeTimeString } from "@/utils/time";
+  import { Play, Pause, VolumeX, Volume1, Volume2, Menu } from "lucide-svelte";
 
   interface Props {
     videoElement?: HTMLVideoElement;
@@ -175,30 +177,33 @@
     }
   };
   const toggleMute = () => {
-    if (!videoElement || !playerState.currentVideo) return;
-
     playerState.isMuted = !playerState.isMuted;
-    videoElement.muted = playerState.isMuted;
 
-    videoElement.volume = playerState.isMuted ? 0 : playerState.volume;
+    if (videoElement) {
+      videoElement.muted = playerState.isMuted;
+      videoElement.volume = playerState.isMuted ? 0 : playerState.volume;
+    }
   };
   const changeVolume = (ev: Event) => {
-    if (!videoElement || !playerState.currentVideo) return;
-
     const target = ev.target as HTMLInputElement;
     const newVolume = Number.parseFloat(target.value);
 
     playerState.volume = newVolume;
     playerState.isMuted = newVolume === 0;
 
-    videoElement.volume = newVolume;
-    videoElement.muted = playerState.isMuted;
+    if (videoElement) {
+      videoElement.volume = newVolume;
+      videoElement.muted = playerState.isMuted;
+    }
   };
+
+  $effect(() => {
+    console.log("current volume:", playerState.volume);
+  });
 </script>
 
 <div
-  class="w-full border-t bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 transition-opacity duration-300"
-  style="height: 10%"
+  class="h-[10%] w-full border-t bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 transition-opacity duration-300"
   class:opacity-0={!playerState.showControls && playerState.isPlaying}
   class:opacity-100={playerState.showControls || !playerState.isPlaying}
   id="media-controls"
@@ -215,11 +220,6 @@
         onmouseleave={handleMouseLeave}
         onkeydown={handleKeyDown}
         role="slider"
-        tabindex="0"
-        aria-label="Seek video"
-        aria-valuemin="0"
-        aria-valuemax={playerState.duration}
-        aria-valuenow={playerState.currentTime}
       >
         <div
           class="absolute inset-0 h-full rounded-full bg-gray-500/50"
@@ -266,12 +266,17 @@
       <button
         onclick={toggleMute}
         class="text-lg text-white transition-colors hover:text-blue-400 focus:text-blue-400 focus:outline-none"
+        title={playerState.isMuted ? "Unmute" : "Mute"}
       >
-        {playerState.isMuted || playerState.volume === 0
-          ? "🔇"
-          : playerState.volume < 0.5
-            ? "🔉"
-            : "🔊"}
+        {#if playerState.isMuted || playerState.volume === 0}
+          <VolumeX size={ICON_SIZE} />
+        {:else if playerState.volume <= 0.33}
+          <Volume1 size={ICON_SIZE} />
+        {:else if playerState.volume <= 0.66}
+          <Volume2 size={ICON_SIZE} />
+        {:else}
+          <Volume2 size={ICON_SIZE} />
+        {/if}
       </button>
 
       <input
@@ -290,9 +295,15 @@
     <div class="flex items-center space-x-4">
       <button
         onclick={togglePlay}
-        class="text-2xl text-white transition-colors hover:text-blue-400 focus:text-blue-400 focus:outline-none"
+        class="flex items-center justify-center text-white transition-colors hover:text-blue-400 focus:text-blue-400 focus:outline-none"
+        title={playerState.isPlaying ? "Pause" : "Play"}
+        disabled={!playerState.currentVideo || playerState.isLoading}
       >
-        {playerState.isPlaying ? "⏸️" : "▶️"}
+        {#if playerState.isPlaying}
+          <Pause size={ICON_SIZE} />
+        {:else}
+          <Play size={ICON_SIZE} />
+        {/if}
       </button>
 
       <div class="font-mono text-sm text-white">
@@ -308,13 +319,7 @@
         class="rounded-full bg-gray-700/50 p-2 text-white/70 opacity-60 transition-all hover:bg-gray-600/50 hover:text-white hover:opacity-100"
         title={sidebarState.isOpen ? "Hide sidebar" : "Show sidebar"}
       >
-        <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-          <path
-            fill-rule="evenodd"
-            d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
-            clip-rule="evenodd"
-          />
-        </svg>
+        <Menu size={ICON_SIZE} />
       </button>
     </div>
   </div>

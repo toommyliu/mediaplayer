@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { Shuffle, Trash2, FileText, X } from "lucide-svelte";
+
   interface PlaylistItem {
     id: string;
     name: string;
@@ -49,14 +51,14 @@
           class="bg-player-surface hover:bg-player-border text-player-text-secondary hover:text-player-text rounded px-2 py-1 text-xs transition-colors"
           title="Shuffle playlist"
         >
-          🔀
+          <Shuffle size={12} />
         </button>
         <button
           onclick={onClear}
           class="bg-player-error rounded px-2 py-1 text-xs text-white transition-colors hover:bg-red-600"
           title="Clear playlist"
         >
-          🗑️
+          <Trash2 size={12} />
         </button>
       </div>
     </div>
@@ -65,7 +67,9 @@
   <div class="flex-1 overflow-y-auto">
     {#if items.length === 0}
       <div class="text-player-text-secondary p-4 text-center">
-        <div class="mb-2 text-2xl">📝</div>
+        <div class="mb-2 flex justify-center text-2xl">
+          <FileText size={32} />
+        </div>
         <p class="text-sm">No items in playlist</p>
       </div>
     {:else}
@@ -101,7 +105,7 @@
             class="text-player-text-secondary hover:text-player-error p-1 opacity-0 transition-all group-hover:opacity-100"
             title="Remove from playlist"
           >
-            ✕
+            <X size={14} />
           </button>
         </div>
       {/each}
