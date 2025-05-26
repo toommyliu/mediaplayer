@@ -4,8 +4,28 @@
   import { PaneGroup, Pane, PaneResizer } from "paneforge";
   import { playerState, sidebarState } from "./state.svelte";
   import { AlertTriangle, X } from "lucide-svelte";
+  import { playVideo, resetPlayer, setQueue } from "./utils/video-playback";
 
   let videoElement = $state<HTMLVideoElement | null>(null);
+
+  window.electron.ipcRenderer.on("video-load", async (_ev, videoPath) => {
+    resetPlayer();
+    setQueue([videoPath]);
+    playVideo(videoPath);
+  });
+  window.electron.ipcRenderer.on("folder-load", async (_ev, folderRes) => {
+    const files = folderRes.files.flatMap(function flatten(entry): string[] {
+      if ("files" in entry && Array.isArray(entry.files)) {
+        return entry.files.flatMap(flatten) ?? [];
+      }
+
+      return [`file://${entry.path}`];
+    });
+
+    resetPlayer();
+    setQueue(files);
+    playVideo(files[0]);
+  });
 </script>
 
 <div class="bg-player-bg text-player-text dark flex h-screen flex-col">
