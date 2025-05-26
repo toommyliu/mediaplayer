@@ -7,17 +7,161 @@
   }
 
   let { videoElement }: Props = $props();
+  let isDragging = $state(false);
+  let hoverTime = $state(0);
+  let isHovering = $state(false);
+  let bufferedPercentage = $state(0);
+  let isSeeking = $state(false);
+
+  $effect(() => {
+    if (!videoElement || !playerState.duration) return;
+
+    const updateBuffered = () => {
+      if (videoElement.buffered.length > 0) {
+        const bufferedEnd = videoElement.buffered.end(videoElement.buffered.length - 1);
+        bufferedPercentage = (bufferedEnd / playerState.duration) * 100;
+      }
+    };
+
+    const handleProgress = () => updateBuffered();
+    const handleSeeking = () => {
+      isSeeking = true;
+    };
+    const handleSeeked = () => {
+      isSeeking = false;
+    };
+
+    videoElement.addEventListener("progress", handleProgress);
+    videoElement.addEventListener("seeking", handleSeeking);
+    videoElement.addEventListener("seeked", handleSeeked);
+    updateBuffered();
+
+    return () => {
+      videoElement.removeEventListener("progress", handleProgress);
+      videoElement.removeEventListener("seeking", handleSeeking);
+      videoElement.removeEventListener("seeked", handleSeeked);
+    };
+  });
 
   const handleSeek = (ev: MouseEvent) => {
-    if (!videoElement) return;
+    if (!videoElement || !playerState.duration) return;
+
+    const progressBar =
+      ev.currentTarget instanceof HTMLElement
+        ? (ev.currentTarget as HTMLElement)
+        : ((ev.currentTarget as Document).querySelector(
+            ".relative.h-1.cursor-pointer"
+          ) as HTMLElement);
+
+    if (!progressBar) return;
+
+    const rect = progressBar.getBoundingClientRect();
+    const percent = Math.max(0, Math.min(1, (ev.clientX - rect.left) / rect.width));
+    const newTime = percent * playerState.duration;
+
+    playerState.currentTime = newTime;
+
+    try {
+      videoElement.currentTime = newTime;
+    } catch (error) {
+      console.error("Error seeking video:", error);
+    }
+  };
+
+  const handleMouseDown = (ev: MouseEvent) => {
+    if (!videoElement || !playerState.duration) return;
+
+    ev.preventDefault();
+    isDragging = true;
+    const wasPlaying = playerState.isPlaying;
+    const progressBar = ev.currentTarget as HTMLElement;
+
+    // if (wasPlaying) {
+    //   videoElement.pause();
+    // }
+
+    handleSeek(ev);
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isDragging) {
+        const syntheticEvent = new MouseEvent("mousemove", e);
+        Object.defineProperty(syntheticEvent, "currentTarget", {
+          get: () => progressBar
+        });
+
+        handleSeek(syntheticEvent);
+        e.preventDefault();
+      }
+    };
+
+    const handleMouseUp = () => {
+      isDragging = false;
+
+      if (wasPlaying && videoElement.readyState >= 2) {
+        videoElement.play().catch((error) => {
+          console.error("Error resuming playback after seek:", error);
+        });
+      }
+
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+  };
+
+  const handleMouseMove = (ev: MouseEvent) => {
+    if (!playerState.duration || isDragging) return;
 
     const progressBar = ev.currentTarget as HTMLElement;
     const rect = progressBar.getBoundingClientRect();
-    const percent = (ev.clientX - rect.left) / rect.width;
-    const newTime = percent * playerState.duration;
+    const percent = Math.max(0, Math.min(1, (ev.clientX - rect.left) / rect.width));
+    hoverTime = percent * playerState.duration;
+  };
 
-    videoElement.currentTime = newTime;
-    playerState.currentTime = newTime;
+  const handleMouseEnter = () => {
+    isHovering = true;
+  };
+
+  const handleMouseLeave = () => {
+    isHovering = false;
+  };
+
+  const handleKeyDown = (ev: KeyboardEvent) => {
+    if (!videoElement || !playerState.duration) return;
+
+    switch (ev.code) {
+      case "ArrowLeft":
+        ev.preventDefault();
+        seekRelative(-5);
+        break;
+      case "ArrowRight":
+        ev.preventDefault();
+        seekRelative(5);
+        break;
+      case "Home":
+        ev.preventDefault();
+        seekTo(0);
+        break;
+      case "End":
+        ev.preventDefault();
+        seekTo(playerState.duration - 1);
+        break;
+    }
+  };
+
+  const seekRelative = (seconds: number) => {
+    if (!videoElement) return;
+    const newTime = Math.max(0, Math.min(playerState.duration, playerState.currentTime + seconds));
+    seekTo(newTime);
+  };
+
+  const seekTo = (time: number) => {
+    if (!videoElement) return;
+    const clampedTime = Math.max(0, Math.min(playerState.duration, time));
+    videoElement.currentTime = clampedTime;
+    playerState.currentTime = clampedTime;
   };
   const togglePlay = () => {
     if (!videoElement || !playerState.currentVideo) return;
@@ -61,17 +205,64 @@
 >
   <div class="mb-4 flex items-center space-x-4">
     <!-- Playback progress bar -->
-    <div
-      class="h-1 flex-1 cursor-pointer rounded-full bg-gray-600 transition-all hover:h-2"
-      onclick={handleSeek}
-      role="slider"
-    >
+    <div class="relative flex-1">
       <div
-        class="h-full rounded-full bg-blue-500 transition-all"
-        style="width: {playerState.duration > 0
-          ? (playerState.currentTime / playerState.duration) * 100
-          : 0}%"
-      ></div>
+        class="relative h-1 cursor-pointer rounded-full bg-gray-600 transition-all hover:h-2"
+        class:h-2={isDragging}
+        onmousedown={handleMouseDown}
+        onmousemove={handleMouseMove}
+        onmouseenter={handleMouseEnter}
+        onmouseleave={handleMouseLeave}
+        onkeydown={handleKeyDown}
+        role="slider"
+        tabindex="0"
+        aria-label="Seek video"
+        aria-valuemin="0"
+        aria-valuemax={playerState.duration}
+        aria-valuenow={playerState.currentTime}
+      >
+        <!-- Buffered and Current progress (layered on top of each other) -->
+        <div
+          class="absolute inset-0 h-full rounded-full bg-gray-500/50"
+          style="width: {bufferedPercentage}%"
+        ></div>
+        <div
+          class="absolute inset-0 h-full rounded-full bg-blue-500 transition-none"
+          class:bg-yellow-500={isSeeking}
+          class:transition-all={!isDragging}
+          style="width: {playerState.duration > 0
+            ? (playerState.currentTime / playerState.duration) * 100
+            : 0}%"
+        ></div>
+
+        <!-- Seek thumb -->
+        {#if playerState.duration > 0}
+          <div
+            class="absolute top-1/2 h-4 w-4 -translate-y-1/2 rounded-full bg-blue-500 shadow-lg"
+            class:opacity-0={!isDragging && !isHovering}
+            class:opacity-100={isDragging || isHovering}
+            class:scale-125={isDragging}
+            class:bg-yellow-500={isSeeking}
+            class:shadow-yellow-300={isSeeking}
+            style="left: {(playerState.currentTime / playerState.duration) *
+              100}%; transform: translateX(-50%) translateY(-50%)"
+          ></div>
+        {/if}
+
+        <!-- Hover time preview -->
+        {#if isHovering && !isDragging && playerState.duration > 0}
+          <div
+            class="absolute bottom-8 rounded bg-black/90 px-2 py-1 text-xs text-white shadow-lg backdrop-blur-sm"
+            style="left: {(hoverTime / playerState.duration) * 100}%; transform: translateX(-50%)"
+          >
+            {makeTimeString(hoverTime)}
+            <!-- Tooltip arrow -->
+            <div
+              class="absolute left-1/2 top-full h-0 w-0 -translate-x-1/2 border-l-4 border-r-4 border-t-4 border-transparent border-t-black/90"
+            ></div>
+          </div>
+        {/if}
+      </div>
     </div>
 
     <!-- Volume bar -->

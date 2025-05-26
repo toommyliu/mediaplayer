@@ -49,6 +49,12 @@
     }
   }
 
+  function handleSeeked(): void {
+    if (videoElement) {
+      playerState.currentTime = videoElement.currentTime;
+    }
+  }
+
   function handleError(event: Event): void {
     console.error("Video error:", event);
     const target = event.target as HTMLVideoElement;
@@ -112,14 +118,99 @@
     showControlsTemporarily();
   }
 
-  function handleKeyDown(_event: KeyboardEvent): void {
-    // switch (event.code) {
-    //   case "Space":
-    //     event.preventDefault();
-    //     togglePlay();
-    //     break;
-    // ...
-    // }
+  function handleClick(): void {
+    const videoContainer = document.getElementById("video-player");
+    if (videoContainer) {
+      videoContainer.focus();
+    }
+  }
+
+  function handleKeyDown(event: KeyboardEvent): void {
+    if (!videoElement || !playerState.currentVideo) return;
+
+    switch (event.code) {
+      case "Space":
+        event.preventDefault();
+        togglePlay();
+        break;
+      case "ArrowLeft":
+        event.preventDefault();
+        seekRelative(-10);
+        break;
+      case "ArrowRight":
+        event.preventDefault();
+        seekRelative(10);
+        break;
+      case "KeyJ":
+        event.preventDefault();
+        seekRelative(-10);
+        break;
+      case "KeyL":
+        event.preventDefault();
+        seekRelative(10);
+        break;
+      case "KeyK":
+        event.preventDefault();
+        togglePlay();
+        break;
+      case "Home":
+        event.preventDefault();
+        seekTo(0);
+        break;
+      case "End":
+        event.preventDefault();
+        seekTo(playerState.duration - 1);
+        break;
+      case "Digit0":
+      case "Digit1":
+      case "Digit2":
+      case "Digit3":
+      case "Digit4":
+      case "Digit5":
+      case "Digit6":
+      case "Digit7":
+      case "Digit8":
+      case "Digit9":
+        event.preventDefault();
+        const number = Number.parseInt(event.code.replace("Digit", ""));
+        const percentage = number / 10;
+        seekTo(playerState.duration * percentage);
+        break;
+    }
+  }
+
+  function togglePlay(): void {
+    if (!videoElement || !playerState.currentVideo) return;
+
+    if (playerState.isPlaying) {
+      videoElement.pause();
+    } else {
+      videoElement.play().catch((error) => {
+        console.error("Error playing video:", error);
+      });
+    }
+  }
+
+  function seekRelative(seconds: number): void {
+    if (!videoElement || !playerState.currentVideo) return;
+
+    const newTime = Math.max(0, Math.min(playerState.duration, playerState.currentTime + seconds));
+    seekTo(newTime);
+  }
+
+  function seekTo(time: number): void {
+    if (!videoElement || !playerState.currentVideo) return;
+
+    const clampedTime = Math.max(0, Math.min(playerState.duration, time));
+
+    try {
+      videoElement.currentTime = clampedTime;
+      playerState.currentTime = clampedTime;
+
+      showControlsTemporarily();
+    } catch (error) {
+      console.error("Error seeking video:", error);
+    }
   }
 
   function handleDblClick(ev: MouseEvent): void {
@@ -175,6 +266,7 @@
     )}
     onmousemove={handleMouseMove}
     onkeydown={handleKeyDown}
+    onclick={handleClick}
     ondblclick={handleDblClick}
     id="video-player"
   >
@@ -187,6 +279,7 @@
         onloadeddata={handleLoadedData}
         onloadedmetadata={handleLoadedMetadata}
         ontimeupdate={handleTimeUpdate}
+        onseeked={handleSeeked}
         onerror={handleError}
         oncanplay={handleCanPlay}
         onplay={handlePlay}
