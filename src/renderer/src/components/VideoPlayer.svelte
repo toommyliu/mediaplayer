@@ -296,24 +296,3 @@
 
   <MediaControls bind:videoElement />
 </div>
-
-<style>
-  .slider::-webkit-slider-thumb {
-    appearance: none;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: #3b82f6;
-    cursor: pointer;
-    border: 2px solid #ffffff;
-  }
-
-  .slider::-moz-range-thumb {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: #3b82f6;
-    cursor: pointer;
-    border: 2px solid #ffffff;
-  }
-</style>

@@ -2,13 +2,17 @@
   import { ICON_SIZE } from "@/constants";
   import { playerState, sidebarState } from "@/state.svelte";
   import { makeTimeString } from "@/utils/time";
-  import { Play, Pause, VolumeX, Volume1, Volume2, Menu } from "lucide-svelte";
-
+  import Play from "lucide-svelte/icons/play";
+  import Pause from "lucide-svelte/icons/pause";
+  import VolumeX from "lucide-svelte/icons/volume-x";
+  import Volume1 from "lucide-svelte/icons/volume-1";
+  import Volume2 from "lucide-svelte/icons/volume-2";
+  import Menu from "lucide-svelte/icons/menu";
   interface Props {
     videoElement?: HTMLVideoElement;
   }
 
-  let { videoElement }: Props = $props();
+  let { videoElement = $bindable() }: Props = $props();
   let isDragging = $state(false);
   let hoverTime = $state(0);
   let isHovering = $state(false);

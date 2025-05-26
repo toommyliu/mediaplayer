@@ -1,19 +1,20 @@
 <script lang="ts">
-  import { playlistState } from "@/state.svelte";
-  import { PlaylistManager } from "@/utils/playlist";
+  import { ICON_SIZE } from "@/constants";
+  import { loadFileBrowser } from "@/utils/ipc";
+  // import { PlaylistManager } from "@/utils/playlist";
+  import { playVideo } from "@/utils/video-player";
   import FileVideo from "lucide-svelte/icons/file-video";
   import Folder from "lucide-svelte/icons/folder";
   import FolderOpen from "lucide-svelte/icons/folder-open";
   import * as ContextMenu from "../ui/context-menu/index";
-  import { loadFileBrowser } from "@/utils/ipc";
-  import { ICON_SIZE } from "@/constants";
+  import { playerState } from "@/state.svelte";
 
-  interface FileBrowserProps {
-    onFileSelect?: (filePath: string) => void;
-    onFolderSelect?: (folderPath: string) => void;
-  }
+  // interface FileBrowserProps {
+  //   onFileSelect?: (filePath: string) => void;
+  //   onFolderSelect?: (folderPath: string) => void;
+  // }
 
-  let { onFileSelect, onFolderSelect }: FileBrowserProps = $props();
+  // let { onFileSelect, onFolderSelect }: FileBrowserProps = $props();
 
   let fileSystem = $state<FileSystemItem[]>([]);
   let expandedFolders = $state(new Set<string>());
@@ -29,6 +30,9 @@
       if (result && result.files && result.files.length > 0) {
         // Transform the entire files array from the root
         fileSystem = transformFileBrowserResult(result.files);
+
+        playerState.queue = fileSystem.flatMap((entry) => `file://${entry.path}`);
+        playerState.currentIndex = 0;
       } else if (result === null) {
         // User cancelled the dialog
         error = null;
@@ -45,32 +49,23 @@
   }
 
   function transformFileBrowserResult(items: any[]): FileSystemItem[] {
-    return items.map((item) => {
-      // Check if item has 'files' property (it's a folder)
-      if (item.files && Array.isArray(item.files)) {
-        // Extract folder name from path
-        const pathParts = item.path.split(/[/\\]/);
+    return items.map((entry) => {
+      if (entry.files && Array.isArray(entry.files)) {
+        const pathParts = entry.path.split(/[/\\]/);
         const folderName = pathParts[pathParts.length - 1];
 
         return {
           name: folderName,
-          type: "folder" as const,
-          path: item.path,
-          children: transformFileBrowserResult(item.files)
+          path: entry.path,
+          children: transformFileBrowserResult(entry.files),
+          type: "folder" as const
         };
       } else {
-        // It's a video file - extract name from path if name is not provided
-        let fileName = item.name;
-        if (!fileName && item.path) {
-          const pathParts = item.path.split(/[/\\]/);
-          fileName = pathParts[pathParts.length - 1];
-        }
-
         return {
-          name: fileName,
-          type: "video" as const,
-          path: item.path,
-          duration: item.duration || 0
+          name: entry.name,
+          path: entry.path,
+          duration: entry.duration || 0, // TODO: not provided yet
+          type: "video" as const
         };
       }
     });
@@ -97,21 +92,20 @@
   function handleItemClick(item: FileSystemItem) {
     if (item.type === "folder") {
       toggleFolder(item.path);
-      onFolderSelect?.(item.path);
     } else if (item.type === "video") {
-      onFileSelect?.(item.path);
+      playVideo(`file://${item.path}`);
     }
   }
 
   function addToPlaylist(item: FileSystemItem) {
-    if (item.type === "video") {
-      PlaylistManager.addItemToPlaylist(playlistState.currentPlaylistId, {
-        name: item.name,
-        path: item.path,
-        duration: item.duration,
-        size: item.size
-      });
-    }
+    // if (item.type === "video") {
+    //   PlaylistManager.addItemToPlaylist(playlistState.currentPlaylistId, {
+    //     name: item.name,
+    //     path: item.path,
+    //     duration: item.duration,
+    //     size: item.size
+    //   });
+    // }
   }
 
   function formatDuration(seconds: number): string {

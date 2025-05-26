@@ -1,4 +1,4 @@
-<script lang="ts">
+<!-- <script lang="ts">
   import {
     BarChart3,
     ChevronDown,
@@ -295,4 +295,4 @@
       {/if}
     </div>
   {/if}
-</div>
+</div> -->

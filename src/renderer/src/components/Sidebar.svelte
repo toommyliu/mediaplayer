@@ -2,42 +2,35 @@
   import * as Tabs from "./ui/tabs/index";
   import FileBrowser from "./sidebar/file-browser.svelte";
   import PlaylistSelector from "./sidebar/playlist-selector.svelte";
-  import { playlistState, type PlaylistItem } from "../state.svelte";
-  import { PlaylistManager } from "../utils/playlist";
-  import { Plus } from "lucide-svelte";
+  // import { playlistState, type PlaylistItem } from "../state.svelte";
+  // import { PlaylistManager } from "../utils/playlist";
 
-  function handlePlaylistPlay(item: PlaylistItem) {
-    // Handle play logic here
-    console.log("Playing:", item);
-  }
+  // function handlePlaylistPlay(item: PlaylistItem) {
+  //   console.log("Playing:", item);
+  // }
+  function handlePlaylistPlay(item: any) {}
 
   function handlePlaylistRemove(id: string) {
-    PlaylistManager.removeItemFromPlaylist(playlistState.currentPlaylistId, id);
+    // PlaylistManager.removeItemFromPlaylist(playlistState.currentPlaylistId, id);
   }
 
   function handlePlaylistClear() {
-    PlaylistManager.clearPlaylist(playlistState.currentPlaylistId);
+    // PlaylistManager.clearPlaylist(playlistState.currentPlaylistId);
   }
 
   function handlePlaylistShuffle() {
-    PlaylistManager.shufflePlaylist(playlistState.currentPlaylistId);
+    // PlaylistManager.shufflePlaylist(playlistState.currentPlaylistId);
   }
 
   function handleFileSelect(filePath: string) {
     // Handle file selection from browser
-    console.log("File selected:", filePath);
-
-    // Extract filename from path
-    const filename = filePath.split("/").pop() || filePath;
-
-    // Add to current playlist
-    PlaylistManager.addItemToPlaylist(playlistState.currentPlaylistId, {
-      name: filename,
-      path: filePath
-    });
+    // console.log("File selected:", filePath);
+    // const filename = filePath.split("/").pop() || filePath;
+    // PlaylistManager.addItemToPlaylist(playlistState.currentPlaylistId, {
+    //   name: filename,
+    //   path: filePath
+    // });
   }
-
-  const onFileSelect = handleFileSelect;
 </script>
 
 <div class="h-full bg-zinc-900 p-4">
@@ -47,7 +40,7 @@
       <Tabs.Trigger value="playlist" class="flex-1">Playlist</Tabs.Trigger>
     </Tabs.List>
     <Tabs.Content value="browser" class="mt-4 flex-1 overflow-auto">
-      <FileBrowser {onFileSelect} />
+      <FileBrowser />
     </Tabs.Content>
     <Tabs.Content value="playlist" class="mt-4 flex-1 overflow-auto">
       <div class="space-y-2">
@@ -84,7 +77,7 @@
           </div>
         </div>
         <div class="min-h-[200px] rounded-lg bg-zinc-800 p-3">
-          {#if playlistState.currentPlaylistItems.length === 0}
+          <!-- {#if playlistState.currentPlaylistItems.length === 0}
             <div class="py-8 text-center text-zinc-500">
               <div class="mb-2 text-2xl">🎵</div>
               <p class="text-sm">No items in playlist</p>
@@ -125,7 +118,7 @@
                 </div>
               {/each}
             </div>
-          {/if}
+          {/if} -->
         </div>
       </div>
     </Tabs.Content>

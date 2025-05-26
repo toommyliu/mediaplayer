@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { playlistState } from "@/state.svelte";
-  import { PlaylistManager } from "@/utils/playlist";
+  // import { playlistState } from "@/state.svelte";
+  // import { PlaylistManager } from "@/utils/playlist";
   import { Plus, MoreHorizontal, Copy, Trash2, Edit3, ChevronDown } from "lucide-svelte";
   import { ICON_SIZE } from "@/constants";
   import * as DropdownMenu from "../ui/dropdown-menu/index";
@@ -16,11 +16,11 @@
   function createPlaylist() {
     if (!newPlaylistName.trim()) return;
 
-    const newPlaylist = PlaylistManager.createPlaylist(
-      newPlaylistName.trim(),
-      newPlaylistDescription.trim() || undefined
-    );
-    PlaylistManager.switchToPlaylist(newPlaylist.id);
+    // const newPlaylist = PlaylistManager.createPlaylist(
+    //   newPlaylistName.trim(),
+    //   newPlaylistDescription.trim() || undefined
+    // );
+    // PlaylistManager.switchToPlaylist(newPlaylist.id);
 
     newPlaylistName = "";
     newPlaylistDescription = "";
@@ -28,17 +28,17 @@
   }
 
   function selectPlaylist(playlistId: string) {
-    PlaylistManager.switchToPlaylist(playlistId);
+    // PlaylistManager.switchToPlaylist(playlistId);
   }
 
   function deletePlaylist(playlistId: string) {
     if (confirm("Are you sure you want to delete this playlist?")) {
-      PlaylistManager.deletePlaylist(playlistId);
+      // PlaylistManager.deletePlaylist(playlistId);
     }
   }
 
   function duplicatePlaylist(playlistId: string) {
-    PlaylistManager.duplicatePlaylist(playlistId);
+    // PlaylistManager.duplicatePlaylist(playlistId);
   }
 
   function startEditingPlaylist(playlistId: string, currentName: string) {
@@ -48,7 +48,7 @@
 
   function savePlaylistEdit() {
     if (editingPlaylist && editingName.trim()) {
-      PlaylistManager.renamePlaylist(editingPlaylist, editingName.trim());
+      // PlaylistManager.renamePlaylist(editingPlaylist, editingName.trim());
     }
     editingPlaylist = null;
     editingName = "";
@@ -69,10 +69,10 @@
       <div class="flex items-center justify-between">
         <div>
           <div class="font-medium text-zinc-200">
-            {playlistState.currentPlaylist?.name || "No Playlist"}
+            <!-- {playlistState.currentPlaylist?.name || "No Playlist"} -->
           </div>
           <div class="text-xs text-zinc-500">
-            {playlistState.currentPlaylistItems.length} items
+            <!-- {playlistState.currentPlaylistItems.length} items -->
           </div>
         </div>
         <ChevronDown class="h-4 w-4 text-zinc-400" />
@@ -82,7 +82,7 @@
     <DropdownMenu.Content
       class="max-h-60 w-[var(--radix-dropdown-menu-trigger-width)] overflow-y-auto border-zinc-700 bg-zinc-800"
     >
-      {#each playlistState.playlists as playlist}
+      <!-- {#each playlistState.playlists as playlist}
         <DropdownMenu.Item
           class="px-3 py-2 text-left transition-colors hover:bg-zinc-700 focus:bg-zinc-700 {playlist.id ===
           playlistState.currentPlaylistId
@@ -93,7 +93,7 @@
           <div class="font-medium">{playlist.name}</div>
           <div class="text-xs text-zinc-500">{playlist.items.length} items</div>
         </DropdownMenu.Item>
-      {/each}
+      {/each} -->
     </DropdownMenu.Content>
   </DropdownMenu.Root>
 
