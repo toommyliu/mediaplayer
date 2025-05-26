@@ -21,7 +21,8 @@
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.1",
     "@electron-toolkit/utils": "^4.0.0",
-    "@tailwindcss/vite": "^4.1.7"
+    "@tailwindcss/vite": "^4.1.7",
+    "paneforge": "^0.0.6"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config-prettier": "^3.0.0",
