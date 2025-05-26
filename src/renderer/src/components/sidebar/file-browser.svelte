@@ -7,6 +7,7 @@
   import * as ContextMenu from "../ui/context-menu/index";
   import { loadFileBrowser } from "@/utils/ipc";
   import { ICON_SIZE } from "@/constants";
+
   interface FileBrowserProps {
     onFileSelect?: (filePath: string) => void;
     onFolderSelect?: (folderPath: string) => void;
@@ -17,7 +18,7 @@
   let fileSystem = $state<FileSystemItem[]>([]);
   let expandedFolders = $state(new Set<string>());
   let error = $state<string | null>(null);
-  let openContextMenu = $state<string | null>(null); // Track which context menu is open
+  let openContextMenu = $state<string | null>(null);
 
   async function loadFileSystemStructure() {
     try {
@@ -26,12 +27,8 @@
       console.log("loadFileBrowser result:", result);
 
       if (result && result.files && result.files.length > 0) {
-        const rootFolder = result.files[0];
-        if (rootFolder.files) {
-          fileSystem = transformFileBrowserResult(rootFolder.files);
-        } else {
-          fileSystem = [];
-        }
+        // Transform the entire files array from the root
+        fileSystem = transformFileBrowserResult(result.files);
       } else if (result === null) {
         // User cancelled the dialog
         error = null;
@@ -49,22 +46,31 @@
 
   function transformFileBrowserResult(items: any[]): FileSystemItem[] {
     return items.map((item) => {
-      // If item has 'files' property, it's a folder
+      // Check if item has 'files' property (it's a folder)
       if (item.files && Array.isArray(item.files)) {
+        // Extract folder name from path
+        const pathParts = item.path.split(/[/\\]/);
+        const folderName = pathParts[pathParts.length - 1];
+
         return {
-          name: item.name,
+          name: folderName,
           type: "folder" as const,
-          path: item.path || item.name, // Use path if available, fallback to name
+          path: item.path,
           children: transformFileBrowserResult(item.files)
         };
       } else {
-        // It's a video file
+        // It's a video file - extract name from path if name is not provided
+        let fileName = item.name;
+        if (!fileName && item.path) {
+          const pathParts = item.path.split(/[/\\]/);
+          fileName = pathParts[pathParts.length - 1];
+        }
+
         return {
-          name: item.name,
+          name: fileName,
           type: "video" as const,
           path: item.path,
           duration: item.duration || 0
-          // Remove size calculation based on duration as it's not accurate
         };
       }
     });
@@ -127,7 +133,7 @@
   }
 
   function showInFinder(path: string) {
-    console.log("Show in finder:", path);
+    window.electron.ipcRenderer.send("open-file-explorer", path);
   }
 
   function addFolderToPlaylist(folder: FileSystemItem) {
@@ -233,6 +239,7 @@
             }}
             class="flex-shrink-0 p-1 text-zinc-500 opacity-0 hover:text-blue-400 group-hover:opacity-100"
           >
+            +
           </button>
         {/if}
       </div>

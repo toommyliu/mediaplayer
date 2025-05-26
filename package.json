@@ -22,19 +22,14 @@
     "@electron-toolkit/preload": "^3.0.1",
     "@electron-toolkit/utils": "^4.0.0",
     "@tailwindcss/vite": "^4.1.7",
-    "ffprobe": "^1.1.2",
-    "ffprobe-static": "^3.1.0",
-    "get-video-duration": "^4.1.0",
     "lucide-svelte": "^0.511.0",
-    "paneforge": "^0.0.6",
-    "readdirp": "^4.1.2"
+    "paneforge": "^0.0.6"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config-prettier": "^3.0.0",
     "@electron-toolkit/eslint-config-ts": "^3.0.0",
     "@electron-toolkit/tsconfig": "^1.0.1",
     "@sveltejs/vite-plugin-svelte": "^5.0.3",
-    "@types/ffprobe-static": "^2.0.3",
     "@types/node": "^22.14.1",
     "autoprefixer": "^10.4.21",
     "bits-ui": "0.22.0",

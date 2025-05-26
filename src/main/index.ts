@@ -1,9 +1,9 @@
 import { app, shell, BrowserWindow, ipcMain, dialog } from "electron";
-import { join, extname } from "path";
+import { join, extname } from "node:path";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
 import icon from "../../resources/icon.png?asset";
-import { readdir, stat } from "fs/promises";
-import readdirp from "readdirp";
+import { readdir, stat } from "node:fs/promises";
+import "./ipc";
 
 const VIDEO_EXTENSIONS = ["mp4", "mov", "ogv", "webm", "avi", "mkv", "m4v"];
 
@@ -48,6 +48,46 @@ async function filterVideoFiles(dirPath: string): Promise<string[]> {
     }
   } catch (error) {
     console.error(`Error reading directory at ${dirPath}:`, error);
+  }
+
+  return ret;
+}
+
+interface FileNode {
+  path?: string;
+  name?: string;
+  files?: FileNode[];
+}
+
+interface FileTree {
+  rootPath: string;
+  files: FileNode[];
+}
+
+async function buildFileTree(dirPath: string): Promise<FileTree> {
+  const rootPath = dirPath;
+  const ret: FileTree = {
+    rootPath,
+    files: []
+  };
+
+  for (const entry of await readdir(dirPath, { withFileTypes: true })) {
+    if (entry.isDirectory()) {
+      const subDirPath = join(dirPath, entry.name);
+      const subTree = await buildFileTree(subDirPath);
+      ret.files.push({
+        path: subDirPath,
+        files: subTree.files
+      });
+    } else {
+      const filePath = join(dirPath, entry.name);
+      if (VIDEO_EXTENSIONS.some((ext) => extname(filePath).toLowerCase() === `.${ext}`)) {
+        ret.files.push({
+          path: filePath,
+          name: entry.name
+        });
+      }
+    }
   }
 
   return ret;
@@ -200,34 +240,14 @@ app.whenReady().then(() => {
     }
 
     try {
-      const result: FileBrowserResult = {
-        folder: res.filePaths[0],
-        files: []
-      };
+      console.log("res.filePaths[0]:", res.filePaths[0]);
 
-      for (const selectedPath of res.filePaths) {
-        const stats = await stat(selectedPath);
+      const ret = await buildFileTree(res.filePaths[0]);
+      console.log("file tree:", ret);
 
-        if (stats.isDirectory()) {
-          const folderStructure = await buildFolderStructure(selectedPath);
-          result.files.push(folderStructure);
-        } else {
-          if (VIDEO_EXTENSIONS.some((ext) => extname(selectedPath).toLowerCase() === `.${ext}`)) {
-            // const duration = await getVideoDurationInSeconds(selectedPath);
-            result.files.push({
-              name: selectedPath.split("/").pop() || selectedPath,
-              path: selectedPath,
-              duration: 0
-              // duration
-            });
-          }
-        }
-      }
-
-      console.log("File browser selection result:", JSON.stringify(result, null, 2));
-      return result;
+      return ret;
     } catch (error) {
-      console.error("Error processing file browser selection:", error);
+      console.error("Error building folder structure:", error);
       return null;
     }
   });
