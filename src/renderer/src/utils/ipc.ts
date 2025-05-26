@@ -8,3 +8,9 @@ export const loadVideoDialog = () => {
 
   window.electron.ipcRenderer.send("load-video-file");
 };
+
+export const loadFileBrowser = () => {
+  console.log("Loading file browser...");
+
+  return window.electron.ipcRenderer.invoke("start-file-browser");
+};

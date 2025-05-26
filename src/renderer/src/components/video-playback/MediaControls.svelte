@@ -196,10 +196,6 @@
       videoElement.muted = playerState.isMuted;
     }
   };
-
-  $effect(() => {
-    console.log("current volume:", playerState.volume);
-  });
 </script>
 
 <div

@@ -3,8 +3,25 @@ import { join, extname } from "path";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
 import icon from "../../resources/icon.png?asset";
 import { readdir, stat } from "fs/promises";
+import readdirp from "readdirp";
 
 const VIDEO_EXTENSIONS = ["mp4", "mov", "ogv", "webm", "avi", "mkv", "m4v"];
+
+interface VideoFile {
+  name: string;
+  path: string;
+  duration: number;
+}
+
+interface FolderStructure {
+  name: string;
+  files: (VideoFile | FolderStructure)[];
+}
+
+interface FileBrowserResult {
+  folder: string;
+  files: (VideoFile | FolderStructure)[];
+}
 
 async function filterVideoFiles(dirPath: string): Promise<string[]> {
   const ret: string[] = [];
@@ -34,6 +51,44 @@ async function filterVideoFiles(dirPath: string): Promise<string[]> {
   }
 
   return ret;
+}
+
+async function buildFolderStructure(dirPath: string): Promise<FolderStructure> {
+  const folderName = dirPath.split("/").pop() || dirPath;
+  const result: FolderStructure = {
+    name: folderName,
+    files: []
+  };
+
+  try {
+    const items = await readdir(dirPath);
+
+    for (const item of items) {
+      const itemPath = join(dirPath, item);
+      try {
+        const stats = await stat(itemPath);
+
+        if (stats.isDirectory()) {
+          const subFolder = await buildFolderStructure(itemPath);
+          result.files.push(subFolder);
+        } else {
+          if (VIDEO_EXTENSIONS.some((ext) => extname(itemPath).toLowerCase() === `.${ext}`)) {
+            result.files.push({
+              name: item,
+              path: itemPath,
+              duration: 0
+            });
+          }
+        }
+      } catch {
+        continue;
+      }
+    }
+  } catch (error) {
+    console.error(`Error reading directory at ${dirPath}:`, error);
+  }
+
+  return result;
 }
 
 function createWindow(): void {
@@ -126,6 +181,55 @@ app.whenReady().then(() => {
 
     console.log("Selected video files:", allVideoFiles);
     ev.sender.send("video-file-loaded", allVideoFiles);
+  });
+
+  // Similar to load-video-file but we keep the directory structure
+  // and return the folders and files separately
+  ipcMain.handle("start-file-browser", async () => {
+    const res = await dialog.showOpenDialog({
+      defaultPath: app.getPath("downloads"),
+      properties: ["openDirectory", "openFile", "multiSelections"],
+      filters: [
+        { name: "Video Files", extensions: VIDEO_EXTENSIONS },
+        { name: "All Files", extensions: ["*"] }
+      ]
+    });
+
+    if (res.canceled || res.filePaths.length === 0) {
+      return null;
+    }
+
+    try {
+      const result: FileBrowserResult = {
+        folder: res.filePaths[0],
+        files: []
+      };
+
+      for (const selectedPath of res.filePaths) {
+        const stats = await stat(selectedPath);
+
+        if (stats.isDirectory()) {
+          const folderStructure = await buildFolderStructure(selectedPath);
+          result.files.push(folderStructure);
+        } else {
+          if (VIDEO_EXTENSIONS.some((ext) => extname(selectedPath).toLowerCase() === `.${ext}`)) {
+            // const duration = await getVideoDurationInSeconds(selectedPath);
+            result.files.push({
+              name: selectedPath.split("/").pop() || selectedPath,
+              path: selectedPath,
+              duration: 0
+              // duration
+            });
+          }
+        }
+      }
+
+      console.log("File browser selection result:", JSON.stringify(result, null, 2));
+      return result;
+    } catch (error) {
+      console.error("Error processing file browser selection:", error);
+      return null;
+    }
   });
 
   app.on("activate", function () {

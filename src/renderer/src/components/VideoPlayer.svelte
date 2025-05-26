@@ -1,7 +1,7 @@
 <script lang="ts">
   import { playerState } from "@/state.svelte";
   import { cn } from "@/utils/utils";
-  import { loadVideoDialog } from "@/utils/video";
+  import { loadVideoDialog } from "@/utils/ipc";
   import MediaControls from "./video-playback/MediaControls.svelte";
   interface Props {
     videoElement?: HTMLVideoElement;
