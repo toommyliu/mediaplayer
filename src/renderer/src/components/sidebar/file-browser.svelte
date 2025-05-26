@@ -2,7 +2,7 @@
   import { ICON_SIZE } from "@/constants";
   import { loadFileBrowser } from "@/utils/ipc";
   // import { PlaylistManager } from "@/utils/playlist";
-  import { playVideo } from "@/utils/video-player";
+  import { playVideo } from "@/utils/video-playback";
   import FileVideo from "lucide-svelte/icons/file-video";
   import Folder from "lucide-svelte/icons/folder";
   import FolderOpen from "lucide-svelte/icons/folder-open";
@@ -31,7 +31,17 @@
         // Transform the entire files array from the root
         fileSystem = transformFileBrowserResult(result.files);
 
-        playerState.queue = fileSystem.flatMap((entry) => `file://${entry.path}`);
+        playerState.queue = fileSystem.flatMap(function flatten(entry): string[] {
+          if (entry.type === "folder") {
+            return entry.children?.flatMap(flatten) ?? [];
+          }
+
+          if (entry.type === "video") {
+            return [`file://${entry.path}`];
+          }
+          return [];
+        });
+
         playerState.currentIndex = 0;
       } else if (result === null) {
         // User cancelled the dialog

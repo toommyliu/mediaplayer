@@ -6,19 +6,6 @@
   import { AlertTriangle, X } from "lucide-svelte";
 
   let videoElement = $state<HTMLVideoElement | null>(null);
-
-  window.electron.ipcRenderer.on("video-file-loaded", async (_ev, filePaths: string[]) => {
-    console.log("Received filePaths:", filePaths);
-    playerState.error = null;
-    playerState.isLoading = true;
-
-    if (filePaths.length >= 1) {
-      console.log(`Loading video files: ${filePaths}`);
-
-      playerState.queue = filePaths.map((path) => `file://${path}`);
-      playerState.currentIndex = 0;
-    }
-  });
 </script>
 
 <div class="bg-player-bg text-player-text dark flex h-screen flex-col">
