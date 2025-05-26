@@ -14,3 +14,15 @@ export const loadFileBrowser = () => {
 
   return window.electron.ipcRenderer.invoke("start-file-browser");
 };
+
+export const openFileDialog = () => {
+  console.log("Opening file dialog...");
+
+  return window.electron.ipcRenderer.invoke("open-file-dialog");
+};
+
+export const openFolderDialog = () => {
+  console.log("Opening folder dialog...");
+
+  return window.electron.ipcRenderer.invoke("open-folder-dialog");
+};

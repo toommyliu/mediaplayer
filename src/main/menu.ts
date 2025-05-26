@@ -1,4 +1,4 @@
-import { app, Menu } from "electron";
+import { Menu } from "electron";
 import { platform } from "@electron-toolkit/utils";
 import { showFilePicker } from "./utils";
 import { mainWindow } from ".";
@@ -14,7 +14,7 @@ const fileMenu: Electron.MenuItemConstructorOptions = {
       click: async () => {
         const ret = await showFilePicker("file");
         if (ret) {
-          mainWindow!?.webContents?.send("video-load", ret);
+          mainWindow?.webContents?.send("add-file-to-browser", ret);
         }
       }
     },
@@ -24,7 +24,7 @@ const fileMenu: Electron.MenuItemConstructorOptions = {
       click: async () => {
         const ret = await showFilePicker("folder");
         if (ret) {
-          mainWindow!?.webContents?.send("folder-load", ret);
+          mainWindow?.webContents?.send("add-folder-to-browser", ret);
         }
       }
     },

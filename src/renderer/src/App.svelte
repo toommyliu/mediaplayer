@@ -3,28 +3,38 @@
   import Sidebar from "./components/Sidebar.svelte";
   import { PaneGroup, Pane, PaneResizer } from "paneforge";
   import { playerState, sidebarState } from "./state.svelte";
-  import { AlertTriangle, X } from "lucide-svelte";
-  import { playVideo, resetPlayer, setQueue } from "./utils/video-playback";
+  import AlertTriangle from "lucide-svelte/icons/alert-triangle";
+  import X from "lucide-svelte/icons/x";
+  import { playVideo } from "./utils/video-playback";
 
   let videoElement = $state<HTMLVideoElement | null>(null);
 
-  window.electron.ipcRenderer.on("video-load", async (_ev, videoPath) => {
-    resetPlayer();
-    setQueue([videoPath]);
-    playVideo(videoPath);
+  let fileBrowserEvents: {
+    addFile?: (filePath: string) => void;
+    addFolder?: (folderData: any) => void;
+  } = {};
+
+  window.electron.ipcRenderer.on("add-file-to-browser", async (_ev, filePath) => {
+    playVideo(`file://${filePath}`);
+    if (fileBrowserEvents.addFile) {
+      fileBrowserEvents.addFile(filePath);
+    }
   });
-  window.electron.ipcRenderer.on("folder-load", async (_ev, folderRes) => {
-    const files = folderRes.files.flatMap(function flatten(entry): string[] {
+
+  window.electron.ipcRenderer.on("add-folder-to-browser", async (_ev, folderData) => {
+    const files = folderData.files.flatMap(function flatten(entry): string[] {
       if ("files" in entry && Array.isArray(entry.files)) {
         return entry.files.flatMap(flatten) ?? [];
       }
-
       return [`file://${entry.path}`];
     });
 
-    resetPlayer();
-    setQueue(files);
-    playVideo(files[0]);
+    if (files.length > 0) {
+      playVideo(files[0]);
+      if (fileBrowserEvents.addFolder) {
+        fileBrowserEvents.addFolder(folderData);
+      }
+    }
   });
 </script>
 
@@ -57,7 +67,7 @@
       {#if sidebarState.isOpen}
         <Pane defaultSize={20}>
           <aside class="h-full border-l border-gray-700 bg-gray-800">
-            <Sidebar />
+            <Sidebar {fileBrowserEvents} />
           </aside>
         </Pane>
       {/if}

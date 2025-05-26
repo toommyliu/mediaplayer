@@ -12,9 +12,20 @@
   // interface FileBrowserProps {
   //   onFileSelect?: (filePath: string) => void;
   //   onFolderSelect?: (folderPath: string) => void;
+  //   fileBrowserEvents?: {
+  //     addFile?: (filePath: string) => void;
+  //     addFolder?: (folderData: any) => void;
+  //   };
   // }
 
-  // let { onFileSelect, onFolderSelect }: FileBrowserProps = $props();
+  let {
+    fileBrowserEvents
+  }: {
+    fileBrowserEvents?: {
+      addFile?: (filePath: string) => void;
+      addFolder?: (folderData: any) => void;
+    };
+  } = $props();
 
   let fileSystem = $state<FileSystemItem[]>([]);
   let expandedFolders = $state(new Set<string>());
@@ -116,6 +127,7 @@
     //     size: item.size
     //   });
     // }
+    console.log("Add to playlist:", item.name);
   }
 
   function formatDuration(seconds: number): string {
@@ -158,6 +170,53 @@
 
   function closeAllContextMenus() {
     openContextMenu = null;
+  }
+
+  function setFileInFileSystem(filePath: string) {
+    const pathParts = filePath.split(/[/\\]/);
+    const fileName = pathParts[pathParts.length - 1];
+
+    const newFileItem: FileSystemItem = {
+      name: fileName,
+      path: filePath,
+      duration: 0,
+      type: "video"
+    };
+
+    // Reset file system with just this file
+    fileSystem = [newFileItem];
+    updatePlayerQueue();
+  }
+
+  function setFolderInFileSystem(folderData: any) {
+    if (folderData && folderData.files) {
+      const transformedFolder = transformFileBrowserResult(folderData.files);
+
+      // Reset file system with the new folder content
+      fileSystem = transformedFolder;
+      updatePlayerQueue();
+    }
+  }
+
+  function updatePlayerQueue() {
+    playerState.queue = fileSystem.flatMap(function flatten(entry): string[] {
+      if (entry.type === "folder") {
+        return entry.children?.flatMap(flatten) ?? [];
+      }
+      if (entry.type === "video") {
+        return [`file://${entry.path}`];
+      }
+      return [];
+    });
+
+    // Reset current index to 0 when file system is reset
+    playerState.currentIndex = 0;
+  }
+
+  // Expose functions through the events prop
+  if (fileBrowserEvents) {
+    fileBrowserEvents.addFile = setFileInFileSystem;
+    fileBrowserEvents.addFolder = setFolderInFileSystem;
   }
 </script>
 

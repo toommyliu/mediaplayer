@@ -5,14 +5,23 @@
   // import { playlistState, type PlaylistItem } from "../state.svelte";
   // import { PlaylistManager } from "../utils/playlist";
 
+  let {
+    fileBrowserEvents
+  }: {
+    fileBrowserEvents?: {
+      addFile?: (filePath: string) => void;
+      addFolder?: (folderData: any) => void;
+    };
+  } = $props();
+
   // function handlePlaylistPlay(item: PlaylistItem) {
   //   console.log("Playing:", item);
   // }
-  function handlePlaylistPlay(item: any) {}
+  // function handlePlaylistPlay(item: any) {}
 
-  function handlePlaylistRemove(id: string) {
-    // PlaylistManager.removeItemFromPlaylist(playlistState.currentPlaylistId, id);
-  }
+  // function handlePlaylistRemove(id: string) {
+  //   PlaylistManager.removeItemFromPlaylist(playlistState.currentPlaylistId, id);
+  // }
 
   function handlePlaylistClear() {
     // PlaylistManager.clearPlaylist(playlistState.currentPlaylistId);
@@ -22,15 +31,15 @@
     // PlaylistManager.shufflePlaylist(playlistState.currentPlaylistId);
   }
 
-  function handleFileSelect(filePath: string) {
-    // Handle file selection from browser
-    // console.log("File selected:", filePath);
-    // const filename = filePath.split("/").pop() || filePath;
-    // PlaylistManager.addItemToPlaylist(playlistState.currentPlaylistId, {
-    //   name: filename,
-    //   path: filePath
-    // });
-  }
+  // function handleFileSelect(filePath: string) {
+  //   Handle file selection from browser
+  //   console.log("File selected:", filePath);
+  //   const filename = filePath.split("/").pop() || filePath;
+  //   PlaylistManager.addItemToPlaylist(playlistState.currentPlaylistId, {
+  //     name: filename,
+  //     path: filePath
+  //   });
+  // }
 </script>
 
 <div class="h-full bg-zinc-900 p-4">
@@ -40,7 +49,7 @@
       <Tabs.Trigger value="playlist" class="flex-1">Playlist</Tabs.Trigger>
     </Tabs.List>
     <Tabs.Content value="browser" class="mt-4 flex-1 overflow-auto">
-      <FileBrowser />
+      <FileBrowser {fileBrowserEvents} />
     </Tabs.Content>
     <Tabs.Content value="playlist" class="mt-4 flex-1 overflow-auto">
       <div class="space-y-2">

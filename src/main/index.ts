@@ -1,5 +1,5 @@
 import { electronApp, is, optimizer } from "@electron-toolkit/utils";
-import { app, BrowserWindow, dialog, ipcMain, shell } from "electron";
+import { app, BrowserWindow, ipcMain, shell } from "electron";
 import { join } from "node:path";
 import icon from "../../resources/icon.png?asset";
 import "./ipc";
@@ -63,6 +63,14 @@ app.whenReady().then(() => {
 
   ipcMain.handle("start-file-browser", async () => {
     return await showFilePicker("both");
+  });
+
+  ipcMain.handle("open-file-dialog", async () => {
+    return await showFilePicker("file");
+  });
+
+  ipcMain.handle("open-folder-dialog", async () => {
+    return await showFilePicker("folder");
   });
 
   app.on("activate", function () {
