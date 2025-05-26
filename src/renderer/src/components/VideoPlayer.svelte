@@ -1,21 +1,25 @@
 <script lang="ts">
   import { playerState } from "@/state.svelte";
-  import { makeTimeString } from "@/utils/time";
   import { cn } from "@/utils/utils";
   import { loadVideoDialog } from "@/utils/video";
   import MediaControls from "./video-playback/MediaControls.svelte";
   interface Props {
-    src: string;
-    onError: (error: string) => void;
-    onLoading: (loading: boolean) => void;
-    videoElement?: HTMLVideoElement | null;
+    videoElement?: HTMLVideoElement;
   }
 
-  let { src, onError, onLoading, videoElement = $bindable() }: Props = $props();
-  let isFullscreen = $state(false);
+  let { videoElement = $bindable() }: Props = $props();
+
   let controlsTimeout: number | null = null;
 
-  // Handle video events
+  function onLoading(loading: boolean): void {
+    playerState.isLoading = loading;
+  }
+
+  function onError(message: string): void {
+    playerState.error = message;
+    playerState.isLoading = false;
+  }
+
   function handleLoadStart(): void {
     console.log("Video load started");
     onLoading(true);
@@ -26,6 +30,9 @@
     onLoading(false);
     if (videoElement) {
       playerState.duration = videoElement.duration;
+      videoElement.play().catch((error) => {
+        console.error("Auto-play failed:", error);
+      });
     }
   }
 
@@ -85,18 +92,8 @@
     playerState.isPlaying = false;
   }
 
-  function toggleFullscreen(): void {
-    if (!document.fullscreenElement) {
-      videoElement?.requestFullscreen().catch((err) => {
-        console.error("Error attempting to enable fullscreen:", err);
-      });
-    } else {
-      document.exitFullscreen();
-    }
-  }
-
   function handleFullscreenChange(): void {
-    isFullscreen = !!document.fullscreenElement;
+    // isFullscreen = !!document.fullscreenElement;
   }
 
   function showControlsTemporarily(): void {
@@ -115,52 +112,33 @@
     showControlsTemporarily();
   }
 
-  function handleKeyDown(event: KeyboardEvent): void {
-    switch (event.code) {
-      case "Space":
-        event.preventDefault();
-        togglePlay();
-        break;
-      case "KeyF":
-        event.preventDefault();
-        toggleFullscreen();
-        break;
-      case "KeyM":
-        event.preventDefault();
-        toggleMute();
-        break;
-      case "ArrowLeft":
-        event.preventDefault();
-        if (videoElement) {
-          videoElement.currentTime = Math.max(0, videoElement.currentTime - 10);
-        }
-        break;
-      case "ArrowRight":
-        event.preventDefault();
-        if (videoElement) {
-          videoElement.currentTime = Math.min(playerState.duration, videoElement.currentTime + 10);
-        }
-        break;
-    }
+  function handleKeyDown(_event: KeyboardEvent): void {
+    // switch (event.code) {
+    //   case "Space":
+    //     event.preventDefault();
+    //     togglePlay();
+    //     break;
+    // ...
+    // }
   }
 
   function handleDblClick(ev: MouseEvent): void {
     const target = ev.target as HTMLElement;
 
-    // Check if the click is within the media controls
     const controlsElement = target.closest("#media-controls");
     if (controlsElement) {
-      return; // Don't trigger if clicking on controls
+      return;
     }
 
-    // Trigger on video element OR the main container (for when no video is loaded)
     if (target.tagName === "VIDEO" || target.id === "video-player") {
-      console.log("Load video dialog");
-      loadVideoDialog();
+      if (playerState.isPlaying) {
+        console.log("Double click while playing...");
+      } else {
+        loadVideoDialog();
+      }
     }
   }
 
-  // Add event listeners for fullscreen changes
   $effect(() => {
     document.addEventListener("fullscreenchange", handleFullscreenChange);
     return () => {
@@ -171,13 +149,19 @@
     };
   });
 
-  // Show controls when not playing
   $effect(() => {
     if (!playerState.isPlaying) {
       playerState.showControls = true;
       if (controlsTimeout) {
         clearTimeout(controlsTimeout);
       }
+    }
+  });
+
+  $effect(() => {
+    if (videoElement) {
+      videoElement.volume = playerState.isMuted ? 0 : playerState.volume;
+      videoElement.muted = playerState.isMuted;
     }
   });
 </script>
@@ -197,7 +181,7 @@
     {#if playerState.currentVideo}
       <video
         bind:this={videoElement}
-        {src}
+        src={playerState.currentVideo}
         class="video-no-controls max-h-full max-w-full object-contain"
         onloadstart={handleLoadStart}
         onloadeddata={handleLoadedData}

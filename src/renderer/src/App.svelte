@@ -2,28 +2,6 @@
   import VideoPlayer from "./components/VideoPlayer.svelte";
   import { playerState } from "./state.svelte";
 
-  interface PlaylistItem {
-    id: string;
-    name: string;
-    path: string;
-    duration?: number;
-    size?: number;
-  }
-
-  interface MediaInfo {
-    filename?: string;
-    duration?: number;
-    resolution?: { width: number; height: number };
-    frameRate?: number;
-    bitrate?: number;
-    codec?: string;
-    audioCodec?: string;
-    audioChannels?: number;
-    audioSampleRate?: number;
-    fileSize?: number;
-    aspectRatio?: string;
-  }
-
   let videoElement = $state<HTMLVideoElement | null>(null);
 
   window.electron.ipcRenderer.on("video-file-loaded", async (_ev, filePaths: string[]) => {
@@ -34,19 +12,10 @@
     if (filePaths.length >= 1) {
       console.log(`Loading video files: ${filePaths}`);
 
-      playerState.queue.push(...filePaths.slice(1).map((path) => `file://${path}`));
+      playerState.queue = filePaths.map((path) => `file://${path}`);
       playerState.currentIndex = 0;
     }
   });
-
-  function handleVideoError(errorMessage: string): void {
-    playerState.error = errorMessage;
-    playerState.isLoading = false;
-  }
-
-  function handleVideoLoading(loading: boolean): void {
-    playerState.isLoading = loading;
-  }
 </script>
 
 <div class="bg-player-bg text-player-text dark flex h-screen flex-col">
@@ -64,12 +33,7 @@
         </div>
       {/if}
 
-      <VideoPlayer
-        src={playerState.currentVideo}
-        onError={handleVideoError}
-        onLoading={handleVideoLoading}
-        bind:videoElement
-      />
+      <VideoPlayer bind:videoElement />
     </main>
   </div>
 </div>

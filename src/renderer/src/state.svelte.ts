@@ -1,4 +1,5 @@
 type State = {
+  // Playback
   isPlaying: boolean;
   currentTime: number;
   duration: number;

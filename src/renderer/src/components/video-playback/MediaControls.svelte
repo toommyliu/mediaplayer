@@ -2,10 +2,16 @@
   import { playerState } from "@/state.svelte";
   import { makeTimeString } from "@/utils/time";
 
+  interface Props {
+    videoElement?: HTMLVideoElement;
+  }
+
+  let { videoElement }: Props = $props();
+
   const handleSeek = (ev: MouseEvent) => {
     if (!videoElement) return;
 
-    const progressBar = event.currentTarget as HTMLElement;
+    const progressBar = ev.currentTarget as HTMLElement;
     const rect = progressBar.getBoundingClientRect();
     const percent = (ev.clientX - rect.left) / rect.width;
     const newTime = percent * playerState.duration;
@@ -44,8 +50,6 @@
     videoElement.volume = newVolume;
     videoElement.muted = playerState.isMuted;
   };
-
-  let { videoElement }: { videoElement: HTMLVideoElement } = $props();
 </script>
 
 <div
