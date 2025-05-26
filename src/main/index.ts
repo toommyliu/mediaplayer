@@ -1,8 +1,40 @@
 import { app, shell, BrowserWindow, ipcMain, dialog } from "electron";
-import { join } from "path";
+import { join, extname } from "path";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
 import icon from "../../resources/icon.png?asset";
 import { readdir, stat } from "fs/promises";
+
+const VIDEO_EXTENSIONS = ["mp4", "mov", "ogv", "webm", "avi", "mkv", "m4v"];
+
+async function filterVideoFiles(dirPath: string): Promise<string[]> {
+  const ret: string[] = [];
+
+  try {
+    const items = await readdir(dirPath);
+
+    for (const item of items) {
+      const itemPath = join(dirPath, item);
+      try {
+        const stats = await stat(itemPath);
+
+        if (stats.isDirectory()) {
+          const subDirVideos = await filterVideoFiles(itemPath);
+          ret.push(...subDirVideos);
+        } else {
+          if (VIDEO_EXTENSIONS.some((ext) => extname(itemPath).toLowerCase() === `.${ext}`)) {
+            ret.push(itemPath);
+          }
+        }
+      } catch {
+        continue;
+      }
+    }
+  } catch (error) {
+    console.error(`Error reading directory at ${dirPath}:`, error);
+  }
+
+  return ret;
+}
 
 function createWindow(): void {
   // Create the browser window.
@@ -57,18 +89,15 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window);
   });
 
-  // IPC test
-  ipcMain.on("ping", () => console.log("pong"));
-
   ipcMain.on("load-video-file", async (ev) => {
     const res = await dialog.showOpenDialog({
       defaultPath: app.getPath("downloads"),
-      properties: ["openFile"],
+      properties: ["openFile", "openDirectory", "multiSelections"],
       filters: [
-        { name: "Video Files", extensions: ["mp4", "mov", "ogv", "webm", "avi", "mkv", "m4v"] },
+        { name: "Video Files", extensions: VIDEO_EXTENSIONS },
         { name: "All Files", extensions: ["*"] }
       ],
-      message: "Select video file to load"
+      message: "Select video files or folder to load"
     });
 
     if (res.canceled || res.filePaths.length === 0) {
@@ -76,55 +105,27 @@ app.whenReady().then(() => {
       return;
     }
 
-    const files = res.filePaths.filter((file) => {
-      const ext = file.split(".").pop()?.toLowerCase();
-      return ["mp4", "mov", "ogv", "webm", "avi", "mkv", "m4v"].includes(ext || "");
-    });
+    const allVideoFiles: string[] = [];
 
-    if (files.length === 0) {
-      ev.sender.send("video-file-loaded", []);
-      return;
-    }
+    for (const path of res.filePaths) {
+      try {
+        const stats = await stat(path);
 
-    console.log("Selected video files:", files);
-    ev.sender.send("video-file-loaded", files);
-  });
-
-  // File browser IPC handlers
-  ipcMain.handle("show-open-dialog", async () => {
-    const result = await dialog.showOpenDialog({
-      properties: ["openDirectory"],
-      message: "Select folder to browse"
-    });
-    return result;
-  });
-
-  ipcMain.handle("read-directory", async (_, dirPath: string) => {
-    try {
-      const items = await readdir(dirPath);
-      const itemsWithStats = await Promise.all(
-        items.map(async (item) => {
-          try {
-            const itemPath = join(dirPath, item);
-            const stats = await stat(itemPath);
-            return {
-              name: item,
-              path: itemPath,
-              isDirectory: stats.isDirectory(),
-              size: stats.size,
-              modified: stats.mtime
-            };
-          } catch {
-            return null;
+        if (stats.isDirectory()) {
+          const videoFiles = await filterVideoFiles(path);
+          allVideoFiles.push(...videoFiles);
+        } else {
+          if (VIDEO_EXTENSIONS.some((ext) => extname(path).toLowerCase() === `.${ext}`)) {
+            allVideoFiles.push(path);
           }
-        })
-      );
-
-      return itemsWithStats.filter(Boolean);
-    } catch (error) {
-      console.error("Error reading directory:", error);
-      throw error;
+        }
+      } catch (error) {
+        console.error(`Error reading path at ${path}:`, error);
+      }
     }
+
+    console.log("Selected video files:", allVideoFiles);
+    ev.sender.send("video-file-loaded", allVideoFiles);
   });
 
   app.on("activate", function () {
