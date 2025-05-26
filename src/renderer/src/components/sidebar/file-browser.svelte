@@ -1,8 +1,13 @@
 <script lang="ts">
   import { playlistState } from "@/state.svelte";
   import { PlaylistManager } from "@/utils/playlist";
-  import { Plus } from "lucide-svelte";
+  import Plus from "lucide-svelte/icons/plus";
+  import FileVideo from "lucide-svelte/icons/file-video";
+  import Folder from "lucide-svelte/icons/folder";
+  import FolderOpen from "lucide-svelte/icons/folder-open";
+
   import { loadFileBrowser } from "@/utils/ipc";
+  import { ICON_SIZE } from "@/constants";
   interface FileBrowserProps {
     onFileSelect?: (filePath: string) => void;
     onFolderSelect?: (folderPath: string) => void;
@@ -12,13 +17,11 @@
 
   let fileSystem = $state<FileSystemItem[]>([]);
   let expandedFolders = $state(new Set<string>());
-  let isLoading = $state(false);
   let error = $state<string | null>(null);
 
   async function loadFileSystemStructure() {
     try {
       error = null;
-      isLoading = true;
       const result = await loadFileBrowser();
       console.log("loadFileBrowser result:", result);
 
@@ -42,8 +45,6 @@
       console.error("Failed to load file system:", err);
       error = "Failed to load file system. Please try again.";
       fileSystem = [];
-    } finally {
-      isLoading = false;
     }
   }
 
@@ -137,11 +138,7 @@
   </div>
 
   <div class="h-[87vh] overflow-hidden rounded-lg bg-zinc-800 p-3">
-    {#if isLoading}
-      <div class="flex items-center justify-center py-8">
-        <div class="text-xs text-zinc-500">Loading file system...</div>
-      </div>
-    {:else if error}
+    {#if error}
       <div class="flex flex-col items-center justify-center py-8 text-center">
         <div class="mb-2 text-lg">⚠️</div>
         <div class="text-xs text-red-400">{error}</div>
@@ -155,14 +152,14 @@
     {:else}
       <div class="space-y-1 overflow-hidden text-xs text-zinc-400">
         {#each fileSystem as item}
-          {@render FileSystemItemComponent(item, 0)}
+          {@render FileBrowserItem(item, 0)}
         {/each}
       </div>
     {/if}
   </div>
 </div>
 
-{#snippet FileSystemItemComponent(item: FileSystemItem, depth: number)}
+{#snippet FileBrowserItem(item: FileSystemItem, depth: number)}
   {@const isExpanded = expandedFolders.has(item.path)}
   {@const paddingLeft = depth * 16}
 
@@ -175,12 +172,16 @@
         onclick={() => toggleFolder(item.path)}
         class="flex min-w-0 flex-1 items-center gap-2 text-left"
       >
-        <span class="flex-shrink-0">{isExpanded ? "📂" : "📁"}</span>
+        {#if isExpanded}
+          <FolderOpen size={ICON_SIZE - 2} />
+        {:else}
+          <Folder size={ICON_SIZE - 2} />
+        {/if}
         <span class="truncate">{item.name}</span>
       </button>
     {:else}
       <div class="flex min-w-0 flex-1 items-center gap-2" onclick={() => handleItemClick(item)}>
-        <span class="flex-shrink-0">🎬</span>
+        <FileVideo size={ICON_SIZE - 2} />
         <span class="flex-1 truncate" title={item.name}>{item.name}</span>
         {#if item.duration && item.duration > 0}
           <span class="flex-shrink-0 text-xs text-blue-400">{formatDuration(item.duration)}</span>
@@ -197,14 +198,14 @@
         class="flex-shrink-0 p-1 text-zinc-500 opacity-0 hover:text-blue-400 group-hover:opacity-100"
         title="Add to current playlist"
       >
-        <Plus size={12} />
+        <Plus size={ICON_SIZE - 6} />
       </button>
     {/if}
   </div>
 
   {#if item.type === "folder" && isExpanded && item.children}
     {#each item.children as child}
-      {@render FileSystemItemComponent(child, depth + 1)}
+      {@render FileBrowserItem(child, depth + 1)}
     {/each}
   {/if}
 {/snippet}
