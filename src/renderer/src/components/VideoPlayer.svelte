@@ -11,6 +11,8 @@
   let { videoElement = $bindable() }: Props = $props();
 
   let controlsTimeout: number | null = null;
+  let overlayTimeout: number | null = null;
+  let showOverlay = $state(false);
 
   function onLoading(loading: boolean): void {
     playerState.isLoading = loading;
@@ -115,8 +117,19 @@
     }, 3000) as unknown as number;
   }
 
+  function showOverlayTemporarily(): void {
+    showOverlay = true;
+    if (overlayTimeout) {
+      clearTimeout(overlayTimeout);
+    }
+    overlayTimeout = setTimeout(() => {
+      showOverlay = false;
+    }, 2000) as unknown as number; // Show for 2 seconds
+  }
+
   function handleMouseMove(): void {
     showControlsTemporarily();
+    showOverlayTemporarily();
   }
 
   function handleClick(): void {
@@ -149,6 +162,9 @@
       document.removeEventListener("fullscreenchange", handleFullscreenChange);
       if (controlsTimeout) {
         clearTimeout(controlsTimeout);
+      }
+      if (overlayTimeout) {
+        clearTimeout(overlayTimeout);
       }
     };
   });
@@ -207,7 +223,9 @@
 
       <!-- Hover overlay -->
       <div
-        class="absolute left-4 top-4 rounded-lg bg-black bg-opacity-70 p-3 text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+        class="absolute left-4 top-4 rounded-lg bg-black bg-opacity-70 p-3 text-white transition-opacity duration-300"
+        class:opacity-100={showOverlay}
+        class:opacity-0={!showOverlay}
       >
         <div class="text-sm font-medium">
           {playerState.currentVideo?.split("/").pop() || "Unknown"}

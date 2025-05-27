@@ -2,6 +2,8 @@ import hotkey from "hotkeys-js";
 import * as state from "@/state.svelte";
 import { previousVideo, nextVideo } from "./video-playback";
 
+// TODO: use globalShortcuts instead of "mod" key
+
 const mod = state.platformState.isMac ? "cmd" : "ctrl";
 
 window.electron.ipcRenderer.on("media-previous-track", () => {

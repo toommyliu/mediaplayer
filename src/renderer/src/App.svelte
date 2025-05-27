@@ -43,8 +43,6 @@
     platformState.isMac = res.isMacOS;
     platformState.isLinux = res.isLinux;
 
-    console.log("platform loaded");
-
     await import("./utils/input.svelte");
   });
 </script>

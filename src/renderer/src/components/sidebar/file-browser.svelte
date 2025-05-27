@@ -128,6 +128,7 @@
             fileBrowser.toggleFolder(item.path);
           }
         }}
+        title={item.name}
       >
         {#if item.type === "folder"}
           <button class="flex min-w-0 flex-1 items-center gap-2 text-left">
