@@ -103,12 +103,17 @@
       <div
         class="group flex min-w-0 cursor-pointer items-center gap-2 rounded p-2 hover:bg-zinc-700"
         style="padding-left: {paddingLeft + 8}px"
+        ondblclick={(ev) => {
+          ev.stopPropagation();
+          if (item.type === "video") {
+            handleItemClick(item);
+          } else if (item.type === "folder") {
+            fileBrowser.toggleFolder(item.path);
+          }
+        }}
       >
         {#if item.type === "folder"}
-          <button
-            onclick={() => fileBrowser.toggleFolder(item.path)}
-            class="flex min-w-0 flex-1 items-center gap-2 text-left"
-          >
+          <button class="flex min-w-0 flex-1 items-center gap-2 text-left">
             {#if isExpanded}
               <FolderOpen size={ICON_SIZE - 2} />
             {:else}
@@ -117,7 +122,7 @@
             <span class="truncate">{item.name}</span>
           </button>
         {:else}
-          <div class="flex min-w-0 flex-1 items-center gap-2" onclick={() => handleItemClick(item)}>
+          <div class="flex min-w-0 flex-1 items-center gap-2">
             <FileVideo size={ICON_SIZE - 2} />
             <span class="flex-1 truncate" title={item.name}>{item.name}</span>
             {#if item.duration && item.duration > 0}
