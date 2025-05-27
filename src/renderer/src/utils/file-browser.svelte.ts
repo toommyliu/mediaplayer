@@ -32,6 +32,7 @@ export class FileBrowserContext {
 
   constructor() {}
 
+  // TODO: fix
   transformFileBrowserResult(items: any[]): FileSystemItem[] {
     return items.map((entry) => {
       if (entry.files && Array.isArray(entry.files)) {

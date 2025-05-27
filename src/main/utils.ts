@@ -1,7 +1,7 @@
 import { app, dialog } from "electron";
 import { VIDEO_EXTENSIONS } from "./constants";
-import { readdir } from "node:fs/promises";
-import { extname, join } from "node:path";
+import { readdir, stat } from "node:fs/promises";
+import { extname, join, dirname } from "node:path";
 
 /**
  * Shows the file picker.
@@ -47,10 +47,19 @@ export async function showFilePicker(
     if (mode === "file") {
       return res.filePaths[0];
     } else if (mode === "folder" || mode === "both") {
-      const ret = await buildFileTree(res.filePaths[0]);
-      console.log("file tree:", ret);
+      const selectedPath = res.filePaths[0];
+      const stats = await stat(selectedPath);
 
-      return ret;
+      if (stats.isDirectory()) {
+        const ret = await buildFileTree(selectedPath);
+        console.log("file tree:", ret);
+        return ret;
+      } else {
+        const parentDir = dirname(selectedPath);
+        const ret = await buildFileTree(parentDir);
+        console.log("file tree:", ret);
+        return ret;
+      }
     }
 
     return null;
