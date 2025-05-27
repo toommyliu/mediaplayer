@@ -2,6 +2,7 @@
   import { playerState } from "@/state.svelte";
   import { cn } from "@/utils/utils";
   import { loadVideoDialog } from "@/utils/ipc";
+  import { makeTimeString } from "@/utils/time";
   import MediaControls from "./video-playback/MediaControls.svelte";
   interface Props {
     videoElement?: HTMLVideoElement;
@@ -125,21 +126,6 @@
     }
   }
 
-  function seekTo(time: number): void {
-    if (!videoElement || !playerState.currentVideo) return;
-
-    const clampedTime = Math.max(0, Math.min(playerState.duration, time));
-
-    try {
-      videoElement.currentTime = clampedTime;
-      playerState.currentTime = clampedTime;
-
-      showControlsTemporarily();
-    } catch (error) {
-      console.error("Error seeking video:", error);
-    }
-  }
-
   function handleDblClick(ev: MouseEvent): void {
     const target = ev.target as HTMLElement;
 
@@ -218,6 +204,23 @@
         disablepictureinpicture
       >
       </video>
+
+      <!-- Hover overlay -->
+      <div
+        class="absolute left-4 top-4 rounded-lg bg-black bg-opacity-70 p-3 text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+      >
+        <div class="text-sm font-medium">
+          {playerState.currentVideo?.split("/").pop() || "Unknown"}
+        </div>
+        <div class="mt-1 text-xs text-gray-300">
+          {makeTimeString(playerState.currentTime)} / {makeTimeString(playerState.duration)}
+        </div>
+        <div class="mt-1 text-xs text-gray-300">
+          {playerState.isPlaying ? "Playing" : "Paused"} • Volume: {Math.round(
+            playerState.volume * 100
+          )}%{playerState.isMuted ? " (Muted)" : ""}
+        </div>
+      </div>
     {/if}
   </div>
 
