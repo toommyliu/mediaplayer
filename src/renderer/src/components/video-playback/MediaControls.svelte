@@ -286,7 +286,7 @@
         step="0.1"
         value={playerState.isMuted ? 0 : playerState.volume}
         oninput={changeVolume}
-        class="slider h-1 w-20 cursor-pointer appearance-none rounded-lg bg-gray-600"
+        class="slider h-1 w-20 appearance-none rounded-lg bg-gray-600"
       />
     </div>
   </div>
