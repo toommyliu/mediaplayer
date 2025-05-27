@@ -60,8 +60,10 @@
       <Tabs.Trigger value="browser" class="flex-1">Browser</Tabs.Trigger>
       <Tabs.Trigger value="playlist" class="flex-1">Playlist</Tabs.Trigger>
     </Tabs.List>
-    <Tabs.Content value="browser" class="mt-4 flex-1 overflow-auto">
-      <FileBrowser />
+    <Tabs.Content value="browser" class="mt-4 flex-1 overflow-hidden">
+      <div class="scrollbar-hide h-full overflow-y-auto">
+        <FileBrowser />
+      </div>
     </Tabs.Content>
     <Tabs.Content value="playlist" class="mt-4 flex-1 overflow-auto">
       <div class="space-y-2">

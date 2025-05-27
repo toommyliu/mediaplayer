@@ -60,9 +60,9 @@
     </button>
   </div>
 
-  <div class="h-[87vh] overflow-hidden rounded-lg bg-zinc-800 p-3">
+  <div class="h-[87vh] overflow-hidden rounded-lg bg-zinc-800">
     {#if fileBrowser.error}
-      <div class="flex flex-col items-center justify-center py-8 text-center">
+      <div class="flex flex-col items-center justify-center p-3 py-8 text-center">
         <div class="mb-2 text-lg">⚠️</div>
         <div class="text-xs text-red-400">{fileBrowser.error}</div>
         <button
@@ -73,10 +73,12 @@
         </button>
       </div>
     {:else}
-      <div class="space-y-1 overflow-hidden text-xs text-zinc-400">
-        {#each fileBrowser.fileSystem as item}
-          {@render FileBrowserItem(item, 0)}
-        {/each}
+      <div class="no-scrollbar h-full overflow-y-auto bg-zinc-800 p-3">
+        <div class="space-y-1 text-xs text-zinc-400">
+          {#each fileBrowser.fileSystem as item}
+            {@render FileBrowserItem(item, 0)}
+          {/each}
+        </div>
       </div>
     {/if}
   </div>
