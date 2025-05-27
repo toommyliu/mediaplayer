@@ -34,3 +34,31 @@ export const playVideo = (src: string) => {
     playerState.currentIndex = idx;
   }
 };
+
+/**
+ * Plays the previous video in the queue.
+ */
+export const previousVideo = () => {
+  if (playerState.queue.length === 0) return;
+
+  const newIndex = playerState.currentIndex - 1;
+  if (newIndex >= 0) {
+    playerState.currentIndex = newIndex;
+    playerState.currentTime = 0;
+    playerState.videoElement.currentTime = 0;
+  }
+};
+
+/**
+ * Plays the next video in the queue.
+ */
+export const nextVideo = () => {
+  if (playerState.queue.length === 0) return;
+
+  const newIndex = playerState.currentIndex + 1;
+  if (newIndex < playerState.queue.length) {
+    playerState.currentIndex = newIndex;
+    playerState.currentTime = 0;
+    playerState.videoElement!.currentTime = 0;
+  }
+};

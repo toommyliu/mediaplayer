@@ -1,7 +1,28 @@
 import hotkey from "hotkeys-js";
 import * as state from "@/state.svelte";
+import { previousVideo, nextVideo } from "./video-playback";
 
 const mod = state.platformState.isMac ? "cmd" : "ctrl";
+
+window.electron.ipcRenderer.on("media-previous-track", () => {
+  console.log("Media Previous Track");
+
+  if (state.playerState.currentVideo) {
+    previousVideo();
+  }
+});
+
+window.electron.ipcRenderer.on("media-next-track", () => {
+  console.log("Media Next Track");
+
+  if (state.playerState.currentVideo) {
+    nextVideo();
+  }
+});
+
+window.electron.ipcRenderer.on("media-play-pause", () => {
+  _togglePlayback();
+});
 
 // Toggle sidebar
 hotkey(`${mod}+b`, (ev) => {
@@ -10,10 +31,7 @@ hotkey(`${mod}+b`, (ev) => {
   state.sidebarState.isOpen = !state.sidebarState.isOpen;
 });
 
-// Play/pause
-hotkey("space", (ev) => {
-  ev.preventDefault();
-
+function _togglePlayback() {
   if (state.playerState.currentVideo) {
     state.playerState.isPlaying = !state.playerState.isPlaying;
     if (state.playerState.isPlaying) {
@@ -22,6 +40,12 @@ hotkey("space", (ev) => {
       state.playerState.videoElement!.pause();
     }
   }
+}
+
+// Play/pause
+hotkey("space", (ev) => {
+  ev.preventDefault();
+  _togglePlayback();
 });
 
 // TODO: configurable seek time
@@ -46,6 +70,22 @@ hotkey("right", (ev) => {
       state.playerState.currentTime + 10
     );
     state.playerState.videoElement!.currentTime = state.playerState.currentTime;
+  }
+});
+
+// Previous track
+hotkey(`${mod}+left`, (ev) => {
+  ev.preventDefault();
+  if (state.playerState.currentVideo) {
+    previousVideo();
+  }
+});
+
+// Next track
+hotkey(`${mod}+right`, (ev) => {
+  ev.preventDefault();
+  if (state.playerState.currentVideo) {
+    nextVideo();
   }
 });
 

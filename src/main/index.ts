@@ -4,6 +4,7 @@ import { join } from "node:path";
 import icon from "../../resources/icon.png?asset";
 import "./ipc";
 import "./menu";
+import "./input";
 import { showFilePicker } from "./utils";
 
 export let mainWindow: BrowserWindow | null = null;
@@ -53,6 +54,10 @@ function createWindow(): void {
 app.whenReady().then(() => {
   // Set app user model id for windows
   electronApp.setAppUserModelId("com.electron");
+
+  // Require accessibility support for macOS
+  // Which is required for MediaKeys to work
+  app.setAccessibilitySupportEnabled(true);
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
