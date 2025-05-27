@@ -1,9 +1,11 @@
 <script lang="ts">
   import { ICON_SIZE } from "@/constants";
   import { playVideo } from "@/utils/video-playback";
+  import { playerState } from "@/state.svelte";
   import FileVideo from "lucide-svelte/icons/file-video";
   import Folder from "lucide-svelte/icons/folder";
   import FolderOpen from "lucide-svelte/icons/folder-open";
+  import Play from "lucide-svelte/icons/play";
   import * as ContextMenu from "../ui/context-menu/index";
   import {
     getFileBrowserContext,
@@ -12,9 +14,15 @@
     showInFinder,
     type FileSystemItem
   } from "@/utils/file-browser.svelte";
+  import { cn } from "@/utils/utils";
 
   // Get the file browser context
   const fileBrowser = getFileBrowserContext();
+
+  function isCurrentlyPlaying(item: FileSystemItem): boolean {
+    if (item.type !== "video" || !playerState.currentVideo) return false;
+    return playerState.currentVideo === `file://${item.path}`;
+  }
 
   function handleItemClick(item: FileSystemItem) {
     if (item.type === "folder") {
@@ -101,7 +109,16 @@
   >
     <ContextMenu.Trigger class="w-full">
       <div
-        class="group flex min-w-0 cursor-pointer items-center gap-2 rounded p-2 hover:bg-zinc-700"
+        class={cn(
+          "group flex min-w-0 cursor-pointer items-center gap-2 rounded p-2 transition-colors",
+          item.type === "video" &&
+            isCurrentlyPlaying(item) && [
+              "bg-blue-500/20",
+              "border border-blue-400",
+              "hover:bg-blue-500/30"
+            ],
+          !(item.type === "video" && isCurrentlyPlaying(item)) && "hover:bg-zinc-700"
+        )}
         style="padding-left: {paddingLeft + 8}px"
         ondblclick={(ev) => {
           ev.stopPropagation();
@@ -123,8 +140,27 @@
           </button>
         {:else}
           <div class="flex min-w-0 flex-1 items-center gap-2">
-            <FileVideo size={ICON_SIZE - 2} />
-            <span class="flex-1 truncate" title={item.name}>{item.name}</span>
+            <div class="relative">
+              <FileVideo
+                size={ICON_SIZE - 2}
+                class={cn(isCurrentlyPlaying(item) && "text-blue-400")}
+              />
+              {#if isCurrentlyPlaying(item)}
+                <Play
+                  size={8}
+                  class="absolute -bottom-1 -right-1 rounded-full bg-zinc-800 p-0.5 text-blue-400"
+                />
+              {/if}
+            </div>
+            <span
+              class={cn(
+                "flex-1 truncate",
+                isCurrentlyPlaying(item) && ["text-blue-400", "font-medium"]
+              )}
+              title={item.name}
+            >
+              {item.name}
+            </span>
             {#if item.duration && item.duration > 0}
               <span class="flex-shrink-0 text-xs text-blue-400"
                 >{formatDuration(item.duration)}</span
