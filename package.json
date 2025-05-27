@@ -22,6 +22,7 @@
     "@electron-toolkit/preload": "^3.0.1",
     "@electron-toolkit/utils": "^4.0.0",
     "@tailwindcss/vite": "^4.1.7",
+    "hotkeys-js": "^3.13.10",
     "lucide-svelte": "^0.511.0",
     "paneforge": "^0.0.6"
   },

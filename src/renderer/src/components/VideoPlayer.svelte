@@ -125,79 +125,6 @@
     }
   }
 
-  function handleKeyDown(event: KeyboardEvent): void {
-    if (!videoElement || !playerState.currentVideo) return;
-
-    switch (event.code) {
-      case "Space":
-        event.preventDefault();
-        togglePlay();
-        break;
-      case "ArrowLeft":
-        event.preventDefault();
-        seekRelative(-10);
-        break;
-      case "ArrowRight":
-        event.preventDefault();
-        seekRelative(10);
-        break;
-      case "KeyJ":
-        event.preventDefault();
-        seekRelative(-10);
-        break;
-      case "KeyL":
-        event.preventDefault();
-        seekRelative(10);
-        break;
-      case "KeyK":
-        event.preventDefault();
-        togglePlay();
-        break;
-      case "Home":
-        event.preventDefault();
-        seekTo(0);
-        break;
-      case "End":
-        event.preventDefault();
-        seekTo(playerState.duration - 1);
-        break;
-      case "Digit0":
-      case "Digit1":
-      case "Digit2":
-      case "Digit3":
-      case "Digit4":
-      case "Digit5":
-      case "Digit6":
-      case "Digit7":
-      case "Digit8":
-      case "Digit9":
-        event.preventDefault();
-        const number = Number.parseInt(event.code.replace("Digit", ""));
-        const percentage = number / 10;
-        seekTo(playerState.duration * percentage);
-        break;
-    }
-  }
-
-  function togglePlay(): void {
-    if (!videoElement || !playerState.currentVideo) return;
-
-    if (playerState.isPlaying) {
-      videoElement.pause();
-    } else {
-      videoElement.play().catch((error) => {
-        console.error("Error playing video:", error);
-      });
-    }
-  }
-
-  function seekRelative(seconds: number): void {
-    if (!videoElement || !playerState.currentVideo) return;
-
-    const newTime = Math.max(0, Math.min(playerState.duration, playerState.currentTime + seconds));
-    seekTo(newTime);
-  }
-
   function seekTo(time: number): void {
     if (!videoElement || !playerState.currentVideo) return;
 
@@ -253,6 +180,7 @@
     if (videoElement) {
       videoElement.volume = playerState.isMuted ? 0 : playerState.volume;
       videoElement.muted = playerState.isMuted;
+      playerState.videoElement = videoElement;
     }
   });
 </script>
@@ -265,7 +193,6 @@
       !playerState.currentVideo && "cursor-pointer transition-all duration-300 hover:bg-gray-800"
     )}
     onmousemove={handleMouseMove}
-    onkeydown={handleKeyDown}
     onclick={handleClick}
     ondblclick={handleDblClick}
     id="video-player"

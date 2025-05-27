@@ -15,13 +15,23 @@ export const playerState = $state<PlayerState>({
 
   // Volume control
   volume: 1,
-  isMuted: false
+  isMuted: false,
+
+  // Video element reference
+  videoElement: null
 });
 
 export const sidebarState = $state<SidebarState>({
   isOpen: true
   // width: -1
 });
+
+export const platformState = $state<PlatformState>({
+  isMac: false,
+  isWindows: false,
+  isLinux: false
+});
+
 type PlayerState = {
   // Playback
   isPlaying: boolean;
@@ -38,9 +48,18 @@ type PlayerState = {
   // Volume control
   volume: number;
   isMuted: boolean;
+
+  // Video element reference
+  videoElement: HTMLVideoElement | null;
 };
 
 type SidebarState = {
   isOpen: boolean;
   // width: number;
+};
+
+type PlatformState = {
+  isMac: boolean;
+  isWindows: boolean;
+  isLinux: boolean;
 };

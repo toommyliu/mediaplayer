@@ -56,7 +56,7 @@
       class="text-xs text-zinc-500 hover:text-zinc-300"
       onclick={fileBrowser.loadFileSystemStructure}
     >
-      Browse...
+      Browse
     </button>
   </div>
 

@@ -4,7 +4,7 @@
   import { Pane, PaneGroup, PaneResizer } from "paneforge";
   import Sidebar from "./components/Sidebar.svelte";
   import VideoPlayer from "./components/VideoPlayer.svelte";
-  import { playerState, sidebarState } from "./state.svelte";
+  import { playerState, sidebarState, platformState } from "./state.svelte";
   import { playVideo } from "./utils/video-playback";
 
   let videoElement = $state<HTMLVideoElement | null>(null);
@@ -35,6 +35,17 @@
         fileBrowserEvents.addFolder(folderData);
       }
     }
+  });
+
+  document.addEventListener("DOMContentLoaded", async () => {
+    const res = await window.electron.ipcRenderer.invoke("get-platform");
+    platformState.isWindows = res.isWindows;
+    platformState.isMac = res.isMacOS;
+    platformState.isLinux = res.isLinux;
+
+    console.log("platform loaded");
+
+    await import("./utils/input.svelte");
   });
 </script>
 
