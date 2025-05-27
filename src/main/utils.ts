@@ -44,8 +44,6 @@ export async function showFilePicker(
   }
 
   try {
-    console.log("res.filePaths[0]:", res.filePaths[0]);
-
     if (mode === "file") {
       return res.filePaths[0];
     } else if (mode === "folder" || mode === "both") {
@@ -70,6 +68,8 @@ async function buildFileTree(dirPath: string): Promise<FileTree> {
   };
 
   for (const entry of await readdir(dirPath, { withFileTypes: true })) {
+    if (entry.name.startsWith(".")) continue;
+
     if (entry.isDirectory()) {
       const subDirPath = join(dirPath, entry.name);
       const subTree = await buildFileTree(subDirPath);
