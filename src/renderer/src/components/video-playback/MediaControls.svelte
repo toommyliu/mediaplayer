@@ -206,6 +206,7 @@
   class="h-[10%] w-full border-t bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 transition-opacity duration-300"
   class:opacity-0={!playerState.showControls && playerState.isPlaying}
   class:opacity-100={playerState.showControls || !playerState.isPlaying}
+  class:pointer-events-none={!playerState.showControls && playerState.isPlaying}
   id="media-controls"
 >
   <div class="mb-4 flex items-center space-x-4">
