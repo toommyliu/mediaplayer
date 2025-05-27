@@ -1,12 +1,7 @@
-import { playerState } from "@/state.svelte";
-
-export const loadVideoDialog = () => {
+export const loadVideoDialog = async () => {
   console.log("Loading video dialog...");
 
-  playerState.isLoading = true;
-  playerState.error = null;
-
-  window.electron.ipcRenderer.send("load-video-file");
+  await window.electron.ipcRenderer.send("start-file-browser");
 };
 
 export const loadFileBrowser = () => {
