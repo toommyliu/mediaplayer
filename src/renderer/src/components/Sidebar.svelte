@@ -3,8 +3,8 @@
   import FileBrowser from "./sidebar/file-browser.svelte";
   import PlaylistSelector from "./sidebar/playlist-selector.svelte";
   import {
-    FileBrowserContext,
-    setFileBrowserContext,
+    setFileInFileSystem,
+    setFolderInFileSystem,
     type FileBrowserEvents
   } from "../utils/file-browser.svelte";
   // import { playlistState, type PlaylistItem } from "../state.svelte";
@@ -16,14 +16,10 @@
     fileBrowserEvents?: FileBrowserEvents;
   } = $props();
 
-  // Create and set file browser context
-  const fileBrowserContext = new FileBrowserContext();
-  setFileBrowserContext(fileBrowserContext);
-
   // Wire up events if provided
   if (fileBrowserEvents) {
-    fileBrowserEvents.addFile = fileBrowserContext.setFileInFileSystem.bind(fileBrowserContext);
-    fileBrowserEvents.addFolder = fileBrowserContext.setFolderInFileSystem.bind(fileBrowserContext);
+    fileBrowserEvents.addFile = setFileInFileSystem;
+    fileBrowserEvents.addFolder = setFolderInFileSystem;
   }
 
   // function handlePlaylistPlay(item: PlaylistItem) {

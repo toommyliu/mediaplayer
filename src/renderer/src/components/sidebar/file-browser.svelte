@@ -1,23 +1,22 @@
 <script lang="ts">
   import { ICON_SIZE } from "@/constants";
   import { playVideo } from "@/utils/video-playback";
-  import { playerState } from "@/state.svelte";
+  import { playerState, fileBrowserState } from "@/state.svelte";
   import FileVideo from "lucide-svelte/icons/file-video";
   import Folder from "lucide-svelte/icons/folder";
   import FolderOpen from "lucide-svelte/icons/folder-open";
   import Play from "lucide-svelte/icons/play";
   import * as ContextMenu from "../ui/context-menu/index";
   import {
-    getFileBrowserContext,
-    formatDuration,
-    copyToClipboard,
-    showInFinder,
-    type FileSystemItem
+    toggleFolder,
+    openContextMenuForItem,
+    closeAllContextMenus,
+    loadFileSystemStructure
   } from "@/utils/file-browser.svelte";
+  import { type FileSystemItem } from "@/state.svelte";
   import { cn } from "@/utils/utils";
-
-  // Get the file browser context
-  const fileBrowser = getFileBrowserContext();
+  import { makeTimeString } from "@/utils/time";
+  import { copyToClipboard, showItemInFolder } from "@/utils";
 
   function isCurrentlyPlaying(item: FileSystemItem): boolean {
     if (item.type !== "video" || !playerState.currentVideo) return false;
@@ -26,7 +25,7 @@
 
   function handleItemClick(item: FileSystemItem) {
     if (item.type === "folder") {
-      fileBrowser.toggleFolder(item.path);
+      toggleFolder(item.path);
     } else if (item.type === "video") {
       playVideo(`file://${item.path}`);
     }
@@ -60,22 +59,19 @@
 <div class="space-y-2">
   <div class="mb-3 flex items-center justify-between">
     <h3 class="text-sm font-medium text-zinc-300">File Browser</h3>
-    <button
-      class="text-xs text-zinc-500 hover:text-zinc-300"
-      onclick={fileBrowser.loadFileSystemStructure}
-    >
+    <button class="text-xs text-zinc-500 hover:text-zinc-300" onclick={loadFileSystemStructure}>
       Browse
     </button>
   </div>
 
   <div class="h-[87vh] overflow-hidden rounded-lg bg-zinc-800">
-    {#if fileBrowser.error}
+    {#if fileBrowserState.error}
       <div class="flex flex-col items-center justify-center p-3 py-8 text-center">
         <div class="mb-2 text-lg">⚠️</div>
-        <div class="text-xs text-red-400">{fileBrowser.error}</div>
+        <div class="text-xs text-red-400">{fileBrowserState.error}</div>
         <button
           class="mt-2 text-xs text-zinc-500 hover:text-zinc-300"
-          onclick={fileBrowser.loadFileSystemStructure}
+          onclick={loadFileSystemStructure}
         >
           Try again
         </button>
@@ -83,7 +79,7 @@
     {:else}
       <div class="no-scrollbar h-full overflow-y-auto bg-zinc-800 p-3">
         <div class="space-y-1 text-xs text-zinc-400">
-          {#each fileBrowser.fileSystem as item}
+          {#each fileBrowserState.fileSystem as item}
             {@render FileBrowserItem(item, 0)}
           {/each}
         </div>
@@ -93,17 +89,17 @@
 </div>
 
 {#snippet FileBrowserItem(item: FileSystemItem, depth: number)}
-  {@const isExpanded = fileBrowser.expandedFolders.has(item.path)}
+  {@const isExpanded = fileBrowserState.expandedFolders.has(item.path)}
   {@const paddingLeft = depth * 16}
-  {@const isContextMenuOpen = fileBrowser.openContextMenu === item.path}
+  {@const isContextMenuOpen = fileBrowserState.openContextMenu === item.path}
 
   <ContextMenu.Root
     open={isContextMenuOpen}
     onOpenChange={(open) => {
       if (open) {
-        fileBrowser.openContextMenuForItem(item.path);
-      } else if (fileBrowser.openContextMenu === item.path) {
-        fileBrowser.closeAllContextMenus();
+        openContextMenuForItem(item.path);
+      } else if (fileBrowserState.openContextMenu === item.path) {
+        closeAllContextMenus();
       }
     }}
   >
@@ -125,7 +121,7 @@
           if (item.type === "video") {
             handleItemClick(item);
           } else if (item.type === "folder") {
-            fileBrowser.toggleFolder(item.path);
+            toggleFolder(item.path);
           }
         }}
         title={item.name}
@@ -164,7 +160,7 @@
             </span>
             {#if item.duration && item.duration > 0}
               <span class="flex-shrink-0 text-xs text-blue-400"
-                >{formatDuration(item.duration)}</span
+                >{makeTimeString(item.duration)}</span
               >
             {/if}
           </div>
@@ -189,7 +185,7 @@
         <ContextMenu.Item
           onclick={() => {
             handleItemClick(item);
-            fileBrowser.closeAllContextMenus();
+            closeAllContextMenus();
           }}
         >
           Play Video
@@ -197,7 +193,7 @@
         <ContextMenu.Item
           onclick={() => {
             addToPlaylist(item);
-            fileBrowser.closeAllContextMenus();
+            closeAllContextMenus();
           }}
         >
           Add to Playlist
@@ -206,15 +202,15 @@
         <ContextMenu.Item
           onclick={() => {
             copyToClipboard(item.path);
-            fileBrowser.closeAllContextMenus();
+            closeAllContextMenus();
           }}
         >
           Copy Path
         </ContextMenu.Item>
         <ContextMenu.Item
           onclick={() => {
-            showInFinder(item.path);
-            fileBrowser.closeAllContextMenus();
+            showItemInFolder(item.path);
+            closeAllContextMenus();
           }}
         >
           Show in Finder
@@ -222,16 +218,16 @@
       {:else if item.type === "folder"}
         <ContextMenu.Item
           onclick={() => {
-            fileBrowser.toggleFolder(item.path);
-            fileBrowser.closeAllContextMenus();
+            toggleFolder(item.path);
+            closeAllContextMenus();
           }}
         >
-          {isExpanded ? "Collapse" : "Expand"} Folder
+          {isExpanded ? "Collapse" : "Expand"}
         </ContextMenu.Item>
         <ContextMenu.Item
           onclick={() => {
             addFolderToPlaylist(item);
-            fileBrowser.closeAllContextMenus();
+            closeAllContextMenus();
           }}
         >
           Add All Videos to Playlist
@@ -240,15 +236,15 @@
         <ContextMenu.Item
           onclick={() => {
             copyToClipboard(item.path);
-            fileBrowser.closeAllContextMenus();
+            closeAllContextMenus();
           }}
         >
           Copy Path
         </ContextMenu.Item>
         <ContextMenu.Item
           onclick={() => {
-            showInFinder(item.path);
-            fileBrowser.closeAllContextMenus();
+            showItemInFolder(item.path);
+            closeAllContextMenus();
           }}
         >
           Show in Finder

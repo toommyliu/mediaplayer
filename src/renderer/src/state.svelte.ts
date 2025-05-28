@@ -32,6 +32,13 @@ export const platformState = $state<PlatformState>({
   isLinux: false
 });
 
+export const fileBrowserState = $state<FileBrowserState>({
+  fileSystem: [],
+  expandedFolders: new Set<string>(),
+  error: null,
+  openContextMenu: null
+});
+
 type PlayerState = {
   // Playback
   isPlaying: boolean;
@@ -62,4 +69,20 @@ type PlatformState = {
   isMac: boolean;
   isWindows: boolean;
   isLinux: boolean;
+};
+
+export type FileSystemItem = {
+  name: string;
+  type: "folder" | "video" | "file";
+  path: string;
+  size?: number;
+  duration?: number;
+  children?: FileSystemItem[];
+};
+
+type FileBrowserState = {
+  fileSystem: FileSystemItem[];
+  expandedFolders: Set<string>;
+  error: string | null;
+  openContextMenu: string | null;
 };
