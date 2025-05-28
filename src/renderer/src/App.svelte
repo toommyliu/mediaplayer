@@ -6,6 +6,7 @@
   import VideoPlayer from "./components/video-player.svelte";
   import { playerState, sidebarState, platformState } from "./state.svelte";
   import { playVideo } from "./utils/video-playback";
+  import { client } from "./client";
 
   let fileBrowserEvents: {
     addFile?: (filePath: string) => void;
@@ -36,7 +37,7 @@
   });
 
   document.addEventListener("DOMContentLoaded", async () => {
-    const res = await window.electron.ipcRenderer.invoke("get-platform");
+    const res = await client.getPlatform();
     platformState.isWindows = res.isWindows;
     platformState.isMac = res.isMacOS;
     platformState.isLinux = res.isLinux;

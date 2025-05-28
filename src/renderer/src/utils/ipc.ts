@@ -1,23 +1,25 @@
+import { client } from "@/client";
+
 export const loadVideoDialog = async () => {
   console.log("Loading video dialog...");
 
   await window.electron.ipcRenderer.send("start-file-browser");
 };
 
-export const loadFileBrowser = () => {
-  console.log("Loading file browser...");
+export const loadFileBrowser = async () => {
+  console.log("Loading file browser (file or folder)...");
 
-  return window.electron.ipcRenderer.invoke("start-file-browser");
+  return await client.selectFileOrFolder();
 };
 
-export const openFileDialog = () => {
+export const openFileDialog = async () => {
   console.log("Opening file dialog...");
 
-  return window.electron.ipcRenderer.invoke("open-file-dialog");
+  return await client.selectFile();
 };
 
-export const openFolderDialog = () => {
+export const openFolderDialog = async () => {
   console.log("Opening folder dialog...");
 
-  return window.electron.ipcRenderer.invoke("open-folder-dialog");
+  return await client.selectFolder();
 };

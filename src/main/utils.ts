@@ -100,13 +100,13 @@ async function buildFileTree(dirPath: string): Promise<FileTree> {
   return ret;
 }
 
-type FileNode = {
+export type FileNode = {
   path?: string;
   name?: string;
   files?: FileNode[];
 };
 
-type FileTree = {
+export type FileTree = {
   rootPath: string;
   files: FileNode[];
 };
