@@ -180,77 +180,7 @@
       </div>
     </ContextMenu.Trigger>
 
-    <ContextMenu.Content>
-      {#if item.type === "video"}
-        <ContextMenu.Item
-          onclick={() => {
-            handleItemClick(item);
-            closeAllContextMenus();
-          }}
-        >
-          Play Video
-        </ContextMenu.Item>
-        <ContextMenu.Item
-          onclick={() => {
-            addToPlaylist(item);
-            closeAllContextMenus();
-          }}
-        >
-          Add to Playlist
-        </ContextMenu.Item>
-        <ContextMenu.Separator />
-        <ContextMenu.Item
-          onclick={() => {
-            copyToClipboard(item.path);
-            closeAllContextMenus();
-          }}
-        >
-          Copy Path
-        </ContextMenu.Item>
-        <ContextMenu.Item
-          onclick={() => {
-            showItemInFolder(item.path);
-            closeAllContextMenus();
-          }}
-        >
-          Show in Finder
-        </ContextMenu.Item>
-      {:else if item.type === "folder"}
-        <ContextMenu.Item
-          onclick={() => {
-            toggleFolder(item.path);
-            closeAllContextMenus();
-          }}
-        >
-          {isExpanded ? "Collapse" : "Expand"}
-        </ContextMenu.Item>
-        <ContextMenu.Item
-          onclick={() => {
-            addFolderToPlaylist(item);
-            closeAllContextMenus();
-          }}
-        >
-          Add All Videos to Playlist
-        </ContextMenu.Item>
-        <ContextMenu.Separator />
-        <ContextMenu.Item
-          onclick={() => {
-            copyToClipboard(item.path);
-            closeAllContextMenus();
-          }}
-        >
-          Copy Path
-        </ContextMenu.Item>
-        <ContextMenu.Item
-          onclick={() => {
-            showItemInFolder(item.path);
-            closeAllContextMenus();
-          }}
-        >
-          Show in Finder
-        </ContextMenu.Item>
-      {/if}
-    </ContextMenu.Content>
+    {@render FileBrowserItemContextMenu(item, isExpanded)}
   </ContextMenu.Root>
 
   {#if item.type === "folder" && isExpanded && item.children}
@@ -258,4 +188,78 @@
       {@render FileBrowserItem(child, depth + 1)}
     {/each}
   {/if}
+{/snippet}
+
+{#snippet FileBrowserItemContextMenu(item: FileSystemItem, isExpanded: boolean)}
+  <ContextMenu.Content>
+    {#if item.type === "video"}
+      <ContextMenu.Item
+        onclick={() => {
+          handleItemClick(item);
+          closeAllContextMenus();
+        }}
+      >
+        Play Video
+      </ContextMenu.Item>
+      <ContextMenu.Item
+        onclick={() => {
+          addToPlaylist(item);
+          closeAllContextMenus();
+        }}
+      >
+        Add to Playlist
+      </ContextMenu.Item>
+      <ContextMenu.Separator />
+      <ContextMenu.Item
+        onclick={() => {
+          copyToClipboard(item.path);
+          closeAllContextMenus();
+        }}
+      >
+        Copy Path
+      </ContextMenu.Item>
+      <ContextMenu.Item
+        onclick={() => {
+          showItemInFolder(item.path);
+          closeAllContextMenus();
+        }}
+      >
+        Reveal
+      </ContextMenu.Item>
+    {:else if item.type === "folder"}
+      <ContextMenu.Item
+        onclick={() => {
+          toggleFolder(item.path);
+          closeAllContextMenus();
+        }}
+      >
+        {isExpanded ? "Collapse" : "Expand"}
+      </ContextMenu.Item>
+      <ContextMenu.Item
+        onclick={() => {
+          addFolderToPlaylist(item);
+          closeAllContextMenus();
+        }}
+      >
+        Add All Videos to Playlist
+      </ContextMenu.Item>
+      <ContextMenu.Separator />
+      <ContextMenu.Item
+        onclick={() => {
+          copyToClipboard(item.path);
+          closeAllContextMenus();
+        }}
+      >
+        Copy Path
+      </ContextMenu.Item>
+      <ContextMenu.Item
+        onclick={() => {
+          showItemInFolder(item.path);
+          closeAllContextMenus();
+        }}
+      >
+        Reveal
+      </ContextMenu.Item>
+    {/if}
+  </ContextMenu.Content>
 {/snippet}
