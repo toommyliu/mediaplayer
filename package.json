@@ -19,6 +19,7 @@
     "build:linux": "npm run build && electron-builder --linux"
   },
   "dependencies": {
+    "@egoist/tipc": "^0.3.2",
     "@electron-toolkit/preload": "^3.0.1",
     "@electron-toolkit/utils": "^4.0.0",
     "@tailwindcss/vite": "^4.1.7",
@@ -76,7 +77,8 @@
       "eslint-config-neon>eslint-plugin-rxjs": "@favware/skip-dependency@latest",
       "eslint-config-neon>eslint-plugin-rxjs-angular": "@favware/skip-dependency@latest",
       "eslint-config-neon>eslint-plugin-vue": "@favware/skip-dependency@latest",
-      "eslint-config-neon>vue-eslint-parser": "@favware/skip-dependency@latest"
+      "eslint-config-neon>vue-eslint-parser": "@favware/skip-dependency@latest",
+      "@egoist/tipc>@tanstack/react-query": "@favware/skip-dependency@latest"
     }
   }
 }

@@ -23,11 +23,15 @@ overrides:
   eslint-config-neon>eslint-plugin-rxjs-angular: '@favware/skip-dependency@latest'
   eslint-config-neon>eslint-plugin-vue: '@favware/skip-dependency@latest'
   eslint-config-neon>vue-eslint-parser: '@favware/skip-dependency@latest'
+  '@egoist/tipc>@tanstack/react-query': '@favware/skip-dependency@latest'
 
 importers:
 
   .:
     dependencies:
+      '@egoist/tipc':
+        specifier: ^0.3.2
+        version: 0.3.2(electron@35.4.0)
       '@electron-toolkit/preload':
         specifier: ^3.0.1
         version: 3.0.2(electron@35.4.0)
@@ -212,6 +216,11 @@ packages:
   '@develar/schema-utils@2.6.5':
     resolution: {integrity: sha512-0cp4PsWQ/9avqTVMCtZ+GirikIA36ikvjtHweU4/j8yLtgObI0+JUPhYFScgwlteveGB1rt3Cm8UhN04XayDig==}
     engines: {node: '>= 8.9.0'}
+
+  '@egoist/tipc@0.3.2':
+    resolution: {integrity: sha512-p8g35BhErVkYIgDqkw/HQJSli1TOsZRIUU9U7PYnYfwru6J/Ep1lwFGH2N6+sQMFi1HkqGTTUlJEISJ1DClfQw==}
+    peerDependencies:
+      electron: '>=26.0.0'
 
   '@electron-toolkit/eslint-config-prettier@3.0.0':
     resolution: {integrity: sha512-YapmIOVkbYdHLuTa+ad1SAVtcqYL9A/SJsc7cxQokmhcwAwonGevNom37jBf9slXegcZ/Slh01I/JARG1yhNFw==}
@@ -3918,6 +3927,12 @@ snapshots:
     dependencies:
       ajv: 6.12.6
       ajv-keywords: 3.5.2(ajv@6.12.6)
+
+  '@egoist/tipc@0.3.2(electron@35.4.0)':
+    dependencies:
+      electron: 35.4.0
+    optionalDependencies:
+      '@tanstack/react-query': link:@favware/skip-dependency@latest
 
   '@electron-toolkit/eslint-config-prettier@3.0.0(eslint@9.27.0(jiti@2.4.2))(prettier@3.5.3)':
     dependencies:

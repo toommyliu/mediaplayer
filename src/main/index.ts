@@ -6,6 +6,10 @@ import "./ipc";
 import "./menu";
 import "./input";
 import { showFilePicker } from "./utils";
+import { registerIpcMain } from "@egoist/tipc/main";
+import { router } from "./tipc";
+
+registerIpcMain(router);
 
 export let mainWindow: BrowserWindow | null = null;
 
