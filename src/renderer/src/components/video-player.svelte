@@ -1,9 +1,10 @@
 <script lang="ts">
   import { playerState } from "@/state.svelte";
   import { cn } from "@/utils/utils";
-  import { loadVideoDialog } from "@/utils/ipc";
   import { makeTimeString } from "@/utils/time";
   import MediaControls from "./video-playback/media-controls.svelte";
+  import { client } from "@/client";
+  import { loadFileSystemStructure } from "@/utils/file-browser.svelte";
 
   let controlsTimeout: number | null = null;
   let overlayTimeout: number | null = null;
@@ -134,7 +135,7 @@
     }
   }
 
-  function handleDblClick(ev: MouseEvent): void {
+  async function handleDblClick(ev: MouseEvent): Promise<void> {
     const target = ev.target as HTMLElement;
 
     const controlsElement = target.closest("#media-controls");
@@ -146,7 +147,7 @@
       if (playerState.isPlaying) {
         console.log("Double click while playing...");
       } else {
-        loadVideoDialog();
+        await loadFileSystemStructure();
       }
     }
   }

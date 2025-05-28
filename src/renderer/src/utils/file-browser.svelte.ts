@@ -1,4 +1,5 @@
 import { playerState, fileBrowserState, type FileSystemItem } from "@/state.svelte";
+import { client } from "@/client";
 
 export type FileBrowserEvents = {
   addFile?: (filePath: string) => void;
@@ -88,8 +89,7 @@ export function setFolderInFileSystem(folderData) {
 export async function loadFileSystemStructure() {
   try {
     fileBrowserState.error = null;
-    const { loadFileBrowser } = await import("./ipc");
-    const result = await loadFileBrowser();
+    const result = await client.selectFileOrFolder();
     console.log("loadFileBrowser result:", result);
 
     if (result && result.files && result.files.length > 0) {
