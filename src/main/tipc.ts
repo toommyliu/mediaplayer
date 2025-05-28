@@ -2,10 +2,18 @@ import { tipc } from "@egoist/tipc/main";
 import { platform } from "@electron-toolkit/utils";
 import { showFilePicker } from "./utils";
 import { shell } from "electron";
+import { mainWindow } from ".";
 
 const t = tipc.create();
 
 export const router = {
+  enterFullscreen: t.procedure.action(async () => {
+    mainWindow?.setFullScreen(true);
+  }),
+  exitFullscreen: t.procedure.action(async () => {
+    mainWindow?.setFullScreen(false);
+  }),
+
   selectFile: t.procedure.action(async () => {
     return await showFilePicker("file");
   }),

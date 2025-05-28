@@ -7,6 +7,7 @@ export const playerState = $state<PlayerState>({
   error: null,
   showControls: true,
   queue: [],
+  isFullscreen: false,
 
   get currentVideo() {
     return this.queue[this.currentIndex] || null;
@@ -51,6 +52,8 @@ type PlayerState = {
 
   get currentVideo(): string | null;
   currentIndex: number;
+
+  isFullscreen: boolean;
 
   // Volume control
   volume: number;

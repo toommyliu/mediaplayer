@@ -14,6 +14,7 @@
   import Volume1 from "lucide-svelte/icons/volume-1";
   import Volume2 from "lucide-svelte/icons/volume-2";
   import VolumeX from "lucide-svelte/icons/volume-x";
+  import { client } from "@/client";
 
   let isDragging = $state(false);
   let hoverTime = $state(0);
@@ -322,10 +323,12 @@
   };
 
   const toggleFullscreen = (): void => {
-    if (!document.fullscreenElement) {
-      playerState.videoElement?.requestFullscreen?.();
+    if (playerState.isFullscreen) {
+      void client.enterFullscreen();
+      playerState.isFullscreen = false;
     } else {
-      document.exitFullscreen?.();
+      void client.exitFullscreen();
+      playerState.isFullscreen = true;
     }
   };
 
