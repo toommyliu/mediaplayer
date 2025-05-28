@@ -3,7 +3,6 @@
   import { cn } from "@/utils/utils";
   import { makeTimeString } from "@/utils/time";
   import MediaControls from "./video-playback/media-controls.svelte";
-  import { client } from "@/client";
   import { loadFileSystemStructure } from "@/utils/file-browser.svelte";
 
   let controlsTimeout: number | null = null;

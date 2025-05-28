@@ -6,10 +6,6 @@ import { shell } from "electron";
 const t = tipc.create();
 
 export const router = {
-  sum: t.procedure.input<{ a: number; b: number }>().action(async ({ input }) => {
-    return input.a + input.b;
-  }),
-
   selectFile: t.procedure.action(async () => {
     return await showFilePicker("file");
   }),
