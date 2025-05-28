@@ -4,14 +4,17 @@
   import { playerState, fileBrowserState } from "@/state.svelte";
   import FileVideo from "lucide-svelte/icons/file-video";
   import Folder from "lucide-svelte/icons/folder";
-  import FolderOpen from "lucide-svelte/icons/folder-open";
   import Play from "lucide-svelte/icons/play";
+  import ChevronLeft from "lucide-svelte/icons/chevron-left";
+  import Home from "lucide-svelte/icons/home";
   import * as ContextMenu from "../ui/context-menu/index";
   import {
-    toggleFolder,
     openContextMenuForItem,
     closeAllContextMenus,
-    loadFileSystemStructure
+    loadFileSystemStructure,
+    navigateToDirectory,
+    navigateToParent,
+    navigateToOriginalDirectory
   } from "@/utils/file-browser.svelte";
   import { type FileSystemItem } from "@/state.svelte";
   import { cn } from "@/utils/utils";
@@ -25,7 +28,8 @@
 
   function handleItemClick(item: FileSystemItem) {
     if (item.type === "folder") {
-      toggleFolder(item.path);
+      // Preserve current playback when navigating into folders
+      navigateToDirectory(item.path);
     } else if (item.type === "video") {
       playVideo(`file://${item.path}`);
     }
@@ -54,6 +58,15 @@
       });
     }
   }
+
+  function getDisplayPath(path: string | null): string {
+    if (!path) return "";
+    const parts = path.split(/[/\\]/);
+    if (parts.length > 3) {
+      return `.../${parts.slice(-2).join("/")}`;
+    }
+    return path;
+  }
 </script>
 
 <div class="space-y-2">
@@ -63,6 +76,31 @@
       Browse
     </button>
   </div>
+
+  {#if fileBrowserState.currentPath}
+    <div class="mb-2 flex items-center gap-2 rounded bg-zinc-700/50 p-2">
+      <button
+        class="flex h-6 w-6 items-center justify-center rounded hover:bg-zinc-600 disabled:cursor-not-allowed disabled:opacity-50"
+        onclick={navigateToParent}
+        disabled={fileBrowserState.isAtRoot}
+        title="Go back"
+      >
+        <ChevronLeft size={ICON_SIZE - 4} class="text-zinc-400 hover:text-zinc-200" />
+      </button>
+      <span class="flex-1 truncate text-xs text-zinc-400" title={fileBrowserState.currentPath}>
+        {getDisplayPath(fileBrowserState.currentPath)}
+      </span>
+      {#if fileBrowserState.originalPath && fileBrowserState.currentPath !== fileBrowserState.originalPath}
+        <button
+          class="flex h-6 w-6 items-center justify-center rounded hover:bg-zinc-600"
+          onclick={navigateToOriginalDirectory}
+          title="Back to original directory"
+        >
+          <Home size={ICON_SIZE - 4} class="text-zinc-300 hover:text-zinc-100" />
+        </button>
+      {/if}
+    </div>
+  {/if}
 
   <div class="h-[87vh] overflow-hidden rounded-lg bg-zinc-800">
     {#if fileBrowserState.error}
@@ -89,7 +127,6 @@
 </div>
 
 {#snippet FileBrowserItem(item: FileSystemItem, depth: number)}
-  {@const isExpanded = fileBrowserState.expandedFolders.has(item.path)}
   {@const paddingLeft = depth * 16}
   {@const isContextMenuOpen = fileBrowserState.openContextMenu === item.path}
 
@@ -118,21 +155,13 @@
         style="padding-left: {paddingLeft + 8}px"
         ondblclick={(ev) => {
           ev.stopPropagation();
-          if (item.type === "video") {
-            handleItemClick(item);
-          } else if (item.type === "folder") {
-            toggleFolder(item.path);
-          }
+          handleItemClick(item);
         }}
         title={item.name}
       >
         {#if item.type === "folder"}
           <button class="flex min-w-0 flex-1 items-center gap-2 text-left">
-            {#if isExpanded}
-              <FolderOpen size={ICON_SIZE - 2} />
-            {:else}
-              <Folder size={ICON_SIZE - 2} />
-            {/if}
+            <Folder size={ICON_SIZE - 2} />
             <span class="truncate">{item.name}</span>
           </button>
         {:else}
@@ -180,17 +209,11 @@
       </div>
     </ContextMenu.Trigger>
 
-    {@render FileBrowserItemContextMenu(item, isExpanded)}
+    {@render FileBrowserItemContextMenu(item)}
   </ContextMenu.Root>
-
-  {#if item.type === "folder" && isExpanded && item.children}
-    {#each item.children as child}
-      {@render FileBrowserItem(child, depth + 1)}
-    {/each}
-  {/if}
 {/snippet}
 
-{#snippet FileBrowserItemContextMenu(item: FileSystemItem, isExpanded: boolean)}
+{#snippet FileBrowserItemContextMenu(item: FileSystemItem)}
   <ContextMenu.Content>
     {#if item.type === "video"}
       <ContextMenu.Item
@@ -229,11 +252,11 @@
     {:else if item.type === "folder"}
       <ContextMenu.Item
         onclick={() => {
-          toggleFolder(item.path);
+          handleItemClick(item);
           closeAllContextMenus();
         }}
       >
-        {isExpanded ? "Collapse" : "Expand"}
+        Open Folder
       </ContextMenu.Item>
       <ContextMenu.Item
         onclick={() => {

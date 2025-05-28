@@ -1,7 +1,7 @@
 import { app, dialog } from "electron";
 import { VIDEO_EXTENSIONS } from "./constants";
 import { readdir, stat } from "node:fs/promises";
-import { extname, join, dirname } from "node:path";
+import { extname, join, dirname, resolve } from "node:path";
 
 /**
  * Shows the file picker.
@@ -100,6 +100,57 @@ async function buildFileTree(dirPath: string): Promise<FileTree> {
   return ret;
 }
 
+export async function loadDirectoryContents(dirPath: string): Promise<DirectoryContents> {
+  try {
+    const resolvedPath = resolve(dirPath);
+    const entries = await readdir(resolvedPath, { withFileTypes: true });
+    const files: FileItem[] = [];
+
+    // Check if we're at the root by trying to go up one level
+    const parentPath = dirname(resolvedPath);
+    const isAtRoot = resolvedPath === parentPath;
+
+    for (const entry of entries) {
+      if (entry.name.startsWith(".")) continue;
+
+      const fullPath = join(resolvedPath, entry.name);
+
+      if (entry.isDirectory()) {
+        files.push({
+          name: entry.name,
+          path: fullPath,
+          type: "folder"
+        });
+      } else if (VIDEO_EXTENSIONS.some((ext) => extname(fullPath).toLowerCase() === `.${ext}`)) {
+        const stats = await stat(fullPath);
+        files.push({
+          name: entry.name,
+          path: fullPath,
+          type: "video",
+          size: stats.size
+        });
+      }
+    }
+
+    // Sort: folders first, then files, both alphabetically
+    files.sort((a, b) => {
+      if (a.type === "folder" && b.type === "video") return -1;
+      if (a.type === "video" && b.type === "folder") return 1;
+      return a.name.localeCompare(b.name);
+    });
+
+    return {
+      currentPath: resolvedPath,
+      parentPath: isAtRoot ? null : parentPath,
+      isAtRoot,
+      files
+    };
+  } catch (error) {
+    console.error("Error loading directory:", error);
+    throw error;
+  }
+}
+
 export type FileNode = {
   path?: string;
   name?: string;
@@ -109,4 +160,19 @@ export type FileNode = {
 export type FileTree = {
   rootPath: string;
   files: FileNode[];
+};
+
+export type FileItem = {
+  name: string;
+  path: string;
+  type: "folder" | "video";
+  size?: number;
+  duration?: number;
+};
+
+export type DirectoryContents = {
+  currentPath: string;
+  parentPath: string | null;
+  isAtRoot: boolean;
+  files: FileItem[];
 };

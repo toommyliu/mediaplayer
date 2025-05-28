@@ -1,6 +1,6 @@
 import { tipc } from "@egoist/tipc/main";
 import { platform } from "@electron-toolkit/utils";
-import { showFilePicker } from "./utils";
+import { showFilePicker, loadDirectoryContents } from "./utils";
 import { shell } from "electron";
 import { mainWindow } from ".";
 
@@ -22,6 +22,10 @@ export const router = {
   }),
   selectFileOrFolder: t.procedure.action(async () => {
     return await showFilePicker("both");
+  }),
+
+  readDirectory: t.procedure.input<string>().action(async ({ input }) => {
+    return await loadDirectoryContents(input);
   }),
 
   showItemInFolder: t.procedure.input<string>().action(async ({ input }) => {

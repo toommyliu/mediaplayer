@@ -37,7 +37,10 @@ export const fileBrowserState = $state<FileBrowserState>({
   fileSystem: [],
   expandedFolders: new Set<string>(),
   error: null,
-  openContextMenu: null
+  openContextMenu: null,
+  currentPath: null,
+  isAtRoot: false,
+  originalPath: null
 });
 
 type PlayerState = {
@@ -88,4 +91,7 @@ type FileBrowserState = {
   expandedFolders: Set<string>;
   error: string | null;
   openContextMenu: string | null;
+  currentPath: string | null;
+  isAtRoot: boolean;
+  originalPath: string | null;
 };
