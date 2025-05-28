@@ -3,12 +3,7 @@
   import { cn } from "@/utils/utils";
   import { loadVideoDialog } from "@/utils/ipc";
   import { makeTimeString } from "@/utils/time";
-  import MediaControls from "./video-playback/MediaControls.svelte";
-  interface Props {
-    videoElement?: HTMLVideoElement;
-  }
-
-  let { videoElement = $bindable() }: Props = $props();
+  import MediaControls from "./video-playback/media-controls.svelte";
 
   let controlsTimeout: number | null = null;
   let overlayTimeout: number | null = null;
@@ -31,9 +26,9 @@
   function handleLoadedData(): void {
     console.log("Video data loaded");
     onLoading(false);
-    if (videoElement) {
-      playerState.duration = videoElement.duration;
-      videoElement.play().catch((error) => {
+    if (playerState.videoElement) {
+      playerState.duration = playerState.videoElement.duration;
+      playerState.videoElement.play().catch((error) => {
         console.error("Auto-play failed:", error);
       });
     }
@@ -41,20 +36,20 @@
 
   function handleLoadedMetadata(): void {
     console.log("Video metadata loaded");
-    if (videoElement) {
-      playerState.duration = videoElement.duration;
+    if (playerState.videoElement) {
+      playerState.duration = playerState.videoElement.duration;
     }
   }
 
   function handleTimeUpdate(): void {
-    if (videoElement) {
-      playerState.currentTime = videoElement.currentTime;
+    if (playerState.videoElement) {
+      playerState.currentTime = playerState.videoElement.currentTime;
     }
   }
 
   function handleSeeked(): void {
-    if (videoElement) {
-      playerState.currentTime = videoElement.currentTime;
+    if (playerState.videoElement) {
+      playerState.currentTime = playerState.videoElement.currentTime;
     }
   }
 
@@ -92,7 +87,7 @@
   }
 
   function handlePlay(): void {
-    if (!videoElement || !playerState.currentVideo) return;
+    if (!playerState.videoElement || !playerState.currentVideo) return;
 
     playerState.isPlaying = true;
   }
@@ -179,10 +174,10 @@
   });
 
   $effect(() => {
-    if (videoElement) {
-      videoElement.volume = playerState.isMuted ? 0 : playerState.volume;
-      videoElement.muted = playerState.isMuted;
-      playerState.videoElement = videoElement;
+    if (playerState.videoElement) {
+      playerState.videoElement.volume = playerState.isMuted ? 0 : playerState.volume;
+      playerState.videoElement.muted = playerState.isMuted;
+      playerState.videoElement = playerState.videoElement;
     }
   });
 </script>
@@ -201,7 +196,7 @@
   >
     {#if playerState.currentVideo}
       <video
-        bind:this={videoElement}
+        bind:this={playerState.videoElement}
         src={playerState.currentVideo}
         class="video-no-controls max-h-full max-w-full object-contain"
         onloadstart={handleLoadStart}
@@ -242,5 +237,5 @@
     {/if}
   </div>
 
-  <MediaControls bind:videoElement />
+  <MediaControls />
 </div>
