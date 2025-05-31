@@ -2,7 +2,7 @@
   import AlertTriangle from "lucide-svelte/icons/alert-triangle";
   import X from "lucide-svelte/icons/x";
   import { Pane, PaneGroup, PaneResizer } from "paneforge";
-  import Sidebar from "./components/Sidebar.svelte";
+  import Sidebar from "./components/sidebar.svelte";
   import VideoPlayer from "./components/video-player.svelte";
   import { playerState, sidebarState, platformState } from "./state.svelte";
   import { playVideo } from "./utils/video-playback";
