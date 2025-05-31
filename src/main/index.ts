@@ -13,6 +13,8 @@ process.env["ELECTRON_DISABLE_SECURITY_WARNINGS"] = "true";
 
 registerIpcMain(router);
 
+let once = false;
+
 export let mainWindow: BrowserWindow | null = null;
 
 function createWindow(): void {
@@ -31,7 +33,11 @@ function createWindow(): void {
     }
   });
 
+  // Show the window on initial load then don't bother again
   mainWindow.on("ready-to-show", () => {
+    if (once) return;
+    once = true;
+
     mainWindow!.show();
     mainWindow!.maximize();
     mainWindow!.webContents.openDevTools({

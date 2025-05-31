@@ -2,8 +2,8 @@ import { app, dialog } from "electron";
 import { VIDEO_EXTENSIONS } from "./constants";
 import { readdir, stat } from "node:fs/promises";
 import { extname, join, dirname, resolve } from "node:path";
-import ffprobe from "@ffprobe-installer/ffprobe";
-import spawn from "nano-spawn";
+// import ffprobe from "@ffprobe-installer/ffprobe";
+// import spawn from "nano-spawn";
 
 /**
  * Shows the file picker.
@@ -130,7 +130,8 @@ export async function loadDirectoryContents(dirPath: string): Promise<DirectoryC
           name: entry.name,
           path: fullPath,
           type: "video",
-          duration: await getVideoDuration(fullPath)
+          // duration: await getVideoDuration(fullPath)
+          duration: 0
         });
       }
     }
@@ -161,24 +162,24 @@ export async function loadDirectoryContents(dirPath: string): Promise<DirectoryC
  *
  * @returns The video duration in milliseconds.
  */
-export async function getVideoDuration(filePath: string): Promise<number> {
-  const ffprobeOutput = await spawn(ffprobe.path, [
-    "-v",
-    "quiet",
-    "-print_format",
-    "json",
-    "-show_format",
-    filePath
-  ]);
+// export async function getVideoDuration(filePath: string): Promise<number> {
+//   const ffprobeOutput = await spawn(ffprobe.path, [
+//     "-v",
+//     "quiet",
+//     "-print_format",
+//     "json",
+//     "-show_format",
+//     filePath
+//   ]);
 
-  const data = JSON.parse(ffprobeOutput.stdout.toString());
-  if (data?.format?.duration) {
-    const duration = Math.round(Number.parseFloat(data.format.duration) * 1000);
-    return duration;
-  }
+//   const data = JSON.parse(ffprobeOutput.stdout.toString());
+//   if (data?.format?.duration) {
+//     const duration = Math.round(Number.parseFloat(data.format.duration) * 1000);
+//     return duration;
+//   }
 
-  return 0;
-}
+//   return 0;
+// }
 
 export type FileNode = {
   path?: string;

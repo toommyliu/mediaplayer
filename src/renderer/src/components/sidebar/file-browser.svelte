@@ -5,10 +5,7 @@
   import FileVideo from "lucide-svelte/icons/file-video";
   import Folder from "lucide-svelte/icons/folder";
   import Play from "lucide-svelte/icons/play";
-  import ChevronLeft from "lucide-svelte/icons/chevron-left";
   import Home from "lucide-svelte/icons/home";
-  import ChevronDown from "lucide-svelte/icons/chevron-down";
-  import ChevronUp from "lucide-svelte/icons/chevron-up";
   import * as ContextMenu from "../ui/context-menu/index";
   import {
     openContextMenuForItem,
