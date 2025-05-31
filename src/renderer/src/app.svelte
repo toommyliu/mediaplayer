@@ -48,7 +48,7 @@
   });
 </script>
 
-<div class="bg-player-bg text-player-text dark flex h-screen flex-col">
+<div class="dark flex h-screen flex-col">
   <div class="flex w-full flex-1 overflow-hidden">
     <PaneGroup direction="horizontal">
       <Pane defaultSize={80}>

@@ -2,7 +2,7 @@
   import { playerState } from "@/state.svelte";
   import { cn } from "@/utils/utils";
   import { makeTimeString } from "@/utils/time";
-  import MediaControls from "./video-playback/media-controls.svelte";
+  // import MediaControls from "./video-playback/media-controls.svelte";
   import { loadFileSystemStructure } from "@/utils/file-browser.svelte";
   import { nextPlaylistVideo, nextVideo } from "@/utils/video-playback";
   import { playlistState } from "@/state.svelte";
@@ -239,11 +239,11 @@
   });
 </script>
 
-<div class="flex h-full w-full flex-col bg-black">
+<div class="flex h-full w-full flex-col">
   <!-- Video container -->
   <div
     class={cn(
-      "group relative flex h-[90%] w-full flex-1 items-center justify-center bg-black",
+      "group relative flex h-[90%] w-full flex-1 items-center justify-center bg-zinc-950",
       !playerState.currentVideo && "cursor-pointer transition-all duration-300 hover:bg-gray-800"
     )}
     onmousemove={handleMouseMove}
@@ -295,5 +295,5 @@
     {/if}
   </div>
 
-  <MediaControls />
+  <!-- <MediaControls /> -->
 </div>
