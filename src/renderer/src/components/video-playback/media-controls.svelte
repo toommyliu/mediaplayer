@@ -2,7 +2,7 @@
   import { Button } from "@/components/ui/button";
   import * as Tooltip from "@/components/ui/tooltip";
   import { ICON_SIZE } from "@/constants";
-  import { playerState, sidebarState } from "@/state.svelte";
+  import { playerState, sidebarState, playlistState } from "@/state.svelte";
   import { makeTimeString } from "@/utils/time";
   import { cn } from "@/utils/utils";
   import Maximize from "lucide-svelte/icons/maximize";
@@ -14,7 +14,11 @@
   import Volume1 from "lucide-svelte/icons/volume-1";
   import Volume2 from "lucide-svelte/icons/volume-2";
   import VolumeX from "lucide-svelte/icons/volume-x";
+  import FastForward from "lucide-svelte/icons/fast-forward";
+  import Rewind from "lucide-svelte/icons/rewind";
+  import Minimize from "lucide-svelte/icons/minimize";
   import { client } from "@/client";
+  import { nextPlaylistVideo, previousPlaylistVideo } from "@/utils/video-playback";
 
   let isDragging = $state(false);
   let hoverTime = $state(0);
@@ -335,6 +339,26 @@
   const skipBackward = (): void => seekRelative(-10);
   const skipForward = (): void => seekRelative(10);
 
+  // Playlist navigation functions
+  const previousTrack = (): void => {
+    const currentPlaylist = playlistState.currentPlaylist;
+    if (currentPlaylist && currentPlaylist.items.length > 0) {
+      previousPlaylistVideo();
+    }
+  };
+
+  const nextTrack = (): void => {
+    const currentPlaylist = playlistState.currentPlaylist;
+    if (currentPlaylist && currentPlaylist.items.length > 0) {
+      nextPlaylistVideo();
+    }
+  };
+
+  // Check if playlist navigation is available
+  const hasPlaylistItems = $derived(
+    playlistState.currentPlaylist && playlistState.currentPlaylist.items.length > 1
+  );
+
   // Calculate progress percentage - use derived state for reactivity
   const progressPercentage = $derived(
     playerState.duration > 0 ? (playerState.currentTime / playerState.duration) * 100 : 0
@@ -432,7 +456,28 @@
   <!-- Controls Section -->
   <div class="flex items-center justify-between gap-4">
     <!-- Left Controls -->
-    <div class="flex items-center gap-3">
+    <div class="flex items-center gap-2">
+      <!-- Previous Track -->
+      {#if hasPlaylistItems}
+        <Tooltip.Root>
+          <Tooltip.Trigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              onclick={previousTrack}
+              class="h-8 w-8 text-white hover:bg-white/20 hover:text-blue-400 focus-visible:ring-blue-400"
+              disabled={!playerState.currentVideo || playerState.isLoading}
+              aria-label="Previous track in playlist"
+            >
+              <Rewind size={ICON_SIZE} />
+            </Button>
+          </Tooltip.Trigger>
+          <Tooltip.Content>
+            <p>Previous track</p>
+          </Tooltip.Content>
+        </Tooltip.Root>
+      {/if}
+
       <!-- Skip Backward -->
       <Tooltip.Root>
         <Tooltip.Trigger asChild>
@@ -486,7 +531,7 @@
             variant="ghost"
             size="icon"
             onclick={skipForward}
-            class="h-9 w-9 text-white hover:bg-white/20 hover:text-blue-400 focus-visible:ring-blue-400"
+            class="size-9 text-white hover:bg-white/20 hover:text-blue-400 focus-visible:ring-blue-400"
             disabled={!playerState.currentVideo || playerState.isLoading}
             aria-label="Skip forward 10 seconds"
           >
@@ -497,6 +542,27 @@
           <p>Skip forward 10s</p>
         </Tooltip.Content>
       </Tooltip.Root>
+
+      <!-- Next Track -->
+      {#if hasPlaylistItems}
+        <Tooltip.Root>
+          <Tooltip.Trigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              onclick={nextTrack}
+              class="size-9 text-white hover:bg-white/20 hover:text-blue-400 focus-visible:ring-blue-400"
+              disabled={!playerState.currentVideo || playerState.isLoading}
+              aria-label="Next track in playlist"
+            >
+              <FastForward size={ICON_SIZE} />
+            </Button>
+          </Tooltip.Trigger>
+          <Tooltip.Content>
+            <p>Next track</p>
+          </Tooltip.Content>
+        </Tooltip.Root>
+      {/if}
 
       <!-- Time Display -->
       <div class="flex items-center gap-1 font-mono text-sm text-white/90">
@@ -598,15 +664,27 @@
       <!-- Fullscreen -->
       <Tooltip.Root>
         <Tooltip.Trigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            onclick={toggleFullscreen}
-            class="h-9 w-9 text-white hover:bg-white/20 hover:text-blue-400 focus-visible:ring-blue-400"
-            aria-label="Toggle fullscreen"
-          >
-            <Maximize size={ICON_SIZE} />
-          </Button>
+          {#if playerState.isFullscreen}
+            <Button
+              variant="ghost"
+              size="icon"
+              onclick={toggleFullscreen}
+              class="h-9 w-9 text-white hover:bg-white/20 hover:text-blue-400 focus-visible:ring-blue-400"
+              aria-label="Toggle fullscreen"
+            >
+              <Maximize size={ICON_SIZE} />
+            </Button>
+          {:else}
+            <Button
+              variant="ghost"
+              size="icon"
+              onclick={toggleFullscreen}
+              class="h-9 w-9 text-white hover:bg-white/20 hover:text-blue-400 focus-visible:ring-blue-400"
+              aria-label="Exit fullscreen"
+            >
+              <Minimize size={ICON_SIZE} />
+            </Button>
+          {/if}
         </Tooltip.Trigger>
         <Tooltip.Content>
           <p>Fullscreen</p>

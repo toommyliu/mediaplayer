@@ -2,11 +2,12 @@
   import AlertTriangle from "lucide-svelte/icons/alert-triangle";
   import X from "lucide-svelte/icons/x";
   import { Pane, PaneGroup, PaneResizer } from "paneforge";
-  import Sidebar from "./components/sidebar.svelte";
+  import Sidebar from "./components/Sidebar.svelte";
   import VideoPlayer from "./components/video-player.svelte";
   import { playerState, sidebarState, platformState } from "./state.svelte";
   import { playVideo } from "./utils/video-playback";
   import { client } from "./client";
+  import { PlaylistManager } from "./utils/playlist";
 
   let fileBrowserEvents: {
     addFile?: (filePath: string) => void;
@@ -21,18 +22,16 @@
   });
 
   window.electron.ipcRenderer.on("add-folder-to-browser", async (_ev, folderData) => {
-    const files = folderData.files.flatMap(function flatten(entry): string[] {
-      if ("files" in entry && Array.isArray(entry.files)) {
-        return entry.files.flatMap(flatten) ?? [];
-      }
-      return [`file://${entry.path}`];
-    });
+    // Store the current video before updating
+    const currentVideo = playerState.currentVideo;
 
-    if (files.length > 0) {
-      playVideo(files[0]);
-      if (fileBrowserEvents.addFolder) {
-        fileBrowserEvents.addFolder(folderData);
-      }
+    if (fileBrowserEvents.addFolder) {
+      fileBrowserEvents.addFolder(folderData);
+    }
+
+    // If no video was playing, play the first video from the folder
+    if (!currentVideo && playerState.queue.length > 0) {
+      playVideo(playerState.queue[0]);
     }
   });
 
@@ -41,6 +40,9 @@
     platformState.isWindows = res.isWindows;
     platformState.isMac = res.isMacOS;
     platformState.isLinux = res.isLinux;
+
+    // Initialize playlist state from storage
+    PlaylistManager.initializeFromStorage();
 
     await import("./utils/input.svelte");
   });

@@ -1,13 +1,15 @@
+import { registerIpcMain } from "@egoist/tipc/main";
 import { electronApp, is, optimizer } from "@electron-toolkit/utils";
-import { app, BrowserWindow, ipcMain, shell } from "electron";
+import { app, BrowserWindow, shell } from "electron";
 import { join } from "node:path";
 import icon from "../../resources/icon.png?asset";
+import "./input";
 import "./ipc";
 import "./menu";
-import "./input";
-import { showFilePicker } from "./utils";
-import { registerIpcMain } from "@egoist/tipc/main";
 import { router } from "./tipc";
+import process from "node:process";
+
+process.env["ELECTRON_DISABLE_SECURITY_WARNINGS"] = "true";
 
 registerIpcMain(router);
 
@@ -24,8 +26,7 @@ function createWindow(): void {
     webPreferences: {
       preload: join(__dirname, "../preload/index.js"),
       sandbox: false,
-      webSecurity: false, // Allow local file access
-      allowRunningInsecureContent: true,
+      webSecurity: false,
       contextIsolation: true
     }
   });
@@ -62,6 +63,8 @@ app.whenReady().then(() => {
   // Require accessibility support for macOS
   // Which is required for MediaKeys to work
   app.setAccessibilitySupportEnabled(true);
+
+  createWindow();
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.

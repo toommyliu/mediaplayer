@@ -1,15 +1,18 @@
 <script lang="ts">
-  // import { playlistState } from "@/state.svelte";
-  // import { PlaylistManager } from "@/utils/playlist";
+  import { playlistState } from "@/state.svelte";
+  import { PlaylistManager } from "@/utils/playlist";
   import Plus from "lucide-svelte/icons/plus";
   import MoreHorizontal from "lucide-svelte/icons/more-horizontal";
   import Copy from "lucide-svelte/icons/copy";
   import Trash2 from "lucide-svelte/icons/trash-2";
   import Edit3 from "lucide-svelte/icons/edit-3";
   import ChevronDown from "lucide-svelte/icons/chevron-down";
+  import Download from "lucide-svelte/icons/download";
+  import Upload from "lucide-svelte/icons/upload";
   import { ICON_SIZE } from "@/constants";
   import * as DropdownMenu from "../ui/dropdown-menu/index";
   import * as Dialog from "../ui/dialog/index";
+  import { exportPlaylistToFile, importPlaylistFromFile } from "@/utils/playlist-persistence";
 
   let showCreateDialog = $state(false);
   let showManageDialog = $state(false);
@@ -21,11 +24,11 @@
   function createPlaylist() {
     if (!newPlaylistName.trim()) return;
 
-    // const newPlaylist = PlaylistManager.createPlaylist(
-    //   newPlaylistName.trim(),
-    //   newPlaylistDescription.trim() || undefined
-    // );
-    // PlaylistManager.switchToPlaylist(newPlaylist.id);
+    const newPlaylist = PlaylistManager.createPlaylist(
+      newPlaylistName.trim(),
+      newPlaylistDescription.trim() || undefined
+    );
+    PlaylistManager.switchToPlaylist(newPlaylist.id);
 
     newPlaylistName = "";
     newPlaylistDescription = "";
@@ -33,17 +36,17 @@
   }
 
   function selectPlaylist(playlistId: string) {
-    // PlaylistManager.switchToPlaylist(playlistId);
+    PlaylistManager.switchToPlaylist(playlistId);
   }
 
   function deletePlaylist(playlistId: string) {
     if (confirm("Are you sure you want to delete this playlist?")) {
-      // PlaylistManager.deletePlaylist(playlistId);
+      PlaylistManager.deletePlaylist(playlistId);
     }
   }
 
   function duplicatePlaylist(playlistId: string) {
-    // PlaylistManager.duplicatePlaylist(playlistId);
+    PlaylistManager.duplicatePlaylist(playlistId);
   }
 
   function startEditingPlaylist(playlistId: string, currentName: string) {
@@ -53,7 +56,7 @@
 
   function savePlaylistEdit() {
     if (editingPlaylist && editingName.trim()) {
-      // PlaylistManager.renamePlaylist(editingPlaylist, editingName.trim());
+      PlaylistManager.renamePlaylist(editingPlaylist, editingName.trim());
     }
     editingPlaylist = null;
     editingName = "";
@@ -62,6 +65,47 @@
   function cancelEdit() {
     editingPlaylist = null;
     editingName = "";
+  }
+
+  async function exportPlaylist(playlistId: string) {
+    const playlist = playlistState.playlists.find((p) => p.id === playlistId);
+    if (playlist) {
+      try {
+        await exportPlaylistToFile(playlist);
+      } catch (error) {
+        console.error("Failed to export playlist:", error);
+        alert("Failed to export playlist. Please try again.");
+      }
+    }
+  }
+
+  async function importPlaylist() {
+    try {
+      // Create a file input element
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = ".json";
+
+      input.onchange = async (e) => {
+        const file = (e.target as HTMLInputElement).files?.[0];
+        if (file) {
+          try {
+            const playlist = await importPlaylistFromFile(file);
+            // Add the imported playlist to the state
+            playlistState.playlists.push(playlist);
+            PlaylistManager.switchToPlaylist(playlist.id);
+          } catch (error) {
+            console.error("Failed to import playlist:", error);
+            alert("Failed to import playlist. Please check the file format and try again.");
+          }
+        }
+      };
+
+      input.click();
+    } catch (error) {
+      console.error("Failed to create file input:", error);
+      alert("Failed to open file dialog. Please try again.");
+    }
   }
 </script>
 
@@ -74,10 +118,10 @@
       <div class="flex items-center justify-between">
         <div>
           <div class="font-medium text-zinc-200">
-            <!-- {playlistState.currentPlaylist?.name || "No Playlist"} -->
+            {playlistState.currentPlaylist?.name || "No Playlist"}
           </div>
           <div class="text-xs text-zinc-500">
-            <!-- {playlistState.currentPlaylistItems.length} items -->
+            {playlistState.currentPlaylistItems.length} items
           </div>
         </div>
         <ChevronDown class="h-4 w-4 text-zinc-400" />
@@ -87,18 +131,18 @@
     <DropdownMenu.Content
       class="max-h-60 w-[var(--radix-dropdown-menu-trigger-width)] overflow-y-auto border-zinc-700 bg-zinc-800"
     >
-      <!-- {#each playlistState.playlists as playlist}
+      {#each playlistState.playlists as playlist}
         <DropdownMenu.Item
           class="px-3 py-2 text-left transition-colors hover:bg-zinc-700 focus:bg-zinc-700 {playlist.id ===
           playlistState.currentPlaylistId
             ? 'bg-zinc-700 text-blue-400'
             : 'text-zinc-300'}"
-          on:click={() => selectPlaylist(playlist.id)}
+          onclick={() => selectPlaylist(playlist.id)}
         >
           <div class="font-medium">{playlist.name}</div>
           <div class="text-xs text-zinc-500">{playlist.items.length} items</div>
         </DropdownMenu.Item>
-      {/each} -->
+      {/each}
     </DropdownMenu.Content>
   </DropdownMenu.Root>
 
@@ -216,6 +260,13 @@
               >
                 <Copy size={14} />
               </button>
+              <button
+                class="rounded p-1 text-zinc-400 hover:text-zinc-200"
+                onclick={() => exportPlaylist(playlist.id)}
+                title="Export"
+              >
+                <Download size={14} />
+              </button>
               {#if playlist.id !== "default"}
                 <button
                   class="rounded p-1 text-zinc-400 hover:text-red-400"
@@ -231,7 +282,16 @@
       {/each}
     </div>
 
-    <Dialog.Footer class="flex justify-end">
+    <Dialog.Footer class="flex justify-between">
+      <button
+        class="flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-white transition-colors hover:bg-green-700"
+        onclick={importPlaylist}
+        title="Import playlist from file"
+      >
+        <Upload size={16} />
+        Import
+      </button>
+
       <Dialog.Close asChild let:builder>
         <button
           use:builder.action

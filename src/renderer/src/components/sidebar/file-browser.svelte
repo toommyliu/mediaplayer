@@ -7,6 +7,8 @@
   import Play from "lucide-svelte/icons/play";
   import ChevronLeft from "lucide-svelte/icons/chevron-left";
   import Home from "lucide-svelte/icons/home";
+  import ChevronDown from "lucide-svelte/icons/chevron-down";
+  import ChevronUp from "lucide-svelte/icons/chevron-up";
   import * as ContextMenu from "../ui/context-menu/index";
   import {
     openContextMenuForItem,
@@ -14,12 +16,15 @@
     loadFileSystemStructure,
     navigateToDirectory,
     navigateToParent,
-    navigateToOriginalDirectory
+    navigateToOriginalDirectory,
+    toggleSort
   } from "@/utils/file-browser.svelte";
   import { type FileSystemItem } from "@/state.svelte";
   import { cn } from "@/utils/utils";
   import { makeTimeString } from "@/utils/time";
   import { copyToClipboard, showItemInFolder } from "@/utils";
+  import { playlistState } from "@/state.svelte";
+  import { PlaylistManager } from "@/utils/playlist";
 
   function isCurrentlyPlaying(item: FileSystemItem): boolean {
     if (item.type !== "video" || !playerState.currentVideo) return false;
@@ -36,15 +41,14 @@
   }
 
   function addToPlaylist(item: FileSystemItem) {
-    // if (item.type === "video") {
-    //   PlaylistManager.addItemToPlaylist(playlistState.currentPlaylistId, {
-    //     name: item.name,
-    //     path: item.path,
-    //     duration: item.duration,
-    //     size: item.size
-    //   });
-    // }
-    console.log("Add to playlist:", item.name);
+    if (item.type === "video") {
+      PlaylistManager.addItemToPlaylist(playlistState.currentPlaylistId, {
+        name: item.name,
+        path: item.path,
+        duration: item.duration,
+        size: item.size
+      });
+    }
   }
 
   function addFolderToPlaylist(folder: FileSystemItem) {
@@ -67,10 +71,15 @@
     }
     return path;
   }
+
+  function getSortIcon(sortType: "name" | "duration") {
+    if (fileBrowserState.sortBy !== sortType) return "";
+    return fileBrowserState.sortDirection === "asc" ? "↑" : "↓";
+  }
 </script>
 
-<div class="space-y-2">
-  <div class="mb-3 flex items-center justify-between">
+<div class="flex h-full flex-col space-y-2">
+  <div class="flex items-center justify-between">
     <h3 class="text-sm font-medium text-zinc-300">File Browser</h3>
     <button class="text-xs text-zinc-500 hover:text-zinc-300" onclick={loadFileSystemStructure}>
       Browse
@@ -100,11 +109,32 @@
         </button>
       {/if}
     </div>
+
+    <div class="mb-2 grid grid-cols-2 gap-2 px-2 text-xs text-zinc-400">
+      <button
+        class={cn(
+          "flex items-center justify-start hover:text-zinc-200",
+          fileBrowserState.sortBy === "name" && "text-zinc-200"
+        )}
+        onclick={() => toggleSort("name")}
+      >
+        Name {getSortIcon("name")}
+      </button>
+      <button
+        class={cn(
+          "flex items-center justify-end hover:text-zinc-200",
+          fileBrowserState.sortBy === "duration" && "text-zinc-200"
+        )}
+        onclick={() => toggleSort("duration")}
+      >
+        Duration {getSortIcon("duration")}
+      </button>
+    </div>
   {/if}
 
-  <div class="h-[87vh] overflow-hidden rounded-lg bg-zinc-800">
+  <div class="flex-1 overflow-hidden rounded-lg bg-zinc-800">
     {#if fileBrowserState.error}
-      <div class="flex flex-col items-center justify-center p-3 py-8 text-center">
+      <div class="flex h-full flex-col items-center justify-center p-3 py-8 text-center">
         <div class="mb-2 text-lg">⚠️</div>
         <div class="text-xs text-red-400">{fileBrowserState.error}</div>
         <button

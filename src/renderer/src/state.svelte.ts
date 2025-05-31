@@ -40,8 +40,55 @@ export const fileBrowserState = $state<FileBrowserState>({
   openContextMenu: null,
   currentPath: null,
   isAtRoot: false,
-  originalPath: null
+  originalPath: null,
+  sortBy: "name",
+  sortDirection: "asc"
 });
+
+export const playlistState = $state<PlaylistState>({
+  playlists: [
+    {
+      id: "default",
+      name: "Default Playlist",
+      description: "Default playlist for all videos",
+      items: [],
+      createdAt: new Date(),
+      lastModified: new Date()
+    }
+  ],
+  currentPlaylistId: "default",
+  get currentPlaylist() {
+    return this.playlists.find((p) => p.id === this.currentPlaylistId) || null;
+  },
+  get currentPlaylistItems() {
+    return this.currentPlaylist?.items || [];
+  }
+});
+
+export type PlaylistItem = {
+  id: string;
+  name: string;
+  path: string;
+  duration?: number;
+  size?: number;
+  addedAt: Date;
+};
+
+export type Playlist = {
+  id: string;
+  name: string;
+  description?: string;
+  items: PlaylistItem[];
+  createdAt: Date;
+  lastModified: Date;
+};
+
+type PlaylistState = {
+  playlists: Playlist[];
+  currentPlaylistId: string;
+  get currentPlaylist(): Playlist | null;
+  get currentPlaylistItems(): PlaylistItem[];
+};
 
 type PlayerState = {
   // Playback
@@ -94,4 +141,6 @@ type FileBrowserState = {
   currentPath: string | null;
   isAtRoot: boolean;
   originalPath: string | null;
+  sortBy: "name" | "duration";
+  sortDirection: "asc" | "desc";
 };

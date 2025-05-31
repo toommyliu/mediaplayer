@@ -1,6 +1,12 @@
 import hotkey from "hotkeys-js";
 import * as state from "@/state.svelte";
-import { previousVideo, nextVideo } from "./video-playback";
+import {
+  previousVideo,
+  nextVideo,
+  nextPlaylistVideo,
+  previousPlaylistVideo
+} from "./video-playback";
+import { PlaylistManager } from "./playlist";
 
 // TODO: use globalShortcuts instead of "mod" key
 
@@ -88,6 +94,40 @@ hotkey(`${mod}+right`, (ev) => {
   ev.preventDefault();
   if (state.playerState.currentVideo) {
     nextVideo();
+  }
+});
+
+// Playlist navigation - previous track
+hotkey("shift+left", (ev) => {
+  ev.preventDefault();
+  if (state.playerState.currentVideo && state.playlistState.currentPlaylist) {
+    previousPlaylistVideo();
+  }
+});
+
+// Playlist navigation - next track
+hotkey("shift+right", (ev) => {
+  ev.preventDefault();
+  if (state.playerState.currentVideo && state.playlistState.currentPlaylist) {
+    nextPlaylistVideo();
+  }
+});
+
+// Shuffle current playlist
+hotkey(`${mod}+s`, (ev) => {
+  ev.preventDefault();
+  if (state.playlistState.currentPlaylist) {
+    PlaylistManager.shufflePlaylist(state.playlistState.currentPlaylistId);
+  }
+});
+
+// Clear current playlist
+hotkey(`${mod}+shift+c`, (ev) => {
+  ev.preventDefault();
+  if (state.playlistState.currentPlaylist) {
+    if (confirm("Clear current playlist?")) {
+      PlaylistManager.clearPlaylist(state.playlistState.currentPlaylistId);
+    }
   }
 });
 

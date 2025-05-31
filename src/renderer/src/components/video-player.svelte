@@ -4,6 +4,8 @@
   import { makeTimeString } from "@/utils/time";
   import MediaControls from "./video-playback/media-controls.svelte";
   import { loadFileSystemStructure } from "@/utils/file-browser.svelte";
+  import { nextPlaylistVideo, nextVideo } from "@/utils/video-playback";
+  import { playlistState } from "@/state.svelte";
 
   let controlsTimeout: number | null = null;
   let overlayTimeout: number | null = null;
@@ -96,8 +98,60 @@
     playerState.isPlaying = false;
   }
 
-  function handleFullscreenChange(): void {
-    // isFullscreen = !!document.fullscreenElement;
+  function handleEnded(): void {
+    console.log("Video ended, checking for next video");
+
+    const currentVideo = playerState.currentVideo;
+    if (!currentVideo) return;
+
+    // Check if the current video is part of the current playlist
+    const currentPlaylist = playlistState.currentPlaylist;
+    let isVideoInPlaylist = false;
+    let playlistIndex = -1;
+
+    if (currentPlaylist && currentPlaylist.items.length > 0) {
+      const currentPath = currentVideo.replace("file://", "");
+      playlistIndex = currentPlaylist.items.findIndex((item) => item.path === currentPath);
+      isVideoInPlaylist = playlistIndex !== -1;
+    }
+
+    if (isVideoInPlaylist && currentPlaylist) {
+      // Current video is in the playlist, use playlist navigation
+      console.log(
+        "Using playlist navigation - current video found in playlist at index:",
+        playlistIndex
+      );
+      if (playlistIndex < currentPlaylist.items.length - 1) {
+        setTimeout(() => {
+          nextPlaylistVideo();
+        }, 500);
+      } else {
+        console.log("Reached end of playlist");
+      }
+    } else {
+      // Current video is not in playlist (or no playlist), use file browser queue navigation
+      console.log(
+        "Using file browser queue navigation - current video not in playlist or no playlist active"
+      );
+      if (playerState.queue.length > 1) {
+        const currentIndex = playerState.currentIndex;
+        console.log(
+          "Current queue index:",
+          currentIndex,
+          "Queue length:",
+          playerState.queue.length
+        );
+        if (currentIndex < playerState.queue.length - 1) {
+          setTimeout(() => {
+            nextVideo();
+          }, 500);
+        } else {
+          console.log("Reached end of file browser queue");
+        }
+      } else {
+        console.log("No queue available or only one video in queue");
+      }
+    }
   }
 
   function showControlsTemporarily(): void {
@@ -135,34 +189,24 @@
   }
 
   async function handleDblClick(ev: MouseEvent): Promise<void> {
+    // If we click on the controls, ignore the double click
     const target = ev.target as HTMLElement;
-
     const controlsElement = target.closest("#media-controls");
     if (controlsElement) {
       return;
     }
 
+    // Only proceed if we clicked the video or video player container
     if (target.tagName === "VIDEO" || target.id === "video-player") {
-      if (playerState.isPlaying) {
-        console.log("Double click while playing...");
-      } else {
+      // Only show dialog if no video is currently playing/loaded
+      if (!playerState.currentVideo) {
         await loadFileSystemStructure();
+      } else {
+        // Video is already loaded, ignore double click
+        console.log("Double click ignored - video already loaded");
       }
     }
   }
-
-  $effect(() => {
-    document.addEventListener("fullscreenchange", handleFullscreenChange);
-    return () => {
-      document.removeEventListener("fullscreenchange", handleFullscreenChange);
-      if (controlsTimeout) {
-        clearTimeout(controlsTimeout);
-      }
-      if (overlayTimeout) {
-        clearTimeout(overlayTimeout);
-      }
-    };
-  });
 
   $effect(() => {
     if (!playerState.isPlaying) {
@@ -178,6 +222,19 @@
       playerState.videoElement.volume = playerState.isMuted ? 0 : playerState.volume;
       playerState.videoElement.muted = playerState.isMuted;
       playerState.videoElement = playerState.videoElement;
+    }
+  });
+
+  // Debug effect to log video source changes
+  $effect(() => {
+    console.log("Current video changed to:", playerState.currentVideo);
+    console.log("Current index:", playerState.currentIndex);
+    console.log("Queue length:", playerState.queue.length);
+    if (playerState.queue.length > 0) {
+      console.log(
+        "Queue contents:",
+        playerState.queue.map((video, index) => `${index}: ${video.split("/").pop()}`)
+      );
     }
   });
 </script>
@@ -198,7 +255,7 @@
       <video
         bind:this={playerState.videoElement}
         src={playerState.currentVideo}
-        class="video-no-controls max-h-full max-w-full object-contain"
+        class="video-no-controls h-full w-full object-contain"
         onloadstart={handleLoadStart}
         onloadeddata={handleLoadedData}
         onloadedmetadata={handleLoadedMetadata}
@@ -208,6 +265,7 @@
         oncanplay={handleCanPlay}
         onplay={handlePlay}
         onpause={handlePause}
+        onended={handleEnded}
         preload="metadata"
         crossorigin="anonymous"
         controls={false}
