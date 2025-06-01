@@ -27,7 +27,7 @@ export const setQueue = (queue: string[]) => {
  * @param addToPlaylist - Whether to add the video to the current playlist if not already there.
  */
 export const playVideo = (src: string, addToPlaylist: boolean = false) => {
-  playerState.isLoading = false;
+  playerState.isLoading = true;
   playerState.error = null;
 
   // Normalize the src to ensure it has the file:// protocol
@@ -48,11 +48,26 @@ export const playVideo = (src: string, addToPlaylist: boolean = false) => {
     }
   }
 
-  const idx = playerState.queue.findIndex((item) => item === normalizedSrc);
+  // Find the video in the queue or add it
+  let idx = playerState.queue.findIndex((item) => item === normalizedSrc);
 
-  if (idx !== -1) {
-    playerState.currentIndex = idx;
+  if (idx === -1) {
+    // Video not in queue, add it
+    playerState.queue.push(normalizedSrc);
+    idx = playerState.queue.length - 1;
   }
+
+  // Set the current index to play this video
+  playerState.currentIndex = idx;
+  playerState.currentTime = 0;
+
+  // If video element exists, load and play the video
+  if (playerState.videoElement) {
+    playerState.videoElement.currentTime = 0;
+    playerState.videoElement.load();
+  }
+
+  console.log("playVideo: Playing video", normalizedSrc, "at index", idx);
 };
 
 /**

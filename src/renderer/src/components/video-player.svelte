@@ -224,27 +224,15 @@
       playerState.videoElement = playerState.videoElement;
     }
   });
-
-  // Debug effect to log video source changes
-  $effect(() => {
-    console.log("Current video changed to:", playerState.currentVideo);
-    console.log("Current index:", playerState.currentIndex);
-    console.log("Queue length:", playerState.queue.length);
-    if (playerState.queue.length > 0) {
-      console.log(
-        "Queue contents:",
-        playerState.queue.map((video, index) => `${index}: ${video.split("/").pop()}`)
-      );
-    }
-  });
 </script>
 
-<div class="flex h-full w-full flex-col">
+<div class="flex h-full w-full flex-col bg-zinc-950">
   <!-- Video container -->
   <div
     class={cn(
-      "group relative flex h-[90%] w-full flex-1 items-center justify-center bg-zinc-950",
-      !playerState.currentVideo && "cursor-pointer transition-all duration-300 hover:bg-gray-800"
+      "group relative flex h-[90%] w-full flex-1 items-center justify-center",
+      !playerState.currentVideo &&
+        "cursor-pointer transition-all duration-300 ease-out hover:bg-slate-100/15 hover:shadow-inner hover:backdrop-blur-md"
     )}
     onmousemove={handleMouseMove}
     onclick={handleClick}

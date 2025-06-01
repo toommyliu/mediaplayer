@@ -1,0 +1,636 @@
+<script lang="ts">
+  import { cn } from "@/utils/utils";
+  import AlertCircle from "lucide-svelte/icons/alert-circle";
+  import ArrowLeft from "lucide-svelte/icons/arrow-left";
+  import FileVideo from "lucide-svelte/icons/file-video";
+  import Folder from "lucide-svelte/icons/folder";
+  import FolderOpen from "lucide-svelte/icons/folder-open";
+  import FolderPlus from "lucide-svelte/icons/folder-plus";
+  import MoveUp from "lucide-svelte/icons/move-up";
+  import Play from "lucide-svelte/icons/play";
+  import RotateCcw from "lucide-svelte/icons/rotate-ccw";
+  import Search from "lucide-svelte/icons/search";
+  import X from "lucide-svelte/icons/x";
+  import { client } from "../../client";
+  import type { FileSystemItem } from "../../state.svelte";
+  import { fileBrowserState, platformState, playerState } from "../../state.svelte";
+  import {
+    navigateToParent,
+    transformDirectoryContents,
+    closeAllContextMenus,
+    navigateToDirectory
+  } from "../../utils/file-browser.svelte";
+  import { playVideo } from "../../utils/video-playback";
+  import { showItemInFolder } from "../../utils";
+  import { PlaylistManager } from "../../utils/playlist";
+  import { playlistState } from "../../state.svelte";
+  import { Input } from "../ui/input/";
+  import * as ContextMenu from "../ui/context-menu/";
+
+  let isEmpty = $derived(fileBrowserState.fileSystem.length === 0);
+  let expandedFoldersArray = $derived([...fileBrowserState.expandedFolders]);
+
+  let filteredAndSortedFileSystem = $derived(() => {
+    let items = [...fileBrowserState.fileSystem];
+
+    if (fileBrowserState.searchQuery.trim()) {
+      items = filterItemsRecursively(items, fileBrowserState.searchQuery.trim().toLowerCase());
+      expandFoldersWithMatches(items);
+    }
+
+    return items.sort(compareItems);
+  });
+
+  let hasNoSearchResults = $derived(
+    fileBrowserState.searchQuery.trim() && filteredAndSortedFileSystem().length === 0
+  );
+
+  function filterItemsRecursively(items: FileSystemItem[], query: string): FileSystemItem[] {
+    return items
+      .filter((item) => {
+        const nameMatches = item.name?.toLowerCase().includes(query) || false;
+
+        let hasMatchingChildren = false;
+        if (item.type === "folder") {
+          const filteredChildren = filterItemsRecursively(item.files, query);
+          hasMatchingChildren = filteredChildren.length > 0;
+
+          if (hasMatchingChildren) {
+            item = { ...item, files: filteredChildren };
+          }
+        }
+
+        return nameMatches || hasMatchingChildren;
+      })
+      .map((item) => {
+        if (item.files && fileBrowserState.searchQuery.trim()) {
+          return { ...item, files: filterItemsRecursively(item.files, query) };
+        }
+        return item;
+      });
+  }
+
+  function expandFoldersWithMatches(items: FileSystemItem[]) {
+    for (const item of items) {
+      if (item.files && item.path) {
+        fileBrowserState.expandedFolders.add(item.path);
+        expandFoldersWithMatches(item.files);
+      }
+    }
+  }
+
+  function clearSearch() {
+    fileBrowserState.searchQuery = "";
+  }
+
+  function handleItemClick(ev: MouseEvent, item: FileSystemItem) {
+    if (!item.path) return;
+
+    console.log("Item clicked:", item);
+
+    if (item.type === "folder") {
+      // mod + click to navigate to folder
+      const isModKeyPressed = platformState.isMac ? ev.metaKey : ev.ctrlKey;
+      if (isModKeyPressed) {
+        ev.preventDefault();
+        console.log("Cmd/Ctrl + click detected, navigating to:", item.path);
+        navigateToDirectory(item.path);
+        return;
+      }
+
+      // Regular click to toggle folder expansion
+      toggleFolder(item.path);
+      fileBrowserState.fileTree = { ...fileBrowserState.fileTree! };
+    } else if (item.duration !== undefined) {
+      console.log("Playing video:", item.path);
+      playVideo(`file://${item.path}`);
+    }
+  }
+
+  async function handleEmptyDblClick(event: MouseEvent) {
+    if (isEmpty && event.detail === 2) {
+      await resetAndBrowse();
+    }
+  }
+
+  function navigateToParentDirectory() {
+    if (!fileBrowserState.currentPath || fileBrowserState.isAtRoot) return;
+
+    console.log("Navigating to parent directory from:", fileBrowserState.currentPath);
+
+    const currentPath = fileBrowserState.currentPath;
+    const pathParts = currentPath.split(/[/\\]/);
+    const parentName = pathParts[pathParts.length - 2] || "Parent";
+
+    navigateToParent().catch((err) => {
+      console.error("Failed to navigate to parent directory:", err);
+      fileBrowserState.error = `Failed to navigate to ${parentName} directory.`;
+    });
+  }
+
+  function compareItems(a: FileSystemItem, b: FileSystemItem): number {
+    const aIsFolder = !!a.files;
+    const bIsFolder = !!b.files;
+
+    // Folders first
+    if (aIsFolder && !bIsFolder) return -1;
+    if (!aIsFolder && bIsFolder) return 1;
+
+    // Apply filter given params
+    let comparison = 0;
+    if (fileBrowserState.sortBy === "name") {
+      const aName = a.name || "";
+      const bName = b.name || "";
+      comparison = aName.localeCompare(bName);
+    } else if (fileBrowserState.sortBy === "duration") {
+      if (aIsFolder && bIsFolder) {
+        const aName = a.name || "";
+        const bName = b.name || "";
+        comparison = aName.localeCompare(bName);
+      } else {
+        const aDuration = a.duration || 0;
+        const bDuration = b.duration || 0;
+
+        if (aDuration === bDuration) {
+          const aName = a.name || "";
+          const bName = b.name || "";
+          comparison = aName.localeCompare(bName);
+        } else {
+          if (aDuration === 0 && bDuration > 0) return 1;
+          if (bDuration === 0 && aDuration > 0) return -1;
+          comparison = aDuration - bDuration;
+        }
+      }
+    }
+
+    // Apply sort direction
+    return fileBrowserState.sortDirection === "desc" ? -comparison : comparison;
+  }
+
+  function setSortBy(sortBy: "name" | "duration") {
+    if (fileBrowserState.sortBy === sortBy) {
+      fileBrowserState.sortDirection = fileBrowserState.sortDirection === "asc" ? "desc" : "asc";
+    } else {
+      fileBrowserState.sortBy = sortBy;
+      fileBrowserState.sortDirection = "asc";
+    }
+  }
+
+  function renderFileSystemItem(item: FileSystemItem, depth = 0) {
+    const isFolder = !!item.files;
+    const isVideo = !isFolder && item.duration !== undefined;
+    const isExpanded = item.path ? fileBrowserState.expandedFolders.has(item.path) : false;
+    const isCurrentlyPlaying =
+      isVideo && item.path && playerState.currentVideo === `file://${item.path}`;
+
+    const sortedChildren = item.files ? [...item.files].sort(compareItems) : undefined;
+
+    return {
+      item: { ...item, files: sortedChildren },
+      isFolder,
+      isVideo,
+      isExpanded,
+      isCurrentlyPlaying,
+      depth
+    };
+  }
+
+  function toggleFolder(path: string | undefined) {
+    if (!path) return;
+
+    if (fileBrowserState.expandedFolders.has(path)) {
+      fileBrowserState.expandedFolders.delete(path);
+    } else {
+      fileBrowserState.expandedFolders.add(path);
+      loadFolderContents(path);
+    }
+
+    fileBrowserState.expandedFolders = new Set(fileBrowserState.expandedFolders);
+  }
+
+  async function loadFolderContents(folderPath: string) {
+    try {
+      const folder = findFolderInFileSystem(fileBrowserState.fileSystem, folderPath);
+      if (!folder) return;
+
+      if (folder.files && folder.files.length > 0) return;
+
+      const result = await client.readDirectory(folderPath);
+      if (result && result.files) {
+        const folderContents = transformDirectoryContents(result);
+
+        updateFolderContents(fileBrowserState.fileSystem, folderPath, folderContents);
+      }
+    } catch (err) {
+      console.error("Failed to load folder contents:", err);
+      fileBrowserState.expandedFolders.delete(folderPath);
+    }
+  }
+
+  function findFolderInFileSystem(
+    items: FileSystemItem[],
+    targetPath: string
+  ): FileSystemItem | null {
+    for (const item of items) {
+      if (item.path === targetPath && item.files !== undefined) {
+        return item;
+      }
+      if (item.files) {
+        const found = findFolderInFileSystem(item.files, targetPath);
+        if (found) return found;
+      }
+    }
+    return null;
+  }
+
+  function updateFolderContents(
+    items: FileSystemItem[],
+    targetPath: string,
+    newContents: FileSystemItem[]
+  ): boolean {
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].path === targetPath && items[i].files !== undefined) {
+        items[i] = { ...items[i], files: newContents };
+        fileBrowserState.fileTree = { ...fileBrowserState.fileTree! };
+        return true;
+      }
+      if (items[i].files) {
+        if (updateFolderContents(items[i].files!, targetPath, newContents)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  async function resetAndBrowse() {
+    console.log("resetAndBrowse called");
+
+    fileBrowserState.fileTree = null;
+    fileBrowserState.expandedFolders.clear();
+    fileBrowserState.searchQuery = "";
+
+    try {
+      // Open browse dialog
+      const res = await client.selectFileOrFolder();
+      console.log("Selected file or folder:", res);
+
+      // Single file selected
+      if (typeof res === "string") {
+        playVideo(`file://${res}`);
+        return;
+      }
+
+      if (res && res.rootPath) {
+        fileBrowserState.originalPath = res.rootPath;
+
+        const dirResult = await client.readDirectory(res.rootPath);
+        console.log("Directory result:", dirResult);
+        if (dirResult) {
+          fileBrowserState.fileTree = {
+            rootPath: dirResult.currentPath,
+            files: transformDirectoryContents(dirResult)
+          };
+          console.log("Final files", fileBrowserState.fileTree.files);
+          fileBrowserState.currentPath = dirResult.currentPath;
+          fileBrowserState.isAtRoot = dirResult.isAtRoot;
+          console.log(
+            "Set state - currentPath:",
+            fileBrowserState.currentPath,
+            "isAtRoot:",
+            fileBrowserState.isAtRoot
+          );
+        }
+      }
+    } catch (error) {
+      console.error("Failed to browse and load directory:", error);
+      fileBrowserState.error = "Failed to load directory. Please try again.";
+    }
+  }
+</script>
+
+<div
+  class="flex h-full flex-col overflow-hidden rounded-xl border border-zinc-800/50 bg-zinc-900/50 backdrop-blur-sm"
+>
+  {#if isEmpty}
+    <div
+      class="m-8 flex h-full cursor-pointer items-center justify-center rounded-xl border-zinc-700/30 transition-all duration-300 hover:border-zinc-600/40 hover:bg-black/10 hover:shadow-lg"
+      ondblclick={handleEmptyDblClick}
+      role="button"
+      tabindex="0"
+    >
+      <div class="space-y-8 px-10 py-16 text-center">
+        <div
+          class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-zinc-700/20 to-zinc-800/30 shadow-lg ring-1 ring-zinc-600/20"
+        >
+          <FolderPlus class="h-8 w-8 text-zinc-400" />
+        </div>
+        <div class="space-y-4">
+          <h3 class="text-lg font-semibold text-zinc-300">No media files loaded</h3>
+          <p class="mx-auto max-w-xs text-sm leading-relaxed text-zinc-500">
+            Browse and select a folder containing your media files to get started
+          </p>
+        </div>
+        <div
+          class="inline-flex items-center gap-2 rounded-lg bg-zinc-800/30 px-4 py-2 text-xs font-medium text-zinc-400 ring-1 ring-zinc-700/40"
+        >
+          Double-click to browse
+        </div>
+      </div>
+    </div>
+  {:else}
+    <!-- File Browser Header -->
+    <div class="border-b border-zinc-800/50 bg-zinc-900/30">
+      <!-- Path and navigation row -->
+      <div class="flex items-center gap-2 p-3">
+        <!-- Current directory path display -->
+        {#if fileBrowserState.currentPath}
+          <div
+            class="flex-1 overflow-hidden rounded bg-zinc-800/30 px-3 py-2"
+            title={fileBrowserState.currentPath}
+          >
+            <span class="truncate text-xs text-zinc-400">
+              {fileBrowserState.currentPath}
+            </span>
+          </div>
+        {/if}
+
+        <!-- Reset button -->
+        <button
+          onclick={resetAndBrowse}
+          class="flex items-center justify-center rounded-lg border border-zinc-700/50 bg-zinc-800/30 p-2 text-blue-400 transition-all duration-200 hover:border-blue-600/40 hover:bg-blue-950/30 hover:text-blue-300"
+          title="Reset and browse new folder"
+        >
+          <RotateCcw class="h-4 w-4" />
+        </button>
+      </div>
+
+      <!-- Search input -->
+      <div class="px-3 pb-3">
+        <div class="relative">
+          <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+          <Input
+            type="text"
+            placeholder="Search files and folders..."
+            bind:value={fileBrowserState.searchQuery}
+            class="w-full rounded-md border border-zinc-700/50 bg-zinc-800/50 py-2 pl-10 pr-10 text-sm text-zinc-200 placeholder-zinc-500 transition-all duration-200 focus:border-blue-500/50 focus:bg-zinc-800/70 focus:outline-none focus:ring-1 focus:ring-blue-500/30"
+          />
+          {#if fileBrowserState.searchQuery}
+            <button
+              onclick={clearSearch}
+              class="absolute right-3 top-1/2 -translate-y-1/2 rounded p-0.5 text-zinc-400 transition-colors duration-200 hover:bg-zinc-700/40 hover:text-zinc-300"
+              title="Clear search"
+            >
+              <X class="h-4 w-4" />
+            </button>
+          {/if}
+        </div>
+      </div>
+
+      <!-- Sort controls -->
+      <div
+        class="flex items-center justify-between border-t border-zinc-800/50 bg-zinc-900/10 px-3 py-2"
+      >
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-zinc-500">Sort by:</span>
+          <div class="flex gap-1">
+            <button
+              onclick={() => setSortBy("name")}
+              class="flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium transition-all duration-200 {fileBrowserState.sortBy ===
+              'name'
+                ? 'border border-blue-500/40 bg-blue-500/20 text-blue-200'
+                : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-300'}"
+            >
+              Name
+              {#if fileBrowserState.sortBy === "name"}
+                <MoveUp
+                  class={cn("h-3 w-3", {
+                    "rotate-180": fileBrowserState.sortDirection === "desc"
+                  })}
+                />
+              {/if}
+            </button>
+            <button
+              onclick={() => setSortBy("duration")}
+              class="flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium transition-all duration-200 {fileBrowserState.sortBy ===
+              'duration'
+                ? 'border border-blue-500/40 bg-blue-500/20 text-blue-200'
+                : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-300'}"
+            >
+              Duration
+              {#if fileBrowserState.sortBy === "duration"}
+                <MoveUp
+                  class={cn("h-3 w-3", {
+                    "rotate-180": fileBrowserState.sortDirection === "desc"
+                  })}
+                />
+              {/if}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- File system list -->
+    <div
+      class="scrollbar-thin scrollbar-track-slate-900/30 scrollbar-thumb-slate-700/50 flex-1 overflow-y-auto"
+    >
+      {#if hasNoSearchResults}
+        <!-- No search results found message -->
+        <div class="flex h-full flex-col items-center justify-center p-4 text-center">
+          <div class="mb-4 rounded-full bg-zinc-800/50 p-3">
+            <AlertCircle class="h-6 w-6 text-zinc-400" />
+          </div>
+          <h3 class="mb-2 text-base font-medium text-zinc-300">No results found</h3>
+          <p class="mb-4 max-w-xs text-sm text-zinc-500">
+            No files or folders match your search query
+          </p>
+          <button
+            onclick={clearSearch}
+            class="flex items-center gap-2 rounded-lg bg-blue-800/40 px-4 py-2 text-xs font-medium text-blue-300 transition-all duration-200 hover:bg-blue-800/60 hover:text-blue-200"
+          >
+            <X class="h-3.5 w-3.5" />
+            Clear search
+          </button>
+        </div>
+      {:else}
+        <div class="-ml-4 space-y-1 p-0">
+          {#if !fileBrowserState.isAtRoot && fileBrowserState.currentPath}
+            <div
+              class="group flex cursor-pointer items-center rounded py-2 pr-[12px] transition-all duration-200 hover:bg-zinc-800/50"
+              onclick={navigateToParentDirectory}
+              title="Go back"
+            >
+              <div class="mr-2 w-4 flex-shrink-0"></div>
+              <div class="mr-2 flex-shrink-0">
+                <ArrowLeft class="h-4 w-4 text-blue-400" />
+              </div>
+              <span class="flex-1 truncate text-sm text-zinc-300 group-hover:text-zinc-100">
+                ..
+              </span>
+            </div>
+          {/if}
+          {#each filteredAndSortedFileSystem() as item}
+            {@render FileSystemItemComponent(item, 0)}
+          {/each}
+        </div>
+      {/if}
+    </div>
+  {/if}
+</div>
+
+{#snippet FileSystemItemComponent(item: FileSystemItem, depth: number)}
+  {@const fileItemView = renderFileSystemItem(item, depth)}
+  {@const displayDuration = item.duration || 0}
+
+  {#key expandedFoldersArray}
+    <ContextMenu.Root open={fileBrowserState.openContextMenu === item.path}>
+      <ContextMenu.Trigger>
+        <div
+          class={cn(
+            "group relative flex cursor-pointer items-center rounded py-2 pr-[12px] transition-all duration-200",
+            fileItemView.isCurrentlyPlaying
+              ? "border border-blue-500/30 bg-blue-500/20 hover:bg-blue-500/25"
+              : "hover:bg-zinc-800/40"
+          )}
+          style={`padding-left: ${depth * 16 + 16}px;`}
+          onclick={(ev) => handleItemClick(ev, item)}
+        >
+          <div class="mr-2 w-4 flex-shrink-0">
+            {#if fileItemView.isFolder}
+              <button
+                onclick={(ev) => {
+                  ev.stopPropagation();
+                  toggleFolder(item.path);
+                }}
+                class="flex h-4 w-4 items-center justify-center rounded transition-colors duration-200 hover:bg-zinc-700/40"
+              >
+              </button>
+            {/if}
+          </div>
+
+          <div class="mr-2 flex-shrink-0">
+            {#if fileItemView.isFolder}
+              {#if fileItemView.isExpanded}
+                <FolderOpen class="h-4 w-4 text-amber-300" />
+              {:else}
+                <Folder class="h-4 w-4 text-amber-300" />
+              {/if}
+            {:else if fileItemView.isVideo}
+              <div class="relative">
+                <FileVideo
+                  class={cn(
+                    "h-4 w-4",
+                    fileItemView.isCurrentlyPlaying ? "text-blue-400" : "text-emerald-400"
+                  )}
+                />
+                {#if fileItemView.isCurrentlyPlaying}
+                  <div
+                    class="absolute -right-1 -top-1 flex h-3 w-3 items-center justify-center rounded-full bg-blue-500 ring-1 ring-blue-400/50"
+                  >
+                    <Play class="h-1.5 w-1.5 fill-white text-white" />
+                  </div>
+                {/if}
+              </div>
+            {/if}
+          </div>
+
+          <!-- Content -->
+          <div class="flex min-w-0 flex-1 items-center" title={item.name!}>
+            <span
+              class={cn(
+                "flex-1 truncate text-sm font-medium",
+                fileItemView.isCurrentlyPlaying &&
+                  "font-semibold text-blue-200 group-hover:text-blue-100",
+                fileItemView.isVideo &&
+                  !fileItemView.isCurrentlyPlaying &&
+                  "text-emerald-200 group-hover:text-emerald-100",
+                !fileItemView.isVideo && "text-zinc-300 group-hover:text-zinc-100"
+              )}
+            >
+              {item!.name}
+            </span>
+
+            {#if fileItemView.isVideo}
+              <span
+                class={cn(
+                  "ml-3 flex-shrink-0 rounded-sm px-2 py-1 font-mono text-xs ring-1",
+                  fileItemView.isCurrentlyPlaying
+                    ? "bg-blue-900/40 text-blue-200 ring-blue-700/40"
+                    : "bg-emerald-900/30 text-emerald-300 ring-emerald-700/30"
+                )}
+              >
+                {#if displayDuration > 0}
+                  {Math.floor(displayDuration / 60)}:{Math.floor(displayDuration % 60)
+                    .toString()
+                    .padStart(2, "0")}
+                {:else}
+                  --:--
+                {/if}
+              </span>
+            {/if}
+          </div>
+        </div>
+      </ContextMenu.Trigger>
+
+      <ContextMenu.Content class="w-48 border-zinc-700 bg-zinc-800">
+        {#if fileItemView.isFolder}
+          <ContextMenu.Item
+            class="text-zinc-200 hover:bg-zinc-700 focus:bg-zinc-700"
+            onclick={(ev: MouseEvent) => handleItemClick(ev, item)}
+          >
+            Open Folder
+          </ContextMenu.Item>
+          <ContextMenu.Item
+            class="text-zinc-200 hover:bg-zinc-700 focus:bg-zinc-700"
+            onclick={() => {
+              if (item.path) {
+                showItemInFolder(item.path);
+              }
+            }}
+          >
+            Show in Finder
+          </ContextMenu.Item>
+        {:else}
+          <ContextMenu.Item
+            class="text-zinc-200 hover:bg-zinc-700 focus:bg-zinc-700"
+            onclick={(ev: MouseEvent) => handleItemClick(ev, item)}
+          >
+            Play
+          </ContextMenu.Item>
+          <ContextMenu.Item
+            class="text-zinc-200 hover:bg-zinc-700 focus:bg-zinc-700"
+            onclick={() => {
+              if (item.path && item.name) {
+                PlaylistManager.addItemToPlaylist(playlistState.currentPlaylistId, {
+                  name: item.name,
+                  path: item.path,
+                  duration: item.duration
+                });
+              }
+            }}
+          >
+            Add to Playlist
+          </ContextMenu.Item>
+          <ContextMenu.Separator class="bg-zinc-700" />
+          <ContextMenu.Item
+            class="text-zinc-200 hover:bg-zinc-700 focus:bg-zinc-700"
+            onclick={() => {
+              if (item.path) {
+                showItemInFolder(item.path);
+              }
+            }}
+          >
+            Show in Finder
+          </ContextMenu.Item>
+        {/if}
+      </ContextMenu.Content>
+    </ContextMenu.Root>
+
+    {#if fileItemView.isFolder && fileItemView.isExpanded && fileItemView.item.files}
+      {#each fileItemView.item.files as child}
+        {@render FileSystemItemComponent(child, fileItemView.depth + 1)}
+      {/each}
+    {/if}
+  {/key}
+{/snippet}

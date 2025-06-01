@@ -12,20 +12,13 @@ export function transformDirectoryContents(directoryContents): FileSystemItem[] 
   const items = directoryContents.files.map((item) => ({
     name: item.name,
     path: item.path,
-    type: item.type,
-    duration: item.duration || 0
+    duration: item.duration || 0,
+    // Use files property for folders (if type is folder), otherwise undefined
+    files: item.type === "folder" ? [] : undefined,
+    type: item.type
   }));
 
   return sortFileSystem(items);
-}
-
-export function toggleFolder(path: string) {
-  if (fileBrowserState.expandedFolders.has(path)) {
-    fileBrowserState.expandedFolders.delete(path);
-  } else {
-    fileBrowserState.expandedFolders.add(path);
-  }
-  fileBrowserState.expandedFolders = new Set(fileBrowserState.expandedFolders);
 }
 
 export async function navigateToDirectory(dirPath: string) {
@@ -34,31 +27,17 @@ export async function navigateToDirectory(dirPath: string) {
     const result = await client.readDirectory(dirPath);
 
     if (result) {
-      fileBrowserState.fileSystem = transformDirectoryContents(result);
+      // Create a FileTree structure from DirectoryContents
+      fileBrowserState.fileTree = {
+        rootPath: result.currentPath,
+        files: transformDirectoryContents(result)
+      };
       fileBrowserState.currentPath = result.currentPath;
       fileBrowserState.isAtRoot = result.isAtRoot;
 
       // Always update the queue when navigating to a new directory
       // This ensures that videos in nested folders are accessible
       updatePlayerQueueForced(true); // Preserve current video if it exists in new directory
-    }
-  } catch (err) {
-    console.error("Failed to navigate to directory:", err);
-    fileBrowserState.error = "Failed to load directory. Please try again.";
-  }
-}
-
-export async function navigateToDirectoryAndUpdateQueue(dirPath: string) {
-  try {
-    fileBrowserState.error = null;
-    const result = await client.readDirectory(dirPath);
-
-    if (result) {
-      fileBrowserState.fileSystem = transformDirectoryContents(result);
-      fileBrowserState.currentPath = result.currentPath;
-      fileBrowserState.isAtRoot = result.isAtRoot;
-      // Force update the queue but don't try to preserve current video
-      updatePlayerQueueForced(false);
     }
   } catch (err) {
     console.error("Failed to navigate to directory:", err);
@@ -80,35 +59,8 @@ export async function navigateToParent() {
   }
 }
 
-export async function navigateToOriginalDirectory() {
-  if (fileBrowserState.originalPath) {
-    await navigateToDirectory(fileBrowserState.originalPath);
-  }
-}
-
-export function openContextMenuForItem(itemPath: string) {
-  fileBrowserState.openContextMenu = itemPath;
-}
-
 export function closeAllContextMenus() {
   fileBrowserState.openContextMenu = null;
-}
-
-export function updatePlayerQueue() {
-  const newVideos = fileBrowserState.fileSystem.flatMap(function flatten(entry): string[] {
-    if (entry.type === "folder") {
-      return entry.children?.flatMap(flatten) ?? [];
-    }
-    if (entry.type === "video") {
-      return [`file://${entry.path}`];
-    }
-    return [];
-  });
-
-  if (newVideos.length > 0) {
-    playerState.queue = newVideos;
-    playerState.currentIndex = 0;
-  }
 }
 
 export function updatePlayerQueueForced(preserveCurrentVideo: boolean = false) {
@@ -116,10 +68,10 @@ export function updatePlayerQueueForced(preserveCurrentVideo: boolean = false) {
   const currentVideo = preserveCurrentVideo ? playerState.currentVideo : null;
 
   playerState.queue = fileBrowserState.fileSystem.flatMap(function flatten(entry): string[] {
-    if (entry.type === "folder") {
-      return entry.children?.flatMap(flatten) ?? [];
+    if (entry.files) {
+      return entry.files?.flatMap(flatten) ?? [];
     }
-    if (entry.type === "video") {
+    if (entry.path && entry.duration !== undefined) {
       return [`file://${entry.path}`];
     }
     return [];
@@ -135,57 +87,6 @@ export function updatePlayerQueueForced(preserveCurrentVideo: boolean = false) {
     }
   } else {
     playerState.currentIndex = 0;
-  }
-}
-
-// Set a single file in the file system
-export function setFileInFileSystem(filePath: string) {
-  const pathParts = filePath.split(/[/\\]/);
-  const fileName = pathParts[pathParts.length - 1];
-
-  const newFileItem: FileSystemItem = {
-    name: fileName,
-    path: filePath,
-    duration: 0,
-    type: "video"
-  };
-
-  fileBrowserState.fileSystem = [newFileItem];
-  updatePlayerQueueForced(false);
-}
-
-// Set a folder in the file system
-export function setFolderInFileSystem(folderData) {
-  if (folderData && folderData.files) {
-    // Store current video before updating
-    const currentVideo = playerState.currentVideo;
-
-    const transformedItems = folderData.files.map((entry) => {
-      if (entry.files && Array.isArray(entry.files)) {
-        const pathParts = entry.path.split(/[/\\]/);
-        const folderName = pathParts[pathParts.length - 1];
-        return {
-          name: folderName,
-          path: entry.path,
-          type: "folder" as const
-        };
-      } else {
-        return {
-          name: entry.name,
-          path: entry.path,
-          duration: entry.duration || 0,
-          type: "video" as const
-        };
-      }
-    });
-
-    fileBrowserState.fileSystem = transformedItems;
-    fileBrowserState.currentPath = folderData.rootPath || null;
-    fileBrowserState.originalPath = folderData.rootPath || null;
-    fileBrowserState.isAtRoot = false;
-
-    // Update the queue and preserve the current playing video if there is one
-    updatePlayerQueueForced(!!currentVideo);
   }
 }
 
@@ -211,16 +112,19 @@ export async function loadFileSystemStructure() {
       // Navigate to the directory
       const dirResult = await client.readDirectory(result.rootPath);
       if (dirResult) {
-        fileBrowserState.fileSystem = transformDirectoryContents(dirResult);
+        fileBrowserState.fileTree = {
+          rootPath: dirResult.currentPath,
+          files: transformDirectoryContents(dirResult)
+        };
         fileBrowserState.currentPath = dirResult.currentPath;
         fileBrowserState.isAtRoot = dirResult.isAtRoot;
 
         // Update the queue but don't auto-play
         const videos = fileBrowserState.fileSystem.flatMap(function flatten(entry): string[] {
-          if (entry.type === "folder") {
-            return entry.children?.flatMap(flatten) ?? [];
+          if (entry.files) {
+            return entry.files?.flatMap(flatten) ?? [];
           }
-          if (entry.type === "video") {
+          if (entry.path && entry.duration !== undefined) {
             return [`file://${entry.path}`];
           }
           return [];
@@ -233,13 +137,13 @@ export async function loadFileSystemStructure() {
         }
       } else if (result === null) {
         fileBrowserState.error = null;
-        fileBrowserState.fileSystem = [];
+        fileBrowserState.fileTree = null;
         fileBrowserState.currentPath = null;
         fileBrowserState.isAtRoot = false;
         fileBrowserState.originalPath = null;
       } else {
         fileBrowserState.error = "No video files found in the selected folder";
-        fileBrowserState.fileSystem = [];
+        fileBrowserState.fileTree = null;
         fileBrowserState.currentPath = null;
         fileBrowserState.isAtRoot = false;
         fileBrowserState.originalPath = null;
@@ -248,7 +152,7 @@ export async function loadFileSystemStructure() {
   } catch (err) {
     console.error("Failed to load file system:", err);
     fileBrowserState.error = "Failed to load file system. Please try again.";
-    fileBrowserState.fileSystem = [];
+    fileBrowserState.fileTree = null;
     fileBrowserState.currentPath = null;
     fileBrowserState.isAtRoot = false;
     fileBrowserState.originalPath = null;
@@ -330,18 +234,25 @@ function smartNameCompare(a: string, b: string): number {
 function sortFileSystem(files: FileSystemItem[]): FileSystemItem[] {
   return [...files].sort((a, b) => {
     // Folders always come before files
-    if (a.type === "folder" && b.type !== "folder") return -1;
-    if (a.type !== "folder" && b.type === "folder") return 1;
+    const aIsFolder = !!a.files;
+    const bIsFolder = !!b.files;
+
+    if (aIsFolder && !bIsFolder) return -1;
+    if (!aIsFolder && bIsFolder) return 1;
 
     // If both are folders or both are files, sort by the selected criteria
     switch (fileBrowserState.sortBy) {
       case "name":
-        const nameCompare = smartNameCompare(a.name, b.name);
+        const aName = a.name || "";
+        const bName = b.name || "";
+        const nameCompare = smartNameCompare(aName, bName);
         return fileBrowserState.sortDirection === "asc" ? nameCompare : -nameCompare;
 
       case "duration":
-        if (a.type !== "video" || b.type !== "video") {
-          const nameCompare = smartNameCompare(a.name, b.name);
+        if (aIsFolder || bIsFolder) {
+          const aName = a.name || "";
+          const bName = b.name || "";
+          const nameCompare = smartNameCompare(aName, bName);
           return fileBrowserState.sortDirection === "asc" ? nameCompare : -nameCompare;
         }
         const aDuration = a.duration || 0;
@@ -353,20 +264,4 @@ function sortFileSystem(files: FileSystemItem[]): FileSystemItem[] {
         return 0;
     }
   });
-}
-
-export function toggleSort(sortBy: "name" | "duration") {
-  if (fileBrowserState.sortBy === sortBy) {
-    // Toggle direction if clicking the same sort option
-    fileBrowserState.sortDirection = fileBrowserState.sortDirection === "asc" ? "desc" : "asc";
-  } else {
-    // Set new sort option and default to ascending
-    fileBrowserState.sortBy = sortBy;
-    fileBrowserState.sortDirection = "asc";
-  }
-
-  // Apply the sort to the current file system
-  fileBrowserState.fileSystem = sortFileSystem(fileBrowserState.fileSystem);
-
-  updatePlayerQueueForced(true);
 }

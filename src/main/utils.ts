@@ -59,10 +59,7 @@ export async function showFilePicker(
         console.log("file tree:", ret);
         return ret;
       } else {
-        const parentDir = dirname(selectedPath);
-        const ret = await buildFileTree(parentDir);
-        console.log("file tree:", ret);
-        return ret;
+        return res.filePaths[0];
       }
     }
 
@@ -88,14 +85,17 @@ async function buildFileTree(dirPath: string): Promise<FileTree> {
       const subTree = await buildFileTree(subDirPath);
       ret.files.push({
         path: subDirPath,
-        files: subTree.files
+        files: subTree.files,
+        type: "folder"
       });
     } else {
       const filePath = join(dirPath, entry.name);
       if (VIDEO_EXTENSIONS.some((ext) => extname(filePath).toLowerCase() === `.${ext}`)) {
         ret.files.push({
           path: filePath,
-          name: entry.name
+          name: entry.name,
+          type: "video",
+          duration: 0
         });
       }
     }
@@ -123,20 +123,20 @@ export async function loadDirectoryContents(dirPath: string): Promise<DirectoryC
         files.push({
           name: entry.name,
           path: fullPath,
-          type: "folder"
+          type: "folder",
+          files: await loadDirectoryContents(fullPath).then((contents) => contents.files)
         });
       } else if (VIDEO_EXTENSIONS.some((ext) => extname(fullPath).toLowerCase() === `.${ext}`)) {
         files.push({
           name: entry.name,
           path: fullPath,
           type: "video",
-          // duration: await getVideoDuration(fullPath)
           duration: 0
         });
       }
     }
 
-    // Sort: folders first, then files, both alphabetically
+    // Folders first
     files.sort((a, b) => {
       if (a.type === "folder" && b.type === "video") return -1;
       if (a.type === "video" && b.type === "folder") return 1;
@@ -184,8 +184,16 @@ export async function loadDirectoryContents(dirPath: string): Promise<DirectoryC
 export type FileNode = {
   path?: string;
   name?: string;
-  files?: FileNode[];
-};
+} & (
+  | {
+      type: "video";
+      duration: number;
+    }
+  | {
+      type: "folder";
+      files: FileNode[];
+    }
+);
 
 export type FileTree = {
   rootPath: string;
@@ -195,9 +203,16 @@ export type FileTree = {
 export type FileItem = {
   name: string;
   path: string;
-  type: "folder" | "video";
-  duration?: number;
-};
+} & (
+  | {
+      type: "video";
+      duration: number;
+    }
+  | {
+      type: "folder";
+      files: FileItem[];
+    }
+);
 
 export type DirectoryContents = {
   currentPath: string;

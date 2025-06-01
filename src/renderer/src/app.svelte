@@ -4,34 +4,82 @@
   import { Pane, PaneGroup, PaneResizer } from "paneforge";
   import Sidebar from "./components/sidebar.svelte";
   import VideoPlayer from "./components/video-player.svelte";
-  import { playerState, sidebarState, platformState } from "./state.svelte";
+  import { playerState, sidebarState, platformState, fileBrowserState } from "./state.svelte";
   import { playVideo } from "./utils/video-playback";
   import { client } from "./client";
-  import { PlaylistManager } from "./utils/playlist";
+  import { transformDirectoryContents } from "./utils/file-browser.svelte";
 
-  let fileBrowserEvents: {
-    addFile?: (filePath: string) => void;
-    addFolder?: (folderData: any) => void;
-  } = {};
-
+  // TODO: this should use tipc
   window.electron.ipcRenderer.on("add-file-to-browser", async (_ev, filePath) => {
     playVideo(`file://${filePath}`);
-    if (fileBrowserEvents.addFile) {
-      fileBrowserEvents.addFile(filePath);
-    }
   });
 
   window.electron.ipcRenderer.on("add-folder-to-browser", async (_ev, folderData) => {
-    // Store the current video before updating
-    const currentVideo = playerState.currentVideo;
+    try {
+      fileBrowserState.error = null;
+      const result = folderData;
+      console.log("loadFileBrowser result:", result);
 
-    if (fileBrowserEvents.addFolder) {
-      fileBrowserEvents.addFolder(folderData);
-    }
+      if (result && result.rootPath) {
+        fileBrowserState.originalPath = result.rootPath;
 
-    // If no video was playing, play the first video from the folder
-    if (!currentVideo && playerState.queue.length > 0) {
-      playVideo(playerState.queue[0]);
+        // Reset player state
+        playerState.currentTime = 0;
+        playerState.duration = 0;
+        playerState.isPlaying = false;
+        playerState.currentIndex = 0;
+        playerState.queue = [];
+        if (playerState.videoElement) {
+          playerState.videoElement.pause();
+        }
+
+        // Navigate to the directory
+        const dirResult = await client.readDirectory(result.rootPath);
+        if (dirResult) {
+          fileBrowserState.fileTree = {
+            rootPath: dirResult.currentPath,
+            files: transformDirectoryContents(dirResult)
+          };
+          fileBrowserState.currentPath = dirResult.currentPath;
+          fileBrowserState.isAtRoot = dirResult.isAtRoot;
+
+          // Update the queue but don't auto-play
+          const videos = fileBrowserState.fileSystem.flatMap(function flatten(entry): string[] {
+            if (entry.files) {
+              return entry.files?.flatMap(flatten) ?? [];
+            }
+            if (entry.path && entry.duration !== undefined) {
+              return [`file://${entry.path}`];
+            }
+            return [];
+          });
+
+          if (videos.length > 0) {
+            playerState.queue = videos;
+            playerState.currentIndex = 0;
+            // Don't auto-play - let user manually select a video
+          }
+        } else if (result === null) {
+          fileBrowserState.error = null;
+          fileBrowserState.fileTree = null;
+          fileBrowserState.currentPath = null;
+          fileBrowserState.isAtRoot = false;
+          fileBrowserState.originalPath = null;
+        } else {
+          fileBrowserState.error = "No video files found in the selected folder";
+          fileBrowserState.fileTree = null;
+          fileBrowserState.currentPath = null;
+          fileBrowserState.isAtRoot = false;
+          fileBrowserState.originalPath = null;
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load file system:", err);
+      fileBrowserState.error = "Failed to load file system. Please try again.";
+      fileBrowserState.fileTree = null;
+      fileBrowserState.currentPath = null;
+      fileBrowserState.isAtRoot = false;
+      fileBrowserState.originalPath = null;
     }
   });
 
@@ -41,9 +89,6 @@
     platformState.isMac = res.isMacOS;
     platformState.isLinux = res.isLinux;
 
-    // Initialize playlist state from storage
-    PlaylistManager.initializeFromStorage();
-
     await import("./utils/input.svelte");
   });
 </script>
@@ -52,10 +97,10 @@
   <div class="flex w-full flex-1 overflow-hidden">
     <PaneGroup direction="horizontal">
       <Pane defaultSize={80}>
-        <main class="relative h-full bg-black">
+        <main class="relative h-full">
           {#if playerState.error}
             <div
-              class="bg-player-error absolute left-1/2 top-4 z-50 flex -translate-x-1/2 transform items-center space-x-2 rounded-lg px-4 py-2 text-white shadow-lg"
+              class="absolute left-1/2 top-4 z-50 flex -translate-x-1/2 transform items-center space-x-2 rounded-lg px-4 py-2 text-white shadow-lg"
             >
               <AlertTriangle size={16} />
               <span>{playerState.error}</span>
@@ -76,8 +121,8 @@
 
       {#if sidebarState.isOpen}
         <Pane defaultSize={20}>
-          <aside class="h-full border-l border-gray-700 bg-gray-800">
-            <Sidebar {fileBrowserEvents} />
+          <aside class="h-full border-l border-gray-700">
+            <Sidebar />
           </aside>
         </Pane>
       {/if}

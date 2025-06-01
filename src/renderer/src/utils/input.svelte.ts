@@ -1,5 +1,6 @@
 import hotkey from "hotkeys-js";
 import * as state from "@/state.svelte";
+import { SidebarTab } from "@/types";
 import {
   previousVideo,
   nextVideo,
@@ -7,10 +8,11 @@ import {
   previousPlaylistVideo
 } from "./video-playback";
 import { PlaylistManager } from "./playlist";
+import { navigateToParent } from "./file-browser.svelte";
 
 // TODO: use globalShortcuts instead of "mod" key
 
-const mod = state.platformState.isMac ? "cmd" : "ctrl";
+export const modKey = state.platformState.isMac ? "cmd" : "ctrl";
 
 window.electron.ipcRenderer.on("media-previous-track", () => {
   console.log("Media Previous Track");
@@ -32,8 +34,20 @@ window.electron.ipcRenderer.on("media-play-pause", () => {
   _togglePlayback();
 });
 
+// File Browser
+hotkey(`${modKey}+1`, (ev) => {
+  ev.preventDefault();
+  state.sidebarState.currentTab = SidebarTab.FileBrowser;
+});
+
+// Queue
+hotkey(`${modKey}+2`, (ev) => {
+  ev.preventDefault();
+  state.sidebarState.currentTab = SidebarTab.Queue;
+});
+
 // Toggle sidebar
-hotkey(`${mod}+b`, (ev) => {
+hotkey(`${modKey}+b`, (ev) => {
   console.log("press");
   ev.preventDefault();
   state.sidebarState.isOpen = !state.sidebarState.isOpen;
@@ -82,7 +96,7 @@ hotkey("right", (ev) => {
 });
 
 // Previous track
-hotkey(`${mod}+left`, (ev) => {
+hotkey(`${modKey}+left`, (ev) => {
   ev.preventDefault();
   if (state.playerState.currentVideo) {
     previousVideo();
@@ -90,7 +104,7 @@ hotkey(`${mod}+left`, (ev) => {
 });
 
 // Next track
-hotkey(`${mod}+right`, (ev) => {
+hotkey(`${modKey}+right`, (ev) => {
   ev.preventDefault();
   if (state.playerState.currentVideo) {
     nextVideo();
@@ -114,7 +128,7 @@ hotkey("shift+right", (ev) => {
 });
 
 // Shuffle current playlist
-hotkey(`${mod}+s`, (ev) => {
+hotkey(`${modKey}+s`, (ev) => {
   ev.preventDefault();
   if (state.playlistState.currentPlaylist) {
     PlaylistManager.shufflePlaylist(state.playlistState.currentPlaylistId);
@@ -122,7 +136,7 @@ hotkey(`${mod}+s`, (ev) => {
 });
 
 // Clear current playlist
-hotkey(`${mod}+shift+c`, (ev) => {
+hotkey(`${modKey}+shift+c`, (ev) => {
   ev.preventDefault();
   if (state.playlistState.currentPlaylist) {
     if (confirm("Clear current playlist?")) {
@@ -143,3 +157,13 @@ for (let idx = 0; idx <= 9; idx++) {
     }
   });
 }
+
+// File browser back navigation
+hotkey("alt+left", (ev) => {
+  ev.preventDefault();
+  if (!state.fileBrowserState.currentPath || state.fileBrowserState.isAtRoot) return;
+
+  navigateToParent().catch((err) => {
+    console.error("Failed to navigate to parent directory:", err);
+  });
+});

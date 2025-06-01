@@ -3,6 +3,7 @@ import { twMerge } from "tailwind-merge";
 import { cubicOut } from "svelte/easing";
 import type { TransitionConfig } from "svelte/transition";
 
+// Works better than cn() provided by tailwind-variants
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }

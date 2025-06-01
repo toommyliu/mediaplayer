@@ -1,52 +1,64 @@
-export const playerState = $state<PlayerState>({
-  // Playback
-  isPlaying: false,
-  currentTime: 0,
-  duration: 0,
-  isLoading: false,
-  error: null,
-  showControls: true,
-  queue: [],
-  isFullscreen: false,
+import { SidebarTab } from "./types";
 
+class PlayerState {
+  // Playback
+  isPlaying = $state(false);
+  currentTime = $state(0);
+  duration = $state(0);
+  isLoading = $state(false);
+  error = $state<string | null>(null);
+  showControls = $state(true);
+  queue = $state<string[]>([]);
+  currentIndex = $state(0);
+  isFullscreen = $state(false);
   get currentVideo() {
     return this.queue[this.currentIndex] || null;
-  },
-  currentIndex: 0,
-
+  }
   // Volume control
-  volume: 1,
-  isMuted: false,
-
+  volume = $state(1);
+  isMuted = $state(false);
   // Video element reference
-  videoElement: null
-});
+  videoElement = $state<HTMLVideoElement | null>(null);
+}
 
-export const sidebarState = $state<SidebarState>({
-  isOpen: true
-  // width: -1
-});
+export const playerState = new PlayerState();
 
-export const platformState = $state<PlatformState>({
-  isMac: false,
-  isWindows: false,
-  isLinux: false
-});
+class SidebarState {
+  isOpen = $state(true);
+  currentTab = $state<SidebarTab>(SidebarTab.FileBrowser);
+}
 
-export const fileBrowserState = $state<FileBrowserState>({
-  fileSystem: [],
-  expandedFolders: new Set<string>(),
-  error: null,
-  openContextMenu: null,
-  currentPath: null,
-  isAtRoot: false,
-  originalPath: null,
-  sortBy: "name",
-  sortDirection: "asc"
-});
+export const sidebarState = new SidebarState();
 
-export const playlistState = $state<PlaylistState>({
-  playlists: [
+class PlatformState {
+  isMac = $state(false);
+  isWindows = $state(false);
+  isLinux = $state(false);
+}
+
+export const platformState = new PlatformState();
+
+class FileBrowserState {
+  fileTree = $state<FileTree | null>(null);
+  expandedFolders = $state(new Set<string>());
+  error = $state<string | null>(null);
+  openContextMenu = $state<string | null>(null);
+  currentPath = $state<string | null>(null);
+  isAtRoot = $state(false);
+  originalPath = $state<string | null>(null);
+  sortBy = $state<"name" | "duration">("name");
+  sortDirection = $state<"asc" | "desc">("asc");
+  searchQuery = $state("");
+
+  get fileSystem() {
+    return this.fileTree?.files || [];
+  }
+}
+
+export const fileBrowserState = new FileBrowserState();
+
+class PlaylistState {
+  playlists = $state<Playlist[]>([
     {
       id: "default",
       name: "Default Playlist",
@@ -55,15 +67,19 @@ export const playlistState = $state<PlaylistState>({
       createdAt: new Date(),
       lastModified: new Date()
     }
-  ],
-  currentPlaylistId: "default",
+  ]);
+  currentPlaylistId = $state("default");
+
   get currentPlaylist() {
     return this.playlists.find((p) => p.id === this.currentPlaylistId) || null;
-  },
+  }
+
   get currentPlaylistItems() {
     return this.currentPlaylist?.items || [];
   }
-});
+}
+
+export const playlistState = new PlaylistState();
 
 export type PlaylistItem = {
   id: string;
@@ -83,64 +99,22 @@ export type Playlist = {
   lastModified: Date;
 };
 
-type PlaylistState = {
-  playlists: Playlist[];
-  currentPlaylistId: string;
-  get currentPlaylist(): Playlist | null;
-  get currentPlaylistItems(): PlaylistItem[];
-};
-
-type PlayerState = {
-  // Playback
-  isPlaying: boolean;
-  currentTime: number;
-  duration: number;
-  isLoading: boolean;
-  error: string | null;
-  showControls: boolean;
-  queue: string[];
-
-  get currentVideo(): string | null;
-  currentIndex: number;
-
-  isFullscreen: boolean;
-
-  // Volume control
-  volume: number;
-  isMuted: boolean;
-
-  // Video element reference
-  videoElement: HTMLVideoElement | null;
-};
-
-type SidebarState = {
-  isOpen: boolean;
-  // width: number;
-};
-
-type PlatformState = {
-  isMac: boolean;
-  isWindows: boolean;
-  isLinux: boolean;
-};
-
 export type FileSystemItem = {
-  name: string;
-  type: "folder" | "video" | "file";
-  path: string;
-  size?: number;
+  name?: string;
+  type?: "folder" | "video";
+  path?: string;
   duration?: number;
-  children?: FileSystemItem[];
+  files?: FileSystemItem[];
 };
 
-type FileBrowserState = {
-  fileSystem: FileSystemItem[];
-  expandedFolders: Set<string>;
-  error: string | null;
-  openContextMenu: string | null;
-  currentPath: string | null;
+export type FileTree = {
+  rootPath: string;
+  files: FileSystemItem[];
+};
+
+export type DirectoryContents = {
+  currentPath: string;
+  parentPath: string | null;
   isAtRoot: boolean;
-  originalPath: string | null;
-  sortBy: "name" | "duration";
-  sortDirection: "asc" | "desc";
+  files: FileSystemItem[];
 };
