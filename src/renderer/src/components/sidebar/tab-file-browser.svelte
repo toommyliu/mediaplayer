@@ -340,28 +340,15 @@
 >
   {#if isEmpty}
     <div
-      class="m-8 flex h-full cursor-pointer items-center justify-center rounded-xl border-zinc-700/30 transition-all duration-300 hover:border-zinc-600/40 hover:bg-black/10 hover:shadow-lg"
+      class="flex h-full cursor-pointer items-center justify-center"
       ondblclick={handleEmptyDblClick}
       role="button"
       tabindex="0"
     >
-      <div class="space-y-8 px-10 py-16 text-center">
-        <div
-          class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-zinc-700/20 to-zinc-800/30 shadow-lg ring-1 ring-zinc-600/20"
-        >
-          <FolderPlus class="h-8 w-8 text-zinc-400" />
-        </div>
-        <div class="space-y-4">
-          <h3 class="text-lg font-semibold text-zinc-300">No media files loaded</h3>
-          <p class="mx-auto max-w-xs text-sm leading-relaxed text-zinc-500">
-            Browse and select a folder containing your media files to get started
-          </p>
-        </div>
-        <div
-          class="inline-flex items-center gap-2 rounded-lg bg-zinc-800/30 px-4 py-2 text-xs font-medium text-zinc-400 ring-1 ring-zinc-700/40"
-        >
-          Double-click to browse
-        </div>
+      <div class="text-center text-zinc-500">
+        <FolderPlus size={32} class="mx-auto mb-2 opacity-50" />
+        <p class="text-sm font-medium">No media files loaded</p>
+        <p class="text-xs opacity-75">Double-click to browse</p>
       </div>
     </div>
   {:else}
