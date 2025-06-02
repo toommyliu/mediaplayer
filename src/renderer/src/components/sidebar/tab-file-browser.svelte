@@ -126,6 +126,38 @@
     });
   }
 
+  function naturalSort(a: string, b: string): number {
+    // Split strings into parts, separating numeric and non-numeric segments
+    const aParts = a.match(/(\d+|\D+)/g) || [];
+    const bParts = b.match(/(\d+|\D+)/g) || [];
+
+    const maxLength = Math.max(aParts.length, bParts.length);
+
+    for (let i = 0; i < maxLength; i++) {
+      const aPart = aParts[i] || "";
+      const bPart = bParts[i] || "";
+
+      // If both parts are numeric, compare as numbers
+      const aNum = Number.parseInt(aPart, 10);
+      const bNum = Number.parseInt(bPart, 10);
+
+      if (!Number.isNaN(aNum) && !Number.isNaN(bNum)) {
+        if (aNum !== bNum) return aNum - bNum;
+      } else {
+        // Compare as strings with locale awareness
+        const comparison = aPart.localeCompare(bPart, undefined, {
+          numeric: true,
+          sensitivity: "base"
+        });
+        if (comparison !== 0) {
+          return comparison;
+        }
+      }
+    }
+
+    return 0;
+  }
+
   function compareItems(a: FileSystemItem, b: FileSystemItem): number {
     const aIsFolder = !!a.files;
     const bIsFolder = !!b.files;
@@ -139,12 +171,12 @@
     if (fileBrowserState.sortBy === "name") {
       const aName = a.name || "";
       const bName = b.name || "";
-      comparison = aName.localeCompare(bName);
+      comparison = naturalSort(aName, bName);
     } else if (fileBrowserState.sortBy === "duration") {
       if (aIsFolder && bIsFolder) {
         const aName = a.name || "";
         const bName = b.name || "";
-        comparison = aName.localeCompare(bName);
+        comparison = naturalSort(aName, bName);
       } else {
         const aDuration = a.duration || 0;
         const bDuration = b.duration || 0;
@@ -152,7 +184,7 @@
         if (aDuration === bDuration) {
           const aName = a.name || "";
           const bName = b.name || "";
-          comparison = aName.localeCompare(bName);
+          comparison = naturalSort(aName, bName);
         } else {
           if (aDuration === 0 && bDuration > 0) return 1;
           if (bDuration === 0 && aDuration > 0) return -1;
