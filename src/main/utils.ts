@@ -5,6 +5,10 @@ import { extname, join, dirname, resolve } from "node:path";
 import { chmod } from "node:fs/promises";
 import ffmpegInstaller from "@ffmpeg-installer/ffmpeg";
 import ffprobeInstaller from "@ffprobe-installer/ffprobe";
+import ffmpeg from "fluent-ffmpeg";
+import { promisify } from "node:util";
+
+const ffprobeAsync = promisify(ffmpeg.ffprobe);
 
 let isFfmpegInitialized = false;
 
@@ -24,6 +28,12 @@ async function doFfmpegInit() {
   } catch (error) {
     console.log(`Could not fix ffprobe permissions: ${error}`);
   }
+
+  ffmpeg.setFfmpegPath(ffmpegInstaller.path);
+  console.log(`Set ffmpeg path to: ${ffmpegInstaller.path}`);
+
+  ffmpeg.setFfprobePath(ffprobeInstaller.path);
+  console.log(`Set ffprobe path to: ${ffprobeInstaller.path}`);
 }
 
 /**
@@ -39,18 +49,14 @@ export async function getVideoDuration(filePath: string): Promise<number> {
     isFfmpegInitialized = true;
   }
 
-  return new Promise((resolve) => {
-    ffmpeg.ffprobe(filePath, (err, metadata) => {
-      if (err) {
-        console.error("Error getting video duration:", err);
-        resolve(0);
-        return;
-      }
-
-      const duration = metadata.format?.duration || 0;
-      resolve(duration);
-    });
-  });
+  try {
+    const metadata = await ffprobeAsync(filePath);
+    const duration = (metadata as any).format?.duration || 0;
+    return duration;
+  } catch (error) {
+    console.error("Error getting video duration:", error);
+    return 0;
+  }
 }
 
 /**
