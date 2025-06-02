@@ -1,6 +1,7 @@
 <script lang="ts">
   import * as Tabs from "./ui/tabs/";
   import TabFileBrowser from "./sidebar/tab-file-browser.svelte";
+  import TabPlaylistQueue from "./sidebar/tab-playlist-queue.svelte";
   import { sidebarState } from "../state.svelte";
   import { SidebarTab } from "@/types";
   import { fly } from "svelte/transition";
@@ -37,7 +38,7 @@
       class="grid w-full grid-cols-2 gap-1 rounded-lg border border-zinc-800/50 bg-zinc-900/50"
     >
       <Tabs.Trigger value={SidebarTab.FileBrowser} class="flex-1">File Browser</Tabs.Trigger>
-      <Tabs.Trigger value={SidebarTab.Queue} class="flex-1">Queue</Tabs.Trigger>
+      <Tabs.Trigger value={SidebarTab.Queue} class="flex-1">Playlist</Tabs.Trigger>
     </Tabs.List>
 
     <!-- Tab content container with relative positioning for sliding animation -->
@@ -62,31 +63,7 @@
             </div>
           {:else if sidebarState.currentTab === SidebarTab.Queue}
             <div class="h-full w-full overflow-hidden">
-              <div
-                class="flex h-full items-center justify-center rounded-xl border border-zinc-800/50 bg-zinc-900/50 backdrop-blur-sm"
-              >
-                <div class="space-y-2 text-center">
-                  <div
-                    class="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-zinc-800/50"
-                  >
-                    <svg
-                      class="h-6 w-6 text-zinc-500"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
-                      ></path>
-                    </svg>
-                  </div>
-                  <p class="text-sm font-medium text-zinc-400">Playlist Coming Soon</p>
-                  <p class="text-xs text-zinc-500">Feature in development</p>
-                </div>
-              </div>
+              <TabPlaylistQueue />
             </div>
           {/if}
         </div>

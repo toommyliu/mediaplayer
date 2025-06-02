@@ -13,19 +13,17 @@
   import X from "lucide-svelte/icons/x";
   import { client } from "../../client";
   import type { FileSystemItem } from "../../state.svelte";
-  import { fileBrowserState, platformState, playerState } from "../../state.svelte";
+  import { fileBrowserState, platformState, playerState, playlistState } from "../../state.svelte";
   import {
     navigateToParent,
     transformDirectoryContents,
-    closeAllContextMenus,
     navigateToDirectory
   } from "../../utils/file-browser.svelte";
   import { playVideo } from "../../utils/video-playback";
   import { showItemInFolder } from "../../utils";
-  import { PlaylistManager } from "../../utils/playlist";
-  import { playlistState } from "../../state.svelte";
   import { Input } from "../ui/input/";
   import * as ContextMenu from "../ui/context-menu/";
+  import { PlaylistManager } from "../../utils/playlist";
 
   let isEmpty = $derived(fileBrowserState.fileSystem.length === 0);
   let expandedFoldersArray = $derived([...fileBrowserState.expandedFolders]);
@@ -271,7 +269,6 @@
     fileBrowserState.searchQuery = "";
 
     try {
-      // Open browse dialog
       const res = await client.selectFileOrFolder();
       console.log("Selected file or folder:", res);
 
@@ -300,6 +297,35 @@
             "isAtRoot:",
             fileBrowserState.isAtRoot
           );
+
+          const allFiles = fileBrowserState.fileTree.files;
+          const videoFiles = allFiles.filter(
+            (file) => file.type === "video" && file.duration !== undefined && file.path && file.name
+          );
+
+          console.log(`[FileBrowser] Found ${videoFiles.length} video files in directory`);
+
+          if (videoFiles.length > 0) {
+            console.log(`[FileBrowser] Attempting to add ${videoFiles.length} videos to playlist`);
+            const success = PlaylistManager.addFolderContentsToCurrentPlaylist(
+              videoFiles.map((file) => ({
+                name: file.name!,
+                path: file.path!,
+                duration: file.duration
+              }))
+            );
+            console.log(`[FileBrowser] Add to playlist result: ${success}`);
+
+            if (success) {
+              console.log(
+                `[FileBrowser] Successfully added ${videoFiles.length} videos to current playlist`
+              );
+            } else {
+              console.warn(`[FileBrowser] Failed to add videos to playlist`);
+            }
+          } else {
+            console.log("[FileBrowser] No video files found to add to playlist");
+          }
         }
       }
     } catch (error) {
@@ -601,6 +627,7 @@
           <ContextMenu.Item
             class="text-zinc-200 hover:bg-zinc-700 focus:bg-zinc-700"
             onclick={() => {
+              console.log("Adding to playlist:", item);
               if (item.path && item.name) {
                 PlaylistManager.addItemToPlaylist(playlistState.currentPlaylistId, {
                   name: item.name,

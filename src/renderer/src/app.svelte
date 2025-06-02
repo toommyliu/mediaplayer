@@ -4,10 +4,50 @@
   import { Pane, PaneGroup, PaneResizer } from "paneforge";
   import Sidebar from "./components/sidebar.svelte";
   import VideoPlayer from "./components/video-player.svelte";
-  import { playerState, sidebarState, platformState, fileBrowserState } from "./state.svelte";
+  import {
+    playerState,
+    sidebarState,
+    platformState,
+    fileBrowserState,
+    playlistState
+  } from "./state.svelte";
   import { playVideo } from "./utils/video-playback";
   import { client } from "./client";
   import { transformDirectoryContents } from "./utils/file-browser.svelte";
+  import { PlaylistManager } from "./utils/playlist";
+
+  PlaylistManager.initializeFromStorage();
+
+  async function getAllVideoFilesRecursive(
+    folderPath: string,
+    depth: number = 0
+  ): Promise<Array<{ name: string; path: string; duration?: number }>> {
+    let videoFiles: Array<{ name: string; path: string; duration?: number }> = [];
+    const indent = "  ".repeat(depth);
+    console.log(`${indent}Scanning folder: ${folderPath}`);
+
+    try {
+      const contents = await client.readDirectory(folderPath);
+      if (contents && contents.files) {
+        console.log(`${indent}Found ${contents.files.length} items in folder`);
+
+        for (const item of contents.files) {
+          if (item.type === "video" && item.path && item.name) {
+            videoFiles.push({ name: item.name, path: item.path, duration: item.duration });
+            console.log(`${indent}- Found video: ${item.name}`);
+          } else if (item.type === "folder" && item.path) {
+            console.log(`${indent}> Entering subfolder: ${item.name}`);
+            const nestedVideos = await getAllVideoFilesRecursive(item.path, depth + 1);
+            console.log(`${indent}< Subfolder ${item.name} returned ${nestedVideos.length} videos`);
+            videoFiles = videoFiles.concat(nestedVideos);
+          }
+        }
+      }
+    } catch (error) {
+      console.error(`${indent}Error reading directory ${folderPath} recursively:`, error);
+    }
+    return videoFiles;
+  }
 
   // TODO: this should use tipc
   window.electron.ipcRenderer.on("add-file-to-browser", async (_ev, filePath) => {
@@ -23,7 +63,6 @@
       if (result && result.rootPath) {
         fileBrowserState.originalPath = result.rootPath;
 
-        // Reset player state
         playerState.currentTime = 0;
         playerState.duration = 0;
         playerState.isPlaying = false;
@@ -33,7 +72,6 @@
           playerState.videoElement.pause();
         }
 
-        // Navigate to the directory
         const dirResult = await client.readDirectory(result.rootPath);
         if (dirResult) {
           fileBrowserState.fileTree = {
@@ -43,38 +81,53 @@
           fileBrowserState.currentPath = dirResult.currentPath;
           fileBrowserState.isAtRoot = dirResult.isAtRoot;
 
-          // Update the queue but don't auto-play
-          const videos = fileBrowserState.fileSystem.flatMap(function flatten(entry): string[] {
-            if (entry.files) {
-              return entry.files?.flatMap(flatten) ?? [];
-            }
-            if (entry.path && entry.duration !== undefined) {
-              return [`file://${entry.path}`];
-            }
-            return [];
-          });
-
-          if (videos.length > 0) {
-            playerState.queue = videos;
+          const allVideoFiles = await getAllVideoFilesRecursive(result.rootPath);
+          if (allVideoFiles.length > 0) {
+            playerState.queue = allVideoFiles.map((vf) => `file://${vf.path}`);
             playerState.currentIndex = 0;
-            // Don't auto-play - let user manually select a video
+
+            console.log(`Adding ${allVideoFiles.length} videos to playlist`);
+            const success = PlaylistManager.addFolderContentsToCurrentPlaylist(allVideoFiles);
+            if (success) {
+              console.log("Successfully added folder contents to playlist");
+            } else {
+              console.error("Failed to add folder contents to playlist");
+            }
+
+            console.log(
+              `Playlist state before adding videos: ${playlistState.currentPlaylistId}, Items: ${playlistState.currentPlaylistItems.length}`
+            );
+            console.log(`Found ${allVideoFiles.length} video files in all folders and subfolders`);
+
+            PlaylistManager.addFolderContentsToCurrentPlaylist(allVideoFiles);
+            // PlaylistManager.saveCurrentState();
+
+            console.log(
+              `Playlist state after adding videos: ${playlistState.currentPlaylistId}, Items: ${playlistState.currentPlaylistItems.length}`
+            );
+
+            console.log(
+              `Added ${allVideoFiles.length} videos recursively to current playlist (unsaved)`
+            );
+          } else {
+            console.log("No video files found recursively in the selected folder.");
           }
-        } else if (result === null) {
-          fileBrowserState.error = null;
-          fileBrowserState.fileTree = null;
-          fileBrowserState.currentPath = null;
-          fileBrowserState.isAtRoot = false;
-          fileBrowserState.originalPath = null;
         } else {
-          fileBrowserState.error = "No video files found in the selected folder";
+          fileBrowserState.error = "Failed to read the selected folder.";
           fileBrowserState.fileTree = null;
           fileBrowserState.currentPath = null;
           fileBrowserState.isAtRoot = false;
-          fileBrowserState.originalPath = null;
         }
+      } else {
+        console.warn("Invalid folderData received for add-folder-to-browser:", folderData);
+        fileBrowserState.error = "Invalid folder data received.";
+        fileBrowserState.fileTree = null;
+        fileBrowserState.currentPath = null;
+        fileBrowserState.isAtRoot = false;
+        fileBrowserState.originalPath = null;
       }
     } catch (err) {
-      console.error("Failed to load file system:", err);
+      console.error("Failed to load file system or add folder to playlist:", err);
       fileBrowserState.error = "Failed to load file system. Please try again.";
       fileBrowserState.fileTree = null;
       fileBrowserState.currentPath = null;
@@ -88,6 +141,8 @@
     platformState.isWindows = res.isWindows;
     platformState.isMac = res.isMacOS;
     platformState.isLinux = res.isLinux;
+
+    PlaylistManager.initializeFromStorage();
 
     await import("./utils/input.svelte");
   });
@@ -108,7 +163,7 @@
                 onclick={() => (playerState.error = null)}
                 class="ml-2 rounded px-2 py-1 hover:bg-red-600"
               >
-                <X size={14} />
+                <X size={16} />
               </button>
             </div>
           {/if}

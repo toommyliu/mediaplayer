@@ -110,7 +110,6 @@ export async function loadDirectoryContents(dirPath: string): Promise<DirectoryC
     const entries = await readdir(resolvedPath, { withFileTypes: true });
     const files: FileItem[] = [];
 
-    // Check if we're at the root by trying to go up one level
     const parentPath = dirname(resolvedPath);
     const isAtRoot = resolvedPath === parentPath;
 

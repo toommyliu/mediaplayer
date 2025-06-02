@@ -1,14 +1,9 @@
 import hotkey from "hotkeys-js";
 import * as state from "@/state.svelte";
 import { SidebarTab } from "@/types";
-import {
-  previousVideo,
-  nextVideo,
-  nextPlaylistVideo,
-  previousPlaylistVideo
-} from "./video-playback";
-import { PlaylistManager } from "./playlist";
+import { previousVideo, nextVideo } from "./video-playback";
 import { navigateToParent } from "./file-browser.svelte";
+import { PlaylistManager } from "./playlist";
 
 // TODO: use globalShortcuts instead of "mod" key
 
@@ -51,6 +46,15 @@ hotkey(`${modKey}+b`, (ev) => {
   console.log("press");
   ev.preventDefault();
   state.sidebarState.isOpen = !state.sidebarState.isOpen;
+});
+
+// Save current playlist
+hotkey(`${modKey}+s`, (ev) => {
+  ev.preventDefault();
+  if (state.playlistState.hasUnsavedChanges) {
+    PlaylistManager.saveCurrentState();
+    console.log("Playlist saved via keyboard shortcut");
+  }
 });
 
 function _togglePlayback() {
@@ -108,40 +112,6 @@ hotkey(`${modKey}+right`, (ev) => {
   ev.preventDefault();
   if (state.playerState.currentVideo) {
     nextVideo();
-  }
-});
-
-// Playlist navigation - previous track
-hotkey("shift+left", (ev) => {
-  ev.preventDefault();
-  if (state.playerState.currentVideo && state.playlistState.currentPlaylist) {
-    previousPlaylistVideo();
-  }
-});
-
-// Playlist navigation - next track
-hotkey("shift+right", (ev) => {
-  ev.preventDefault();
-  if (state.playerState.currentVideo && state.playlistState.currentPlaylist) {
-    nextPlaylistVideo();
-  }
-});
-
-// Shuffle current playlist
-hotkey(`${modKey}+s`, (ev) => {
-  ev.preventDefault();
-  if (state.playlistState.currentPlaylist) {
-    PlaylistManager.shufflePlaylist(state.playlistState.currentPlaylistId);
-  }
-});
-
-// Clear current playlist
-hotkey(`${modKey}+shift+c`, (ev) => {
-  ev.preventDefault();
-  if (state.playlistState.currentPlaylist) {
-    if (confirm("Clear current playlist?")) {
-      PlaylistManager.clearPlaylist(state.playlistState.currentPlaylistId);
-    }
   }
 });
 

@@ -57,33 +57,10 @@ class FileBrowserState {
 
 export const fileBrowserState = new FileBrowserState();
 
-class PlaylistState {
-  playlists = $state<Playlist[]>([
-    {
-      id: "default",
-      name: "Default Playlist",
-      description: "Default playlist for all videos",
-      items: [],
-      createdAt: new Date(),
-      lastModified: new Date()
-    }
-  ]);
-  currentPlaylistId = $state("default");
-
-  get currentPlaylist() {
-    return this.playlists.find((p) => p.id === this.currentPlaylistId) || null;
-  }
-
-  get currentPlaylistItems() {
-    return this.currentPlaylist?.items || [];
-  }
-}
-
-export const playlistState = new PlaylistState();
-
+// Playlist Types
 export type PlaylistItem = {
   id: string;
-  name: string;
+  name?: string;
   path: string;
   duration?: number;
   size?: number;
@@ -98,6 +75,22 @@ export type Playlist = {
   createdAt: Date;
   lastModified: Date;
 };
+
+class PlaylistState {
+  playlists = $state<Playlist[]>([]);
+  currentPlaylistId = $state<string>("default");
+  hasUnsavedChanges = $state<boolean>(false);
+
+  get currentPlaylist(): Playlist | null {
+    return this.playlists.find((p) => p.id === this.currentPlaylistId) || null;
+  }
+
+  get currentPlaylistItems(): PlaylistItem[] {
+    return this.currentPlaylist?.items || [];
+  }
+}
+
+export const playlistState = new PlaylistState();
 
 export type FileSystemItem = {
   name?: string;

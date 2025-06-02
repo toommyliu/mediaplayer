@@ -13,7 +13,6 @@ export function transformDirectoryContents(directoryContents): FileSystemItem[] 
     name: item.name,
     path: item.path,
     duration: item.duration || 0,
-    // Use files property for folders (if type is folder), otherwise undefined
     files: item.type === "folder" ? [] : undefined,
     type: item.type
   }));
@@ -27,7 +26,6 @@ export async function navigateToDirectory(dirPath: string) {
     const result = await client.readDirectory(dirPath);
 
     if (result) {
-      // Create a FileTree structure from DirectoryContents
       fileBrowserState.fileTree = {
         rootPath: result.currentPath,
         files: transformDirectoryContents(result)
@@ -35,9 +33,20 @@ export async function navigateToDirectory(dirPath: string) {
       fileBrowserState.currentPath = result.currentPath;
       fileBrowserState.isAtRoot = result.isAtRoot;
 
-      // Always update the queue when navigating to a new directory
-      // This ensures that videos in nested folders are accessible
-      updatePlayerQueueForced(true); // Preserve current video if it exists in new directory
+      updatePlayerQueueForced(true);
+
+      const allVideoFiles = await getAllVideoFilesRecursive(dirPath);
+      console.log(
+        `Navigated to directory ${dirPath}, found ${allVideoFiles.length} videos recursively`
+      );
+
+      const { PlaylistManager } = await import("./playlist");
+      if (allVideoFiles.length > 0) {
+        PlaylistManager.addFolderContentsToCurrentPlaylist(allVideoFiles);
+        console.log(
+          `Added ${allVideoFiles.length} videos from directory (including subfolders) to current playlist (unsaved)`
+        );
+      }
     }
   } catch (err) {
     console.error("Failed to navigate to directory:", err);
@@ -64,7 +73,6 @@ export function closeAllContextMenus() {
 }
 
 export function updatePlayerQueueForced(preserveCurrentVideo: boolean = false) {
-  // Store current video before updating queue
   const currentVideo = preserveCurrentVideo ? playerState.currentVideo : null;
 
   playerState.queue = fileBrowserState.fileSystem.flatMap(function flatten(entry): string[] {
@@ -77,7 +85,6 @@ export function updatePlayerQueueForced(preserveCurrentVideo: boolean = false) {
     return [];
   });
 
-  // If we're preserving the current video and it exists, try to find it in the new queue
   if (currentVideo) {
     const newIndex = playerState.queue.findIndex((src) => src === currentVideo);
     if (newIndex !== -1) {
@@ -99,7 +106,6 @@ export async function loadFileSystemStructure() {
     if (result && result.rootPath) {
       fileBrowserState.originalPath = result.rootPath;
 
-      // Reset player state
       playerState.currentTime = 0;
       playerState.duration = 0;
       playerState.isPlaying = false;
@@ -109,7 +115,6 @@ export async function loadFileSystemStructure() {
         playerState.videoElement.pause();
       }
 
-      // Navigate to the directory
       const dirResult = await client.readDirectory(result.rootPath);
       if (dirResult) {
         fileBrowserState.fileTree = {
@@ -119,21 +124,16 @@ export async function loadFileSystemStructure() {
         fileBrowserState.currentPath = dirResult.currentPath;
         fileBrowserState.isAtRoot = dirResult.isAtRoot;
 
-        // Update the queue but don't auto-play
-        const videos = fileBrowserState.fileSystem.flatMap(function flatten(entry): string[] {
-          if (entry.files) {
-            return entry.files?.flatMap(flatten) ?? [];
-          }
-          if (entry.path && entry.duration !== undefined) {
-            return [`file://${entry.path}`];
-          }
-          return [];
-        });
+        const allVideoFiles = await getAllVideoFilesRecursive(result.rootPath);
+        console.log(`Found ${allVideoFiles.length} video files recursively in ${result.rootPath}`);
 
-        if (videos.length > 0) {
-          playerState.queue = videos;
+        if (allVideoFiles.length > 0) {
+          playerState.queue = allVideoFiles.map((vf) => `file://${vf.path}`);
           playerState.currentIndex = 0;
-          // Don't auto-play - let user manually select a video
+
+          const { PlaylistManager } = await import("./playlist");
+          PlaylistManager.addFolderContentsToCurrentPlaylist(allVideoFiles);
+          console.log(`Added ${allVideoFiles.length} videos recursively to playlist`);
         }
       } else if (result === null) {
         fileBrowserState.error = null;
@@ -157,6 +157,42 @@ export async function loadFileSystemStructure() {
     fileBrowserState.isAtRoot = false;
     fileBrowserState.originalPath = null;
   }
+}
+
+export async function getAllVideoFilesRecursive(
+  folderPath: string,
+  depth: number = 0
+): Promise<Array<{ name: string; path: string; duration?: number }>> {
+  let videoFiles: Array<{ name: string; path: string; duration?: number }> = [];
+  const indent = "  ".repeat(depth);
+  console.log(`${indent}[FileManager] Scanning folder: ${folderPath}`);
+
+  try {
+    const contents = await client.readDirectory(folderPath);
+    if (contents && contents.files) {
+      console.log(`${indent}[FileManager] Found ${contents.files.length} items in folder`);
+
+      for (const item of contents.files) {
+        if (item.type === "video" && item.path && item.name) {
+          videoFiles.push({ name: item.name, path: item.path, duration: item.duration });
+          console.log(`${indent}[FileManager] - Found video: ${item.name}`);
+        } else if (item.type === "folder" && item.path) {
+          console.log(`${indent}[FileManager] > Entering subfolder: ${item.name}`);
+          const nestedVideos = await getAllVideoFilesRecursive(item.path, depth + 1);
+          console.log(
+            `${indent}[FileManager] < Subfolder ${item.name} returned ${nestedVideos.length} videos`
+          );
+          videoFiles = videoFiles.concat(nestedVideos);
+        }
+      }
+    }
+  } catch (error) {
+    console.error(
+      `${indent}[FileManager] Error reading directory ${folderPath} recursively:`,
+      error
+    );
+  }
+  return videoFiles;
 }
 
 function extractDatePrefix(name: string): Date | null {
@@ -233,7 +269,7 @@ function smartNameCompare(a: string, b: string): number {
 
 function sortFileSystem(files: FileSystemItem[]): FileSystemItem[] {
   return [...files].sort((a, b) => {
-    // Folders always come before files
+    // Folders first
     const aIsFolder = !!a.files;
     const bIsFolder = !!b.files;
 
