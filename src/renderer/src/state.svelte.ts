@@ -1,30 +1,4 @@
-import { toBlobURL } from "@ffmpeg/util";
 import { SidebarTab } from "./types";
-import { FFmpeg } from "@ffmpeg/ffmpeg";
-
-class FfmpegState {
-  ffmpeg = $state<FFmpeg | null>(null);
-
-  isReady = $state(false);
-
-  #baseURL = "https://unpkg.com/@ffmpeg/core-mt@0.12.6/dist/esm";
-
-  init = async () => {
-    if (this.ffmpeg !== null || !this.isReady) return;
-
-    this.ffmpeg = new FFmpeg();
-
-    await this.ffmpeg.load({
-      coreURL: await toBlobURL(`${this.#baseURL}/ffmpeg-core.js`, "text/javascript"),
-      wasmURL: await toBlobURL(`${this.#baseURL}/ffmpeg-core.wasm`, "application/wasm"),
-      workerURL: await toBlobURL(`${this.#baseURL}/ffmpeg-worker.js`, "text/javascript")
-    });
-
-    this.isReady = true;
-  };
-}
-
-export const ffmpegState = new FfmpegState();
 
 class PlayerState {
   // Playback

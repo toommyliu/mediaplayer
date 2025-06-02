@@ -9,8 +9,7 @@
     sidebarState,
     platformState,
     fileBrowserState,
-    playlistState,
-    ffmpegState
+    playlistState
   } from "./state.svelte";
   import { playVideo } from "./utils/video-playback";
   import { client } from "./client";
@@ -138,8 +137,6 @@
   });
 
   document.addEventListener("DOMContentLoaded", async () => {
-    await ffmpegState.init();
-
     const res = await client.getPlatform();
     platformState.isWindows = res.isWindows;
     platformState.isMac = res.isMacOS;
