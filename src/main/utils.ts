@@ -2,8 +2,56 @@ import { app, dialog } from "electron";
 import { VIDEO_EXTENSIONS } from "./constants";
 import { readdir, stat } from "node:fs/promises";
 import { extname, join, dirname, resolve } from "node:path";
-// import ffprobe from "@ffprobe-installer/ffprobe";
-// import spawn from "nano-spawn";
+import { chmod } from "node:fs/promises";
+import ffmpegInstaller from "@ffmpeg-installer/ffmpeg";
+import ffprobeInstaller from "@ffprobe-installer/ffprobe";
+
+let isFfmpegInitialized = false;
+
+async function doFfmpegInit() {
+  try {
+    // Fix permissions for ffmpeg binary (make executable)
+    await chmod(ffmpegInstaller.path, 0o755);
+    console.log(`Fixed permissions for ffmpeg at: ${ffmpegInstaller.path}`);
+  } catch (error) {
+    console.log(`Could not fix ffmpeg permissions: ${error}`);
+  }
+
+  try {
+    // Fix permissions for ffprobe binary (make executable)
+    await chmod(ffprobeInstaller.path, 0o755);
+    console.log(`Fixed permissions for ffprobe at: ${ffprobeInstaller.path}`);
+  } catch (error) {
+    console.log(`Could not fix ffprobe permissions: ${error}`);
+  }
+}
+
+/**
+ * Get the duration of a video file.
+ *
+ * @param filePath - The path to the video file.
+ *
+ * @returns The video duration in seconds.
+ */
+export async function getVideoDuration(filePath: string): Promise<number> {
+  if (!isFfmpegInitialized) {
+    await doFfmpegInit();
+    isFfmpegInitialized = true;
+  }
+
+  return new Promise((resolve) => {
+    ffmpeg.ffprobe(filePath, (err, metadata) => {
+      if (err) {
+        console.error("Error getting video duration:", err);
+        resolve(0);
+        return;
+      }
+
+      const duration = metadata.format?.duration || 0;
+      resolve(duration);
+    });
+  });
+}
 
 /**
  * Shows the file picker.
@@ -71,6 +119,11 @@ export async function showFilePicker(
 }
 
 async function buildFileTree(dirPath: string): Promise<FileTree> {
+  if (!isFfmpegInitialized) {
+    await doFfmpegInit();
+    isFfmpegInitialized = true;
+  }
+
   const rootPath = dirPath;
   const ret: FileTree = {
     rootPath,
@@ -126,11 +179,12 @@ export async function loadDirectoryContents(dirPath: string): Promise<DirectoryC
           files: await loadDirectoryContents(fullPath).then((contents) => contents.files)
         });
       } else if (VIDEO_EXTENSIONS.some((ext) => extname(fullPath).toLowerCase() === `.${ext}`)) {
+        const duration = await getVideoDuration(fullPath);
         files.push({
           name: entry.name,
           path: fullPath,
           type: "video",
-          duration: 0
+          duration
         });
       }
     }
@@ -153,32 +207,6 @@ export async function loadDirectoryContents(dirPath: string): Promise<DirectoryC
     throw error;
   }
 }
-
-/**
- * Get the duration of a video file.
- *
- * @param filePath - The path to the video file.
- *
- * @returns The video duration in milliseconds.
- */
-// export async function getVideoDuration(filePath: string): Promise<number> {
-//   const ffprobeOutput = await spawn(ffprobe.path, [
-//     "-v",
-//     "quiet",
-//     "-print_format",
-//     "json",
-//     "-show_format",
-//     filePath
-//   ]);
-
-//   const data = JSON.parse(ffprobeOutput.stdout.toString());
-//   if (data?.format?.duration) {
-//     const duration = Math.round(Number.parseFloat(data.format.duration) * 1000);
-//     return duration;
-//   }
-
-//   return 0;
-// }
 
 export type FileNode = {
   path?: string;
