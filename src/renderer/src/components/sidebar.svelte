@@ -8,22 +8,9 @@
   import { cubicOut } from "svelte/easing";
 
   let previousTab = $state(sidebarState.currentTab);
-  let isTransitioning = $state(false);
 
   $effect(() => {
-    if (previousTab !== sidebarState.currentTab) {
-      isTransitioning = true;
-      previousTab = sidebarState.currentTab;
-
-      const timeoutId = setTimeout(() => {
-        isTransitioning = false;
-      }, 300);
-
-      return () => {
-        clearTimeout(timeoutId);
-      };
-    }
-
+    if (previousTab !== sidebarState.currentTab) previousTab = sidebarState.currentTab;
     return () => {};
   });
 </script>
@@ -41,8 +28,7 @@
       <Tabs.Trigger value={SidebarTab.Queue} class="flex-1">Playlist</Tabs.Trigger>
     </Tabs.List>
 
-    <!-- Tab content container with relative positioning for sliding animation -->
-    <div class="relative mt-6 flex-1 overflow-hidden">
+    <div class="relative mt-5 flex-1 overflow-hidden">
       {#key sidebarState.currentTab}
         <div
           class="absolute inset-0 flex h-full w-full"

@@ -4,37 +4,37 @@ import { showFilePicker, loadDirectoryContents } from "./utils";
 import { shell } from "electron";
 import { mainWindow } from ".";
 
-const t = tipc.create();
+const tipcInstance = tipc.create();
 
 export const router = {
-  enterFullscreen: t.procedure.action(async () => {
+  enterFullscreen: tipcInstance.procedure.action(async () => {
     mainWindow?.setFullScreen(true);
   }),
-  exitFullscreen: t.procedure.action(async () => {
+  exitFullscreen: tipcInstance.procedure.action(async () => {
     mainWindow?.setFullScreen(false);
   }),
 
-  selectFile: t.procedure.action(async () => {
+  selectFile: tipcInstance.procedure.action(async () => {
     return await showFilePicker("file");
   }),
-  selectFolder: t.procedure.action(async () => {
+  selectFolder: tipcInstance.procedure.action(async () => {
     return await showFilePicker("folder");
   }),
-  selectFileOrFolder: t.procedure.action(async () => {
+  selectFileOrFolder: tipcInstance.procedure.action(async () => {
     return await showFilePicker("both");
   }),
 
-  readDirectory: t.procedure.input<string>().action(async ({ input }) => {
+  readDirectory: tipcInstance.procedure.input<string>().action(async ({ input }) => {
     return await loadDirectoryContents(input);
   }),
 
-  showItemInFolder: t.procedure.input<string>().action(async ({ input }) => {
+  showItemInFolder: tipcInstance.procedure.input<string>().action(async ({ input }) => {
     try {
       shell.showItemInFolder(input);
     } catch {}
   }),
 
-  getPlatform: t.procedure.action(async () => platform)
+  getPlatform: tipcInstance.procedure.action(async () => platform)
 };
 
 export type Router = typeof router;

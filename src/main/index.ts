@@ -4,7 +4,6 @@ import { app, BrowserWindow, shell } from "electron";
 import { join } from "node:path";
 import icon from "../../resources/icon.png?asset";
 import "./input";
-import "./ipc";
 import "./menu";
 import { router } from "./tipc";
 import process from "node:process";

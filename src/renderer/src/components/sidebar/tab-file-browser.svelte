@@ -367,9 +367,7 @@
   }
 </script>
 
-<div
-  class="flex h-full flex-col overflow-hidden rounded-xl border border-zinc-800/50 bg-zinc-900/50 backdrop-blur-sm"
->
+<div class="flex h-full flex-col overflow-hidden rounded-xl bg-zinc-900/50 backdrop-blur-sm">
   {#if isEmpty}
     <div
       class="flex h-full cursor-pointer items-center justify-center"

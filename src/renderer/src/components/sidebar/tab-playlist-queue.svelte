@@ -14,6 +14,8 @@
   import { playVideo } from "../../utils/video-playback";
   import * as DropdownMenu from "../ui/dropdown-menu/index";
   import * as Dialog from "../ui/dialog/index";
+  import { ICON_SIZE } from "../../constants";
+  import { cn } from "@/utils/utils";
 
   console.log(
     `Playlist tab loaded. Current playlist: ${playlistState.currentPlaylistId}, Items: ${playlistState.currentPlaylistItems.length}`
@@ -60,18 +62,6 @@
   function savePlaylist() {
     PlaylistManager.saveCurrentState();
     console.log("Playlist saved to storage");
-
-    // Show temporary feedback
-    showSaveConfirmation();
-  }
-
-  let showSavedMessage = $state(false);
-
-  function showSaveConfirmation() {
-    showSavedMessage = true;
-    setTimeout(() => {
-      showSavedMessage = false;
-    }, 2000);
   }
 
   function getFileNameFromPath(path: string): string {
@@ -121,36 +111,41 @@
 
 <div class="flex h-full flex-col">
   <!-- Playlist Header -->
-  <div class="mb-4 flex items-center justify-between border-b border-zinc-800 px-4 pb-3">
-    <div class="flex items-center gap-2">
-      <h2 class="m-0 text-sm font-medium text-zinc-200">
-        {playlistState.currentPlaylist?.name || "Playlist"}
-      </h2>
-      {#if playlistState.hasUnsavedChanges}
+  <div class="mb-4 border-b border-zinc-800 px-4 pb-3">
+    {#if playlistState.hasUnsavedChanges}
+      <div class="mb-2 flex justify-end">
         <div class="flex items-center gap-1.5 text-xs text-zinc-400">
           <div class="h-1.5 w-1.5 rounded-full bg-amber-500"></div>
           <span class="italic">Unsaved</span>
         </div>
-      {/if}
-    </div>
+      </div>
+    {/if}
 
-    <div class="flex items-center gap-1">
-      {#if playlistState.hasUnsavedChanges}
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <h2 class="m-0 text-sm font-medium text-zinc-200">
+          {playlistState.currentPlaylist?.name || "Playlist"}
+        </h2>
+      </div>
+
+      <div class="flex items-center gap-1">
+        {#if playlistState.hasUnsavedChanges}
+          <button
+            class="flex h-7 w-7 items-center justify-center rounded-md border-none bg-transparent text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-300"
+            title="Save changes"
+            onclick={savePlaylist}
+          >
+            <Save size={ICON_SIZE - 4} />
+          </button>
+        {/if}
         <button
           class="flex h-7 w-7 items-center justify-center rounded-md border-none bg-transparent text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-300"
-          title="Save changes"
-          onclick={savePlaylist}
+          title="Clear playlist"
+          onclick={clearPlaylist}
         >
-          <Save size={14} />
+          <Trash2 size={ICON_SIZE - 4} />
         </button>
-      {/if}
-      <button
-        class="flex h-7 w-7 items-center justify-center rounded-md border-none bg-transparent text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-300"
-        title="Clear playlist"
-        onclick={clearPlaylist}
-      >
-        <Trash2 size={14} />
-      </button>
+      </div>
     </div>
   </div>
 
@@ -171,11 +166,12 @@
       <div class="space-y-1">
         {#each playlistState.currentPlaylistItems as item, index (item.id)}
           <div
-            class="group flex cursor-pointer items-center gap-2 rounded-md p-2 text-sm transition-colors {isCurrentlyPlaying(
-              item
-            )
-              ? 'bg-blue-500/20 text-blue-400'
-              : 'hover:bg-zinc-800/50'}"
+            class={cn(
+              "group flex cursor-pointer items-center gap-2 rounded-md p-2 text-sm transition-colors",
+              isCurrentlyPlaying(item)
+                ? "bg-blue-500/20 text-blue-400"
+                : "text-zinc-200 hover:bg-zinc-800/50"
+            )}
             role="button"
             tabindex="0"
             onclick={() => handleItemClick(item)}
@@ -341,7 +337,7 @@
       onclick={() => (showCreateDialog = true)}
       title="Create new playlist"
     >
-      <Plus size={14} />
+      <Plus size={ICON_SIZE - 4} />
     </button>
   </div>
 
