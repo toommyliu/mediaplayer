@@ -158,7 +158,7 @@
   {@render PlaylistSelector()}
 
   <!-- Queue Items -->
-  <div class="flex-1 overflow-y-auto">
+  <div class="no-scrollbar flex-1 overflow-y-auto">
     {#if playlistState.currentPlaylistItems.length === 0}
       <div class="flex h-full items-center justify-center">
         <div class="text-center text-zinc-500">

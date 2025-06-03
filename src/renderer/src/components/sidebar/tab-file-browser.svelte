@@ -477,9 +477,7 @@
     </div>
 
     <!-- File system list -->
-    <div
-      class="scrollbar-thin scrollbar-track-slate-900/30 scrollbar-thumb-slate-700/50 flex-1 overflow-y-auto"
-    >
+    <div class="no-scrollbar flex-1 overflow-y-auto">
       {#if hasNoSearchResults}
         <!-- No search results found message -->
         <div class="flex h-full flex-col items-center justify-center p-4 text-center">
