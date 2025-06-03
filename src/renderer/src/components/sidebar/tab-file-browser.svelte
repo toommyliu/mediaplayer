@@ -525,7 +525,16 @@
   {@const displayDuration = item.duration || 0}
 
   {#key expandedFoldersArray}
-    <ContextMenu.Root open={fileBrowserState.openContextMenu === item.path}>
+    <ContextMenu.Root
+      open={fileBrowserState.openContextMenu === item.path}
+      onOpenChange={(open) => {
+        if (open) {
+          fileBrowserState.openContextMenu = item.path;
+        } else if (fileBrowserState.openContextMenu === item.path) {
+          fileBrowserState.openContextMenu = null;
+        }
+      }}
+    >
       <ContextMenu.Trigger>
         <div
           class={cn(
