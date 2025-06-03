@@ -1,4 +1,4 @@
-import { app, dialog } from "electron";
+import { app, BrowserWindow, dialog } from "electron";
 import { VIDEO_EXTENSIONS } from "./constants";
 import { readdir, stat } from "node:fs/promises";
 import { extname, join, dirname, resolve } from "node:path";
@@ -95,17 +95,15 @@ export async function showFilePicker(
     ];
   }
 
-  const res = await dialog.showOpenDialog(options);
+  const filePaths = dialog.showOpenDialogSync(BrowserWindow.getFocusedWindow()!, options);
 
-  if (res.canceled || res.filePaths.length === 0) {
-    return null;
-  }
+  if (!filePaths || filePaths.length === 0) return null;
 
   try {
     if (mode === "file") {
-      return res.filePaths[0];
+      return filePaths[0];
     } else if (mode === "folder" || mode === "both") {
-      const selectedPath = res.filePaths[0];
+      const selectedPath = filePaths[0];
       const stats = await stat(selectedPath);
 
       if (stats.isDirectory()) {
@@ -113,7 +111,7 @@ export async function showFilePicker(
         console.log("file tree:", ret);
         return ret;
       } else {
-        return res.filePaths[0];
+        return filePaths[0];
       }
     }
 
