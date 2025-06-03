@@ -49,6 +49,8 @@ class FileBrowserState {
   sortBy = $state<"name" | "duration">("name");
   sortDirection = $state<"asc" | "desc">("asc");
   searchQuery = $state("");
+  isLoading = $state(false);
+  loadingFolders = $state(new Set<string>());
 
   get fileSystem() {
     return this.fileTree?.files || [];

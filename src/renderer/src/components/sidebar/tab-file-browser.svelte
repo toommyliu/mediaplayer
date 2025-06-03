@@ -6,6 +6,7 @@
   import Folder from "lucide-svelte/icons/folder";
   import FolderOpen from "lucide-svelte/icons/folder-open";
   import FolderPlus from "lucide-svelte/icons/folder-plus";
+  import Loader2 from "lucide-svelte/icons/loader-2";
   import MoveUp from "lucide-svelte/icons/move-up";
   import Play from "lucide-svelte/icons/play";
   import RotateCcw from "lucide-svelte/icons/rotate-ccw";
@@ -24,6 +25,7 @@
   import { Input } from "../ui/input/";
   import * as ContextMenu from "../ui/context-menu/";
   import { PlaylistManager } from "../../utils/playlist";
+  import { fade } from "svelte/transition";
 
   let isEmpty = $derived(fileBrowserState.fileSystem.length === 0);
   let expandedFoldersArray = $derived([...fileBrowserState.expandedFolders]);
@@ -82,7 +84,7 @@
   }
 
   function handleItemClick(ev: MouseEvent, item: FileSystemItem) {
-    if (!item.path) return;
+    if (!item.path || fileBrowserState.isLoading) return;
 
     console.log("Item clicked:", item);
 
@@ -212,6 +214,7 @@
     const isExpanded = item.path ? fileBrowserState.expandedFolders.has(item.path) : false;
     const isCurrentlyPlaying =
       isVideo && item.path && playerState.currentVideo === `file://${item.path}`;
+    const isLoading = item.path ? fileBrowserState.loadingFolders.has(item.path) : false;
 
     const sortedChildren = item.files ? [...item.files].sort(compareItems) : undefined;
 
@@ -221,6 +224,7 @@
       isVideo,
       isExpanded,
       isCurrentlyPlaying,
+      isLoading,
       depth
     };
   }
@@ -237,7 +241,6 @@
 
     fileBrowserState.expandedFolders = new Set(fileBrowserState.expandedFolders);
   }
-
   async function loadFolderContents(folderPath: string) {
     try {
       const folder = findFolderInFileSystem(fileBrowserState.fileSystem, folderPath);
@@ -245,15 +248,20 @@
 
       if (folder.files && folder.files.length > 0) return;
 
+      fileBrowserState.loadingFolders.add(folderPath);
+      fileBrowserState.loadingFolders = new Set(fileBrowserState.loadingFolders);
+
       const result = await client.readDirectory(folderPath);
       if (result && result.files) {
         const folderContents = transformDirectoryContents(result);
-
         updateFolderContents(fileBrowserState.fileSystem, folderPath, folderContents);
       }
     } catch (err) {
       console.error("Failed to load folder contents:", err);
       fileBrowserState.expandedFolders.delete(folderPath);
+    } finally {
+      fileBrowserState.loadingFolders.delete(folderPath);
+      fileBrowserState.loadingFolders = new Set(fileBrowserState.loadingFolders);
     }
   }
 
@@ -298,9 +306,11 @@
 
     fileBrowserState.fileTree = null;
     fileBrowserState.expandedFolders.clear();
+    fileBrowserState.loadingFolders.clear();
     fileBrowserState.searchQuery = "";
 
     try {
+      fileBrowserState.isLoading = true;
       const res = await client.selectFileOrFolder();
       console.log("Selected file or folder:", res);
 
@@ -363,22 +373,46 @@
     } catch (error) {
       console.error("Failed to browse and load directory:", error);
       fileBrowserState.error = "Failed to load directory. Please try again.";
+    } finally {
+      fileBrowserState.isLoading = false;
     }
   }
 </script>
 
-<div class="flex h-full flex-col overflow-hidden rounded-xl bg-zinc-900/50 backdrop-blur-sm">
+<div
+  class="relative flex h-full flex-col overflow-hidden rounded-xl bg-zinc-900/50 backdrop-blur-sm"
+>
+  <!-- Loading overlay -->
+  {#if fileBrowserState.isLoading}
+    <div
+      class="absolute inset-0 z-50 flex items-center justify-center bg-zinc-900/80 backdrop-blur-sm"
+      transition:fade={{ duration: 200 }}
+    >
+      <div class="flex flex-col items-center gap-3">
+        <Loader2 class="h-8 w-8 animate-spin text-blue-400" />
+        <span class="text-sm font-medium text-zinc-300">Loading...</span>
+      </div>
+    </div>
+  {/if}
+
   {#if isEmpty}
     <div
       class="flex h-full cursor-pointer items-center justify-center"
-      ondblclick={handleEmptyDblClick}
+      ondblclick={fileBrowserState.isLoading ? undefined : handleEmptyDblClick}
       role="button"
       tabindex="0"
+      class:cursor-not-allowed={fileBrowserState.isLoading}
+      class:opacity-50={fileBrowserState.isLoading}
     >
       <div class="text-center text-zinc-500">
-        <FolderPlus size={32} class="mx-auto mb-2 opacity-50" />
-        <p class="text-sm font-medium">No media files loaded</p>
-        <p class="text-xs opacity-75">Double-click to browse</p>
+        {#if fileBrowserState.isLoading}
+          <Loader2 size={32} class="mx-auto mb-2 animate-spin opacity-50" />
+          <p class="text-sm font-medium">Loading...</p>
+        {:else}
+          <FolderPlus size={32} class="mx-auto mb-2 opacity-50" />
+          <p class="text-sm font-medium">No media files loaded</p>
+          <p class="text-xs opacity-75">Double-click to browse</p>
+        {/if}
       </div>
     </div>
   {:else}
@@ -401,10 +435,15 @@
         <!-- Reset button -->
         <button
           onclick={resetAndBrowse}
-          class="flex items-center justify-center rounded-lg border border-zinc-700/50 bg-zinc-800/30 p-2 text-blue-400 transition-all duration-200 hover:border-blue-600/40 hover:bg-blue-950/30 hover:text-blue-300"
+          class="flex items-center justify-center rounded-lg border border-zinc-700/50 bg-zinc-800/30 p-2 text-blue-400 transition-all duration-200 hover:border-blue-600/40 hover:bg-blue-950/30 hover:text-blue-300 disabled:cursor-not-allowed disabled:opacity-50"
           title="Reset and browse new folder"
+          disabled={fileBrowserState.isLoading}
         >
-          <RotateCcw class="h-4 w-4" />
+          {#if fileBrowserState.isLoading}
+            <Loader2 class="h-4 w-4 animate-spin" />
+          {:else}
+            <RotateCcw class="h-4 w-4" />
+          {/if}
         </button>
       </div>
 
@@ -498,13 +537,19 @@
         <div class="-ml-4 space-y-1 p-0">
           {#if !fileBrowserState.isAtRoot && fileBrowserState.currentPath}
             <div
-              class="group flex cursor-pointer items-center rounded py-2 pr-[12px] transition-all duration-200 hover:bg-zinc-800/50"
-              onclick={navigateToParentDirectory}
+              class="group flex cursor-pointer items-center rounded py-2 pr-[12px] transition-all duration-200 hover:bg-zinc-800/50 disabled:cursor-not-allowed disabled:opacity-50"
+              onclick={fileBrowserState.isLoading ? undefined : navigateToParentDirectory}
               title="Go back"
+              class:opacity-50={fileBrowserState.isLoading}
+              class:cursor-not-allowed={fileBrowserState.isLoading}
             >
               <div class="mr-2 w-4 flex-shrink-0"></div>
               <div class="mr-2 flex-shrink-0">
-                <ArrowLeft class="h-4 w-4 text-blue-400" />
+                {#if fileBrowserState.isLoading}
+                  <Loader2 class="h-4 w-4 animate-spin text-blue-400" />
+                {:else}
+                  <ArrowLeft class="h-4 w-4 text-blue-400" />
+                {/if}
               </div>
               <span class="flex-1 truncate text-sm text-zinc-300 group-hover:text-zinc-100">
                 ..
@@ -541,7 +586,8 @@
             "group relative flex cursor-pointer items-center rounded py-2 pr-[12px] transition-all duration-200",
             fileItemView.isCurrentlyPlaying
               ? "border border-blue-500/30 bg-blue-500/20 hover:bg-blue-500/25"
-              : "hover:bg-zinc-800/40"
+              : "hover:bg-zinc-800/40",
+            fileBrowserState.isLoading && "cursor-not-allowed opacity-50"
           )}
           style={`padding-left: ${depth * 16 + 16}px;`}
           onclick={(ev) => handleItemClick(ev, item)}
@@ -554,7 +600,18 @@
                   toggleFolder(item.path);
                 }}
                 class="flex h-4 w-4 items-center justify-center rounded transition-colors duration-200 hover:bg-zinc-700/40"
+                disabled={fileItemView.isLoading}
               >
+                {#if fileItemView.isLoading}
+                  <Loader2 class="h-3 w-3 animate-spin text-zinc-400" />
+                {:else if fileItemView.isExpanded}
+                  <div class="h-0.5 w-2.5 bg-zinc-400"></div>
+                {:else}
+                  <div class="relative flex h-3 w-3 items-center justify-center">
+                    <div class="h-0.5 w-2.5 bg-zinc-400"></div>
+                    <div class="absolute h-2.5 w-0.5 bg-zinc-400"></div>
+                  </div>
+                {/if}
               </button>
             {/if}
           </div>

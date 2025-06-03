@@ -22,7 +22,9 @@ export function transformDirectoryContents(directoryContents): FileSystemItem[] 
 
 export async function navigateToDirectory(dirPath: string) {
   try {
+    fileBrowserState.isLoading = true;
     fileBrowserState.error = null;
+    fileBrowserState.loadingFolders.clear();
     const result = await client.readDirectory(dirPath);
 
     if (result) {
@@ -51,6 +53,8 @@ export async function navigateToDirectory(dirPath: string) {
   } catch (err) {
     console.error("Failed to navigate to directory:", err);
     fileBrowserState.error = "Failed to load directory. Please try again.";
+  } finally {
+    fileBrowserState.isLoading = false;
   }
 }
 
@@ -58,6 +62,7 @@ export async function navigateToParent() {
   if (!fileBrowserState.currentPath || fileBrowserState.isAtRoot) return;
 
   try {
+    fileBrowserState.isLoading = true;
     const result = await client.readDirectory(fileBrowserState.currentPath);
     if (result && result.parentPath) {
       await navigateToDirectory(result.parentPath);
@@ -65,6 +70,7 @@ export async function navigateToParent() {
   } catch (err) {
     console.error("Failed to navigate to parent directory:", err);
     fileBrowserState.error = "Failed to navigate to parent directory.";
+    fileBrowserState.isLoading = false;
   }
 }
 
@@ -99,7 +105,9 @@ export function updatePlayerQueueForced(preserveCurrentVideo: boolean = false) {
 
 export async function loadFileSystemStructure() {
   try {
+    fileBrowserState.isLoading = true;
     fileBrowserState.error = null;
+    fileBrowserState.loadingFolders.clear();
     const result = await client.selectFileOrFolder();
     console.log("loadFileBrowser result:", result);
 
@@ -156,6 +164,8 @@ export async function loadFileSystemStructure() {
     fileBrowserState.currentPath = null;
     fileBrowserState.isAtRoot = false;
     fileBrowserState.originalPath = null;
+  } finally {
+    fileBrowserState.isLoading = false;
   }
 }
 
