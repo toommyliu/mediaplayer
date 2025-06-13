@@ -15,18 +15,22 @@ let isFfmpegInitialized = false;
 // The previous dialog path
 let previousPath: string | null = null;
 
-async function doFfmpegInit() {
+async function doFfmpegInit(): Promise<void> {
   if (isFfmpegInitialized) return;
 
   logger.debug("initializing ffmpeg and ffprobe");
 
   try {
     const stats = await stat(ffmpegInstaller.path);
-    if (stats.isFile() && !(stats.mode & 0o111)) {
-      await chmod(ffmpegInstaller.path, 0o755);
-      logger.debug("fixed permissions for ffmpeg");
-    } else if (stats.isFile()) {
-      logger.debug("ffmpeg already has execute permissions");
+    const isExecutable = stats.mode & 0o111;
+
+    if (stats.isFile()) {
+      if (!isExecutable) {
+        await chmod(ffmpegInstaller.path, 0o755);
+        logger.debug("fixed permissions for ffmpeg");
+      } else {
+        logger.debug("ffmpeg already has execute permissions");
+      }
     }
   } catch (error) {
     logger.error(error, "Could not check/fix ffmpeg permissions");
@@ -34,11 +38,15 @@ async function doFfmpegInit() {
 
   try {
     const stats = await stat(ffprobeInstaller.path);
-    if (stats.isFile() && !(stats.mode & 0o111)) {
-      await chmod(ffprobeInstaller.path, 0o755);
-      logger.debug("fixed permissions for ffprobe");
-    } else if (stats.isFile()) {
-      logger.debug("ffprobe already has permissions set");
+    const isExecutable = stats.mode & 0o111;
+
+    if (stats.isFile()) {
+      if (!isExecutable) {
+        await chmod(ffprobeInstaller.path, 0o755);
+        logger.debug("fixed permissions for ffprobe");
+      } else {
+        logger.debug("ffprobe already has execute permissions");
+      }
     }
   } catch (error) {
     logger.error(error, "Could not check/fix ffprobe permissions");
@@ -61,11 +69,11 @@ export async function getVideoDuration(filePath: string): Promise<number> {
   await doFfmpegInit();
 
   try {
-    const metadata = await ffprobeAsync(filePath);
-    const duration = (metadata as any).format?.duration || 0;
+    const metadata = (await ffprobeAsync(filePath)) as FfmpegProbeMetadata;
+    const duration = metadata.format?.duration || 0;
     return duration;
   } catch (error) {
-    logger.error("Error getting video duration:", error);
+    logger.error(error, `Error getting video duration for ${filePath}`);
     return 0;
   }
 }
@@ -107,7 +115,6 @@ export async function showFilePicker(
   }
 
   const filePaths = dialog.showOpenDialogSync(BrowserWindow.getFocusedWindow()!, options);
-
   if (!filePaths || filePaths.length === 0) return null;
 
   try {
@@ -129,7 +136,7 @@ export async function showFilePicker(
 
     return null;
   } catch (error) {
-    console.error("Error building folder structure:", error);
+    logger.error(error, "Error showing file picker");
     return null;
   }
 }
@@ -161,7 +168,7 @@ async function buildFileTree(dirPath: string): Promise<FileTree> {
           path: filePath,
           name: entry.name,
           type: "video",
-          duration: 0
+          duration: await getVideoDuration(filePath)
         });
       }
     }
@@ -259,4 +266,11 @@ export type DirectoryContents = {
   parentPath: string | null;
   isAtRoot: boolean;
   files: FileItem[];
+};
+
+type FfmpegProbeMetadata = {
+  format: {
+    filename: string;
+    duration: number;
+  };
 };
