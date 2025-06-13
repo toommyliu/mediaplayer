@@ -299,8 +299,8 @@
 
 <div
   class={cn(
-    "relative h-auto w-full bg-gradient-to-t from-black/90 via-black/60 to-transparent p-4 transition-all duration-300",
-    "border-t border-white/10 backdrop-blur-sm",
+    "relative h-auto w-full bg-linear-to-t from-black/90 via-black/60 to-transparent p-4 transition-all duration-300",
+    "border-t border-white/10 backdrop-blur-xs",
     !playerState.showControls &&
       playerState.isPlaying &&
       !isDragging &&
@@ -367,7 +367,7 @@
       <!-- Hover time tooltip -->
       {#if isHovering && !isDragging && playerState.duration > 0}
         <div
-          class="absolute bottom-8 z-10 rounded-md bg-black/90 px-2 py-1 text-xs text-white shadow-lg backdrop-blur-sm"
+          class="absolute bottom-8 z-10 rounded-md bg-black/90 px-2 py-1 text-xs text-white shadow-lg backdrop-blur-xs"
           style="left: {hoverPercentage}%; transform: translateX(-50%)"
           aria-hidden="true"
         >

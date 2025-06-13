@@ -12,11 +12,6 @@ export default defineConfig({
   },
   renderer: {
     plugins: [svelte()],
-    css: {
-      postcss: {
-        plugins: [tailwindcss]
-      }
-    },
     resolve: {
       alias: {
         "@renderer": resolve("src/renderer/src"),

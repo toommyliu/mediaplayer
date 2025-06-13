@@ -361,7 +361,7 @@
             type="text"
             bind:value={newPlaylistName}
             placeholder="Enter playlist name..."
-            class="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-200 placeholder-zinc-500 transition-colors focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            class="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-200 placeholder-zinc-500 transition-colors focus:border-blue-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500"
             onkeydown={(e) => e.key === "Enter" && createPlaylist()}
             autofocus
           />
@@ -376,7 +376,7 @@
             bind:value={newPlaylistDescription}
             placeholder="Enter description (optional)..."
             rows="3"
-            class="w-full resize-none rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-200 placeholder-zinc-500 transition-colors focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            class="w-full resize-none rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-200 placeholder-zinc-500 transition-colors focus:border-blue-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500"
           ></textarea>
         </div>
       </div>

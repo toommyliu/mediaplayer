@@ -1,34 +1,24 @@
-import {
-  common,
-  browser,
-  node,
-  typescript,
-  sveltetypescript,
-  edge,
-  prettier
-} from "eslint-config-neon";
+import tseslint from "@electron-toolkit/eslint-config-ts";
+import eslintConfigPrettier from "@electron-toolkit/eslint-config-prettier";
+import eslintPluginSvelte from "eslint-plugin-svelte";
 
-export default [
+export default tseslint.config(
+  { ignores: ["**/node_modules", "**/dist", "**/out"] },
+  tseslint.configs.recommended,
+  eslintPluginSvelte.configs["flat/recommended"],
   {
-    ignore: ["**/dist/*"]
-  },
-  ...common,
-  ...browser,
-  ...node,
-  ...typescript,
-  ...sveltetypescript,
-  ...edge,
-  ...prettier,
-  {
-    settings: {
-      react: {
-        version: "detect"
-      }
-    },
+    files: ["**/*.svelte"],
     languageOptions: {
       parserOptions: {
-        project: "./tsconfig.json"
+        parser: tseslint.parser
       }
     }
-  }
-];
+  },
+  {
+    files: ["**/*.{tsx,svelte}"],
+    rules: {
+      "svelte/no-unused-svelte-ignore": "off"
+    }
+  },
+  eslintConfigPrettier
+);

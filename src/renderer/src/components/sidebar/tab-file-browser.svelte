@@ -389,7 +389,7 @@
 </script>
 
 <div
-  class="relative flex h-full flex-col overflow-hidden rounded-xl bg-zinc-900/50 backdrop-blur-sm"
+  class="relative flex h-full flex-col overflow-hidden rounded-xl rounded-b-none bg-zinc-900/50 backdrop-blur-sm"
 >
   <!-- Loading overlay -->
   {#if fileBrowserState.isLoading}
@@ -459,17 +459,17 @@
       <!-- Search input -->
       <div class="px-3 pb-3">
         <div class="relative">
-          <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+          <Search class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-zinc-400" />
           <Input
             type="text"
             placeholder="Search files and folders..."
             bind:value={fileBrowserState.searchQuery}
-            class="w-full rounded-md border border-zinc-700/50 bg-zinc-800/50 py-2 pl-10 pr-10 text-sm text-zinc-200 placeholder-zinc-500 transition-all duration-200 focus:border-blue-500/50 focus:bg-zinc-800/70 focus:outline-none focus:ring-1 focus:ring-blue-500/30"
+            class="w-full rounded-md border border-zinc-700/50 bg-zinc-800/50 py-2 pr-10 pl-10 text-sm text-zinc-200 placeholder-zinc-500 transition-all duration-200 focus:border-blue-500/50 focus:bg-zinc-800/70 focus:ring-1 focus:ring-blue-500/30 focus:outline-none"
           />
           {#if fileBrowserState.searchQuery}
             <button
               onclick={clearSearch}
-              class="absolute right-3 top-1/2 -translate-y-1/2 rounded p-0.5 text-zinc-400 transition-colors duration-200 hover:bg-zinc-700/40 hover:text-zinc-300"
+              class="absolute top-1/2 right-3 -translate-y-1/2 rounded p-0.5 text-zinc-400 transition-colors duration-200 hover:bg-zinc-700/40 hover:text-zinc-300"
               title="Clear search"
             >
               <X class="h-4 w-4" />
@@ -635,7 +635,7 @@
                 />
                 {#if fileItemView.isCurrentlyPlaying}
                   <div
-                    class="absolute -right-1 -top-1 flex h-3 w-3 items-center justify-center rounded-full bg-blue-500 ring-1 ring-blue-400/50"
+                    class="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-blue-500 ring-1 ring-blue-400/50"
                   >
                     <Play class="h-1.5 w-1.5 fill-white text-white" />
                   </div>

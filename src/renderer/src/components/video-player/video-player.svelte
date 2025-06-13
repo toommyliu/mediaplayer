@@ -231,7 +231,7 @@
 
       <!-- Hover overlay -->
       <div
-        class="absolute left-4 top-4 rounded-lg bg-black bg-opacity-70 p-3 text-white transition-opacity duration-300"
+        class="bg-opacity-70 absolute top-4 left-4 rounded-lg bg-black p-3 text-white transition-opacity duration-300"
         class:opacity-100={showOverlay}
         class:opacity-0={!showOverlay}
       >

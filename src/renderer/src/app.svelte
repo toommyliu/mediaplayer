@@ -156,7 +156,7 @@
         <main class="relative h-full">
           {#if playerState.error}
             <div
-              class="absolute left-1/2 top-4 z-50 flex -translate-x-1/2 transform items-center space-x-2 rounded-lg px-4 py-2 text-white shadow-lg"
+              class="absolute top-4 left-1/2 z-50 flex -translate-x-1/2 transform items-center space-x-2 rounded-lg px-4 py-2 text-white shadow-lg"
             >
               <AlertTriangle size={16} />
               <span>{playerState.error}</span>

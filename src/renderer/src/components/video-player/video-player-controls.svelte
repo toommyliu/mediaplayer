@@ -125,7 +125,7 @@
             console.error("Error resuming playback after seek:", error);
           });
         } else {
-          const onCanPlay = () => {
+          const onCanPlay = (): void => {
             playerState.videoElement?.play().catch((error) => {
               console.error("Error resuming playback after seek:", error);
             });
@@ -206,12 +206,12 @@
 
     handleVolumeSeek(ev, volumeBar);
 
-    let lastClientX = ev.clientX;
     let rafId: number | null = null;
-    const barRect = volumeBar.getBoundingClientRect();
 
-    const performVolumeUpdate = (): void => {
-      const percent = Math.max(0, Math.min(1, (lastClientX - barRect.left) / barRect.width));
+    const performVolumeUpdate = (clientX: number): void => {
+      // Get fresh rect on each update to handle dynamic width changes
+      const rect = volumeBar.getBoundingClientRect();
+      const percent = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
 
       if (playerState.volume !== percent) {
         playerState.volume = percent;
@@ -228,18 +228,22 @@
 
     const handleMouseMove = (e: MouseEvent): void => {
       if (isVolumeDragging) {
-        lastClientX = e.clientX;
+        e.preventDefault();
 
         if (rafId === null) {
-          rafId = requestAnimationFrame(performVolumeUpdate);
+          rafId = requestAnimationFrame(() => performVolumeUpdate(e.clientX));
         }
-
-        e.preventDefault();
       }
     };
 
     const handleMouseUp = (): void => {
       isVolumeDragging = false;
+
+      // Reset hover state when drag ends
+      if (!volumeBar.matches(":hover")) {
+        isVolumeHovering = false;
+      }
+
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
 
@@ -265,7 +269,7 @@
     playerState.isFullscreen = !playerState.isFullscreen;
   };
 
-  const previousTrack = () => {
+  const previousTrack = (): void => {
     const currentPlaylist = playlistState.currentPlaylist;
     if (currentPlaylist && currentPlaylist.items.length > 0) {
       previousPlaylistVideo();
@@ -274,7 +278,7 @@
     }
   };
 
-  const nextTrack = () => {
+  const nextTrack = (): void => {
     const currentPlaylist = playlistState.currentPlaylist;
     if (currentPlaylist && currentPlaylist.items.length > 0) {
       nextPlaylistVideo();
@@ -299,8 +303,8 @@
 
 <div
   class={cn(
-    "relative h-auto w-full bg-gradient-to-t from-black/90 via-black/60 to-transparent p-4 transition-all duration-300",
-    "border-t border-white/10 backdrop-blur-sm",
+    "relative h-auto w-full bg-linear-to-t from-black/90 via-black/60 to-transparent p-4 transition-all duration-300",
+    "border-t border-white/10 backdrop-blur-xs",
     !playerState.showControls &&
       playerState.isPlaying &&
       !isDragging &&
@@ -350,7 +354,7 @@
       {#if playerState.duration > 0}
         <div
           class={cn(
-            "absolute top-1/2 h-4 w-4 -translate-y-1/2 rounded-full shadow-lg",
+            "absolute top-1/2 h-4 w-4 rounded-full shadow-lg",
             "border-2 border-white/50 bg-blue-500 shadow-blue-300/50",
             !isDragging && "transition-all duration-200",
             isDragging
@@ -367,13 +371,13 @@
       <!-- Hover time tooltip -->
       {#if isHovering && !isDragging && playerState.duration > 0}
         <div
-          class="absolute bottom-8 z-10 rounded-md bg-black/90 px-2 py-1 text-xs text-white shadow-lg backdrop-blur-sm"
+          class="absolute bottom-8 z-10 rounded-md bg-black/90 px-2 py-1 text-xs text-white shadow-lg backdrop-blur-xs"
           style="left: {hoverPercentage}%; transform: translateX(-50%)"
           aria-hidden="true"
         >
           {makeTimeString(hoverTime)}
           <div
-            class="absolute left-1/2 top-full h-0 w-0 -translate-x-1/2 border-l-2 border-r-2 border-t-2 border-transparent border-t-black/90"
+            class="absolute top-full left-1/2 h-0 w-0 -translate-x-1/2 border-t-2 border-r-2 border-l-2 border-transparent border-t-black/90"
           ></div>
         </div>
       {/if}
@@ -384,9 +388,9 @@
   <div class="flex items-center justify-between gap-4">
     <div class="flex items-center gap-2">
       <!-- Previous Track (only show if playlist has items) -->
-      {#if hasPlaylistItems}
+      <Tooltip.Provider>
         <Tooltip.Root>
-          <Tooltip.Trigger asChild>
+          <Tooltip.Trigger>
             <Button
               variant="ghost"
               size="icon"
@@ -401,73 +405,79 @@
             <p>Previous track</p>
           </Tooltip.Content>
         </Tooltip.Root>
-      {/if}
+      </Tooltip.Provider>
 
       <!-- Skip Backward -->
-      <Tooltip.Root>
-        <Tooltip.Trigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            onclick={() => seekToRelative(-10)}
-            class="h-8 w-8 text-white hover:bg-white/20 hover:text-blue-400 focus-visible:ring-blue-400"
-            disabled={!playerState.currentVideo || playerState.isLoading}
-            aria-label="Skip backward 10 seconds"
-          >
-            <SkipBack size={ICON_SIZE} />
-          </Button>
-        </Tooltip.Trigger>
-        <Tooltip.Content>
-          <p>Skip backward 10s</p>
-        </Tooltip.Content>
-      </Tooltip.Root>
+      <Tooltip.Provider>
+        <Tooltip.Root>
+          <Tooltip.Trigger>
+            <Button
+              variant="ghost"
+              size="icon"
+              onclick={() => seekToRelative(-10)}
+              class="h-8 w-8 text-white hover:bg-white/20 hover:text-blue-400 focus-visible:ring-blue-400"
+              disabled={!playerState.currentVideo || playerState.isLoading}
+              aria-label="Skip backward 10 seconds"
+            >
+              <SkipBack size={ICON_SIZE} />
+            </Button>
+          </Tooltip.Trigger>
+          <Tooltip.Content>
+            <p>Skip backward 10s</p>
+          </Tooltip.Content>
+        </Tooltip.Root>
+      </Tooltip.Provider>
 
       <!-- Play/Pause -->
-      <Tooltip.Root>
-        <Tooltip.Trigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            onclick={togglePlay}
-            class="h-8 w-8 text-white hover:bg-white/20 hover:text-blue-400 focus-visible:ring-blue-400"
-            disabled={!playerState.currentVideo || playerState.isLoading}
-            aria-label={playerState.isPlaying ? "Pause video" : "Play video"}
-          >
-            {#if playerState.isPlaying}
-              <Pause size={ICON_SIZE} />
-            {:else}
-              <Play size={ICON_SIZE} />
-            {/if}
-          </Button>
-        </Tooltip.Trigger>
-        <Tooltip.Content>
-          <p>{playerState.isPlaying ? "Pause (Space)" : "Play (Space)"}</p>
-        </Tooltip.Content>
-      </Tooltip.Root>
+      <Tooltip.Provider>
+        <Tooltip.Root>
+          <Tooltip.Trigger>
+            <Button
+              variant="ghost"
+              size="icon"
+              onclick={togglePlay}
+              class="h-8 w-8 text-white hover:bg-white/20 hover:text-blue-400 focus-visible:ring-blue-400"
+              disabled={!playerState.currentVideo || playerState.isLoading}
+              aria-label={playerState.isPlaying ? "Pause video" : "Play video"}
+            >
+              {#if playerState.isPlaying}
+                <Pause size={ICON_SIZE} />
+              {:else}
+                <Play size={ICON_SIZE} />
+              {/if}
+            </Button>
+          </Tooltip.Trigger>
+          <Tooltip.Content>
+            <p>{playerState.isPlaying ? "Pause (Space)" : "Play (Space)"}</p>
+          </Tooltip.Content>
+        </Tooltip.Root>
+      </Tooltip.Provider>
 
       <!-- Skip Forward -->
-      <Tooltip.Root>
-        <Tooltip.Trigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            onclick={() => seekToRelative(10)}
-            class="h-8 w-8 text-white hover:bg-white/20 hover:text-blue-400 focus-visible:ring-blue-400"
-            disabled={!playerState.currentVideo || playerState.isLoading}
-            aria-label="Skip forward 10 seconds"
-          >
-            <SkipForward size={ICON_SIZE} />
-          </Button>
-        </Tooltip.Trigger>
-        <Tooltip.Content>
-          <p>Skip forward 10s</p>
-        </Tooltip.Content>
-      </Tooltip.Root>
+      <Tooltip.Provider>
+        <Tooltip.Root>
+          <Tooltip.Trigger>
+            <Button
+              variant="ghost"
+              size="icon"
+              onclick={() => seekToRelative(10)}
+              class="h-8 w-8 text-white hover:bg-white/20 hover:text-blue-400 focus-visible:ring-blue-400"
+              disabled={!playerState.currentVideo || playerState.isLoading}
+              aria-label="Skip forward 10 seconds"
+            >
+              <SkipForward size={ICON_SIZE} />
+            </Button>
+          </Tooltip.Trigger>
+          <Tooltip.Content>
+            <p>Skip forward 10s</p>
+          </Tooltip.Content>
+        </Tooltip.Root>
+      </Tooltip.Provider>
 
       <!-- Next Track (only show if playlist has items) -->
-      {#if hasPlaylistItems}
+      <Tooltip.Provider>
         <Tooltip.Root>
-          <Tooltip.Trigger asChild>
+          <Tooltip.Trigger>
             <Button
               variant="ghost"
               size="icon"
@@ -482,7 +492,7 @@
             <p>Next track</p>
           </Tooltip.Content>
         </Tooltip.Root>
-      {/if}
+      </Tooltip.Provider>
 
       <!-- Time Display -->
       <div class="flex items-center gap-1 font-mono text-sm text-white/90">
@@ -504,28 +514,30 @@
           }
         }}
       >
-        <Tooltip.Root>
-          <Tooltip.Trigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              onclick={toggleMute}
-              class="h-8 w-8 text-white hover:bg-white/20 hover:text-blue-400 focus-visible:ring-blue-400"
-              aria-label={playerState.isMuted ? "Unmute (M)" : "Mute (M)"}
-            >
-              {#if playerState.isMuted || playerState.volume === 0}
-                <VolumeX size={ICON_SIZE} />
-              {:else if playerState.volume <= 0.33}
-                <Volume1 size={ICON_SIZE} />
-              {:else}
-                <Volume2 size={ICON_SIZE} />
-              {/if}
-            </Button>
-          </Tooltip.Trigger>
-          <Tooltip.Content>
-            <p>{playerState.isMuted ? "Unmute (M)" : "Mute (M)"}</p>
-          </Tooltip.Content>
-        </Tooltip.Root>
+        <Tooltip.Provider>
+          <Tooltip.Root>
+            <Tooltip.Trigger>
+              <Button
+                variant="ghost"
+                size="icon"
+                onclick={toggleMute}
+                class="h-8 w-8 text-white hover:bg-white/20 hover:text-blue-400 focus-visible:ring-blue-400"
+                aria-label={playerState.isMuted ? "Unmute (M)" : "Mute (M)"}
+              >
+                {#if playerState.isMuted || playerState.volume === 0}
+                  <VolumeX size={ICON_SIZE} />
+                {:else if playerState.volume <= 0.33}
+                  <Volume1 size={ICON_SIZE} />
+                {:else}
+                  <Volume2 size={ICON_SIZE} />
+                {/if}
+              </Button>
+            </Tooltip.Trigger>
+            <Tooltip.Content>
+              <p>{playerState.isMuted ? "Unmute (M)" : "Mute (M)"}</p>
+            </Tooltip.Content>
+          </Tooltip.Root>
+        </Tooltip.Provider>
 
         <div
           class={cn(
@@ -565,7 +577,7 @@
 
             <div
               class={cn(
-                "pointer-events-none absolute top-1/2 h-4 w-4 -translate-y-1/2 rounded-full shadow-lg",
+                "pointer-events-none absolute top-1/2 h-4 w-4 rounded-full shadow-lg",
                 "border-2 border-white/50 bg-blue-500 shadow-blue-300/50",
                 !isVolumeDragging && "transition-all duration-100",
                 isVolumeDragging || isVolumeHovering
@@ -581,56 +593,60 @@
       </div>
 
       <!-- Fullscreen -->
-      <Tooltip.Root>
-        <Tooltip.Trigger asChild>
-          {#if playerState.isFullscreen}
-            <Button
-              variant="ghost"
-              size="icon"
-              onclick={toggleFullscreen}
-              class="h-8 w-8 text-white hover:bg-white/20 hover:text-blue-400 focus-visible:ring-blue-400"
-              aria-label="Toggle fullscreen"
-            >
-              <Maximize size={ICON_SIZE} />
-            </Button>
-          {:else}
-            <Button
-              variant="ghost"
-              size="icon"
-              onclick={toggleFullscreen}
-              class="h-8 w-8 text-white hover:bg-white/20 hover:text-blue-400 focus-visible:ring-blue-400"
-              aria-label="Exit fullscreen"
-            >
-              <Minimize size={ICON_SIZE} />
-            </Button>
-          {/if}
-        </Tooltip.Trigger>
-        <Tooltip.Content>
-          <p>Fullscreen</p>
-        </Tooltip.Content>
-      </Tooltip.Root>
+      <Tooltip.Provider>
+        <Tooltip.Root>
+          <Tooltip.Trigger>
+            {#if playerState.isFullscreen}
+              <Button
+                variant="ghost"
+                size="icon"
+                onclick={toggleFullscreen}
+                class="h-8 w-8 text-white hover:bg-white/20 hover:text-blue-400 focus-visible:ring-blue-400"
+                aria-label="Toggle fullscreen"
+              >
+                <Maximize size={ICON_SIZE} />
+              </Button>
+            {:else}
+              <Button
+                variant="ghost"
+                size="icon"
+                onclick={toggleFullscreen}
+                class="h-8 w-8 text-white hover:bg-white/20 hover:text-blue-400 focus-visible:ring-blue-400"
+                aria-label="Exit fullscreen"
+              >
+                <Minimize size={ICON_SIZE} />
+              </Button>
+            {/if}
+          </Tooltip.Trigger>
+          <Tooltip.Content>
+            <p>Fullscreen</p>
+          </Tooltip.Content>
+        </Tooltip.Root>
+      </Tooltip.Provider>
 
       <!-- Sidebar Toggle -->
-      <Tooltip.Root>
-        <Tooltip.Trigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            onclick={() => (sidebarState.isOpen = !sidebarState.isOpen)}
-            class={cn(
-              "h-8 w-8 text-white hover:bg-white/20 hover:text-blue-400 focus-visible:ring-blue-400",
-              sidebarState.isOpen && "bg-white/20 text-blue-400"
-            )}
-            aria-label={sidebarState.isOpen ? "Hide sidebar" : "Show sidebar"}
-            aria-pressed={sidebarState.isOpen}
-          >
-            <Menu size={ICON_SIZE} />
-          </Button>
-        </Tooltip.Trigger>
-        <Tooltip.Content>
-          <p>{sidebarState.isOpen ? "Hide sidebar" : "Show sidebar"}</p>
-        </Tooltip.Content>
-      </Tooltip.Root>
+      <Tooltip.Provider>
+        <Tooltip.Root>
+          <Tooltip.Trigger>
+            <Button
+              variant="ghost"
+              size="icon"
+              onclick={() => (sidebarState.isOpen = !sidebarState.isOpen)}
+              class={cn(
+                "h-8 w-8 text-white hover:bg-white/20 hover:text-blue-400 focus-visible:ring-blue-400",
+                sidebarState.isOpen && "bg-white/20 text-blue-400"
+              )}
+              aria-label={sidebarState.isOpen ? "Hide sidebar" : "Show sidebar"}
+              aria-pressed={sidebarState.isOpen}
+            >
+              <Menu size={ICON_SIZE} />
+            </Button>
+          </Tooltip.Trigger>
+          <Tooltip.Content>
+            <p>{sidebarState.isOpen ? "Hide sidebar" : "Show sidebar"}</p>
+          </Tooltip.Content>
+        </Tooltip.Root>
+      </Tooltip.Provider>
     </div>
   </div>
 </div>
