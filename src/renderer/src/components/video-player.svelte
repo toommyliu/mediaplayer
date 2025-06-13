@@ -56,6 +56,14 @@
 
   function handleError(event: Event): void {
     console.error("Video error:", event);
+
+    if ("path" in event && event.path) {
+      console.error("Event path:", event.path);
+      if (Array.isArray(event.path) && event.path?.[0]) {
+        console.error("Event path first element:", event.path[0]);
+      }
+    }
+
     const target = event.target as HTMLVideoElement;
     let errorMessage = "Unknown video error";
 

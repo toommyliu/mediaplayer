@@ -309,6 +309,15 @@
     fileBrowserState.loadingFolders.clear();
     fileBrowserState.searchQuery = "";
 
+    if (
+      playlistState.currentPlaylist.id === "default" &&
+      playlistState.currentPlaylist.items.length === 0 &&
+      !playlistState.hasUnsavedChanges
+    ) {
+      console.log("!! Clearing default playlist !!");
+      PlaylistManager.clearPlaylist(playlistState.currentPlaylistId);
+    }
+
     try {
       fileBrowserState.isLoading = true;
       const res = await client.selectFileOrFolder();
@@ -604,13 +613,6 @@
               >
                 {#if fileItemView.isLoading}
                   <Loader2 class="h-3 w-3 animate-spin text-zinc-400" />
-                {:else if fileItemView.isExpanded}
-                  <div class="h-0.5 w-2.5 bg-zinc-400"></div>
-                {:else}
-                  <div class="relative flex h-3 w-3 items-center justify-center">
-                    <div class="h-0.5 w-2.5 bg-zinc-400"></div>
-                    <div class="absolute h-2.5 w-0.5 bg-zinc-400"></div>
-                  </div>
                 {/if}
               </button>
             {/if}
