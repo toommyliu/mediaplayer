@@ -577,12 +577,10 @@
 
             <div
               class={cn(
-                "pointer-events-none absolute top-1/2 h-4 w-4 rounded-full shadow-lg",
+                "pointer-events-none absolute top-1/2 h-3 w-3 rounded-full shadow-lg",
                 "border-2 border-white/50 bg-blue-500 shadow-blue-300/50",
                 !isVolumeDragging && "transition-all duration-100",
-                isVolumeDragging || isVolumeHovering
-                  ? "scale-125 opacity-100"
-                  : "scale-100 opacity-0"
+                isVolumeDragging || isVolumeHovering ? "opacity-100" : "opacity-0"
               )}
               style="left: {(playerState.isMuted ? 0 : playerState.volume) *
                 100}%; transform: translateX(-50%) translateY(-50%); z-index: 10;"
