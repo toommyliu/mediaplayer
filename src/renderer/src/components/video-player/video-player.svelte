@@ -2,9 +2,9 @@
   import { playerState, playlistState } from "@/state.svelte";
   import { cn } from "@/utils/utils";
   import { makeTimeString } from "@/utils/time";
-  import MediaControls from "./media-controls.svelte";
   import { loadFileSystemStructure } from "@/utils/file-browser.svelte";
   import { nextPlaylistVideo, nextVideo } from "@/utils/video-playback";
+  import VideoPlayerControls from "./video-player-controls.svelte";
 
   let controlsTimeout: number | null = null;
   let overlayTimeout: number | null = null;
@@ -154,6 +154,8 @@
   }
 
   async function handleDblClick(ev: MouseEvent): Promise<void> {
+    console.log("Double click detected on video player");
+
     const target = ev.target as HTMLElement;
     const controlsElement = target.closest("#media-controls");
     if (controlsElement) {
@@ -164,7 +166,11 @@
       if (!playerState.currentVideo) {
         await loadFileSystemStructure();
       } else {
-        console.log("Double click ignored - video already loaded");
+        if (playerState.videoElement.paused) {
+          await playerState.videoElement.play();
+        } else {
+          playerState.videoElement.pause();
+        }
       }
     }
   }
@@ -244,5 +250,5 @@
     {/if}
   </div>
 
-  <MediaControls />
+  <VideoPlayerControls />
 </div>

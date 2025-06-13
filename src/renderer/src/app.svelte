@@ -3,7 +3,7 @@
   import X from "lucide-svelte/icons/x";
   import { Pane, PaneGroup, PaneResizer } from "paneforge";
   import Sidebar from "./components/sidebar.svelte";
-  import VideoPlayer from "./components/video-player.svelte";
+  import VideoPlayer from "./components/video-player/video-player.svelte";
   import {
     playerState,
     sidebarState,
@@ -15,6 +15,7 @@
   import { client } from "./client";
   import { transformDirectoryContents } from "./utils/file-browser.svelte";
   import { PlaylistManager } from "./utils/playlist";
+  import { logger } from "../../main/logger";
 
   PlaylistManager.initializeFromStorage();
 
@@ -24,7 +25,7 @@
   ): Promise<Array<{ name: string; path: string; duration?: number }>> {
     let videoFiles: Array<{ name: string; path: string; duration?: number }> = [];
     const indent = "  ".repeat(depth);
-    console.log(`${indent}Scanning folder: ${folderPath}`);
+    logger.debug(`${indent}Scanning folder: ${folderPath}`);
 
     try {
       const contents = await client.readDirectory(folderPath);

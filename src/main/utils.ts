@@ -7,33 +7,45 @@ import ffmpegInstaller from "@ffmpeg-installer/ffmpeg";
 import ffprobeInstaller from "@ffprobe-installer/ffprobe";
 import ffmpeg from "fluent-ffmpeg";
 import { promisify } from "node:util";
+import { logger } from "./logger";
 
 const ffprobeAsync = promisify(ffmpeg.ffprobe);
 
 let isFfmpegInitialized = false;
 
 async function doFfmpegInit() {
+  if (isFfmpegInitialized) return;
+
+  logger.debug("initializing ffmpeg and ffprobe");
+
   try {
-    // Fix permissions for ffmpeg binary (make executable)
-    await chmod(ffmpegInstaller.path, 0o755);
-    console.log(`Fixed permissions for ffmpeg at: ${ffmpegInstaller.path}`);
+    const stats = await stat(ffmpegInstaller.path);
+    if (stats.isFile() && !(stats.mode & 0o111)) {
+      await chmod(ffmpegInstaller.path, 0o755);
+      logger.debug("fixed permissions for ffmpeg");
+    } else if (stats.isFile()) {
+      logger.debug("ffmpeg already has execute permissions");
+    }
   } catch (error) {
-    console.log(`Could not fix ffmpeg permissions: ${error}`);
+    logger.error(error, "Could not check/fix ffmpeg permissions");
   }
 
   try {
-    // Fix permissions for ffprobe binary (make executable)
-    await chmod(ffprobeInstaller.path, 0o755);
-    console.log(`Fixed permissions for ffprobe at: ${ffprobeInstaller.path}`);
+    const stats = await stat(ffprobeInstaller.path);
+    if (stats.isFile() && !(stats.mode & 0o111)) {
+      await chmod(ffprobeInstaller.path, 0o755);
+      logger.debug("fixed permissions for ffprobe");
+    } else if (stats.isFile()) {
+      logger.debug("ffprobe already has permissions set");
+    }
   } catch (error) {
-    console.log(`Could not fix ffprobe permissions: ${error}`);
+    logger.error(error, "Could not check/fix ffprobe permissions");
   }
 
   ffmpeg.setFfmpegPath(ffmpegInstaller.path);
-  console.log(`Set ffmpeg path to: ${ffmpegInstaller.path}`);
-
   ffmpeg.setFfprobePath(ffprobeInstaller.path);
-  console.log(`Set ffprobe path to: ${ffprobeInstaller.path}`);
+
+  isFfmpegInitialized = true;
 }
 
 /**
@@ -44,17 +56,14 @@ async function doFfmpegInit() {
  * @returns The video duration in seconds.
  */
 export async function getVideoDuration(filePath: string): Promise<number> {
-  if (!isFfmpegInitialized) {
-    await doFfmpegInit();
-    isFfmpegInitialized = true;
-  }
+  await doFfmpegInit();
 
   try {
     const metadata = await ffprobeAsync(filePath);
     const duration = (metadata as any).format?.duration || 0;
     return duration;
   } catch (error) {
-    console.error("Error getting video duration:", error);
+    logger.error("Error getting video duration:", error);
     return 0;
   }
 }
@@ -123,10 +132,7 @@ export async function showFilePicker(
 }
 
 async function buildFileTree(dirPath: string): Promise<FileTree> {
-  if (!isFfmpegInitialized) {
-    await doFfmpegInit();
-    isFfmpegInitialized = true;
-  }
+  await doFfmpegInit();
 
   const rootPath = dirPath;
   const ret: FileTree = {
@@ -207,7 +213,7 @@ export async function loadDirectoryContents(dirPath: string): Promise<DirectoryC
       files
     };
   } catch (error) {
-    console.error("Error loading directory:", error);
+    logger.error(error, "Error loading directory contents");
     throw error;
   }
 }

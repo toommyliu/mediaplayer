@@ -1,6 +1,12 @@
 import { playerState, fileBrowserState, type FileSystemItem } from "@/state.svelte";
 import { client } from "@/client";
+import pino from "pino";
 
+const logger = pino({
+  browser: {
+    asObject: true
+  }
+});
 export type FileBrowserEvents = {
   addFile?: (filePath: string) => void;
   addFolder?: (folderData: any) => void;
@@ -176,6 +182,7 @@ export async function getAllVideoFilesRecursive(
   let videoFiles: Array<{ name: string; path: string; duration?: number }> = [];
   const indent = "  ".repeat(depth);
   console.log(`${indent}[FileManager] Scanning folder: ${folderPath}`);
+  logger.info(`[FileManager] Scanning folder: ${folderPath}`);
 
   try {
     const contents = await client.readDirectory(folderPath);

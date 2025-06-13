@@ -1,4 +1,11 @@
 import { playlistState, type Playlist, type PlaylistItem } from "../state.svelte";
+import createLogger from "pino";
+
+const logger = createLogger({
+  browser: {
+    asObject: true
+  }
+});
 
 export class PlaylistManager {
   /**
@@ -7,6 +14,7 @@ export class PlaylistManager {
   static initializeFromStorage(): void {
     try {
       console.log("[PlaylistManager] Initializing from storage");
+      logger.info("[PlaylistManager] Attempting to load playlists from localStorage");
       const stored = localStorage.getItem("mediaplayer-playlists");
       const storedCurrentId = localStorage.getItem("mediaplayer-current-playlist");
 
