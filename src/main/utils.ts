@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog } from "electron";
+import { app, BrowserWindow, dialog, type OpenDialogOptions } from "electron";
 import { VIDEO_EXTENSIONS } from "./constants";
 import { readdir, stat } from "node:fs/promises";
 import { extname, join, dirname, resolve } from "node:path";
@@ -10,8 +10,10 @@ import { promisify } from "node:util";
 import { logger } from "./logger";
 
 const ffprobeAsync = promisify(ffmpeg.ffprobe);
-
 let isFfmpegInitialized = false;
+
+// The previous dialog path
+let previousPath: string | null = null;
 
 async function doFfmpegInit() {
   if (isFfmpegInitialized) return;
@@ -90,8 +92,8 @@ export async function showFilePicker(
     properties.push("openFile", "openDirectory", "multiSelections");
   }
 
-  const options: Electron.OpenDialogOptions = {
-    defaultPath: app.getPath("downloads"),
+  const options: OpenDialogOptions = {
+    defaultPath: previousPath || app.getPath("downloads"),
     properties,
     title: `Select ${mode === "file" ? "File" : mode === "folder" ? "Folder" : "File or Folder"}`,
     message: `Select ${mode === "file" ? "a file" : mode === "folder" ? "a folder" : "a file or folder"} to open`
@@ -109,6 +111,9 @@ export async function showFilePicker(
   if (!filePaths || filePaths.length === 0) return null;
 
   try {
+    previousPath = filePaths[0];
+    logger.debug(`previousPath set to: ${previousPath}`);
+
     if (mode === "file") {
       return filePaths[0];
     } else if (mode === "folder" || mode === "both") {
@@ -116,9 +121,7 @@ export async function showFilePicker(
       const stats = await stat(selectedPath);
 
       if (stats.isDirectory()) {
-        const ret = await buildFileTree(selectedPath);
-        console.log("file tree:", ret);
-        return ret;
+        return await buildFileTree(selectedPath);
       } else {
         return filePaths[0];
       }
