@@ -4,28 +4,20 @@ import hotkey from "hotkeys-js";
 import { navigateToParent } from "./file-browser.svelte";
 import { PlaylistManager } from "./playlist";
 import { playNextVideo, playPreviousVideo } from "./video-playback";
-
+import { handlers } from "@/tipc";
 // TODO: use globalShortcuts instead of "mod" key
 
-export const modKey = state.platformState.isMac ? "cmd" : "ctrl";
+const modKey = state.platformState.isMac ? "cmd" : "ctrl";
 
-window.electron.ipcRenderer.on("media-previous-track", () => {
-  console.log("Media Previous Track");
-
-  if (state.playerState.currentVideo) {
-    playPreviousVideo();
-  }
+handlers.mediaPreviousTrack.listen(() => {
+  playPreviousVideo();
 });
 
-window.electron.ipcRenderer.on("media-next-track", () => {
-  console.log("Media Next Track");
-
-  if (state.playerState.currentVideo) {
-    playNextVideo();
-  }
+handlers.mediaNextTrack.listen(() => {
+  playNextVideo();
 });
 
-window.electron.ipcRenderer.on("media-play-pause", () => {
+handlers.mediaPlayPause.listen(() => {
   _togglePlayback();
 });
 
@@ -61,9 +53,9 @@ function _togglePlayback() {
   if (state.playerState.currentVideo) {
     state.playerState.isPlaying = !state.playerState.isPlaying;
     if (state.playerState.isPlaying) {
-      state.playerState.videoElement!.play().catch(() => {});
+      state.playerState.videoElement.play().catch(() => {});
     } else {
-      state.playerState.videoElement!.pause();
+      state.playerState.videoElement.pause();
     }
   }
 }

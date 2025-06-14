@@ -45,4 +45,8 @@ export type Router = typeof router;
 export type RendererHandlers = {
   addFile: (res: PickerResult) => void;
   addFolder: (res: PickerResult) => void;
+
+  mediaPreviousTrack: () => void;
+  mediaNextTrack: () => void;
+  mediaPlayPause: () => void;
 };

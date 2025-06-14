@@ -39,6 +39,7 @@ export const playVideo = (src: string): void => {
  * @returns void
  */
 export function playPreviousVideo(): void {
+  if (!playerState.videoElement || !playerState.currentVideo) return;
   if (playerState.queue.length === 0) return;
 
   const currentPlaylist = playlistState.currentPlaylist;
@@ -72,6 +73,7 @@ export function playPreviousVideo(): void {
  * @returns void
  */
 export const playNextVideo = (): void => {
+  if (!playerState.videoElement || !playerState.currentVideo) return;
   if (playerState.queue.length === 0) return;
 
   const currentPlaylist = playlistState.currentPlaylist;

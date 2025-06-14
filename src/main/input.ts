@@ -1,31 +1,54 @@
+import { getRendererHandlers } from "@egoist/tipc/main";
 import { app, BrowserWindow, globalShortcut, systemPreferences } from "electron";
+import { setTimeout } from "node:timers/promises";
+import { mainWindow } from "./index";
 import { logger } from "./logger";
+import { RendererHandlers } from "./tipc";
 
-app.on("ready", async () => {
-  const isTrustedAccessibilityClient = systemPreferences.isTrustedAccessibilityClient(true);
+const isTrustedAccessibilityClient = systemPreferences.isTrustedAccessibilityClient(true);
 
-  if (!isTrustedAccessibilityClient) {
-    logger.warn("Accessibility permissions are not granted. Media keys may not work as expected.");
-    console.log("Accessibility permissions are not granted. Media keys may not work as expected.");
-    return;
-  }
+function registerGlobalShortcuts(): void {
+  if (!isTrustedAccessibilityClient) return;
 
-  // Forward to the renderer since they can't track these
   globalShortcut.register("MediaPreviousTrack", () => {
-    console.log("Media Previous Track");
-    logger.info("Media Previous Track");
-    BrowserWindow.getFocusedWindow()?.webContents.send("media-previous-track");
+    const handlers = getRendererHandlers<RendererHandlers>(
+      BrowserWindow.getFocusedWindow()!.webContents
+    );
+
+    handlers?.mediaPreviousTrack?.invoke();
   });
 
   globalShortcut.register("MediaNextTrack", () => {
-    console.log("Media Next Track");
-    logger.info("Media Next Track");
-    BrowserWindow.getFocusedWindow()?.webContents.send("media-next-track");
+    const handlers = getRendererHandlers<RendererHandlers>(
+      BrowserWindow.getFocusedWindow()!.webContents
+    );
+
+    handlers?.mediaNextTrack?.invoke();
   });
 
   globalShortcut.register("MediaPlayPause", () => {
-    console.log("Media Play/Pause");
-    logger.info("Media Play/Pause");
-    BrowserWindow.getFocusedWindow()?.webContents.send("media-play-pause");
+    const handlers = getRendererHandlers<RendererHandlers>(
+      BrowserWindow.getFocusedWindow()!.webContents
+    );
+
+    handlers?.mediaPlayPause?.invoke();
+  });
+}
+
+app.on("ready", async () => {
+  if (!isTrustedAccessibilityClient) {
+    logger.warn("accessibility permissions not granted, global shortcuts will not work");
+  }
+
+  // Ensure that global shortcuts only work when the main window is focused
+  while (!mainWindow) await setTimeout(100);
+
+  mainWindow?.on("focus", () => {
+    globalShortcut.unregisterAll();
+    registerGlobalShortcuts();
+  });
+
+  mainWindow?.on("blur", () => {
+    globalShortcut.unregisterAll();
   });
 });
