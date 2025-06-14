@@ -3,8 +3,9 @@ import { platform } from "@electron-toolkit/utils";
 import { showFilePicker, loadDirectoryContents } from "./utils";
 import { shell } from "electron";
 import { mainWindow } from ".";
+import { logger } from "./logger";
 
-const tipcInstance = tipc.create();
+export const tipcInstance = tipc.create();
 
 export const router = {
   enterFullscreen: tipcInstance.procedure.action(async () => {
@@ -31,10 +32,17 @@ export const router = {
   showItemInFolder: tipcInstance.procedure.input<string>().action(async ({ input }) => {
     try {
       shell.showItemInFolder(input);
-    } catch {}
+    } catch (error) {
+      logger.error(error, "Error showing item in folder");
+    }
   }),
 
   getPlatform: tipcInstance.procedure.action(async () => platform)
 };
 
 export type Router = typeof router;
+
+export type RendererHandlers = {
+  addFile: (filePath: string) => void;
+  addFolder: (folderData: unknown) => void;
+};

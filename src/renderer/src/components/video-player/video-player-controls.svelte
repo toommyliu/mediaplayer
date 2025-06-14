@@ -17,7 +17,7 @@
   import FastForward from "lucide-svelte/icons/fast-forward";
   import Rewind from "lucide-svelte/icons/rewind";
   import Minimize from "lucide-svelte/icons/minimize";
-  import { client } from "@/client";
+  import { client } from "@/tipc";
   import {
     nextVideo,
     previousVideo,

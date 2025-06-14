@@ -12,7 +12,7 @@
   import RotateCcw from "lucide-svelte/icons/rotate-ccw";
   import Search from "lucide-svelte/icons/search";
   import X from "lucide-svelte/icons/x";
-  import { client } from "../../client";
+  import { client, handlers } from "../../tipc";
   import type { FileSystemItem } from "../../state.svelte";
   import { fileBrowserState, platformState, playerState, playlistState } from "../../state.svelte";
   import {

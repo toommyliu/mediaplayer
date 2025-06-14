@@ -1,21 +1,22 @@
 <script lang="ts">
+  import { logger } from "@/utils/logger";
   import AlertTriangle from "lucide-svelte/icons/alert-triangle";
   import X from "lucide-svelte/icons/x";
   import { Pane, PaneGroup, PaneResizer } from "paneforge";
+  import { onMount } from "svelte";
   import Sidebar from "./components/sidebar.svelte";
   import VideoPlayer from "./components/video-player/video-player.svelte";
   import {
-    playerState,
-    sidebarState,
-    platformState,
     fileBrowserState,
-    playlistState
+    platformState,
+    playerState,
+    playlistState,
+    sidebarState
   } from "./state.svelte";
-  import { playVideo } from "./utils/video-playback";
-  import { client } from "./client";
+  import { client, handlers } from "./tipc";
   import { transformDirectoryContents } from "./utils/file-browser.svelte";
   import { PlaylistManager } from "./utils/playlist";
-  import { logger } from "../../main/logger";
+  import { playVideo } from "./utils/video-playback";
 
   PlaylistManager.initializeFromStorage();
 
@@ -50,12 +51,11 @@
     return videoFiles;
   }
 
-  // TODO: this should use tipc
-  window.electron.ipcRenderer.on("add-file-to-browser", async (_ev, filePath) => {
-    playVideo(`file://${filePath}`);
+  handlers.addFile.listen(async (path) => {
+    playVideo(`file://${path}`);
   });
 
-  window.electron.ipcRenderer.on("add-folder-to-browser", async (_ev, folderData) => {
+  handlers.addFolder.listen(async (folderData) => {
     try {
       fileBrowserState.error = null;
       const result = folderData;
@@ -137,7 +137,7 @@
     }
   });
 
-  document.addEventListener("DOMContentLoaded", async () => {
+  onMount(async () => {
     const res = await client.getPlatform();
     platformState.isWindows = res.isWindows;
     platformState.isMac = res.isMacOS;

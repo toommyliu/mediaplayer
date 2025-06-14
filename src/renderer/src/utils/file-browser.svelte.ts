@@ -1,5 +1,5 @@
 import { playerState, fileBrowserState, type FileSystemItem } from "@/state.svelte";
-import { client } from "@/client";
+import { client } from "@/tipc";
 import pino from "pino";
 
 const logger = pino({

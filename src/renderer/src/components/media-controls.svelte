@@ -17,7 +17,7 @@
   import FastForward from "lucide-svelte/icons/fast-forward";
   import Rewind from "lucide-svelte/icons/rewind";
   import Minimize from "lucide-svelte/icons/minimize";
-  import { client } from "@/client";
+  import { client } from "@/tipc";
   import {
     nextVideo,
     previousVideo,
@@ -373,7 +373,7 @@
         >
           {makeTimeString(hoverTime)}
           <div
-            class="absolute left-1/2 top-full h-0 w-0 -translate-x-1/2 border-l-2 border-r-2 border-t-2 border-transparent border-t-black/90"
+            class="absolute top-full left-1/2 h-0 w-0 -translate-x-1/2 border-t-2 border-r-2 border-l-2 border-transparent border-t-black/90"
           ></div>
         </div>
       {/if}
