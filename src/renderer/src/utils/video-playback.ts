@@ -33,9 +33,19 @@ export const playVideo = (src: string): void => {
 
 /**
  * Plays the previous video in the queue, cycling to the last video if at the beginning.
+ *
+ * Supports playlist operations.
+ *
+ * @returns void
  */
-export const previousVideo = () => {
+export function playPreviousVideo(): void {
   if (playerState.queue.length === 0) return;
+
+  const currentPlaylist = playlistState.currentPlaylist;
+  if (currentPlaylist && currentPlaylist.items.length > 0) {
+    previousPlaylistVideo();
+    return;
+  }
 
   let newIndex = playerState.currentIndex - 1;
   if (newIndex < 0) {
@@ -53,13 +63,22 @@ export const previousVideo = () => {
     playerState.videoElement.currentTime = 0;
     playerState.videoElement.load();
   }
-};
+}
 
 /**
  * Plays the next video in the queue, cycling to the first video if at the end.
+ *
+ * Supports playlist operations.
+ * @returns void
  */
-export const nextVideo = () => {
+export const playNextVideo = (): void => {
   if (playerState.queue.length === 0) return;
+
+  const currentPlaylist = playlistState.currentPlaylist;
+  if (currentPlaylist && currentPlaylist.items.length > 0) {
+    nextPlaylistVideo();
+    return;
+  }
 
   let newIndex = playerState.currentIndex + 1;
   if (newIndex >= playerState.queue.length) {
@@ -80,11 +99,11 @@ export const nextVideo = () => {
 };
 
 /**
- * Seeks to a relative time in the current video.
+ * Seeks to a time relative to the current playback position.
  *
  * @param time - The time in seconds to seek to.
  */
-export const seekToRelative = (time: number) => {
+export const seekToRelative = (time: number): void => {
   if (!playerState.videoElement) return;
 
   const newTime = playerState.videoElement.currentTime + time;
@@ -96,10 +115,10 @@ export const seekToRelative = (time: number) => {
 /**
  * Plays the next video from the current playlist.
  */
-export const nextPlaylistVideo = () => {
+export const nextPlaylistVideo = (): void => {
   const currentPlaylist = playlistState.currentPlaylist;
   if (!currentPlaylist || currentPlaylist.items.length === 0) {
-    return nextVideo();
+    return playNextVideo();
   }
 
   const currentVideo = playerState.currentVideo;
@@ -125,11 +144,11 @@ export const nextPlaylistVideo = () => {
 /**
  * Plays the previous video from the current playlist.
  */
-export const previousPlaylistVideo = () => {
+const previousPlaylistVideo = (): void => {
   const currentPlaylist = playlistState.currentPlaylist;
   if (!currentPlaylist || currentPlaylist.items.length === 0) {
     // Fall back to queue navigation if no playlist
-    return previousVideo();
+    return playPreviousVideo();
   }
 
   const currentVideo = playerState.currentVideo;

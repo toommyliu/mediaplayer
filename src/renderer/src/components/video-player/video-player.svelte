@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { playerState, playlistState } from "@/state.svelte";
-  import { cn } from "@/utils/utils";
+  import { playerState } from "@/state.svelte";
   import { loadFileSystemStructure } from "@/utils/file-browser.svelte";
-  import { nextPlaylistVideo, nextVideo } from "@/utils/video-playback";
+  import { cn } from "@/utils/utils";
+  import { playNextVideo } from "@/utils/video-playback";
   import VideoPlayerControls from "./video-player-controls.svelte";
   import VideoPlayerTitle from "./video-player-title.svelte";
 
@@ -111,12 +111,7 @@
     const currentVideo = playerState.currentVideo;
     if (!currentVideo) return;
 
-    const currentPlaylist = playlistState.currentPlaylist;
-    if (currentPlaylist && currentPlaylist.items.length > 0) {
-      nextPlaylistVideo();
-    } else {
-      nextVideo();
-    }
+    playNextVideo();
   }
 
   function showControlsTemporarily(): void {

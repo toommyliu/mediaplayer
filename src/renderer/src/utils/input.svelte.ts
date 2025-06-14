@@ -1,9 +1,9 @@
-import hotkey from "hotkeys-js";
 import * as state from "@/state.svelte";
 import { SidebarTab } from "@/types";
-import { previousVideo, nextVideo } from "./video-playback";
+import hotkey from "hotkeys-js";
 import { navigateToParent } from "./file-browser.svelte";
 import { PlaylistManager } from "./playlist";
+import { playNextVideo, playPreviousVideo } from "./video-playback";
 
 // TODO: use globalShortcuts instead of "mod" key
 
@@ -13,7 +13,7 @@ window.electron.ipcRenderer.on("media-previous-track", () => {
   console.log("Media Previous Track");
 
   if (state.playerState.currentVideo) {
-    previousVideo();
+    playPreviousVideo();
   }
 });
 
@@ -21,7 +21,7 @@ window.electron.ipcRenderer.on("media-next-track", () => {
   console.log("Media Next Track");
 
   if (state.playerState.currentVideo) {
-    nextVideo();
+    playNextVideo();
   }
 });
 
@@ -111,7 +111,7 @@ hotkey(`${modKey}+left`, (ev) => {
 hotkey(`${modKey}+right`, (ev) => {
   ev.preventDefault();
   if (state.playerState.currentVideo) {
-    nextVideo();
+    playNextVideo();
   }
 });
 

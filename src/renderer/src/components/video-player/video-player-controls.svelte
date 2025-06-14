@@ -18,13 +18,7 @@
   import Rewind from "lucide-svelte/icons/rewind";
   import Minimize from "lucide-svelte/icons/minimize";
   import { client } from "@/tipc";
-  import {
-    nextVideo,
-    previousVideo,
-    seekToRelative,
-    nextPlaylistVideo,
-    previousPlaylistVideo
-  } from "@/utils/video-playback";
+  import { playNextVideo, playPreviousVideo, seekToRelative } from "@/utils/video-playback";
 
   let isDragging = $state(false);
   let hoverTime = $state(0);
@@ -269,29 +263,6 @@
     playerState.isFullscreen = !playerState.isFullscreen;
   };
 
-  const previousTrack = (): void => {
-    const currentPlaylist = playlistState.currentPlaylist;
-    if (currentPlaylist && currentPlaylist.items.length > 0) {
-      previousPlaylistVideo();
-    } else {
-      previousVideo();
-    }
-  };
-
-  const nextTrack = (): void => {
-    const currentPlaylist = playlistState.currentPlaylist;
-    if (currentPlaylist && currentPlaylist.items.length > 0) {
-      nextPlaylistVideo();
-    } else {
-      nextVideo();
-    }
-  };
-
-  // Check if playlist navigation is available
-  const hasPlaylistItems = $derived(
-    playlistState.currentPlaylist && playlistState.currentPlaylist.items.length > 1
-  );
-
   const progressPercentage = $derived(
     playerState.duration > 0 ? (playerState.currentTime / playerState.duration) * 100 : 0
   );
@@ -387,14 +358,14 @@
   <!-- Controls Section -->
   <div class="flex items-center justify-between gap-4">
     <div class="flex items-center gap-2">
-      <!-- Previous Track (only show if playlist has items) -->
+      <!-- Previous Track -->
       <Tooltip.Provider>
         <Tooltip.Root>
           <Tooltip.Trigger>
             <Button
               variant="ghost"
               size="icon"
-              onclick={previousTrack}
+              onclick={playPreviousVideo}
               class="h-8 w-8 text-white hover:bg-white/20 hover:text-blue-400 focus-visible:ring-blue-400"
               disabled={!playerState.currentVideo || playerState.isLoading}
             >
@@ -474,14 +445,14 @@
         </Tooltip.Root>
       </Tooltip.Provider>
 
-      <!-- Next Track (only show if playlist has items) -->
+      <!-- Next Track -->
       <Tooltip.Provider>
         <Tooltip.Root>
           <Tooltip.Trigger>
             <Button
               variant="ghost"
               size="icon"
-              onclick={nextTrack}
+              onclick={playNextVideo}
               class="h-8 w-8 text-white hover:bg-white/20 hover:text-blue-400 focus-visible:ring-blue-400"
               disabled={!playerState.currentVideo || playerState.isLoading}
             >
