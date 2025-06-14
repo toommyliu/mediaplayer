@@ -83,12 +83,12 @@ export async function getVideoDuration(filePath: string): Promise<number> {
  *
  * @param mode - The mode of the file browser, used to specify the entry types allowed.
  */
-export async function showFilePicker(mode: "file"): Promise<string | null>;
-export async function showFilePicker(mode: "folder"): Promise<FileTree | null>;
-export async function showFilePicker(mode: "both"): Promise<FileTree | null>;
+export async function showFilePicker(mode: "file"): Promise<PickerResult | null>;
+export async function showFilePicker(mode: "folder"): Promise<PickerResult | null>;
+export async function showFilePicker(mode: "both"): Promise<PickerResult | null>;
 export async function showFilePicker(
   mode: "file" | "folder" | "both"
-): Promise<string | FileTree | null> {
+): Promise<string | PickerResult | null> {
   const properties: Array<"openFile" | "openDirectory" | "multiSelections" | "createDirectory"> =
     [];
 
@@ -121,19 +121,23 @@ export async function showFilePicker(
     if (mode === "file") {
       previousPath = dirname(filePaths[0]);
       logger.debug(`previousPath set to: ${previousPath}`);
-      return filePaths[0];
+      return {
+        type: "file",
+        path: filePaths[0]
+      };
     } else if (mode === "folder" || mode === "both") {
       const selectedPath = filePaths[0];
       const stats = await stat(selectedPath);
       if (stats.isFile()) {
         previousPath = dirname(selectedPath);
         logger.debug(`previousPath set to: ${previousPath}`);
-
-        return selectedPath;
+        return {
+          type: "file",
+          path: selectedPath
+        };
       } else if (stats.isDirectory()) {
         previousPath = selectedPath;
         logger.debug(`previousPath set to: ${previousPath}`);
-
         return await buildFileTree(selectedPath);
       }
     }
@@ -145,13 +149,14 @@ export async function showFilePicker(
   }
 }
 
-async function buildFileTree(dirPath: string): Promise<FileTree> {
+async function buildFileTree(dirPath: string): Promise<PickerResult> {
   await doFfmpegInit();
 
   const rootPath = dirPath;
-  const ret: FileTree = {
+  const ret: PickerResult = {
+    type: "folder",
     rootPath,
-    files: []
+    tree: []
   };
 
   for (const entry of await readdir(dirPath, { withFileTypes: true })) {
@@ -160,15 +165,16 @@ async function buildFileTree(dirPath: string): Promise<FileTree> {
     if (entry.isDirectory()) {
       const subDirPath = join(dirPath, entry.name);
       const subTree = await buildFileTree(subDirPath);
-      ret.files.push({
+      ret.tree.push({
         path: subDirPath,
-        files: subTree.files,
+        name: entry.name,
+        files: subTree.type === "folder" ? subTree.tree : [],
         type: "folder"
       });
     } else {
       const filePath = join(dirPath, entry.name);
       if (VIDEO_EXTENSIONS.some((ext) => extname(filePath).toLowerCase() === `.${ext}`)) {
-        ret.files.push({
+        ret.tree.push({
           path: filePath,
           name: entry.name,
           type: "video",
@@ -232,7 +238,18 @@ export async function loadDirectoryContents(dirPath: string): Promise<DirectoryC
   }
 }
 
-export type FileNode = {
+export type PickerResult =
+  | {
+      type: "file";
+      path: string;
+    }
+  | {
+      type: "folder";
+      rootPath: string;
+      tree: PickerNode[];
+    };
+
+export type PickerNode = {
   path?: string;
   name?: string;
 } & (
@@ -242,14 +259,9 @@ export type FileNode = {
     }
   | {
       type: "folder";
-      files: FileNode[];
+      files: PickerNode[];
     }
 );
-
-export type FileTree = {
-  rootPath: string;
-  files: FileNode[];
-};
 
 export type FileItem = {
   name: string;

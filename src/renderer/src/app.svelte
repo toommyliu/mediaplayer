@@ -62,7 +62,9 @@
       const result = folderData;
       console.log("loadFileBrowser result:", result);
 
-      if (result && result.rootPath) {
+      if (!result) return;
+
+      if (result.type === "folder") {
         fileBrowserState.originalPath = result.rootPath;
 
         playerState.currentTime = 0;

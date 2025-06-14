@@ -1,6 +1,6 @@
 import { tipc } from "@egoist/tipc/main";
 import { platform } from "@electron-toolkit/utils";
-import { showFilePicker, loadDirectoryContents } from "./utils";
+import { showFilePicker, loadDirectoryContents, type PickerResult } from "./utils";
 import { shell } from "electron";
 import { mainWindow } from ".";
 import { logger } from "./logger";
@@ -43,6 +43,6 @@ export const router = {
 export type Router = typeof router;
 
 export type RendererHandlers = {
-  addFile: (filePath: string) => void;
-  addFolder: (folderData: unknown) => void;
+  addFile: (res: PickerResult) => void;
+  addFolder: (res: PickerResult) => void;
 };
