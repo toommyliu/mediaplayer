@@ -118,19 +118,23 @@ export async function showFilePicker(
   if (!filePaths || filePaths.length === 0) return null;
 
   try {
-    previousPath = filePaths[0];
-    logger.debug(`previousPath set to: ${previousPath}`);
-
     if (mode === "file") {
+      previousPath = dirname(filePaths[0]);
+      logger.debug(`previousPath set to: ${previousPath}`);
       return filePaths[0];
     } else if (mode === "folder" || mode === "both") {
       const selectedPath = filePaths[0];
       const stats = await stat(selectedPath);
+      if (stats.isFile()) {
+        previousPath = dirname(selectedPath);
+        logger.debug(`previousPath set to: ${previousPath}`);
 
-      if (stats.isDirectory()) {
+        return selectedPath;
+      } else if (stats.isDirectory()) {
+        previousPath = selectedPath;
+        logger.debug(`previousPath set to: ${previousPath}`);
+
         return await buildFileTree(selectedPath);
-      } else {
-        return filePaths[0];
       }
     }
 

@@ -1,10 +1,9 @@
-import { Menu, BrowserWindow, webContents } from "electron";
-import { platform } from "@electron-toolkit/utils";
-import { showFilePicker } from "./utils";
-import { mainWindow } from ".";
-import { type RendererHandlers, tipcInstance } from "./tipc";
 import { getRendererHandlers } from "@egoist/tipc/main";
+import { platform } from "@electron-toolkit/utils";
+import { BrowserWindow, Menu } from "electron";
 import { logger } from "./logger";
+import { type RendererHandlers } from "./tipc";
+import { showFilePicker } from "./utils";
 
 const macAppMenu: Electron.MenuItemConstructorOptions = { role: "appMenu" };
 

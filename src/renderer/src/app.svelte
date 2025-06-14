@@ -52,6 +52,7 @@
   }
 
   handlers.addFile.listen(async (path) => {
+    logger.debug("addFile:", path);
     playVideo(`file://${path}`);
   });
 

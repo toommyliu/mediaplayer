@@ -1,31 +1,14 @@
 import { playerState, playlistState } from "../state.svelte";
-import { PlaylistManager } from "./playlist";
-
-/**
- * Resets the video player state.
- */
-export const resetPlayer = () => {
-  playerState.currentIndex = 0;
-  playerState.queue = [];
-  playerState.isLoading = false;
-  playerState.error = null;
-};
-
-/**
- * Sets the queue for the video player.
- *
- * @param queue - An array of video source URLs to set as the queue.
- */
-export const setQueue = (queue: string[]) => {
-  playerState.queue = queue.map((src) => `file://${src}`);
-};
+import { logger } from "../utils/logger";
 
 /**
  * Plays a video from the source URL.
  *
  * @param src - The source URL of the video to play.
  */
-export const playVideo = (src: string) => {
+export const playVideo = (src: string): void => {
+  logger.debug(`playVideo: ${src}`);
+
   playerState.isLoading = true;
   playerState.error = null;
 
@@ -46,8 +29,6 @@ export const playVideo = (src: string) => {
     playerState.videoElement.currentTime = 0;
     playerState.videoElement.load();
   }
-
-  console.log("playVideo: Playing video", normalizedSrc, "at index", idx);
 };
 
 /**
@@ -169,44 +150,5 @@ export const previousPlaylistVideo = () => {
     // Loop back to last video
     const lastItem = currentPlaylist.items[currentPlaylist.items.length - 1];
     playVideo(`file://${lastItem.path}`);
-  }
-};
-
-/**
- * Adds a video to the current playlist and player queue.
- */
-export const addToCurrentPlaylist = (videoPath: string, videoName?: string, duration?: number) => {
-  // Add to current playlist
-  PlaylistManager.addItemToPlaylist(playlistState.currentPlaylistId, {
-    name: videoName,
-    path: videoPath.replace("file://", ""),
-    duration
-  });
-
-  // Also add to player queue if not already there
-  const normalizedSrc = videoPath.startsWith("file://") ? videoPath : `file://${videoPath}`;
-  if (!playerState.queue.includes(normalizedSrc)) {
-    playerState.queue.push(normalizedSrc);
-  }
-};
-
-/**
- * Syncs the player queue with the current playlist.
- */
-export const syncQueueWithPlaylist = () => {
-  const currentPlaylist = playlistState.currentPlaylist;
-  if (!currentPlaylist) {
-    return;
-  }
-
-  playerState.queue = currentPlaylist.items.map((item) => `file://${item.path}`);
-
-  // Update current index if video is playing
-  const currentVideo = playerState.currentVideo;
-  if (currentVideo) {
-    const idx = playerState.queue.findIndex((item) => item === currentVideo);
-    if (idx !== -1) {
-      playerState.currentIndex = idx;
-    }
   }
 };

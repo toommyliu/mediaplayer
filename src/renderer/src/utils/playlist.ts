@@ -1,11 +1,5 @@
 import { playlistState, type Playlist, type PlaylistItem } from "../state.svelte";
-import createLogger from "pino";
-
-const logger = createLogger({
-  browser: {
-    asObject: true
-  }
-});
+import { logger } from "./logger";
 
 export class PlaylistManager {
   /**

@@ -1,6 +1,7 @@
 import { playerState, fileBrowserState, type FileSystemItem } from "@/state.svelte";
 import { client } from "@/tipc";
 import pino from "pino";
+import { PlaylistManager } from "./playlist";
 
 const logger = pino({
   browser: {
@@ -48,7 +49,6 @@ export async function navigateToDirectory(dirPath: string) {
         `Navigated to directory ${dirPath}, found ${allVideoFiles.length} videos recursively`
       );
 
-      const { PlaylistManager } = await import("./playlist");
       if (allVideoFiles.length > 0) {
         PlaylistManager.addFolderContentsToCurrentPlaylist(allVideoFiles);
         console.log(
@@ -117,6 +117,29 @@ export async function loadFileSystemStructure() {
     const result = await client.selectFileOrFolder();
     console.log("loadFileBrowser result:", result);
 
+    // Immediately play the video (if it's a string, it should be a video file path)
+    if (typeof result === "string" && result) {
+      playerState.queue = [`file://${result}`];
+      playerState.currentIndex = 0;
+      playerState.currentTime = 0;
+      playerState.duration = 0;
+      playerState.isPlaying = true;
+
+      if (playerState.videoElement) {
+        playerState.videoElement.src = `file://${result}`;
+        playerState.videoElement.play();
+      }
+
+      // Add the video to the current playlist
+      PlaylistManager.addItemToPlaylistUnsaved("default", {
+        name: result.split("/").pop() || "Unknown Video",
+        path: result,
+        duration: 0
+      });
+
+      return;
+    }
+
     if (result && result.rootPath) {
       fileBrowserState.originalPath = result.rootPath;
 
@@ -150,12 +173,14 @@ export async function loadFileSystemStructure() {
           console.log(`Added ${allVideoFiles.length} videos recursively to playlist`);
         }
       } else if (result === null) {
+        console.warn("No video files found in the selected folder (1)");
         fileBrowserState.error = null;
         fileBrowserState.fileTree = null;
         fileBrowserState.currentPath = null;
         fileBrowserState.isAtRoot = false;
         fileBrowserState.originalPath = null;
       } else {
+        console.warn("No video files found in the selected folder (2)");
         fileBrowserState.error = "No video files found in the selected folder";
         fileBrowserState.fileTree = null;
         fileBrowserState.currentPath = null;

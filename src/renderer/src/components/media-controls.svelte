@@ -283,11 +283,6 @@
     }
   };
 
-  // Check if playlist navigation is available
-  const hasPlaylistItems = $derived(
-    playlistState.currentPlaylist && playlistState.currentPlaylist.items.length > 1
-  );
-
   const progressPercentage = $derived(
     playerState.duration > 0 ? (playerState.currentTime / playerState.duration) * 100 : 0
   );
@@ -383,29 +378,27 @@
   <!-- Controls Section -->
   <div class="flex items-center justify-between gap-4">
     <div class="flex items-center gap-2">
-      <!-- Previous Track (only show if playlist has items) -->
-      {#if hasPlaylistItems}
-        <Tooltip.Root>
-          <Tooltip.Trigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              onclick={previousTrack}
-              class="h-8 w-8 text-white hover:bg-white/20 hover:text-blue-400 focus-visible:ring-blue-400"
-              disabled={!playerState.currentVideo || playerState.isLoading}
-            >
-              <Rewind size={ICON_SIZE} />
-            </Button>
-          </Tooltip.Trigger>
-          <Tooltip.Content>
-            <p>Previous track</p>
-          </Tooltip.Content>
-        </Tooltip.Root>
-      {/if}
+      <!-- Previous Track -->
+      <Tooltip.Root>
+        <Tooltip.Trigger>
+          <Button
+            variant="ghost"
+            size="icon"
+            onclick={previousTrack}
+            class="h-8 w-8 text-white hover:bg-white/20 hover:text-blue-400 focus-visible:ring-blue-400"
+            disabled={!playerState.currentVideo || playerState.isLoading}
+          >
+            <Rewind size={ICON_SIZE} />
+          </Button>
+        </Tooltip.Trigger>
+        <Tooltip.Content>
+          <span>Previous track</span>
+        </Tooltip.Content>
+      </Tooltip.Root>
 
       <!-- Skip Backward -->
       <Tooltip.Root>
-        <Tooltip.Trigger asChild>
+        <Tooltip.Trigger>
           <Button
             variant="ghost"
             size="icon"
@@ -418,13 +411,13 @@
           </Button>
         </Tooltip.Trigger>
         <Tooltip.Content>
-          <p>Skip backward 10s</p>
+          <span>Skip backward 10s</span>
         </Tooltip.Content>
       </Tooltip.Root>
 
       <!-- Play/Pause -->
       <Tooltip.Root>
-        <Tooltip.Trigger asChild>
+        <Tooltip.Trigger>
           <Button
             variant="ghost"
             size="icon"
@@ -447,7 +440,7 @@
 
       <!-- Skip Forward -->
       <Tooltip.Root>
-        <Tooltip.Trigger asChild>
+        <Tooltip.Trigger>
           <Button
             variant="ghost"
             size="icon"
@@ -460,29 +453,27 @@
           </Button>
         </Tooltip.Trigger>
         <Tooltip.Content>
-          <p>Skip forward 10s</p>
+          <span>Skip forward 10s</span>
         </Tooltip.Content>
       </Tooltip.Root>
 
-      <!-- Next Track (only show if playlist has items) -->
-      {#if hasPlaylistItems}
-        <Tooltip.Root>
-          <Tooltip.Trigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              onclick={nextTrack}
-              class="h-8 w-8 text-white hover:bg-white/20 hover:text-blue-400 focus-visible:ring-blue-400"
-              disabled={!playerState.currentVideo || playerState.isLoading}
-            >
-              <FastForward size={ICON_SIZE} />
-            </Button>
-          </Tooltip.Trigger>
-          <Tooltip.Content>
-            <p>Next track</p>
-          </Tooltip.Content>
-        </Tooltip.Root>
-      {/if}
+      <!-- Next Track -->
+      <Tooltip.Root>
+        <Tooltip.Trigger>
+          <Button
+            variant="ghost"
+            size="icon"
+            onclick={nextTrack}
+            class="h-8 w-8 text-white hover:bg-white/20 hover:text-blue-400 focus-visible:ring-blue-400"
+            disabled={!playerState.currentVideo || playerState.isLoading}
+          >
+            <FastForward size={ICON_SIZE} />
+          </Button>
+        </Tooltip.Trigger>
+        <Tooltip.Content>
+          <span>Next track</span>
+        </Tooltip.Content>
+      </Tooltip.Root>
 
       <!-- Time Display -->
       <div class="flex items-center gap-1 font-mono text-sm text-white/90">
@@ -505,7 +496,7 @@
         }}
       >
         <Tooltip.Root>
-          <Tooltip.Trigger asChild>
+          <Tooltip.Trigger>
             <Button
               variant="ghost"
               size="icon"
@@ -570,19 +561,19 @@
                 !isVolumeDragging && "transition-all duration-100",
                 isVolumeDragging || isVolumeHovering
                   ? "scale-125 opacity-100"
-                  : "scale-100 opacity-0"
+                  : "scale-100 opacity-0",
+                `left-[${(playerState.isMuted ? 0 : playerState.volume) * 100}%]`,
+                "z-10 translate-x-[-50%] translate-y-[-50%] transform"
               )}
-              style="left: {(playerState.isMuted ? 0 : playerState.volume) *
-                100}%; transform: translateX(-50%) translateY(-50%); z-index: 10;"
               aria-hidden="true"
             ></div>
           </div>
         </div>
       </div>
 
-      <!-- Fullscreen -->
+      <!-- Fullscreen/Exit Fullscreen -->
       <Tooltip.Root>
-        <Tooltip.Trigger asChild>
+        <Tooltip.Trigger>
           {#if playerState.isFullscreen}
             <Button
               variant="ghost"
@@ -612,7 +603,7 @@
 
       <!-- Sidebar Toggle -->
       <Tooltip.Root>
-        <Tooltip.Trigger asChild>
+        <Tooltip.Trigger>
           <Button
             variant="ghost"
             size="icon"
@@ -628,7 +619,7 @@
           </Button>
         </Tooltip.Trigger>
         <Tooltip.Content>
-          <p>{sidebarState.isOpen ? "Hide sidebar" : "Show sidebar"}</p>
+          <span>{sidebarState.isOpen ? "Hide sidebar" : "Show sidebar"}</span>
         </Tooltip.Content>
       </Tooltip.Root>
     </div>
