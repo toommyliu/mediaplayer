@@ -2,6 +2,7 @@
   import * as Tabs from "./ui/tabs/";
   import TabFileBrowser from "./sidebar/tab-file-browser.svelte";
   import TabPlaylistQueue from "./sidebar/tab-playlist-queue.svelte";
+  import TabSettings from "./sidebar/tab-settings.svelte";
   import { sidebarState } from "../state.svelte";
   import { SidebarTab } from "@/types";
   import { fly } from "svelte/transition";
@@ -22,10 +23,11 @@
     onValueChange={(value) => (sidebarState.currentTab = value as SidebarTab)}
   >
     <Tabs.List
-      class="grid w-full grid-cols-2 gap-1 rounded-lg border border-zinc-800/50 bg-zinc-900/50"
+      class="grid w-full grid-cols-3 gap-1 rounded-lg border border-zinc-800/50 bg-zinc-900/50"
     >
-      <Tabs.Trigger value={SidebarTab.FileBrowser} class="flex-1">File Browser</Tabs.Trigger>
-      <Tabs.Trigger value={SidebarTab.Queue} class="flex-1">Playlist</Tabs.Trigger>
+      <Tabs.Trigger value={SidebarTab.FileBrowser} class="flex-1">Files</Tabs.Trigger>
+      <Tabs.Trigger value={SidebarTab.Queue} class="flex-1">Queue</Tabs.Trigger>
+      <Tabs.Trigger value={SidebarTab.Settings} class="flex-1">Settings</Tabs.Trigger>
     </Tabs.List>
 
     <div class="relative mt-5 flex-1 overflow-hidden">
@@ -50,6 +52,10 @@
           {:else if sidebarState.currentTab === SidebarTab.Queue}
             <div class="h-full w-full overflow-hidden">
               <TabPlaylistQueue />
+            </div>
+          {:else if sidebarState.currentTab === SidebarTab.Settings}
+            <div class="h-full w-full overflow-hidden">
+              <TabSettings />
             </div>
           {/if}
         </div>
