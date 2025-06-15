@@ -274,7 +274,7 @@
         class="max-h-64 min-w-[280px] overflow-y-auto border-zinc-700 bg-zinc-900 shadow-xl"
       >
         <div class="p-2">
-          <div class="mb-2 text-xs font-medium uppercase tracking-wide text-zinc-400">
+          <div class="mb-2 text-xs font-medium tracking-wide text-zinc-400 uppercase">
             Playlists
           </div>
           <div class="space-y-1">
@@ -361,7 +361,7 @@
             type="text"
             bind:value={newPlaylistName}
             placeholder="Enter playlist name..."
-            class="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-200 placeholder-zinc-500 transition-colors focus:border-blue-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500"
+            class="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-200 placeholder-zinc-500 transition-colors focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-hidden"
             onkeydown={(e) => e.key === "Enter" && createPlaylist()}
             autofocus
           />
@@ -376,16 +376,14 @@
             bind:value={newPlaylistDescription}
             placeholder="Enter description (optional)..."
             rows="3"
-            class="w-full resize-none rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-200 placeholder-zinc-500 transition-colors focus:border-blue-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500"
+            class="w-full resize-none rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-200 placeholder-zinc-500 transition-colors focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-hidden"
           ></textarea>
         </div>
       </div>
 
       <Dialog.Footer class="flex justify-end gap-2 pt-4">
-        <Dialog.Close asChild let:builder>
+        <Dialog.Close>
           <button
-            use:builder.action
-            {...builder}
             class="rounded-md px-4 py-2 text-sm font-medium text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-200"
           >
             Cancel

@@ -17,6 +17,7 @@
   import { transformDirectoryContents } from "./utils/file-browser.svelte";
   import { PlaylistManager } from "./utils/playlist";
   import { playVideo } from "./utils/video-playback";
+  import { ModeWatcher } from "mode-watcher";
 
   PlaylistManager.initializeFromStorage();
 
@@ -152,7 +153,8 @@
   });
 </script>
 
-<div class="dark flex h-screen flex-col">
+<ModeWatcher />
+<div class="flex h-screen flex-col">
   <div class="flex w-full flex-1 overflow-hidden">
     <PaneGroup direction="horizontal">
       <Pane defaultSize={80}>

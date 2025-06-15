@@ -2,7 +2,7 @@
   import { Button } from "@/components/ui/button";
   import * as Tooltip from "@/components/ui/tooltip";
   import { ICON_SIZE } from "@/constants";
-  import { playerState, sidebarState, playlistState } from "@/state.svelte";
+  import { playerState, sidebarState } from "@/state.svelte";
   import { makeTimeString } from "@/utils/time";
   import { cn } from "@/utils/utils";
   import Maximize from "lucide-svelte/icons/maximize";
@@ -19,6 +19,8 @@
   import Minimize from "lucide-svelte/icons/minimize";
   import { client } from "@/tipc";
   import { playNextVideo, playPreviousVideo, seekToRelative } from "@/utils/video-playback";
+  import Settings from "lucide-svelte/icons/settings";
+  import SettingsDialog from "../settings-dialog.svelte";
 
   let isDragging = $state(false);
   let hoverTime = $state(0);
@@ -26,6 +28,7 @@
   let bufferedPercentage = $state(0);
   let isVolumeHovering = $state(false);
   let isVolumeDragging = $state(false);
+  let showSettingsDialog = $state(false);
 
   $effect(() => {
     if (!playerState.videoElement || !playerState.duration) return undefined;
@@ -593,6 +596,26 @@
         </Tooltip.Root>
       </Tooltip.Provider>
 
+      <!-- Settings -->
+      <Tooltip.Provider>
+        <Tooltip.Root>
+          <Tooltip.Trigger>
+            <Button
+              variant="ghost"
+              size="icon"
+              onclick={() => (showSettingsDialog = true)}
+              class="h-8 w-8 text-white hover:bg-white/20 hover:text-blue-400 focus-visible:ring-blue-400"
+              aria-label="Open settings"
+            >
+              <Settings size={ICON_SIZE} />
+            </Button>
+          </Tooltip.Trigger>
+          <Tooltip.Content>
+            <p>Settings</p>
+          </Tooltip.Content>
+        </Tooltip.Root>
+      </Tooltip.Provider>
+
       <!-- Sidebar Toggle -->
       <Tooltip.Provider>
         <Tooltip.Root>
@@ -619,3 +642,6 @@
     </div>
   </div>
 </div>
+
+<!-- Settings Dialog -->
+<SettingsDialog bind:open={showSettingsDialog} />

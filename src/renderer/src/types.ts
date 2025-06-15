@@ -1,7 +1,6 @@
 export enum SidebarTab {
   FileBrowser = "file-browser",
-  Queue = "queue",
-  Settings = "settings"
+  Queue = "queue"
 }
 
 export interface HotkeyAction {
