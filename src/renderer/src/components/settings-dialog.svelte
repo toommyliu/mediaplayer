@@ -5,7 +5,6 @@
   import IconKeyboard from "lucide-svelte/icons/keyboard";
   import IconPlayerPlay from "lucide-svelte/icons/play";
   import IconVolume2 from "lucide-svelte/icons/volume-2";
-
   import SunIcon from "lucide-svelte/icons/sun";
   import MoonIcon from "lucide-svelte/icons/moon";
   import MonitorIcon from "lucide-svelte/icons/monitor";

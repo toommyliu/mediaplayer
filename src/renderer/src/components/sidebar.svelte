@@ -15,20 +15,24 @@
   });
 </script>
 
-<div class="flex h-full flex-col border-r border-zinc-800/50 bg-zinc-900 p-4 pb-6 backdrop-blur-xl">
+<div class="border-sidebar-border bg-sidebar flex h-full flex-col border-r p-4 backdrop-blur-xl">
   <Tabs.Root
     value={sidebarState.currentTab}
     class="flex h-full w-full flex-col"
     onValueChange={(value) => (sidebarState.currentTab = value as SidebarTab)}
   >
     <Tabs.List
-      class="grid w-full grid-cols-2 gap-1 rounded-lg border border-zinc-800/50 bg-zinc-900/50"
+      class="border-sidebar-border bg-sidebar-accent grid w-full grid-cols-2 gap-1 rounded-lg border p-0"
     >
-      <Tabs.Trigger value={SidebarTab.FileBrowser} class="flex-1">Files</Tabs.Trigger>
-      <Tabs.Trigger value={SidebarTab.Queue} class="flex-1">Queue</Tabs.Trigger>
+      <Tabs.Trigger value={SidebarTab.FileBrowser} class="text-sidebar-foreground h-full flex-1"
+        >Files</Tabs.Trigger
+      >
+      <Tabs.Trigger value={SidebarTab.Queue} class="text-sidebar-foreground h-full flex-1"
+        >Queue</Tabs.Trigger
+      >
     </Tabs.List>
 
-    <div class="relative mt-5 flex-1 overflow-hidden">
+    <div class="relative mt-4 flex-1 overflow-hidden">
       {#key sidebarState.currentTab}
         <div
           class="absolute inset-0 flex h-full w-full"
