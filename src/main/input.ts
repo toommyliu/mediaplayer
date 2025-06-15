@@ -7,6 +7,8 @@ import { RendererHandlers } from "./tipc";
 
 const isTrustedAccessibilityClient = systemPreferences.isTrustedAccessibilityClient(true);
 
+// TODO: memory leak somewhere?
+
 function registerGlobalShortcuts(): void {
   if (!isTrustedAccessibilityClient) return;
 

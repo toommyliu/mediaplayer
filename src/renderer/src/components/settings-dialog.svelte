@@ -1,6 +1,7 @@
 <script lang="ts">
   import * as Dialog from "@/components/ui/dialog";
-  import HotkeySettings from "./hotkey-settings.svelte";
+
+  import SettingsKeyboardShortcuts from "./settings/settings-keyboard-shortcuts.svelte";
   import IconSettings from "lucide-svelte/icons/settings";
   import IconKeyboard from "lucide-svelte/icons/keyboard";
   import IconPlayerPlay from "lucide-svelte/icons/play";
@@ -52,7 +53,7 @@
 <Dialog.Root bind:open={isOpen}>
   <Dialog.Content
     class="flex h-[85vh] w-[90vw] max-w-6xl flex-col overflow-hidden p-0 sm:max-w-none"
-    showCloseButton={true}
+    showCloseButton={false}
   >
     <div class="flex flex-1 overflow-hidden">
       <!-- Sidebar -->
@@ -84,71 +85,73 @@
       </aside>
 
       <!-- Main Content -->
-      <main class="flex-1 overflow-y-auto">
-        <div class="p-6">
-          <div class="space-y-6">
+      <main class="flex-1 overflow-hidden">
+        <div class="h-full p-6">
+          <div class="h-full space-y-6">
             {#if selectedCategory === SettingsCategory.General}
               <div class="space-y-6">
                 <div class="flex flex-col space-y-3">
-                  <Label class="text-foreground text-base font-medium">Application Theme</Label>
-                  <DropdownMenu.Root>
-                    <DropdownMenu.Trigger
-                      class="bg-card border-border text-card-foreground hover:bg-accent hover:border-accent-foreground focus:ring-ring focus:ring-offset-background inline-flex w-fit items-center justify-between gap-3 rounded-lg border px-4 py-3 text-sm font-medium transition-colors focus:ring-2 focus:ring-offset-2 focus:outline-none"
-                    >
-                      <div class="flex items-center gap-2">
-                        {#if mode.current === "light"}
+                  <div class="flex flex-col gap-2">
+                    <Label class="text-foreground text-base font-medium">Application Theme</Label>
+                    <DropdownMenu.Root>
+                      <DropdownMenu.Trigger
+                        class="bg-card border-border text-card-foreground hover:bg-accent hover:border-accent-foreground focus:ring-ring focus:ring-offset-background inline-flex w-fit items-center justify-between gap-3 rounded-lg border px-4 py-3 text-sm font-medium transition-colors focus:ring-2 focus:ring-offset-2 focus:outline-none"
+                      >
+                        <div class="flex items-center gap-2">
+                          {#if mode.current === "light"}
+                            <SunIcon class="h-4 w-4 text-yellow-500" />
+                            <span>Light</span>
+                          {:else if mode.current === "dark"}
+                            <MoonIcon class="h-4 w-4 text-blue-400" />
+                            <span>Dark</span>
+                          {:else}
+                            <MonitorIcon class="text-muted-foreground h-4 w-4" />
+                            <span>System</span>
+                          {/if}
+                        </div>
+                        <ChevronDownIcon class="text-muted-foreground h-4 w-4" />
+                      </DropdownMenu.Trigger>
+                      <DropdownMenu.Content align="start" class="w-48">
+                        <DropdownMenu.Item
+                          onclick={() => setMode("light")}
+                          class="flex items-center gap-2 {mode.current === 'light'
+                            ? 'bg-blue-600 text-white'
+                            : ''}"
+                        >
                           <SunIcon class="h-4 w-4 text-yellow-500" />
-                          <span>Light</span>
-                        {:else if mode.current === "dark"}
+                          Light
+                          {#if mode.current === "light"}
+                            <div class="ml-auto h-2 w-2 rounded-full bg-white"></div>
+                          {/if}
+                        </DropdownMenu.Item>
+                        <DropdownMenu.Item
+                          onclick={() => setMode("dark")}
+                          class="flex items-center gap-2 {mode.current === 'dark'
+                            ? 'bg-blue-600 text-white'
+                            : ''}"
+                        >
                           <MoonIcon class="h-4 w-4 text-blue-400" />
-                          <span>Dark</span>
-                        {:else}
+                          Dark
+                          {#if mode.current === "dark"}
+                            <div class="ml-auto h-2 w-2 rounded-full bg-white"></div>
+                          {/if}
+                        </DropdownMenu.Item>
+                        <DropdownMenu.Item
+                          onclick={() => resetMode()}
+                          class="flex items-center gap-2 {mode.current !== 'light' &&
+                          mode.current !== 'dark'
+                            ? 'bg-blue-600 text-white'
+                            : ''}"
+                        >
                           <MonitorIcon class="text-muted-foreground h-4 w-4" />
-                          <span>System</span>
-                        {/if}
-                      </div>
-                      <ChevronDownIcon class="text-muted-foreground h-4 w-4" />
-                    </DropdownMenu.Trigger>
-                    <DropdownMenu.Content align="start" class="w-48">
-                      <DropdownMenu.Item
-                        onclick={() => setMode("light")}
-                        class="flex items-center gap-2 {mode.current === 'light'
-                          ? 'bg-blue-600 text-white'
-                          : ''}"
-                      >
-                        <SunIcon class="h-4 w-4 text-yellow-500" />
-                        Light
-                        {#if mode.current === "light"}
-                          <div class="ml-auto h-2 w-2 rounded-full bg-white"></div>
-                        {/if}
-                      </DropdownMenu.Item>
-                      <DropdownMenu.Item
-                        onclick={() => setMode("dark")}
-                        class="flex items-center gap-2 {mode.current === 'dark'
-                          ? 'bg-blue-600 text-white'
-                          : ''}"
-                      >
-                        <MoonIcon class="h-4 w-4 text-blue-400" />
-                        Dark
-                        {#if mode.current === "dark"}
-                          <div class="ml-auto h-2 w-2 rounded-full bg-white"></div>
-                        {/if}
-                      </DropdownMenu.Item>
-                      <DropdownMenu.Item
-                        onclick={() => resetMode()}
-                        class="flex items-center gap-2 {mode.current !== 'light' &&
-                        mode.current !== 'dark'
-                          ? 'bg-blue-600 text-white'
-                          : ''}"
-                      >
-                        <MonitorIcon class="text-muted-foreground h-4 w-4" />
-                        System
-                        {#if mode.current !== "light" && mode.current !== "dark"}
-                          <div class="ml-auto h-2 w-2 rounded-full bg-white"></div>
-                        {/if}
-                      </DropdownMenu.Item>
-                    </DropdownMenu.Content>
-                  </DropdownMenu.Root>
+                          System
+                          {#if mode.current !== "light" && mode.current !== "dark"}
+                            <div class="ml-auto h-2 w-2 rounded-full bg-white"></div>
+                          {/if}
+                        </DropdownMenu.Item>
+                      </DropdownMenu.Content>
+                    </DropdownMenu.Root>
+                  </div>
                 </div>
               </div>
             {:else if selectedCategory === SettingsCategory.Playback}
@@ -176,13 +179,9 @@
                 </div>
               </div>
             {:else if selectedCategory === SettingsCategory.Shortcuts}
-              <div class="space-y-4">
-                <div class="bg-card rounded-lg p-4">
-                  <h3 class="text-card-foreground mb-2 text-lg font-medium">Keyboard Shortcuts</h3>
-                  <p class="text-muted-foreground mb-3 text-sm">
-                    Customize hotkeys and key bindings
-                  </p>
-                  <HotkeySettings />
+              <div class="flex h-full flex-col space-y-4">
+                <div class="bg-card flex h-full flex-col overflow-hidden rounded-lg p-8">
+                  <SettingsKeyboardShortcuts />
                 </div>
               </div>
             {/if}

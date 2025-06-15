@@ -32,7 +32,7 @@
       >
     </Tabs.List>
 
-    <div class="relative mt-4 flex-1 overflow-hidden">
+    <div class="relative mt-5 flex-1 overflow-hidden">
       {#key sidebarState.currentTab}
         <div
           class="absolute inset-0 flex h-full w-full"

@@ -30,7 +30,10 @@ class HotkeyConfig {
   enabled = $state(true);
 
   constructor() {
-    this.modKey = state.platformState.isMac ? "cmd" : "ctrl";
+    console.log(
+      state.platformState.isMac ? "Using Mac modifier keys" : "Using non-Mac modifier keys"
+    );
+    this.modKey = state.platformState.isMac ? "command" : "ctrl";
     this.initializeDefaultConfig();
   }
 
@@ -44,63 +47,72 @@ class HotkeyConfig {
             description: "Play/Pause video",
             keys: ["space"],
             handler: this.togglePlayback,
-            context: "video"
+            context: "video",
+            enabled: true
           },
           {
             id: "previousTrack",
             description: "Previous video",
             keys: [`${this.modKey}+left`],
             handler: this.previousVideo,
-            context: "video"
+            context: "video",
+            enabled: true
           },
           {
             id: "nextTrack",
             description: "Next video",
             keys: [`${this.modKey}+right`],
             handler: this.nextVideo,
-            context: "video"
+            context: "video",
+            enabled: true
           },
           {
             id: "seekBackward",
             description: `Seek backward ${this.seekTime}s`,
             keys: ["left"],
             handler: this.seekBackward,
-            context: "video"
+            context: "video",
+            enabled: true
           },
           {
             id: "seekForward",
             description: `Seek forward ${this.seekTime}s`,
             keys: ["right"],
             handler: this.seekForward,
-            context: "video"
+            context: "video",
+            enabled: true
           },
           {
             id: "volumeUp",
             description: "Volume up",
             keys: ["up"],
             handler: this.volumeUp,
-            context: "video"
+            context: "video",
+            enabled: true
           },
           {
             id: "volumeDown",
             description: "Volume down",
             keys: ["down"],
             handler: this.volumeDown,
-            context: "video"
+            context: "video",
+            enabled: true
           },
           {
             id: "mute",
             description: "Toggle mute",
             keys: ["m"],
             handler: this.toggleMute,
-            context: "video"
+            context: "video",
+            enabled: true
           },
           {
             id: "fullscreen",
             description: "Toggle fullscreen",
             keys: ["f"],
             handler: this.toggleFullscreen,
-            context: "video"
+            context: "video",
+            enabled: true
           }
         ]
       },
@@ -112,28 +124,32 @@ class HotkeyConfig {
             description: "Show file browser",
             keys: [`${this.modKey}+1`],
             handler: this.showFileBrowser,
-            context: "global"
+            context: "global",
+            enabled: true
           },
           {
             id: "showQueue",
             description: "Show queue",
             keys: [`${this.modKey}+2`],
             handler: this.showQueue,
-            context: "global"
+            context: "global",
+            enabled: true
           },
           {
             id: "toggleSidebar",
             description: "Toggle sidebar",
             keys: [`${this.modKey}+b`],
             handler: this.toggleSidebar,
-            context: "global"
+            context: "global",
+            enabled: true
           },
           {
             id: "fileBrowserBack",
             description: "Navigate back in file browser",
             keys: ["alt+left"],
             handler: this.fileBrowserBack,
-            context: "file-browser"
+            context: "file-browser",
+            enabled: true
           }
         ]
       },
@@ -145,7 +161,8 @@ class HotkeyConfig {
             description: "Save current playlist",
             keys: [`${this.modKey}+s`],
             handler: this.savePlaylist,
-            context: "global"
+            context: "global",
+            enabled: true
           }
         ]
       },
@@ -163,7 +180,8 @@ class HotkeyConfig {
         description: `Jump to ${i * 10}% of video`,
         keys: [`${i}`],
         handler: (ev) => this.jumpToPercent(ev, i / 10),
-        context: "video"
+        context: "video",
+        enabled: true
       });
     }
   }
@@ -257,11 +275,13 @@ class HotkeyConfig {
   };
 
   private showFileBrowser = (ev: KeyboardEvent): void => {
+    console.log("showFileBrowser");
     ev.preventDefault();
     state.sidebarState.currentTab = SidebarTab.FileBrowser;
   };
 
   private showQueue = (ev: KeyboardEvent): void => {
+    console.log("showQueue");
     ev.preventDefault();
     state.sidebarState.currentTab = SidebarTab.Queue;
   };
@@ -330,6 +350,7 @@ class HotkeyConfig {
   }
 
   toggleAction(actionId: string, enabled: boolean): boolean {
+    console.log(`Toggling action ${actionId} to ${enabled}, from ${this.enabled}`);
     for (const category of this.categories) {
       const action = category.actions.find((a) => a.id === actionId);
       if (action) {
@@ -346,7 +367,9 @@ class HotkeyConfig {
   }
 
   private bindAction(action: HotkeyAction): void {
-    if (action.enabled === false) return;
+    // Default to enabled if not explicitly set
+    const isEnabled = action.enabled !== false;
+    if (!isEnabled) return;
 
     action.keys.forEach((key) => {
       Mousetrap.unbind(key);
@@ -367,7 +390,10 @@ class HotkeyConfig {
 
     for (const category of this.categories) {
       for (const action of category.actions) {
-        this.bindAction(action);
+        // Only bind if action is enabled
+        if (action.enabled !== false) {
+          this.bindAction(action);
+        }
       }
     }
   }
@@ -387,70 +413,6 @@ class HotkeyConfig {
   disable(): void {
     this.enabled = false;
     this.unbindAll();
-  }
-
-  // Export/import configuration
-  exportConfig(): {
-    seekTime: number;
-    volumeStep: number;
-    categories: Array<{
-      name: string;
-      actions: Array<{
-        id: string;
-        description: string;
-        keys: string[];
-        context?: string;
-        enabled?: boolean;
-      }>;
-    }>;
-  } {
-    return {
-      seekTime: this.seekTime,
-      volumeStep: this.volumeStep,
-      categories: this.categories.map((category) => ({
-        name: category.name,
-        actions: category.actions.map((action) => ({
-          id: action.id,
-          description: action.description,
-          keys: action.keys,
-          context: action.context,
-          enabled: action.enabled
-        }))
-      }))
-    };
-  }
-
-  importConfig(config: {
-    seekTime?: number;
-    volumeStep?: number;
-    categories?: Array<{
-      name: string;
-      actions: Array<{
-        id: string;
-        keys?: string[];
-        enabled?: boolean;
-      }>;
-    }>;
-  }): void {
-    if (config.seekTime) this.updateSeekTime(config.seekTime);
-    if (config.volumeStep) this.updateVolumeStep(config.volumeStep);
-
-    if (config.categories) {
-      for (const categoryConfig of config.categories) {
-        const category = this.categories.find((c) => c.name === categoryConfig.name);
-        if (category) {
-          for (const actionConfig of categoryConfig.actions) {
-            const action = category.actions.find((a) => a.id === actionConfig.id);
-            if (action) {
-              if (actionConfig.keys) action.keys = actionConfig.keys;
-              if (typeof actionConfig.enabled === "boolean") action.enabled = actionConfig.enabled;
-            }
-          }
-        }
-      }
-    }
-
-    this.bindAllActions();
   }
 
   // Get all shortcuts for display purposes
@@ -512,6 +474,7 @@ export function setupMediaKeyHandlers(): void {
 }
 
 export function initializeHotkeys(): void {
+  console.log("Initializing hotkeys...");
   setupMediaKeyHandlers();
   hotkeyConfig.bindAllActions();
 
