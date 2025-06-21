@@ -23,7 +23,8 @@
       ],
       "@renderer/*": [
         "src/renderer/src/*"
-      ]
-    }
+      ],
+    },
+    "strictNullChecks": true
   }
 }
