@@ -6,6 +6,7 @@ import prettier from "eslint-config-neon/prettier";
 import svelte from "eslint-plugin-svelte";
 import ts from "typescript-eslint";
 import svelteConfig from "./svelte.config.mjs";
+import globals from "globals";
 
 export default [
   {
@@ -15,7 +16,7 @@ export default [
   ...browser,
   ...node,
   ...typescript,
-  ...svelte.configs["flat/all"],
+  ...svelte.configs["flat/recommended"],
   {
     files: ["**/*.svelte", "**/*.svelte.ts", "**/*.svelte.js"],
     languageOptions: {
@@ -29,10 +30,19 @@ export default [
   },
   ...prettier,
   {
-    files: ["src/renderer/**/*.ts", "src/renderer/**/*.tsx"],
+    files: [
+      "src/renderer/**/*.ts",
+      "src/renderer/**/*.svelte",
+      "src/renderer/**/*.svelte.ts",
+      "src/renderer/**/*.svelte.js"
+    ],
     languageOptions: {
       parserOptions: {
         project: "./tsconfig.web.json"
+      },
+      globals: {
+        ...globals.browser,
+        ...globals.node
       }
     }
   },
