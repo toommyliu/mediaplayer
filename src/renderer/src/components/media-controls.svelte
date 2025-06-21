@@ -1,12 +1,4 @@
 <script lang="ts">
-  import { Button } from "@/components/ui/button";
-  import * as Tooltip from "@/components/ui/tooltip";
-  import { ICON_SIZE } from "@/constants";
-  import { playerState, sidebarState } from "@/state.svelte";
-  import { client } from "@/tipc";
-  import { makeTimeString } from "@/utils/time";
-  import { cn } from "@/utils/utils";
-  import { playNextVideo, playPreviousVideo, seekToRelative } from "@/utils/video-playback";
   import FastForward from "lucide-svelte/icons/fast-forward";
   import Maximize from "lucide-svelte/icons/maximize";
   import Menu from "lucide-svelte/icons/menu";
@@ -19,6 +11,14 @@
   import Volume1 from "lucide-svelte/icons/volume-1";
   import Volume2 from "lucide-svelte/icons/volume-2";
   import VolumeX from "lucide-svelte/icons/volume-x";
+  import { Button } from "@/components/ui/button";
+  import * as Tooltip from "@/components/ui/tooltip";
+  import { ICON_SIZE } from "@/constants";
+  import { playerState, sidebarState } from "@/state.svelte";
+  import { client } from "@/tipc";
+  import { makeTimeString } from "@/utils/time";
+  import { cn } from "@/utils/utils";
+  import { playNextVideo, playPreviousVideo, seekToRelative } from "@/utils/video-playback";
 
   let isDragging = $state(false);
   let hoverTime = $state(0);
@@ -38,6 +38,7 @@
         bufferedPercentage = Math.min(100, (bufferedEnd / playerState.duration) * 100);
       }
     };
+
     const handleProgress = (): void => updateBuffered();
 
     playerState.videoElement.addEventListener("progress", handleProgress);
@@ -125,6 +126,7 @@
             });
             playerState.videoElement?.removeEventListener("canplay", onCanPlay);
           };
+
           playerState.videoElement.addEventListener("canplay", onCanPlay);
         }
       }

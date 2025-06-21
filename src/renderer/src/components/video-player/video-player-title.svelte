@@ -2,7 +2,7 @@
   import { playerState } from "@/state.svelte";
   import { makeTimeString } from "@/utils/time";
 
-  let { showOverlay }: { showOverlay: boolean } = $props();
+  const { showOverlay }: { showOverlay: boolean } = $props();
 </script>
 
 <div

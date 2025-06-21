@@ -1,9 +1,10 @@
 <script lang="ts">
-  import { logger } from "@/utils/logger";
   import AlertTriangle from "lucide-svelte/icons/alert-triangle";
   import X from "lucide-svelte/icons/x";
+  import { ModeWatcher } from "mode-watcher";
   import { Pane, PaneGroup, PaneResizer } from "paneforge";
   import { onMount } from "svelte";
+  import { logger } from "@/utils/logger";
   import Sidebar from "./components/sidebar.svelte";
   import VideoPlayer from "./components/video-player/video-player.svelte";
   import {
@@ -17,15 +18,14 @@
   import { transformDirectoryContents } from "./utils/file-browser.svelte";
   import { PlaylistManager } from "./utils/playlist";
   import { playVideo } from "./utils/video-playback";
-  import { ModeWatcher } from "mode-watcher";
 
   PlaylistManager.initializeFromStorage();
 
   async function getAllVideoFilesRecursive(
     folderPath: string,
     depth: number = 0
-  ): Promise<Array<{ name: string; path: string; duration?: number }>> {
-    let videoFiles: Array<{ name: string; path: string; duration?: number }> = [];
+  ): Promise<{ duration?: number, name: string; path: string; }[]> {
+    let videoFiles: { duration?: number, name: string; path: string; }[] = [];
     const indent = "  ".repeat(depth);
     logger.debug(`${indent}Scanning folder: ${folderPath}`);
 
@@ -49,6 +49,7 @@
     } catch (error) {
       console.error(`${indent}Error reading directory ${folderPath} recursively:`, error);
     }
+
     return videoFiles;
   }
 
@@ -131,8 +132,8 @@
         fileBrowserState.isAtRoot = false;
         fileBrowserState.originalPath = null;
       }
-    } catch (err) {
-      console.error("Failed to load file system or add folder to playlist:", err);
+    } catch (error) {
+      console.error("Failed to load file system or add folder to playlist:", error);
       fileBrowserState.error = "Failed to load file system. Please try again.";
       fileBrowserState.fileTree = null;
       fileBrowserState.currentPath = null;

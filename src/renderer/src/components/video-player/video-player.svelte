@@ -119,11 +119,12 @@
     if (controlsTimeout) {
       clearTimeout(controlsTimeout);
     }
+
     controlsTimeout = setTimeout(() => {
       if (playerState.isPlaying) {
         playerState.showControls = false;
       }
-    }, 3000) as unknown as number;
+    }, 3_000) as unknown as number;
   }
 
   function showOverlayTemporarily(): void {
@@ -131,9 +132,10 @@
     if (overlayTimeout) {
       clearTimeout(overlayTimeout);
     }
+
     overlayTimeout = setTimeout(() => {
       showOverlay = false;
-    }, 2000) as unknown as number;
+    }, 2_000) as unknown as number;
   }
 
   function handleMouseMove(): void {
@@ -142,7 +144,7 @@
   }
 
   function handleClick(): void {
-    const videoContainer = document.getElementById("video-player");
+    const videoContainer = document.querySelector("#video-player");
     if (videoContainer) {
       videoContainer.focus();
     }
@@ -160,13 +162,11 @@
     if (target.tagName === "VIDEO" || target.id === "video-player") {
       if (!playerState.currentVideo) {
         await loadFileSystemStructure();
-      } else {
-        if (playerState.videoElement.paused) {
+      } else if (playerState.videoElement.paused) {
           await playerState.videoElement.play();
         } else {
           playerState.videoElement.pause();
         }
-      }
     }
   }
 

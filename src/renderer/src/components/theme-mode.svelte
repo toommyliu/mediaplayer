@@ -1,7 +1,6 @@
 <script lang="ts">
-  import SunIcon from "@lucide/svelte/icons/sun";
   import MoonIcon from "@lucide/svelte/icons/moon";
-
+  import SunIcon from "@lucide/svelte/icons/sun";
   import { resetMode, setMode } from "mode-watcher";
   import * as DropdownMenu from "@/components/ui/dropdown-menu/";
 </script>

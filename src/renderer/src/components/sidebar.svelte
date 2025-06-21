@@ -1,12 +1,11 @@
 <script lang="ts">
-  import * as Tabs from "./ui/tabs/";
+  import { fly, cubicOut  } from "svelte/transition";
+  import { SidebarTab } from "@/types";
+  import { sidebarState } from "../state.svelte";
   import TabFileBrowser from "./sidebar/tab-file-browser.svelte";
   import TabPlaylistQueue from "./sidebar/tab-playlist-queue.svelte";
-  import { sidebarState } from "../state.svelte";
-  import { SidebarTab } from "@/types";
-  import { fly } from "svelte/transition";
-  import { cubicOut } from "svelte/easing";
-
+  import * as Tabs from "./ui/tabs";
+  
   let previousTab = $state(sidebarState.currentTab);
 
   $effect(() => {

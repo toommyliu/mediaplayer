@@ -6,7 +6,7 @@
 
   type Props = WithElementRef<
     Omit<HTMLInputAttributes, "type"> &
-      ({ type: "file"; files?: FileList } | { type?: InputType; files?: undefined })
+      ({ files?: FileList, type: "file"; } | { files?: undefined, type?: InputType; })
   >;
 
   let {

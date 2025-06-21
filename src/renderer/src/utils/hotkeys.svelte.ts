@@ -1,32 +1,36 @@
+import Mousetrap from "mousetrap";
 import * as state from "@/state.svelte";
+import { handlers } from "@/tipc";
 import { SidebarTab } from "@/types";
 import { navigateToParent } from "./file-browser.svelte";
+import { logger } from "./logger";
 import { PlaylistManager } from "./playlist";
 import { playNextVideo, playPreviousVideo } from "./video-playback";
-import { handlers } from "@/tipc";
-import { logger } from "./logger";
-import Mousetrap from "mousetrap";
 
 type HotkeyAction = {
-  id: string;
+  context?: "file-browser" | "global" | "sidebar" | "video";
   description: string;
-  keys: string[];
-  handler: (event: KeyboardEvent) => void;
-  context?: "global" | "video" | "sidebar" | "file-browser";
   enabled?: boolean;
+  handler(event: KeyboardEvent): void;
+  id: string;
+  keys: string[];
 };
 
 type HotkeyCategory = {
-  name: string;
   actions: HotkeyAction[];
+  name: string;
 };
 
 // Configuration state
 class HotkeyConfig {
   categories = $state<HotkeyCategory[]>([]);
+
   modKey = $state<string>("");
+
   seekTime = $state(10);
+
   volumeStep = $state(0.1);
+
   enabled = $state(true);
 
   constructor() {
@@ -187,7 +191,7 @@ class HotkeyConfig {
   }
 
   // Action handlers
-  private togglePlayback = (ev: KeyboardEvent): void => {
+  private readonly togglePlayback = (ev: KeyboardEvent): void => {
     ev.preventDefault();
     if (state.playerState.currentVideo) {
       state.playerState.isPlaying = !state.playerState.isPlaying;
@@ -199,21 +203,21 @@ class HotkeyConfig {
     }
   };
 
-  private previousVideo = (ev: KeyboardEvent): void => {
+  private readonly previousVideo = (ev: KeyboardEvent): void => {
     ev.preventDefault();
     if (state.playerState.currentVideo) {
       playPreviousVideo();
     }
   };
 
-  private nextVideo = (ev: KeyboardEvent): void => {
+  private readonly nextVideo = (ev: KeyboardEvent): void => {
     ev.preventDefault();
     if (state.playerState.currentVideo) {
       playNextVideo();
     }
   };
 
-  private seekBackward = (ev: KeyboardEvent): void => {
+  private readonly seekBackward = (ev: KeyboardEvent): void => {
     ev.preventDefault();
     if (state.playerState.currentVideo) {
       const newTime = Math.max(0, state.playerState.currentTime - this.seekTime);
@@ -224,7 +228,7 @@ class HotkeyConfig {
     }
   };
 
-  private seekForward = (ev: KeyboardEvent): void => {
+  private readonly seekForward = (ev: KeyboardEvent): void => {
     ev.preventDefault();
     if (state.playerState.currentVideo) {
       const newTime = Math.min(
@@ -238,7 +242,7 @@ class HotkeyConfig {
     }
   };
 
-  private volumeUp = (ev: KeyboardEvent): void => {
+  private readonly volumeUp = (ev: KeyboardEvent): void => {
     ev.preventDefault();
     if (state.playerState.videoElement) {
       const newVolume = Math.min(1, state.playerState.volume + this.volumeStep);
@@ -251,7 +255,7 @@ class HotkeyConfig {
     }
   };
 
-  private volumeDown = (ev: KeyboardEvent): void => {
+  private readonly volumeDown = (ev: KeyboardEvent): void => {
     ev.preventDefault();
     if (state.playerState.videoElement) {
       const newVolume = Math.max(0, state.playerState.volume - this.volumeStep);
@@ -260,7 +264,7 @@ class HotkeyConfig {
     }
   };
 
-  private toggleMute = (ev: KeyboardEvent): void => {
+  private readonly toggleMute = (ev: KeyboardEvent): void => {
     ev.preventDefault();
     if (state.playerState.videoElement) {
       state.playerState.isMuted = !state.playerState.isMuted;
@@ -268,39 +272,39 @@ class HotkeyConfig {
     }
   };
 
-  private toggleFullscreen = (ev: KeyboardEvent): void => {
+  private readonly toggleFullscreen = (ev: KeyboardEvent): void => {
     ev.preventDefault();
     state.playerState.isFullscreen = !state.playerState.isFullscreen;
     // You might want to add actual fullscreen API calls here
   };
 
-  private showFileBrowser = (ev: KeyboardEvent): void => {
+  private readonly showFileBrowser = (ev: KeyboardEvent): void => {
     console.log("showFileBrowser");
     ev.preventDefault();
     state.sidebarState.currentTab = SidebarTab.FileBrowser;
   };
 
-  private showQueue = (ev: KeyboardEvent): void => {
+  private readonly showQueue = (ev: KeyboardEvent): void => {
     console.log("showQueue");
     ev.preventDefault();
     state.sidebarState.currentTab = SidebarTab.Queue;
   };
 
-  private toggleSidebar = (ev: KeyboardEvent): void => {
+  private readonly toggleSidebar = (ev: KeyboardEvent): void => {
     ev.preventDefault();
     state.sidebarState.isOpen = !state.sidebarState.isOpen;
   };
 
-  private fileBrowserBack = (ev: KeyboardEvent): void => {
+  private readonly fileBrowserBack = (ev: KeyboardEvent): void => {
     ev.preventDefault();
     if (!state.fileBrowserState.currentPath || state.fileBrowserState.isAtRoot) return;
 
-    navigateToParent().catch((err) => {
-      logger.error("Failed to navigate to parent directory:", err);
+    navigateToParent().catch((error) => {
+      logger.error("Failed to navigate to parent directory:", error);
     });
   };
 
-  private savePlaylist = (ev: KeyboardEvent): void => {
+  private readonly savePlaylist = (ev: KeyboardEvent): void => {
     ev.preventDefault();
     if (state.playlistState.hasUnsavedChanges) {
       PlaylistManager.saveCurrentState();
@@ -308,7 +312,7 @@ class HotkeyConfig {
     }
   };
 
-  private jumpToPercent = (ev: KeyboardEvent, percent: number): void => {
+  private readonly jumpToPercent = (ev: KeyboardEvent, percent: number): void => {
     ev.preventDefault();
     if (state.playerState.currentVideo) {
       const jumpTime = percent * state.playerState.duration;
@@ -346,6 +350,7 @@ class HotkeyConfig {
         return true;
       }
     }
+
     return false;
   }
 
@@ -360,9 +365,11 @@ class HotkeyConfig {
         } else {
           Mousetrap.unbind(action.keys);
         }
+
         return true;
       }
     }
+
     return false;
   }
 
@@ -371,14 +378,14 @@ class HotkeyConfig {
     const isEnabled = action.enabled !== false;
     if (!isEnabled) return;
 
-    action.keys.forEach((key) => {
+    for (const key of action.keys) {
       Mousetrap.unbind(key);
       Mousetrap.bind(key, (ev) => {
         logger.info(`Hotkey pressed: ${action.id} (${key})`);
         ev.preventDefault();
         action.handler(ev);
       });
-    });
+    }
   }
 
   bindAllActions(): void {
@@ -386,6 +393,7 @@ class HotkeyConfig {
       console.warn("Hotkeys are disabled, not binding actions.");
       return;
     }
+
     console.log("Binding all hotkeys...");
 
     for (const category of this.categories) {
@@ -416,22 +424,22 @@ class HotkeyConfig {
   }
 
   // Get all shortcuts for display purposes
-  getAllShortcuts(): Array<{
+  getAllShortcuts(): {
     category: string;
-    id: string;
-    description: string;
-    keys: string;
     context?: string;
+    description: string;
     enabled: boolean;
-  }> {
-    const shortcuts: Array<{
+    id: string;
+    keys: string;
+  }[] {
+    const shortcuts: {
       category: string;
-      id: string;
-      description: string;
-      keys: string;
       context?: string;
+      description: string;
       enabled: boolean;
-    }> = [];
+      id: string;
+      keys: string;
+    }[] = [];
 
     for (const category of this.categories) {
       for (const action of category.actions) {

@@ -1,25 +1,25 @@
 <script lang="ts">
+  import FastForward from "lucide-svelte/icons/fast-forward";
+  import Maximize from "lucide-svelte/icons/maximize";
+  import Menu from "lucide-svelte/icons/menu";
+  import Minimize from "lucide-svelte/icons/minimize";
+  import Pause from "lucide-svelte/icons/pause";
+  import Play from "lucide-svelte/icons/play";
+  import Rewind from "lucide-svelte/icons/rewind";
+  import Settings from "lucide-svelte/icons/settings";
+  import SkipBack from "lucide-svelte/icons/skip-back";
+  import SkipForward from "lucide-svelte/icons/skip-forward";
   import { Button } from "@/components/ui/button";
   import * as Tooltip from "@/components/ui/tooltip";
   import { ICON_SIZE } from "@/constants";
   import { playerState, sidebarState } from "@/state.svelte";
   import { makeTimeString } from "@/utils/time";
   import { cn } from "@/utils/utils";
-  import Maximize from "lucide-svelte/icons/maximize";
-  import Menu from "lucide-svelte/icons/menu";
-  import Pause from "lucide-svelte/icons/pause";
-  import Play from "lucide-svelte/icons/play";
-  import SkipBack from "lucide-svelte/icons/skip-back";
-  import SkipForward from "lucide-svelte/icons/skip-forward";
   import Volume1 from "lucide-svelte/icons/volume-1";
   import Volume2 from "lucide-svelte/icons/volume-2";
   import VolumeX from "lucide-svelte/icons/volume-x";
-  import FastForward from "lucide-svelte/icons/fast-forward";
-  import Rewind from "lucide-svelte/icons/rewind";
-  import Minimize from "lucide-svelte/icons/minimize";
   import { client } from "@/tipc";
   import { playNextVideo, playPreviousVideo, seekToRelative } from "@/utils/video-playback";
-  import Settings from "lucide-svelte/icons/settings";
   import SettingsDialog from "../settings-dialog.svelte";
 
   let isDragging = $state(false);
@@ -41,6 +41,7 @@
         bufferedPercentage = Math.min(100, (bufferedEnd / playerState.duration) * 100);
       }
     };
+
     const handleProgress = (): void => updateBuffered();
 
     playerState.videoElement.addEventListener("progress", handleProgress);
@@ -128,6 +129,7 @@
             });
             playerState.videoElement?.removeEventListener("canplay", onCanPlay);
           };
+
           playerState.videoElement.addEventListener("canplay", onCanPlay);
         }
       }

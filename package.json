@@ -5,7 +5,8 @@
   "main": "./out/main/index.js",
   "scripts": {
     "format": "prettier --plugin prettier-plugin-svelte --write .",
-    "lint": "eslint --cache .",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
     "svelte-check": "svelte-check --tsconfig ./tsconfig.json",
     "typecheck": "npm run typecheck:node && npm run svelte-check",
@@ -27,6 +28,8 @@
     "@fontsource/geist-mono": "^5.2.6",
     "@fontsource/geist-sans": "^5.2.5",
     "@tailwindcss/postcss": "^4.1.10",
+    "eslint": "^9.29.0",
+    "eslint-config-neon": "^0.2.7",
     "fluent-ffmpeg": "^2.1.3",
     "lucide-svelte": "^0.515.0",
     "mode-watcher": "^1.0.8",
@@ -63,6 +66,7 @@
     "tailwindcss": "^4.1.10",
     "tw-animate-css": "^1.3.4",
     "typescript": "^5.8.3",
+    "typescript-eslint": "^8.34.1",
     "vite": "^6.2.6"
   },
   "pnpm": {

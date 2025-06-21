@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { cn } from "@/utils/utils";
   import AlertCircle from "lucide-svelte/icons/alert-circle";
   import ArrowLeft from "lucide-svelte/icons/arrow-left";
   import FileVideo from "lucide-svelte/icons/file-video";
@@ -12,25 +11,26 @@
   import RotateCcw from "lucide-svelte/icons/rotate-ccw";
   import Search from "lucide-svelte/icons/search";
   import X from "lucide-svelte/icons/x";
-  import { client, handlers } from "../../tipc";
+  import { fade } from "svelte/transition";
+  import { cn } from "@/utils/utils";
   import type { FileSystemItem } from "../../state.svelte";
   import { fileBrowserState, platformState, playerState, playlistState } from "../../state.svelte";
+  import { client, handlers } from "../../tipc";
+  import { showItemInFolder } from "../../utils";
   import {
     navigateToParent,
     transformDirectoryContents,
     navigateToDirectory
   } from "../../utils/file-browser.svelte";
-  import { playVideo } from "../../utils/video-playback";
-  import { showItemInFolder } from "../../utils";
-  import { Input } from "../ui/input/";
-  import * as ContextMenu from "../ui/context-menu/";
   import { PlaylistManager } from "../../utils/playlist";
-  import { fade } from "svelte/transition";
+  import { playVideo } from "../../utils/video-playback";
+  import * as ContextMenu from "../ui/context-menu";
+  import { Input } from "../ui/input";
 
-  let isEmpty = $derived(fileBrowserState.fileSystem.length === 0);
-  let expandedFoldersArray = $derived([...fileBrowserState.expandedFolders]);
+  const isEmpty = $derived(fileBrowserState.fileSystem.length === 0);
+  const expandedFoldersArray = $derived([...fileBrowserState.expandedFolders]);
 
-  let filteredAndSortedFileSystem = $derived(() => {
+  const filteredAndSortedFileSystem = $derived(() => {
     let items = [...fileBrowserState.fileSystem];
 
     if (fileBrowserState.searchQuery.trim()) {
@@ -41,7 +41,7 @@
     return items.sort(compareItems);
   });
 
-  let hasNoSearchResults = $derived(
+  const hasNoSearchResults = $derived(
     fileBrowserState.searchQuery.trim() && filteredAndSortedFileSystem().length === 0
   );
 
@@ -66,6 +66,7 @@
         if (item.files && fileBrowserState.searchQuery.trim()) {
           return { ...item, files: filterItemsRecursively(item.files, query) };
         }
+
         return item;
       });
   }
@@ -122,8 +123,8 @@
     const pathParts = currentPath.split(/[/\\]/);
     const parentName = pathParts[pathParts.length - 2] || "Parent";
 
-    navigateToParent().catch((err) => {
-      console.error("Failed to navigate to parent directory:", err);
+    navigateToParent().catch((error) => {
+      console.error("Failed to navigate to parent directory:", error);
       fileBrowserState.error = `Failed to navigate to ${parentName} directory.`;
     });
   }
@@ -161,8 +162,8 @@
   }
 
   function compareItems(a: FileSystemItem, b: FileSystemItem): number {
-    const aIsFolder = !!a.files;
-    const bIsFolder = !!b.files;
+    const aIsFolder = Boolean(a.files);
+    const bIsFolder = Boolean(b.files);
 
     // Folders first
     if (aIsFolder && !bIsFolder) return -1;
@@ -199,7 +200,7 @@
     return fileBrowserState.sortDirection === "desc" ? -comparison : comparison;
   }
 
-  function setSortBy(sortBy: "name" | "duration") {
+  function setSortBy(sortBy: "duration" | "name") {
     if (fileBrowserState.sortBy === sortBy) {
       fileBrowserState.sortDirection = fileBrowserState.sortDirection === "asc" ? "desc" : "asc";
     } else {
@@ -209,7 +210,7 @@
   }
 
   function renderFileSystemItem(item: FileSystemItem, depth = 0) {
-    const isFolder = !!item.files;
+    const isFolder = Boolean(item.files);
     const isVideo = !isFolder && item.duration !== undefined;
     const isExpanded = item.path ? fileBrowserState.expandedFolders.has(item.path) : false;
     const isCurrentlyPlaying =
@@ -256,8 +257,8 @@
         const folderContents = transformDirectoryContents(result);
         updateFolderContents(fileBrowserState.fileSystem, folderPath, folderContents);
       }
-    } catch (err) {
-      console.error("Failed to load folder contents:", err);
+    } catch (error) {
+      console.error("Failed to load folder contents:", error);
       fileBrowserState.expandedFolders.delete(folderPath);
     } finally {
       fileBrowserState.loadingFolders.delete(folderPath);
@@ -273,11 +274,13 @@
       if (item.path === targetPath && item.files !== undefined) {
         return item;
       }
+
       if (item.files) {
         const found = findFolderInFileSystem(item.files, targetPath);
         if (found) return found;
       }
     }
+
     return null;
   }
 
@@ -292,12 +295,12 @@
         fileBrowserState.fileTree = { ...fileBrowserState.fileTree! };
         return true;
       }
-      if (items[i].files) {
-        if (updateFolderContents(items[i].files!, targetPath, newContents)) {
+
+      if (items[i].files && updateFolderContents(items[i].files!, targetPath, newContents)) {
           return true;
         }
-      }
     }
+
     return false;
   }
 
@@ -329,7 +332,7 @@
         return;
       }
 
-      if (res && res.rootPath) {
+      if (res?.rootPath) {
         fileBrowserState.originalPath = res.rootPath;
 
         const dirResult = await client.readDirectory(res.rootPath);

@@ -1,9 +1,9 @@
 <script lang="ts">
-  import { hotkeyConfig } from "@/utils/hotkeys.svelte";
-  import { hotkeyRecorder, formatHotkeyDisplay } from "@/utils/hotkey-recorder";
   import Button from "@/components/ui/button/button.svelte";
-  import * as Tabs from "@/components/ui/tabs";
   import { Checkbox } from "@/components/ui/checkbox";
+  import * as Tabs from "@/components/ui/tabs";
+  import { hotkeyRecorder, formatHotkeyDisplay } from "@/utils/hotkey-recorder";
+  import { hotkeyConfig } from "@/utils/hotkeys.svelte";
 
   let editingAction = $state<string | null>(null);
   let isRecording = $state(false);
@@ -19,12 +19,14 @@
   // Group shortcuts by category
   const shortcutsByCategory = $derived(() => {
     const grouped = new Map<string, typeof shortcuts>();
-    shortcuts.forEach((shortcut) => {
+    for (const shortcut of shortcuts) {
       if (!grouped.has(shortcut.category)) {
         grouped.set(shortcut.category, []);
       }
+
       grouped.get(shortcut.category)!.push(shortcut);
-    });
+    }
+
     return grouped;
   });
 
@@ -103,16 +105,15 @@
       if (recordedKeys && recordedKeys !== originalKeys) {
         saveHotkey();
       }
+
       return;
     }
 
     // Ctrl/Cmd + S saves
-    if (!isRecording && event.key === "s" && (event.metaKey || event.ctrlKey)) {
-      if (recordedKeys && recordedKeys !== originalKeys) {
+    if (!isRecording && event.key === "s" && (event.metaKey || event.ctrlKey) && recordedKeys && recordedKeys !== originalKeys) {
         event.preventDefault();
         saveHotkey();
       }
-    }
   }
 
   function saveHotkey(): void {
@@ -121,7 +122,7 @@
       const keys = recordedKeys
         .split(",")
         .map((k) => k.trim())
-        .filter((k) => k);
+        .filter(Boolean);
 
       hotkeyConfig.updateHotkey(editingAction, keys);
 

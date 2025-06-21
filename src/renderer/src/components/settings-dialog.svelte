@@ -1,19 +1,18 @@
 <script lang="ts">
-  import * as Dialog from "@/components/ui/dialog";
 
-  import SettingsKeyboardShortcuts from "./settings/settings-keyboard-shortcuts.svelte";
-  import IconSettings from "lucide-svelte/icons/settings";
-  import IconKeyboard from "lucide-svelte/icons/keyboard";
-  import IconPlayerPlay from "lucide-svelte/icons/play";
-  import IconVolume2 from "lucide-svelte/icons/volume-2";
-  import SunIcon from "lucide-svelte/icons/sun";
-  import MoonIcon from "lucide-svelte/icons/moon";
-  import MonitorIcon from "lucide-svelte/icons/monitor";
   import ChevronDownIcon from "lucide-svelte/icons/chevron-down";
-
+  import IconKeyboard from "lucide-svelte/icons/keyboard";
+  import MonitorIcon from "lucide-svelte/icons/monitor";
+  import MoonIcon from "lucide-svelte/icons/moon";
+  import IconPlayerPlay from "lucide-svelte/icons/play";
+  import IconSettings from "lucide-svelte/icons/settings";
+  import SunIcon from "lucide-svelte/icons/sun";
+  import IconVolume2 from "lucide-svelte/icons/volume-2";
   import { resetMode, setMode, mode } from "mode-watcher";
+  import * as Dialog from "@/components/ui/dialog";
   import * as DropdownMenu from "@/components/ui/dropdown-menu/";
   import { Label } from "@/components/ui/label";
+  import SettingsKeyboardShortcuts from "./settings/settings-keyboard-shortcuts.svelte";
 
   let { open: isOpen = $bindable() }: { open: boolean } = $props();
 

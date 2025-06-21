@@ -1,6 +1,6 @@
+import pino from "pino";
 import { playerState, fileBrowserState, type FileSystemItem } from "@/state.svelte";
 import { client } from "@/tipc";
-import pino from "pino";
 import { PlaylistManager } from "./playlist";
 
 const logger = pino({
@@ -9,12 +9,12 @@ const logger = pino({
   }
 });
 export type FileBrowserEvents = {
-  addFile?: (filePath: string) => void;
-  addFolder?: (folderData: any) => void;
+  addFile?(filePath: string): void;
+  addFolder?(folderData: any): void;
 };
 
 export function transformDirectoryContents(directoryContents): FileSystemItem[] {
-  if (!directoryContents || !directoryContents.files) return [];
+  if (!directoryContents?.files) return [];
 
   const items = directoryContents.files.map((item) => ({
     name: item.name,
@@ -56,8 +56,8 @@ export async function navigateToDirectory(dirPath: string) {
         );
       }
     }
-  } catch (err) {
-    console.error("Failed to navigate to directory:", err);
+  } catch (error) {
+    console.error("Failed to navigate to directory:", error);
     fileBrowserState.error = "Failed to load directory. Please try again.";
   } finally {
     fileBrowserState.isLoading = false;
@@ -73,8 +73,8 @@ export async function navigateToParent() {
     if (result && result.parentPath) {
       await navigateToDirectory(result.parentPath);
     }
-  } catch (err) {
-    console.error("Failed to navigate to parent directory:", err);
+  } catch (error) {
+    console.error("Failed to navigate to parent directory:", error);
     fileBrowserState.error = "Failed to navigate to parent directory.";
     fileBrowserState.isLoading = false;
   }
@@ -91,14 +91,16 @@ export function updatePlayerQueueForced(preserveCurrentVideo: boolean = false) {
     if (entry.files) {
       return entry.files?.flatMap(flatten) ?? [];
     }
+
     if (entry.path && entry.duration !== undefined) {
       return [`file://${entry.path}`];
     }
+
     return [];
   });
 
   if (currentVideo) {
-    const newIndex = playerState.queue.findIndex((src) => src === currentVideo);
+    const newIndex = playerState.queue.indexOf(currentVideo);
     if (newIndex !== -1) {
       playerState.currentIndex = newIndex;
     } else {
@@ -140,7 +142,7 @@ export async function loadFileSystemStructure() {
       return;
     }
 
-    if (result && result.rootPath) {
+    if (result?.rootPath) {
       fileBrowserState.originalPath = result.rootPath;
 
       playerState.currentTime = 0;
@@ -188,8 +190,8 @@ export async function loadFileSystemStructure() {
         fileBrowserState.originalPath = null;
       }
     }
-  } catch (err) {
-    console.error("Failed to load file system:", err);
+  } catch (error) {
+    console.error("Failed to load file system:", error);
     fileBrowserState.error = "Failed to load file system. Please try again.";
     fileBrowserState.fileTree = null;
     fileBrowserState.currentPath = null;
@@ -203,8 +205,8 @@ export async function loadFileSystemStructure() {
 export async function getAllVideoFilesRecursive(
   folderPath: string,
   depth: number = 0
-): Promise<Array<{ name: string; path: string; duration?: number }>> {
-  let videoFiles: Array<{ name: string; path: string; duration?: number }> = [];
+): Promise<{ duration?: number, name: string; path: string; }[]> {
+  let videoFiles: { duration?: number, name: string; path: string; }[] = [];
   const indent = "  ".repeat(depth);
   console.log(`${indent}[FileManager] Scanning folder: ${folderPath}`);
   logger.info(`[FileManager] Scanning folder: ${folderPath}`);
@@ -234,20 +236,22 @@ export async function getAllVideoFilesRecursive(
       error
     );
   }
+
   return videoFiles;
 }
 
 function extractDatePrefix(name: string): Date | null {
   // Match YYYY/MM/DD, YYYY-MM-DD, or YYYY.MM.DD patterns at the start of the filename
-  const dateMatch = name.match(/^(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})/);
+  const dateMatch = /^(\d{4})[./\-](\d{1,2})[./\-](\d{1,2})/.exec(name);
   if (dateMatch) {
     const [, year, month, day] = dateMatch;
-    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    const date = new Date(Number.parseInt(year), Number.parseInt(month) - 1, Number.parseInt(day));
     // Verify it's a valid date
     if (!isNaN(date.getTime())) {
       return date;
     }
   }
+
   return null;
 }
 
@@ -264,8 +268,8 @@ function naturalCompare(a: string, b: string): number {
 
     // If both chunks are numeric, compare as numbers
     if (/^\d+$/.test(chunkA) && /^\d+$/.test(chunkB)) {
-      const numA = parseInt(chunkA, 10);
-      const numB = parseInt(chunkB, 10);
+      const numA = Number.parseInt(chunkA, 10);
+      const numB = Number.parseInt(chunkB, 10);
       if (numA !== numB) {
         return numA - numB;
       }
@@ -295,9 +299,10 @@ function smartNameCompare(a: string, b: string): number {
     if (dateCompare !== 0) {
       return dateCompare;
     }
+
     // If dates are the same, compare the rest of the filename
-    const restA = a.replace(/^(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})\s*/, "");
-    const restB = b.replace(/^(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})\s*/, "");
+    const restA = a.replace(/^(\d{4})[./\-](\d{1,2})[./\-](\d{1,2})\s*/, "");
+    const restB = b.replace(/^(\d{4})[./\-](\d{1,2})[./\-](\d{1,2})\s*/, "");
     return naturalCompare(restA, restB);
   }
 
@@ -312,8 +317,8 @@ function smartNameCompare(a: string, b: string): number {
 function sortFileSystem(files: FileSystemItem[]): FileSystemItem[] {
   return [...files].sort((a, b) => {
     // Folders first
-    const aIsFolder = !!a.files;
-    const bIsFolder = !!b.files;
+    const aIsFolder = Boolean(a.files);
+    const bIsFolder = Boolean(b.files);
 
     if (aIsFolder && !bIsFolder) return -1;
     if (!aIsFolder && bIsFolder) return 1;
@@ -333,6 +338,7 @@ function sortFileSystem(files: FileSystemItem[]): FileSystemItem[] {
           const nameCompare = smartNameCompare(aName, bName);
           return fileBrowserState.sortDirection === "asc" ? nameCompare : -nameCompare;
         }
+
         const aDuration = a.duration || 0;
         const bDuration = b.duration || 0;
         const durationCompare = aDuration - bDuration;
