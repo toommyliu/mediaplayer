@@ -1,6 +1,6 @@
 <script lang="ts">
   import { playerState } from "@/state.svelte";
-  import { makeTimeString } from "@/utils/time";
+  import { makeTimeString } from "@/utils/makeTimeString";
 
   const { showOverlay }: { showOverlay: boolean } = $props();
 </script>

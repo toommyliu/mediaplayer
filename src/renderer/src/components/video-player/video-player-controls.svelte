@@ -13,7 +13,7 @@
   import * as Tooltip from "@/components/ui/tooltip";
   import { ICON_SIZE } from "@/constants";
   import { playerState, sidebarState } from "@/state.svelte";
-  import { makeTimeString } from "@/utils/time";
+  import { makeTimeString } from "@/utils/makeTimeString";
   import { cn } from "@/utils/utils";
   import Volume1 from "lucide-svelte/icons/volume-1";
   import Volume2 from "lucide-svelte/icons/volume-2";

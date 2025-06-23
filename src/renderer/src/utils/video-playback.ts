@@ -1,5 +1,5 @@
 import { playerState, playlistState } from "../state.svelte";
-import { logger } from "../utils/logger";
+import { logger } from "./logger";
 
 /**
  * Plays a video from the source URL.
@@ -14,7 +14,7 @@ export const playVideo = (src: string): void => {
 
   const normalizedSrc = src.startsWith("file://") ? src : `file://${src}`;
 
-  let idx = playerState.queue.findIndex((item) => item === normalizedSrc);
+  let idx = playerState.queue.indexOf(normalizedSrc);
 
   if (idx === -1) {
     // Video not in queue, add it
@@ -70,6 +70,7 @@ export function playPreviousVideo(): void {
  * Plays the next video in the queue, cycling to the first video if at the end.
  *
  * Supports playlist operations.
+ *
  * @returns void
  */
 export const playNextVideo = (): void => {
@@ -120,7 +121,8 @@ export const seekToRelative = (time: number): void => {
 export const nextPlaylistVideo = (): void => {
   const currentPlaylist = playlistState.currentPlaylist;
   if (!currentPlaylist || currentPlaylist.items.length === 0) {
-    return playNextVideo();
+    playNextVideo();
+    return;
   }
 
   const currentVideo = playerState.currentVideo;
@@ -150,7 +152,8 @@ const previousPlaylistVideo = (): void => {
   const currentPlaylist = playlistState.currentPlaylist;
   if (!currentPlaylist || currentPlaylist.items.length === 0) {
     // Fall back to queue navigation if no playlist
-    return playPreviousVideo();
+    playPreviousVideo();
+    return;
   }
 
   const currentVideo = playerState.currentVideo;

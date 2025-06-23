@@ -16,7 +16,7 @@
   } from "./state.svelte";
   import { client, handlers } from "./tipc";
   import { transformDirectoryContents } from "./utils/file-browser.svelte";
-  import { PlaylistManager } from "./utils/playlist";
+  import { PlaylistManager } from "./utils/playlist-manager";
   import { playVideo } from "./utils/video-playback";
 
   PlaylistManager.initializeFromStorage();
@@ -24,8 +24,8 @@
   async function getAllVideoFilesRecursive(
     folderPath: string,
     depth: number = 0
-  ): Promise<{ duration?: number, name: string; path: string; }[]> {
-    let videoFiles: { duration?: number, name: string; path: string; }[] = [];
+  ): Promise<{ duration?: number; name: string; path: string }[]> {
+    let videoFiles: { duration?: number; name: string; path: string }[] = [];
     const indent = "  ".repeat(depth);
     logger.debug(`${indent}Scanning folder: ${folderPath}`);
 
@@ -147,6 +147,7 @@
     platformState.isWindows = res.isWindows;
     platformState.isMac = res.isMacOS;
     platformState.isLinux = res.isLinux;
+    platformState.pathSep = res.pathSep;
 
     PlaylistManager.initializeFromStorage();
 

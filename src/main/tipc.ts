@@ -1,9 +1,10 @@
 import { tipc } from "@egoist/tipc/main";
 import { platform } from "@electron-toolkit/utils";
-import { showFilePicker, loadDirectoryContents, type PickerResult } from "./utils";
 import { shell } from "electron";
-import { mainWindow } from ".";
 import { logger } from "./logger";
+import { showFilePicker, loadDirectoryContents, type PickerResult } from "./utils";
+import { mainWindow } from ".";
+import { sep } from "node:path";
 
 export const tipcInstance = tipc.create();
 
@@ -15,19 +16,13 @@ export const router = {
     mainWindow?.setFullScreen(false);
   }),
 
-  selectFile: tipcInstance.procedure.action(async () => {
-    return await showFilePicker("file");
-  }),
-  selectFolder: tipcInstance.procedure.action(async () => {
-    return await showFilePicker("folder");
-  }),
-  selectFileOrFolder: tipcInstance.procedure.action(async () => {
-    return await showFilePicker("both");
-  }),
+  selectFile: tipcInstance.procedure.action(async () => showFilePicker("file")),
+  selectFolder: tipcInstance.procedure.action(async () => showFilePicker("folder")),
+  selectFileOrFolder: tipcInstance.procedure.action(async () => showFilePicker("both")),
 
-  readDirectory: tipcInstance.procedure.input<string>().action(async ({ input }) => {
-    return await loadDirectoryContents(input);
-  }),
+  readDirectory: tipcInstance.procedure
+    .input<string>()
+    .action(async ({ input }) => loadDirectoryContents(input)),
 
   showItemInFolder: tipcInstance.procedure.input<string>().action(async ({ input }) => {
     try {
@@ -37,16 +32,21 @@ export const router = {
     }
   }),
 
-  getPlatform: tipcInstance.procedure.action(async () => platform)
+  getPlatform: tipcInstance.procedure.action(async () => ({
+    isMacOS: platform.isMacOS,
+    isWindows: platform.isWindows,
+    isLinux: platform.isLinux,
+    pathSep: sep
+  }))
 };
 
 export type Router = typeof router;
 
 export type RendererHandlers = {
-  addFile: (res: PickerResult) => void;
-  addFolder: (res: PickerResult) => void;
+  addFile(res: PickerResult): void;
+  addFolder(res: PickerResult): void;
 
-  mediaPreviousTrack: () => void;
-  mediaNextTrack: () => void;
-  mediaPlayPause: () => void;
+  mediaNextTrack(): void;
+  mediaPlayPause(): void;
+  mediaPreviousTrack(): void;
 };

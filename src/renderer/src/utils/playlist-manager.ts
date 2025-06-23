@@ -1,16 +1,15 @@
 import { playlistState, type Playlist, type PlaylistItem } from "../state.svelte";
 import { logger } from "./logger";
 
+const MEDIAPLAYER_PLAYLISTS_KEY = "mediaplayer-playlists";
+const MEDIAPLAYER_CURRENT_PLAYLIST_KEY = "mediaplayer-current-playlist";
+
 export class PlaylistManager {
-  /**
-   * Initialize playlists from storage
-   */
-  static initializeFromStorage(): void {
+  // Initialize playlists from localStorage
+  public static initializeFromStorage(): void {
     try {
-      console.log("[PlaylistManager] Initializing from storage");
-      logger.info("[PlaylistManager] Attempting to load playlists from localStorage");
-      const stored = localStorage.getItem("mediaplayer-playlists");
-      const storedCurrentId = localStorage.getItem("mediaplayer-current-playlist");
+      const stored = localStorage.getItem(MEDIAPLAYER_PLAYLISTS_KEY);
+      const storedCurrentId = localStorage.getItem(MEDIAPLAYER_CURRENT_PLAYLIST_KEY);
 
       if (stored) {
         const parsedPlaylists = JSON.parse(stored, (key, value) => {
@@ -20,33 +19,31 @@ export class PlaylistManager {
           ) {
             return new Date(value);
           }
+
           return value;
         });
 
         if (Array.isArray(parsedPlaylists) && parsedPlaylists.length > 0) {
           playlistState.playlists = parsedPlaylists;
 
-          if (storedCurrentId && parsedPlaylists.some((p: Playlist) => p.id === storedCurrentId)) {
+          if (
+            storedCurrentId &&
+            parsedPlaylists.some((playlist: Playlist) => playlist.id === storedCurrentId)
+          ) {
             playlistState.currentPlaylistId = storedCurrentId;
           } else {
-            playlistState.currentPlaylistId = parsedPlaylists[0]?.id || "default";
+            playlistState.currentPlaylistId = parsedPlaylists[0]?.id ?? "default";
           }
         }
       }
 
-      if (!playlistState.playlists.some((p) => p.id === "default")) {
+      // Create default playlist if it doesn't exist yet
+      if (!playlistState.playlists.some((playlist) => playlist.id === "default")) {
+        logger.debug("creating default playlist");
         this.createDefaultPlaylist();
       }
 
-      if (playlistState.hasUnsavedChanges === undefined) {
-        playlistState.hasUnsavedChanges = false;
-      }
-
-      console.log("Playlist state initialized:", {
-        playlistCount: playlistState.playlists.length,
-        currentPlaylist: playlistState.currentPlaylistId,
-        hasUnsavedChanges: playlistState.hasUnsavedChanges
-      });
+      playlistState.hasUnsavedChanges ??= false;
     } catch (error) {
       console.error("Failed to initialize playlists from storage:", error);
       this.createDefaultPlaylist();
@@ -69,8 +66,8 @@ export class PlaylistManager {
         }
         return value;
       });
-      localStorage.setItem("mediaplayer-playlists", serialized);
-      localStorage.setItem("mediaplayer-current-playlist", playlistState.currentPlaylistId);
+      localStorage.setItem(MEDIAPLAYER_PLAYLISTS_KEY, serialized);
+      localStorage.setItem(MEDIAPLAYER_CURRENT_PLAYLIST_KEY, playlistState.currentPlaylistId);
       console.log("[PlaylistManager] Successfully saved to storage");
     } catch (error) {
       console.error("Failed to save playlists to storage:", error);
@@ -85,7 +82,7 @@ export class PlaylistManager {
     const defaultPlaylist: Playlist = {
       id: "default",
       name: "Default Playlist",
-      description: "Your main playlist",
+      description: "",
       items: [],
       createdAt: new Date(),
       lastModified: new Date()
@@ -99,7 +96,7 @@ export class PlaylistManager {
     }
   }
 
-  static createPlaylist(name: string, description?: string): Playlist {
+  public static createPlaylist(name: string, description?: string): Playlist {
     const newPlaylist: Playlist = {
       id: crypto.randomUUID(),
       name,
@@ -114,7 +111,7 @@ export class PlaylistManager {
     return newPlaylist;
   }
 
-  static deletePlaylist(playlistId: string): boolean {
+  public static deletePlaylist(playlistId: string): boolean {
     const index = playlistState.playlists.findIndex((p) => p.id === playlistId);
     if (index === -1 || playlistId === "default") return false;
 
@@ -128,7 +125,7 @@ export class PlaylistManager {
     return true;
   }
 
-  static renamePlaylist(playlistId: string, newName: string): boolean {
+  public static renamePlaylist(playlistId: string, newName: string): boolean {
     const playlist = playlistState.playlists.find((p) => p.id === playlistId);
     if (!playlist) return false;
 
@@ -138,7 +135,7 @@ export class PlaylistManager {
     return true;
   }
 
-  static switchToPlaylist(playlistId: string): boolean {
+  public static switchToPlaylist(playlistId: string): boolean {
     console.log(`[PlaylistManager] Switching to playlist: ${playlistId}`);
     const playlist = playlistState.playlists.find((p) => p.id === playlistId);
     if (!playlist) {
@@ -155,7 +152,7 @@ export class PlaylistManager {
     return true;
   }
 
-  static addItemToPlaylist(
+  public static addItemToPlaylist(
     playlistId: string,
     item: Omit<PlaylistItem, "id" | "addedAt">
   ): boolean {
@@ -178,7 +175,7 @@ export class PlaylistManager {
    * Add an item to a playlist without saving to storage immediately.
    * Useful for bulk operations like adding folder contents.
    */
-  static addItemToPlaylistUnsaved(
+  public static addItemToPlaylistUnsaved(
     playlistId: string,
     item: Omit<PlaylistItem, "id" | "addedAt">
   ): boolean {
@@ -214,33 +211,10 @@ export class PlaylistManager {
   }
 
   /**
-   * Add multiple items to a playlist without saving until all are added.
-   * This is more efficient for bulk operations.
-   */
-  static addMultipleItemsToPlaylist(
-    playlistId: string,
-    items: Omit<PlaylistItem, "id" | "addedAt">[]
-  ): boolean {
-    const playlist = playlistState.playlists.find((p) => p.id === playlistId);
-    if (!playlist) return false;
-
-    const newItems: PlaylistItem[] = items.map((item) => ({
-      ...item,
-      id: crypto.randomUUID(),
-      addedAt: new Date()
-    }));
-
-    playlist.items.push(...newItems);
-    playlist.lastModified = new Date();
-    playlistState.hasUnsavedChanges = true;
-    return true;
-  }
-
-  /**
    * Add folder contents to the current playlist without saving immediately.
    * Call saveToStorage() manually when ready to persist.
    */
-  static addFolderContentsToCurrentPlaylist(
+  public static addFolderContentsToCurrentPlaylist(
     videoFiles: { name: string; path: string; duration?: number }[]
   ): boolean {
     console.log(`[PlaylistManager] Adding ${videoFiles.length} files to current playlist`);
@@ -282,14 +256,14 @@ export class PlaylistManager {
    * Manually save current playlist state to storage.
    * Use this after bulk operations with unsaved methods.
    */
-  static saveCurrentState(): void {
+  public static saveCurrentState(): void {
     console.log("[PlaylistManager] Manually saving current state");
     this.saveToStorage();
     playlistState.hasUnsavedChanges = false;
     console.log("[PlaylistManager] hasUnsavedChanges reset to false after manual save");
   }
 
-  static removeItemFromPlaylist(playlistId: string, itemId: string): boolean {
+  public static removeItemFromPlaylist(playlistId: string, itemId: string): boolean {
     const playlist = playlistState.playlists.find((p) => p.id === playlistId);
     if (!playlist) return false;
 
@@ -302,7 +276,7 @@ export class PlaylistManager {
     return true;
   }
 
-  static clearPlaylist(playlistId: string): boolean {
+  public static clearPlaylist(playlistId: string): boolean {
     const playlist = playlistState.playlists.find((p) => p.id === playlistId);
     if (!playlist) return false;
 
@@ -312,44 +286,7 @@ export class PlaylistManager {
     return true;
   }
 
-  static shufflePlaylist(playlistId: string): boolean {
-    const playlist = playlistState.playlists.find((p) => p.id === playlistId);
-    if (!playlist) return false;
-
-    // Fisher-Yates shuffle algorithm
-    for (let i = playlist.items.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [playlist.items[i], playlist.items[j]] = [playlist.items[j], playlist.items[i]];
-    }
-
-    playlist.lastModified = new Date();
-    playlistState.hasUnsavedChanges = true;
-    return true;
-  }
-
-  static duplicatePlaylist(playlistId: string): Playlist | null {
-    const sourcePlaylist = playlistState.playlists.find((p) => p.id === playlistId);
-    if (!sourcePlaylist) return null;
-
-    const duplicatedPlaylist: Playlist = {
-      id: crypto.randomUUID(),
-      name: `${sourcePlaylist.name} (Copy)`,
-      description: sourcePlaylist.description,
-      items: sourcePlaylist.items.map((item) => ({
-        ...item,
-        id: crypto.randomUUID(),
-        addedAt: new Date()
-      })),
-      createdAt: new Date(),
-      lastModified: new Date()
-    };
-
-    playlistState.playlists.push(duplicatedPlaylist);
-    this.saveToStorage();
-    return duplicatedPlaylist;
-  }
-
-  static moveItem(playlistId: string, fromIndex: number, toIndex: number): boolean {
+  public static moveItem(playlistId: string, fromIndex: number, toIndex: number): boolean {
     const playlist = playlistState.playlists.find((p) => p.id === playlistId);
     if (!playlist) return false;
 
@@ -367,31 +304,5 @@ export class PlaylistManager {
     playlist.lastModified = new Date();
     playlistState.hasUnsavedChanges = true;
     return true;
-  }
-
-  static getNextItem(playlistId: string, currentItemId?: string): PlaylistItem | null {
-    const playlist = playlistState.playlists.find((p) => p.id === playlistId);
-    if (!playlist || playlist.items.length === 0) return null;
-
-    if (!currentItemId) return playlist.items[0];
-
-    const currentIndex = playlist.items.findIndex((item) => item.id === currentItemId);
-    if (currentIndex === -1) return playlist.items[0];
-
-    const nextIndex = (currentIndex + 1) % playlist.items.length;
-    return playlist.items[nextIndex];
-  }
-
-  static getPreviousItem(playlistId: string, currentItemId?: string): PlaylistItem | null {
-    const playlist = playlistState.playlists.find((p) => p.id === playlistId);
-    if (!playlist || playlist.items.length === 0) return null;
-
-    if (!currentItemId) return playlist.items[playlist.items.length - 1];
-
-    const currentIndex = playlist.items.findIndex((item) => item.id === currentItemId);
-    if (currentIndex === -1) return playlist.items[playlist.items.length - 1];
-
-    const prevIndex = currentIndex === 0 ? playlist.items.length - 1 : currentIndex - 1;
-    return playlist.items[prevIndex];
   }
 }

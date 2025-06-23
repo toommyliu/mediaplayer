@@ -44,11 +44,13 @@ class SidebarState {
 export const sidebarState = new SidebarState();
 
 class PlatformState {
-  isMac = $state(false);
+  public isMac = $state(false);
 
-  isWindows = $state(false);
+  public isWindows = $state(false);
 
-  isLinux = $state(false);
+  public isLinux = $state(false);
+
+  public pathSep = $state("");
 }
 
 export const platformState = new PlatformState();

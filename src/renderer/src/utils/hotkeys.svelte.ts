@@ -4,7 +4,7 @@ import { handlers } from "@/tipc";
 import { SidebarTab } from "@/types";
 import { navigateToParent } from "./file-browser.svelte";
 import { logger } from "./logger";
-import { PlaylistManager } from "./playlist";
+import { PlaylistManager } from "./playlist-manager";
 import { playNextVideo, playPreviousVideo } from "./video-playback";
 
 type HotkeyAction = {
@@ -34,9 +34,9 @@ class HotkeyConfig {
   enabled = $state(true);
 
   constructor() {
-    console.log(
-      state.platformState.isMac ? "Using Mac modifier keys" : "Using non-Mac modifier keys"
-    );
+    // console.log(
+    //   state.platformState.isMac ? "Using Mac modifier keys" : "Using non-Mac modifier keys"
+    // );
     this.modKey = state.platformState.isMac ? "command" : "ctrl";
     this.initializeDefaultConfig();
   }
@@ -394,7 +394,7 @@ class HotkeyConfig {
       return;
     }
 
-    console.log("Binding all hotkeys...");
+    // console.log("Binding all hotkeys...");
 
     for (const category of this.categories) {
       for (const action of category.actions) {
@@ -407,7 +407,7 @@ class HotkeyConfig {
   }
 
   unbindAll(): void {
-    console.log("Unbinding all hotkeys...");
+    // console.log("Unbinding all hotkeys...");
     for (const action of this.getAllShortcuts()) {
       Mousetrap.unbind(action.keys);
     }
@@ -482,11 +482,11 @@ export function setupMediaKeyHandlers(): void {
 }
 
 export function initializeHotkeys(): void {
-  console.log("Initializing hotkeys...");
+  // console.log("Initializing hotkeys...");
   setupMediaKeyHandlers();
   hotkeyConfig.bindAllActions();
 
-  logger.info("Hotkey system initialized with", hotkeyConfig.categories.length, "categories");
+  // logger.info("Hotkey system initialized with", hotkeyConfig.categories.length, "categories");
 }
 
 export function cleanupHotkeys(): void {

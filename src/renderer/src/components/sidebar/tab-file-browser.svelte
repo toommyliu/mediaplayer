@@ -22,7 +22,7 @@
     transformDirectoryContents,
     navigateToDirectory
   } from "../../utils/file-browser.svelte";
-  import { PlaylistManager } from "../../utils/playlist";
+  import { PlaylistManager } from "../../utils/playlist-manager";
   import { playVideo } from "../../utils/video-playback";
   import * as ContextMenu from "../ui/context-menu";
   import { Input } from "../ui/input";
@@ -297,8 +297,8 @@
       }
 
       if (items[i].files && updateFolderContents(items[i].files!, targetPath, newContents)) {
-          return true;
-        }
+        return true;
+      }
     }
 
     return false;

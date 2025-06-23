@@ -1,7 +1,7 @@
 import pino from "pino";
 import { playerState, fileBrowserState, type FileSystemItem } from "@/state.svelte";
 import { client } from "@/tipc";
-import { PlaylistManager } from "./playlist";
+import { PlaylistManager } from "./playlist-manager";
 
 const logger = pino({
   browser: {
@@ -170,7 +170,7 @@ export async function loadFileSystemStructure() {
           playerState.queue = allVideoFiles.map((vf) => `file://${vf.path}`);
           playerState.currentIndex = 0;
 
-          const { PlaylistManager } = await import("./playlist");
+          const { PlaylistManager } = await import("./playlist-manager");
           PlaylistManager.addFolderContentsToCurrentPlaylist(allVideoFiles);
           console.log(`Added ${allVideoFiles.length} videos recursively to playlist`);
         }
@@ -205,8 +205,8 @@ export async function loadFileSystemStructure() {
 export async function getAllVideoFilesRecursive(
   folderPath: string,
   depth: number = 0
-): Promise<{ duration?: number, name: string; path: string; }[]> {
-  let videoFiles: { duration?: number, name: string; path: string; }[] = [];
+): Promise<{ duration?: number; name: string; path: string }[]> {
+  let videoFiles: { duration?: number; name: string; path: string }[] = [];
   const indent = "  ".repeat(depth);
   console.log(`${indent}[FileManager] Scanning folder: ${folderPath}`);
   logger.info(`[FileManager] Scanning folder: ${folderPath}`);
