@@ -18,8 +18,7 @@
 
   function isCurrentlyPlaying(item: any): boolean {
     if (!playerState.currentVideo) return false;
-    const itemPath = `file://${item.path}`;
-    return playerState.currentVideo === itemPath;
+    return playerState?.currentVideo === `file://${item.path}`;
   }
 
   function handleItemClick(item: any) {
@@ -30,7 +29,7 @@
   function removeFromPlaylist(itemId: string) {
     const itemToRemove = playlistState.currentPlaylistItems.find((item) => item.id === itemId);
 
-    // Are we trying to remove the currently playing video?
+    // The current video is being removed
     if (itemToRemove && isCurrentlyPlaying(itemToRemove)) {
       const currentIndex = playlistState.currentPlaylistItems.findIndex(
         (item) => item.id === itemId
@@ -76,17 +75,9 @@
     }
   }
 
-  function clearPlaylist() {
-    showClearDialog = true;
-  }
-
   function confirmClearPlaylist() {
     PlaylistManager.clearPlaylist(playlistState.currentPlaylistId);
     showClearDialog = false;
-  }
-
-  function savePlaylist() {
-    PlaylistManager.saveCurrentState();
   }
 </script>
 
@@ -114,7 +105,7 @@
           <button
             class="flex h-7 w-7 items-center justify-center rounded-md border-none bg-transparent text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-300"
             title="Save changes"
-            onclick={savePlaylist}
+            onclick={() => PlaylistManager.saveCurrentState()}
           >
             <IconSave size={ICON_SIZE - 4} />
           </button>
@@ -122,7 +113,7 @@
         <button
           class="flex h-7 w-7 items-center justify-center rounded-md border-none bg-transparent text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-300"
           title="Clear playlist"
-          onclick={clearPlaylist}
+          onclick={() => (showClearDialog = true)}
         >
           <IconTrash2 size={ICON_SIZE - 4} />
         </button>
@@ -217,7 +208,7 @@
   </div>
 </div>
 
-<!-- Clear Playlist Confirmation Dialog -->
+<!-- Clear playlist confirmation dialog -->
 <AlertDialog.Root bind:open={showClearDialog}>
   <AlertDialog.Content>
     <AlertDialog.Header>

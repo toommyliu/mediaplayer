@@ -6,7 +6,7 @@ import { logger } from "./logger";
  *
  * @param src - The source URL of the video to play.
  */
-export const playVideo = (src: string): void => {
+export function playVideo(src: string): void {
   logger.debug(`playVideo: ${src}`);
 
   playerState.isLoading = true;
@@ -29,7 +29,7 @@ export const playVideo = (src: string): void => {
     playerState.videoElement.currentTime = 0;
     playerState.videoElement.load();
   }
-};
+}
 
 /**
  * Plays the previous video in the queue, cycling to the last video if at the beginning.
@@ -70,10 +70,8 @@ export function playPreviousVideo(): void {
  * Plays the next video in the queue, cycling to the first video if at the end.
  *
  * Supports playlist operations.
- *
- * @returns void
  */
-export const playNextVideo = (): void => {
+export function playNextVideo(): void {
   if (!playerState.videoElement || !playerState.currentVideo) return;
   if (playerState.queue.length === 0) return;
 
@@ -99,26 +97,26 @@ export const playNextVideo = (): void => {
     playerState.videoElement.currentTime = 0;
     playerState.videoElement.load();
   }
-};
+}
 
 /**
  * Seeks to a time relative to the current playback position.
  *
  * @param time - The time in seconds to seek to.
  */
-export const seekToRelative = (time: number): void => {
+export function seekToRelative(time: number): void {
   if (!playerState.videoElement) return;
 
   const newTime = playerState.videoElement.currentTime + time;
   const clampedTime = Math.max(0, Math.min(newTime, playerState.videoElement.duration || 0));
   playerState.videoElement.currentTime = clampedTime;
   playerState.currentTime = clampedTime;
-};
+}
 
 /**
  * Plays the next video from the current playlist.
  */
-export const nextPlaylistVideo = (): void => {
+export function nextPlaylistVideo(): void {
   const currentPlaylist = playlistState.currentPlaylist;
   if (!currentPlaylist || currentPlaylist.items.length === 0) {
     playNextVideo();
@@ -143,12 +141,12 @@ export const nextPlaylistVideo = (): void => {
     const firstItem = currentPlaylist.items[0];
     playVideo(`file://${firstItem.path}`);
   }
-};
+}
 
 /**
  * Plays the previous video from the current playlist.
  */
-const previousPlaylistVideo = (): void => {
+function previousPlaylistVideo(): void {
   const currentPlaylist = playlistState.currentPlaylist;
   if (!currentPlaylist || currentPlaylist.items.length === 0) {
     // Fall back to queue navigation if no playlist
@@ -175,4 +173,4 @@ const previousPlaylistVideo = (): void => {
     const lastItem = currentPlaylist.items[currentPlaylist.items.length - 1];
     playVideo(`file://${lastItem.path}`);
   }
-};
+}

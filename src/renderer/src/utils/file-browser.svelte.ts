@@ -1,17 +1,7 @@
-import pino from "pino";
 import { playerState, fileBrowserState, type FileSystemItem } from "@/state.svelte";
 import { client } from "@/tipc";
+import { logger } from "./logger";
 import { PlaylistManager } from "./playlist-manager";
-
-const logger = pino({
-  browser: {
-    asObject: true
-  }
-});
-export type FileBrowserEvents = {
-  addFile?(filePath: string): void;
-  addFolder?(folderData: any): void;
-};
 
 export function transformDirectoryContents(directoryContents): FileSystemItem[] {
   if (!directoryContents?.files) return [];
@@ -70,7 +60,7 @@ export async function navigateToParent() {
   try {
     fileBrowserState.isLoading = true;
     const result = await client.readDirectory(fileBrowserState.currentPath);
-    if (result && result.parentPath) {
+    if (result?.parentPath) {
       await navigateToDirectory(result.parentPath);
     }
   } catch (error) {
@@ -78,10 +68,6 @@ export async function navigateToParent() {
     fileBrowserState.error = "Failed to navigate to parent directory.";
     fileBrowserState.isLoading = false;
   }
-}
-
-export function closeAllContextMenus() {
-  fileBrowserState.openContextMenu = null;
 }
 
 export function updatePlayerQueueForced(preserveCurrentVideo: boolean = false) {

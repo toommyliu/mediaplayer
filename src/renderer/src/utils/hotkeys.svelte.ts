@@ -381,7 +381,6 @@ class HotkeyConfig {
     for (const key of action.keys) {
       Mousetrap.unbind(key);
       Mousetrap.bind(key, (ev) => {
-        logger.info(`Hotkey pressed: ${action.id} (${key})`);
         ev.preventDefault();
         action.handler(ev);
       });

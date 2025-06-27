@@ -1,13 +1,6 @@
-import createLogger from "pino";
+import process from "node:process";
+import { createConsola, LogLevels } from "consola";
 
-export const logger = createLogger({
-  level: process.env.NODE_ENV === "production" ? "info" : "debug",
-  transport: {
-    target: "pino-pretty",
-    options: {
-      colorize: true,
-      translateTime: "SYS:standard",
-      ignore: "pid,hostname"
-    }
-  }
+export const logger = createConsola({
+  level: process.env.NODE_ENV === "production" ? LogLevels.info : LogLevels.debug
 });
