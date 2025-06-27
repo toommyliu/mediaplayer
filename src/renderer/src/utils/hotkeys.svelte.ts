@@ -4,7 +4,6 @@ import { handlers } from "@/tipc";
 import { SidebarTab } from "@/types";
 import { navigateToParent } from "./file-browser.svelte";
 import { logger } from "./logger";
-import { PlaylistManager } from "./playlist-manager";
 import { playNextVideo, playPreviousVideo } from "./video-playback";
 
 type HotkeyAction = {
@@ -158,19 +157,6 @@ class HotkeyConfig {
         ]
       },
       {
-        name: "Playlist",
-        actions: [
-          {
-            id: "savePlaylist",
-            description: "Save current playlist",
-            keys: [`${this.modKey}+s`],
-            handler: this.savePlaylist,
-            context: "global",
-            enabled: true
-          }
-        ]
-      },
-      {
         name: "Time Navigation",
         actions: []
       }
@@ -302,14 +288,6 @@ class HotkeyConfig {
     navigateToParent().catch((error) => {
       logger.error("Failed to navigate to parent directory:", error);
     });
-  };
-
-  private readonly savePlaylist = (ev: KeyboardEvent): void => {
-    ev.preventDefault();
-    if (state.playlistState.hasUnsavedChanges) {
-      PlaylistManager.saveCurrentState();
-      logger.info("Playlist saved via keyboard shortcut");
-    }
   };
 
   private readonly jumpToPercent = (ev: KeyboardEvent, percent: number): void => {

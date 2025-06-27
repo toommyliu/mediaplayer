@@ -1,4 +1,4 @@
-import { playerState, playlistState } from "../state.svelte";
+import { playerState } from "../state.svelte";
 import { logger } from "./logger";
 
 /**
@@ -14,15 +14,17 @@ export function playVideo(src: string): void {
 
   const normalizedSrc = src.startsWith("file://") ? src : `file://${src}`;
 
-  let idx = playerState.queue.indexOf(normalizedSrc);
+  // Find the item in the queue by path
+  const queueIndex = playerState.queue.findIndex((item) => `file://${item.path}` === normalizedSrc);
 
-  if (idx === -1) {
-    // Video not in queue, add it
-    playerState.queue.push(normalizedSrc);
-    idx = playerState.queue.length - 1;
+  if (queueIndex === -1) {
+    // Video not in queue - this shouldn't happen in the new queue-only system
+    console.warn("Video not found in queue:", normalizedSrc);
+    return;
   }
 
-  playerState.currentIndex = idx;
+  playerState.currentIndex = queueIndex;
+
   playerState.currentTime = 0;
 
   if (playerState.videoElement) {
@@ -33,20 +35,10 @@ export function playVideo(src: string): void {
 
 /**
  * Plays the previous video in the queue, cycling to the last video if at the beginning.
- *
- * Supports playlist operations.
- *
- * @returns void
  */
 export function playPreviousVideo(): void {
   if (!playerState.videoElement || !playerState.currentVideo) return;
   if (playerState.queue.length === 0) return;
-
-  const currentPlaylist = playlistState.currentPlaylist;
-  if (currentPlaylist && currentPlaylist.items.length > 0) {
-    previousPlaylistVideo();
-    return;
-  }
 
   let newIndex = playerState.currentIndex - 1;
   if (newIndex < 0) {
@@ -55,7 +47,6 @@ export function playPreviousVideo(): void {
 
   console.log("previousVideo: changing index from", playerState.currentIndex, "to", newIndex);
   console.log("previousVideo: queue length:", playerState.queue.length);
-  console.log("previousVideo: new video will be:", playerState.queue[newIndex]);
 
   playerState.currentIndex = newIndex;
   playerState.currentTime = 0;
@@ -68,18 +59,10 @@ export function playPreviousVideo(): void {
 
 /**
  * Plays the next video in the queue, cycling to the first video if at the end.
- *
- * Supports playlist operations.
  */
 export function playNextVideo(): void {
   if (!playerState.videoElement || !playerState.currentVideo) return;
   if (playerState.queue.length === 0) return;
-
-  const currentPlaylist = playlistState.currentPlaylist;
-  if (currentPlaylist && currentPlaylist.items.length > 0) {
-    nextPlaylistVideo();
-    return;
-  }
 
   let newIndex = playerState.currentIndex + 1;
   if (newIndex >= playerState.queue.length) {
@@ -88,7 +71,6 @@ export function playNextVideo(): void {
 
   console.log("nextVideo: changing index from", playerState.currentIndex, "to", newIndex);
   console.log("nextVideo: queue length:", playerState.queue.length);
-  console.log("nextVideo: new video will be:", playerState.queue[newIndex]);
 
   playerState.currentIndex = newIndex;
   playerState.currentTime = 0;
@@ -111,66 +93,4 @@ export function seekToRelative(time: number): void {
   const clampedTime = Math.max(0, Math.min(newTime, playerState.videoElement.duration || 0));
   playerState.videoElement.currentTime = clampedTime;
   playerState.currentTime = clampedTime;
-}
-
-/**
- * Plays the next video from the current playlist.
- */
-export function nextPlaylistVideo(): void {
-  const currentPlaylist = playlistState.currentPlaylist;
-  if (!currentPlaylist || currentPlaylist.items.length === 0) {
-    playNextVideo();
-    return;
-  }
-
-  const currentVideo = playerState.currentVideo;
-  if (!currentVideo) {
-    const firstItem = currentPlaylist.items[0];
-    playVideo(`file://${firstItem.path}`);
-    return;
-  }
-
-  const currentPath = currentVideo.replace("file://", "");
-  const currentIndex = currentPlaylist.items.findIndex((item) => item.path === currentPath);
-
-  if (currentIndex !== -1 && currentIndex < currentPlaylist.items.length - 1) {
-    const nextItem = currentPlaylist.items[currentIndex + 1];
-    playVideo(`file://${nextItem.path}`);
-  } else {
-    // Loop back to first video
-    const firstItem = currentPlaylist.items[0];
-    playVideo(`file://${firstItem.path}`);
-  }
-}
-
-/**
- * Plays the previous video from the current playlist.
- */
-function previousPlaylistVideo(): void {
-  const currentPlaylist = playlistState.currentPlaylist;
-  if (!currentPlaylist || currentPlaylist.items.length === 0) {
-    // Fall back to queue navigation if no playlist
-    playPreviousVideo();
-    return;
-  }
-
-  const currentVideo = playerState.currentVideo;
-  if (!currentVideo) {
-    // Play last video in playlist
-    const lastItem = currentPlaylist.items[currentPlaylist.items.length - 1];
-    playVideo(`file://${lastItem.path}`);
-    return;
-  }
-
-  const currentPath = currentVideo.replace("file://", "");
-  const currentIndex = currentPlaylist.items.findIndex((item) => item.path === currentPath);
-
-  if (currentIndex > 0) {
-    const prevItem = currentPlaylist.items[currentIndex - 1];
-    playVideo(`file://${prevItem.path}`);
-  } else {
-    // Loop back to last video
-    const lastItem = currentPlaylist.items[currentPlaylist.items.length - 1];
-    playVideo(`file://${lastItem.path}`);
-  }
 }

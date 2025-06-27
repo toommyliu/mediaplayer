@@ -2,23 +2,21 @@
   import IconArrowDown from "lucide-svelte/icons/arrow-down";
   import IconArrowUp from "lucide-svelte/icons/arrow-up";
   import IconMusic from "lucide-svelte/icons/music";
-  import IconSave from "lucide-svelte/icons/save";
   import IconTrash2 from "lucide-svelte/icons/trash-2";
   import IconX from "lucide-svelte/icons/x";
   import * as AlertDialog from "@/components/ui/alert-dialog";
   import { ICON_SIZE } from "@/constants";
-  import { playerState, playlistState } from "@/state.svelte";
+  import { playerState } from "@/state.svelte";
   import { makeTimeString } from "@/utils/makeTimeString";
-  import { PlaylistManager } from "@/utils/playlist-manager";
+  import { QueueManager } from "@/utils/queue-manager";
   import { cn } from "@/utils/utils";
   import { playVideo } from "@/utils/video-playback";
-  import PlaylistSelector from "./tab-playlist/playlist-selector.svelte";
 
   let showClearDialog = $state(false);
 
   function isCurrentlyPlaying(item: any): boolean {
     if (!playerState.currentVideo) return false;
-    return playerState?.currentVideo === `file://${item.path}`;
+    return playerState.currentVideo === `file://${item.path}`;
   }
 
   function handleItemClick(item: any) {
@@ -26,30 +24,28 @@
     playVideo(videoSrc);
   }
 
-  function removeFromPlaylist(itemId: string) {
-    const itemToRemove = playlistState.currentPlaylistItems.find((item) => item.id === itemId);
+  function removeFromQueue(itemId: string) {
+    const itemToRemove = playerState.queue.find((item) => item.id === itemId);
 
     // The current video is being removed
     if (itemToRemove && isCurrentlyPlaying(itemToRemove)) {
-      const currentIndex = playlistState.currentPlaylistItems.findIndex(
-        (item) => item.id === itemId
-      );
-      const playlistLength = playlistState.currentPlaylistItems.length;
+      const currentIndex = playerState.queue.findIndex((item) => item.id === itemId);
+      const queueLength = playerState.queue.length;
 
       let nextVideoToPlay: string | null = null;
 
-      if (playlistLength > 1) {
+      if (queueLength > 1) {
         // Determine the next video to play after removal
-        if (currentIndex < playlistLength - 1) {
-          const nextItem = playlistState.currentPlaylistItems[currentIndex + 1];
+        if (currentIndex < queueLength - 1) {
+          const nextItem = playerState.queue[currentIndex + 1];
           nextVideoToPlay = `file://${nextItem.path}`;
         } else if (currentIndex > 0) {
-          const prevItem = playlistState.currentPlaylistItems[currentIndex - 1];
+          const prevItem = playerState.queue[currentIndex - 1];
           nextVideoToPlay = `file://${prevItem.path}`;
         }
       }
 
-      PlaylistManager.removeItemFromPlaylist(playlistState.currentPlaylistId, itemId);
+      QueueManager.removeFromQueue(itemId);
 
       if (nextVideoToPlay) {
         playVideo(nextVideoToPlay);
@@ -59,60 +55,41 @@
         playerState.currentTime = 0;
       }
     } else {
-      PlaylistManager.removeItemFromPlaylist(playlistState.currentPlaylistId, itemId);
+      QueueManager.removeFromQueue(itemId);
     }
   }
 
   function moveItemUp(index: number) {
     if (index > 0) {
-      PlaylistManager.moveItem(playlistState.currentPlaylistId, index, index - 1);
+      QueueManager.moveItem(index, index - 1);
     }
   }
 
   function moveItemDown(index: number) {
-    if (index < playlistState.currentPlaylistItems.length - 1) {
-      PlaylistManager.moveItem(playlistState.currentPlaylistId, index, index + 1);
+    if (index < playerState.queue.length - 1) {
+      QueueManager.moveItem(index, index + 1);
     }
   }
 
-  function confirmClearPlaylist() {
-    PlaylistManager.clearPlaylist(playlistState.currentPlaylistId);
+  function confirmClearQueue() {
+    QueueManager.clearQueue();
     showClearDialog = false;
   }
 </script>
 
 <div class="flex h-full flex-col">
-  <!-- Playlist Header -->
+  <!-- Queue Header -->
   <div class="mb-4 border-b border-zinc-800 px-4 pb-3">
-    {#if playlistState.hasUnsavedChanges}
-      <div class="mb-2 flex justify-end">
-        <div class="flex items-center gap-1.5 text-xs text-zinc-400">
-          <div class="h-1.5 w-1.5 rounded-full bg-amber-500"></div>
-          <span class="italic">Unsaved</span>
-        </div>
-      </div>
-    {/if}
-
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-2">
-        <h2 class="m-0 text-sm font-medium text-zinc-200">
-          {playlistState.currentPlaylist?.name ?? "Playlist"}
-        </h2>
+        <h2 class="m-0 text-sm font-medium text-zinc-200">Queue</h2>
+        <span class="text-xs text-zinc-500">({playerState.queue.length} items)</span>
       </div>
 
       <div class="flex items-center gap-1">
-        {#if playlistState.hasUnsavedChanges}
-          <button
-            class="flex h-7 w-7 items-center justify-center rounded-md border-none bg-transparent text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-300"
-            title="Save changes"
-            onclick={() => PlaylistManager.saveCurrentState()}
-          >
-            <IconSave size={ICON_SIZE - 4} />
-          </button>
-        {/if}
         <button
           class="flex h-7 w-7 items-center justify-center rounded-md border-none bg-transparent text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-300"
-          title="Clear playlist"
+          title="Clear queue"
           onclick={() => (showClearDialog = true)}
         >
           <IconTrash2 size={ICON_SIZE - 4} />
@@ -121,21 +98,19 @@
     </div>
   </div>
 
-  <PlaylistSelector />
-
   <!-- Queue Items -->
   <div class="no-scrollbar flex-1 overflow-y-auto">
-    {#if playlistState.currentPlaylistItems.length === 0}
+    {#if playerState.queue.length === 0}
       <div class="flex h-full items-center justify-center">
         <div class="text-center text-zinc-500">
           <IconMusic size={32} class="mx-auto mb-2 opacity-50" />
-          <p class="text-sm font-medium">No videos in playlist</p>
+          <p class="text-sm font-medium">No videos in queue</p>
           <p class="text-xs opacity-75">Open a folder to add videos</p>
         </div>
       </div>
     {:else}
       <div class="space-y-1">
-        {#each playlistState.currentPlaylistItems as item, index (item.id)}
+        {#each playerState.queue as item, index (item.id)}
           <div
             class={cn(
               "group flex cursor-pointer items-center gap-2 rounded-md p-2 text-sm transition-colors",
@@ -186,16 +161,16 @@
                   ev.stopPropagation();
                   moveItemDown(index);
                 }}
-                disabled={index === playlistState.currentPlaylistItems.length - 1}
+                disabled={index === playerState.queue.length - 1}
               >
                 <IconArrowDown size={ICON_SIZE - 6} />
               </button>
               <button
                 class="flex h-6 w-6 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-700 hover:text-red-400"
-                title="Remove from playlist"
+                title="Remove from queue"
                 onclick={(ev) => {
                   ev.stopPropagation();
-                  removeFromPlaylist(item.id);
+                  removeFromQueue(item.id);
                 }}
               >
                 <IconX size={ICON_SIZE - 6} />
@@ -208,18 +183,18 @@
   </div>
 </div>
 
-<!-- Clear playlist confirmation dialog -->
+<!-- Clear queue confirmation dialog -->
 <AlertDialog.Root bind:open={showClearDialog}>
   <AlertDialog.Content>
     <AlertDialog.Header>
-      <AlertDialog.Title>Clear Playlist</AlertDialog.Title>
+      <AlertDialog.Title>Clear Queue</AlertDialog.Title>
       <AlertDialog.Description>
-        Are you sure you want to clear the current playlist? This action cannot be undone.
+        Are you sure you want to clear the current queue? This action cannot be undone.
       </AlertDialog.Description>
     </AlertDialog.Header>
     <AlertDialog.Footer>
       <AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
-      <AlertDialog.Action onclick={confirmClearPlaylist}>Clear Playlist</AlertDialog.Action>
+      <AlertDialog.Action onclick={confirmClearQueue}>Clear Queue</AlertDialog.Action>
     </AlertDialog.Footer>
   </AlertDialog.Content>
 </AlertDialog.Root>

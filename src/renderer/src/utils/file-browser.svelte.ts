@@ -1,7 +1,7 @@
 import { playerState, fileBrowserState, type FileSystemItem } from "@/state.svelte";
 import { client } from "@/tipc";
 import { logger } from "./logger";
-import { PlaylistManager } from "./playlist-manager";
+import { QueueManager } from "./queue-manager";
 
 export function transformDirectoryContents(directoryContents): FileSystemItem[] {
   if (!directoryContents?.files) return [];
@@ -40,9 +40,9 @@ export async function navigateToDirectory(dirPath: string) {
       );
 
       if (allVideoFiles.length > 0) {
-        PlaylistManager.addFolderContentsToCurrentPlaylist(allVideoFiles);
+        QueueManager.addMultipleToQueue(allVideoFiles);
         console.log(
-          `Added ${allVideoFiles.length} videos from directory (including subfolders) to current playlist (unsaved)`
+          `Added ${allVideoFiles.length} videos from directory (including subfolders) to queue`
         );
       }
     }
@@ -118,8 +118,8 @@ export async function loadFileSystemStructure() {
         playerState.videoElement.play();
       }
 
-      // Add the video to the current playlist
-      PlaylistManager.addItemToPlaylistUnsaved("default", {
+      // Add the video to the queue
+      QueueManager.addToQueue({
         name: result.split("/").pop() || "Unknown Video",
         path: result,
         duration: 0
@@ -153,12 +153,9 @@ export async function loadFileSystemStructure() {
         console.log(`Found ${allVideoFiles.length} video files recursively in ${result.rootPath}`);
 
         if (allVideoFiles.length > 0) {
-          playerState.queue = allVideoFiles.map((vf) => `file://${vf.path}`);
-          playerState.currentIndex = 0;
-
-          const { PlaylistManager } = await import("./playlist-manager");
-          PlaylistManager.addFolderContentsToCurrentPlaylist(allVideoFiles);
-          console.log(`Added ${allVideoFiles.length} videos recursively to playlist`);
+          QueueManager.clearQueue();
+          QueueManager.addMultipleToQueue(allVideoFiles);
+          console.log(`Added ${allVideoFiles.length} videos recursively to queue`);
         }
       } else if (result === null) {
         console.warn("No video files found in the selected folder (1)");

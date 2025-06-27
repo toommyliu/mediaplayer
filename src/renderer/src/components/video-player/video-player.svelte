@@ -20,12 +20,12 @@
   }
 
   function handleLoadStart(): void {
-    console.log("Video load started");
+    // console.log("Video load started");
     onLoading(true);
   }
 
   function handleLoadedData(): void {
-    console.log("Video data loaded");
+    // console.log("Video data loaded");
     onLoading(false);
     if (playerState.videoElement) {
       playerState.duration = playerState.videoElement.duration;
@@ -36,7 +36,7 @@
   }
 
   function handleLoadedMetadata(): void {
-    console.log("Video metadata loaded");
+    // console.log("Video metadata loaded");
     if (playerState.videoElement) {
       playerState.duration = playerState.videoElement.duration;
     }

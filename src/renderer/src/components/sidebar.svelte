@@ -4,7 +4,7 @@
   import { SidebarTab } from "@/types";
   import { sidebarState } from "../state.svelte";
   import TabFileBrowser from "./sidebar/tab-file-browser.svelte";
-  import TabPlaylistQueue from "./sidebar/tab-playlist-queue.svelte";
+  import TabQueue from "./sidebar/tab-playlist-queue.svelte";
   import * as Tabs from "./ui/tabs";
 
   let previousTab = $state(sidebarState.currentTab);
@@ -53,7 +53,7 @@
             </div>
           {:else if sidebarState.currentTab === SidebarTab.Queue}
             <div class="h-full w-full overflow-hidden">
-              <TabPlaylistQueue />
+              <TabQueue />
             </div>
           {/if}
         </div>
