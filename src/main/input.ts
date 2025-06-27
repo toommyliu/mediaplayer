@@ -1,9 +1,9 @@
+import { setTimeout } from "node:timers/promises";
 import { getRendererHandlers } from "@egoist/tipc/main";
 import { app, BrowserWindow, globalShortcut, systemPreferences } from "electron";
-import { setTimeout } from "node:timers/promises";
-import { mainWindow } from "./index";
 import { logger } from "./logger";
-import { RendererHandlers } from "./tipc";
+import type { RendererHandlers } from "./tipc";
+import { mainWindow } from "./index";
 
 const isTrustedAccessibilityClient = systemPreferences.isTrustedAccessibilityClient(true);
 
@@ -12,28 +12,28 @@ const isTrustedAccessibilityClient = systemPreferences.isTrustedAccessibilityCli
 function registerGlobalShortcuts(): void {
   if (!isTrustedAccessibilityClient) return;
 
-  globalShortcut.register("MediaPreviousTrack", () => {
+  globalShortcut.register("MediaPreviousTrack", async () => {
     const handlers = getRendererHandlers<RendererHandlers>(
       BrowserWindow.getFocusedWindow()!.webContents
     );
 
-    handlers?.mediaPreviousTrack?.invoke();
+    await handlers?.mediaPreviousTrack?.invoke();
   });
 
-  globalShortcut.register("MediaNextTrack", () => {
+  globalShortcut.register("MediaNextTrack", async () => {
     const handlers = getRendererHandlers<RendererHandlers>(
       BrowserWindow.getFocusedWindow()!.webContents
     );
 
-    handlers?.mediaNextTrack?.invoke();
+    await handlers?.mediaNextTrack?.invoke();
   });
 
-  globalShortcut.register("MediaPlayPause", () => {
+  globalShortcut.register("MediaPlayPause", async () => {
     const handlers = getRendererHandlers<RendererHandlers>(
       BrowserWindow.getFocusedWindow()!.webContents
     );
 
-    handlers?.mediaPlayPause?.invoke();
+    await handlers?.mediaPlayPause?.invoke();
   });
 }
 
@@ -46,11 +46,13 @@ app.on("ready", async () => {
   while (!mainWindow) await setTimeout(100);
 
   mainWindow?.on("focus", () => {
+    logger.debug("mainWindow focused, registering global shortcuts");
     globalShortcut.unregisterAll();
     registerGlobalShortcuts();
   });
 
   mainWindow?.on("blur", () => {
+    logger.debug("mainWindow blurred, unregistering global shortcuts");
     globalShortcut.unregisterAll();
   });
 });

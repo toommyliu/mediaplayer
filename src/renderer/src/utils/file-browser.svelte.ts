@@ -1,17 +1,7 @@
-import pino from "pino";
 import { playerState, fileBrowserState, type FileSystemItem } from "@/state.svelte";
 import { client } from "@/tipc";
-import { PlaylistManager } from "./playlist";
-
-const logger = pino({
-  browser: {
-    asObject: true
-  }
-});
-export type FileBrowserEvents = {
-  addFile?(filePath: string): void;
-  addFolder?(folderData: any): void;
-};
+import { logger } from "./logger";
+import { QueueManager } from "./queue-manager";
 
 export function transformDirectoryContents(directoryContents): FileSystemItem[] {
   if (!directoryContents?.files) return [];
@@ -50,9 +40,9 @@ export async function navigateToDirectory(dirPath: string) {
       );
 
       if (allVideoFiles.length > 0) {
-        PlaylistManager.addFolderContentsToCurrentPlaylist(allVideoFiles);
+        QueueManager.addMultipleToQueue(allVideoFiles);
         console.log(
-          `Added ${allVideoFiles.length} videos from directory (including subfolders) to current playlist (unsaved)`
+          `Added ${allVideoFiles.length} videos from directory (including subfolders) to queue`
         );
       }
     }
@@ -70,7 +60,7 @@ export async function navigateToParent() {
   try {
     fileBrowserState.isLoading = true;
     const result = await client.readDirectory(fileBrowserState.currentPath);
-    if (result && result.parentPath) {
+    if (result?.parentPath) {
       await navigateToDirectory(result.parentPath);
     }
   } catch (error) {
@@ -78,10 +68,6 @@ export async function navigateToParent() {
     fileBrowserState.error = "Failed to navigate to parent directory.";
     fileBrowserState.isLoading = false;
   }
-}
-
-export function closeAllContextMenus() {
-  fileBrowserState.openContextMenu = null;
 }
 
 export function updatePlayerQueueForced(preserveCurrentVideo: boolean = false) {
@@ -132,8 +118,8 @@ export async function loadFileSystemStructure() {
         playerState.videoElement.play();
       }
 
-      // Add the video to the current playlist
-      PlaylistManager.addItemToPlaylistUnsaved("default", {
+      // Add the video to the queue
+      QueueManager.addToQueue({
         name: result.split("/").pop() || "Unknown Video",
         path: result,
         duration: 0
@@ -167,12 +153,9 @@ export async function loadFileSystemStructure() {
         console.log(`Found ${allVideoFiles.length} video files recursively in ${result.rootPath}`);
 
         if (allVideoFiles.length > 0) {
-          playerState.queue = allVideoFiles.map((vf) => `file://${vf.path}`);
-          playerState.currentIndex = 0;
-
-          const { PlaylistManager } = await import("./playlist");
-          PlaylistManager.addFolderContentsToCurrentPlaylist(allVideoFiles);
-          console.log(`Added ${allVideoFiles.length} videos recursively to playlist`);
+          QueueManager.clearQueue();
+          QueueManager.addMultipleToQueue(allVideoFiles);
+          console.log(`Added ${allVideoFiles.length} videos recursively to queue`);
         }
       } else if (result === null) {
         console.warn("No video files found in the selected folder (1)");
@@ -205,8 +188,8 @@ export async function loadFileSystemStructure() {
 export async function getAllVideoFilesRecursive(
   folderPath: string,
   depth: number = 0
-): Promise<{ duration?: number, name: string; path: string; }[]> {
-  let videoFiles: { duration?: number, name: string; path: string; }[] = [];
+): Promise<{ duration?: number; name: string; path: string }[]> {
+  let videoFiles: { duration?: number; name: string; path: string }[] = [];
   const indent = "  ".repeat(depth);
   console.log(`${indent}[FileManager] Scanning folder: ${folderPath}`);
   logger.info(`[FileManager] Scanning folder: ${folderPath}`);

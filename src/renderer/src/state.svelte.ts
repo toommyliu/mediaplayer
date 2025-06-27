@@ -1,5 +1,13 @@
 import { SidebarTab } from "./types";
 
+export type QueueItem = {
+  addedAt: Date;
+  duration?: number;
+  id: string;
+  name: string;
+  path: string;
+};
+
 class PlayerState {
   // Playback
   isPlaying = $state(false);
@@ -14,13 +22,18 @@ class PlayerState {
 
   showControls = $state(true);
 
-  queue = $state<string[]>([]);
+  queue = $state<QueueItem[]>([]);
 
   currentIndex = $state(0);
 
   isFullscreen = $state(false);
 
   get currentVideo() {
+    const currentItem = this.queue[this.currentIndex];
+    return currentItem ? `file://${currentItem.path}` : null;
+  }
+
+  get currentQueueItem() {
     return this.queue[this.currentIndex] || null;
   }
 
@@ -44,11 +57,13 @@ class SidebarState {
 export const sidebarState = new SidebarState();
 
 class PlatformState {
-  isMac = $state(false);
+  public isMac = $state(false);
 
-  isWindows = $state(false);
+  public isWindows = $state(false);
 
-  isLinux = $state(false);
+  public isLinux = $state(false);
+
+  public pathSep = $state("");
 }
 
 export const platformState = new PlatformState();
@@ -84,43 +99,6 @@ class FileBrowserState {
 }
 
 export const fileBrowserState = new FileBrowserState();
-
-// Playlist Types
-export type PlaylistItem = {
-  addedAt: Date;
-  duration?: number;
-  id: string;
-  name?: string;
-  path: string;
-  size?: number;
-};
-
-export type Playlist = {
-  createdAt: Date;
-  description?: string;
-  id: string;
-  items: PlaylistItem[];
-  lastModified: Date;
-  name: string;
-};
-
-class PlaylistState {
-  playlists = $state<Playlist[]>([]);
-
-  currentPlaylistId = $state<string>("default");
-
-  hasUnsavedChanges = $state<boolean>(false);
-
-  get currentPlaylist(): Playlist | null {
-    return this.playlists.find((p) => p.id === this.currentPlaylistId) || null;
-  }
-
-  get currentPlaylistItems(): PlaylistItem[] {
-    return this.currentPlaylist?.items || [];
-  }
-}
-
-export const playlistState = new PlaylistState();
 
 export type FileSystemItem = {
   duration?: number;

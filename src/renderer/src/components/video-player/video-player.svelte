@@ -20,12 +20,12 @@
   }
 
   function handleLoadStart(): void {
-    console.log("Video load started");
+    // console.log("Video load started");
     onLoading(true);
   }
 
   function handleLoadedData(): void {
-    console.log("Video data loaded");
+    // console.log("Video data loaded");
     onLoading(false);
     if (playerState.videoElement) {
       playerState.duration = playerState.videoElement.duration;
@@ -36,7 +36,7 @@
   }
 
   function handleLoadedMetadata(): void {
-    console.log("Video metadata loaded");
+    // console.log("Video metadata loaded");
     if (playerState.videoElement) {
       playerState.duration = playerState.videoElement.duration;
     }
@@ -65,6 +65,20 @@
     }
 
     const target = event.target as HTMLVideoElement;
+
+    console.group("Video Error Details");
+    console.log("Video src:", target.src);
+    console.log("Video currentSrc:", target.currentSrc);
+    console.log("Video readyState:", target.readyState);
+    console.log("Video networkState:", target.networkState);
+    console.log("Video error object:", target.error);
+    console.groupEnd();
+
+    if (target.error) {
+      console.log("Error code:", target.error.code);
+      console.log("Error message:", target.error.message);
+    }
+
     let errorMessage = "Unknown video error";
 
     if (target.error) {
@@ -163,10 +177,10 @@
       if (!playerState.currentVideo) {
         await loadFileSystemStructure();
       } else if (playerState.videoElement.paused) {
-          await playerState.videoElement.play();
-        } else {
-          playerState.videoElement.pause();
-        }
+        await playerState.videoElement.play();
+      } else {
+        playerState.videoElement.pause();
+      }
     }
   }
 

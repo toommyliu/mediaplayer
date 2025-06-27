@@ -4,7 +4,6 @@ import { handlers } from "@/tipc";
 import { SidebarTab } from "@/types";
 import { navigateToParent } from "./file-browser.svelte";
 import { logger } from "./logger";
-import { PlaylistManager } from "./playlist";
 import { playNextVideo, playPreviousVideo } from "./video-playback";
 
 type HotkeyAction = {
@@ -33,12 +32,18 @@ class HotkeyConfig {
 
   enabled = $state(true);
 
-  constructor() {
-    console.log(
-      state.platformState.isMac ? "Using Mac modifier keys" : "Using non-Mac modifier keys"
-    );
+  private initialized = $state(false);
+
+  public get isInitialized(): boolean {
+    return this.initialized;
+  }
+
+  public initialize(): void {
+    if (this.initialized) return;
+
     this.modKey = state.platformState.isMac ? "command" : "ctrl";
     this.initializeDefaultConfig();
+    this.initialized = true;
   }
 
   private initializeDefaultConfig(): void {
@@ -153,19 +158,6 @@ class HotkeyConfig {
             keys: ["alt+left"],
             handler: this.fileBrowserBack,
             context: "file-browser",
-            enabled: true
-          }
-        ]
-      },
-      {
-        name: "Playlist",
-        actions: [
-          {
-            id: "savePlaylist",
-            description: "Save current playlist",
-            keys: [`${this.modKey}+s`],
-            handler: this.savePlaylist,
-            context: "global",
             enabled: true
           }
         ]
@@ -304,14 +296,6 @@ class HotkeyConfig {
     });
   };
 
-  private readonly savePlaylist = (ev: KeyboardEvent): void => {
-    ev.preventDefault();
-    if (state.playlistState.hasUnsavedChanges) {
-      PlaylistManager.saveCurrentState();
-      logger.info("Playlist saved via keyboard shortcut");
-    }
-  };
-
   private readonly jumpToPercent = (ev: KeyboardEvent, percent: number): void => {
     ev.preventDefault();
     if (state.playerState.currentVideo) {
@@ -381,20 +365,24 @@ class HotkeyConfig {
     for (const key of action.keys) {
       Mousetrap.unbind(key);
       Mousetrap.bind(key, (ev) => {
-        logger.info(`Hotkey pressed: ${action.id} (${key})`);
         ev.preventDefault();
         action.handler(ev);
       });
     }
   }
 
-  bindAllActions(): void {
+  public bindAllActions(): void {
+    if (!this.initialized) {
+      console.warn("Hotkeys not initialized yet, skipping binding");
+      return;
+    }
+
     if (!this.enabled) {
       console.warn("Hotkeys are disabled, not binding actions.");
       return;
     }
 
-    console.log("Binding all hotkeys...");
+    // console.log("Binding all hotkeys...");
 
     for (const category of this.categories) {
       for (const action of category.actions) {
@@ -407,7 +395,7 @@ class HotkeyConfig {
   }
 
   unbindAll(): void {
-    console.log("Unbinding all hotkeys...");
+    // console.log("Unbinding all hotkeys...");
     for (const action of this.getAllShortcuts()) {
       Mousetrap.unbind(action.keys);
     }
@@ -424,7 +412,7 @@ class HotkeyConfig {
   }
 
   // Get all shortcuts for display purposes
-  getAllShortcuts(): {
+  public getAllShortcuts(): {
     category: string;
     context?: string;
     description: string;
@@ -432,6 +420,10 @@ class HotkeyConfig {
     id: string;
     keys: string;
   }[] {
+    if (!this.initialized) {
+      return [];
+    }
+
     const shortcuts: {
       category: string;
       context?: string;
@@ -482,11 +474,11 @@ export function setupMediaKeyHandlers(): void {
 }
 
 export function initializeHotkeys(): void {
-  console.log("Initializing hotkeys...");
+  hotkeyConfig.initialize(); // Initialize config with platform-specific settings
   setupMediaKeyHandlers();
   hotkeyConfig.bindAllActions();
 
-  logger.info("Hotkey system initialized with", hotkeyConfig.categories.length, "categories");
+  // logger.info("Hotkey system initialized with", hotkeyConfig.categories.length, "categories");
 }
 
 export function cleanupHotkeys(): void {

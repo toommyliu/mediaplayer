@@ -14,7 +14,7 @@
   import { fade } from "svelte/transition";
   import { cn } from "@/utils/utils";
   import type { FileSystemItem } from "../../state.svelte";
-  import { fileBrowserState, platformState, playerState, playlistState } from "../../state.svelte";
+  import { fileBrowserState, platformState, playerState } from "../../state.svelte";
   import { client, handlers } from "../../tipc";
   import { showItemInFolder } from "../../utils";
   import {
@@ -22,7 +22,7 @@
     transformDirectoryContents,
     navigateToDirectory
   } from "../../utils/file-browser.svelte";
-  import { PlaylistManager } from "../../utils/playlist";
+  import { QueueManager } from "../../utils/queue-manager";
   import { playVideo } from "../../utils/video-playback";
   import * as ContextMenu from "../ui/context-menu";
   import { Input } from "../ui/input";
@@ -297,8 +297,8 @@
       }
 
       if (items[i].files && updateFolderContents(items[i].files!, targetPath, newContents)) {
-          return true;
-        }
+        return true;
+      }
     }
 
     return false;
@@ -312,14 +312,8 @@
     fileBrowserState.loadingFolders.clear();
     fileBrowserState.searchQuery = "";
 
-    if (
-      playlistState.currentPlaylist.id === "default" &&
-      playlistState.currentPlaylist.items.length === 0 &&
-      !playlistState.hasUnsavedChanges
-    ) {
-      console.log("!! Clearing default playlist !!");
-      PlaylistManager.clearPlaylist(playlistState.currentPlaylistId);
-    }
+    // Clear the existing queue when browsing a new folder
+    QueueManager.clearQueue();
 
     try {
       fileBrowserState.isLoading = true;
@@ -328,6 +322,13 @@
 
       // Single file selected
       if (typeof res === "string") {
+        // Add single file to queue and play it
+        const fileName = res.split(/[/\\]/).pop() || "Unknown Video";
+        QueueManager.addToQueue({
+          name: fileName,
+          path: res,
+          duration: undefined
+        });
         playVideo(`file://${res}`);
         return;
       }
@@ -360,25 +361,23 @@
           console.log(`[FileBrowser] Found ${videoFiles.length} video files in directory`);
 
           if (videoFiles.length > 0) {
-            console.log(`[FileBrowser] Attempting to add ${videoFiles.length} videos to playlist`);
-            const success = PlaylistManager.addFolderContentsToCurrentPlaylist(
+            console.log(`[FileBrowser] Attempting to add ${videoFiles.length} videos to queue`);
+            const success = QueueManager.addMultipleToQueue(
               videoFiles.map((file) => ({
                 name: file.name!,
                 path: file.path!,
                 duration: file.duration
               }))
             );
-            console.log(`[FileBrowser] Add to playlist result: ${success}`);
+            console.log(`[FileBrowser] Add to queue result: ${success}`);
 
             if (success) {
-              console.log(
-                `[FileBrowser] Successfully added ${videoFiles.length} videos to current playlist`
-              );
+              console.log(`[FileBrowser] Successfully added ${videoFiles.length} videos to queue`);
             } else {
-              console.warn(`[FileBrowser] Failed to add videos to playlist`);
+              console.warn(`[FileBrowser] Failed to add videos to queue`);
             }
           } else {
-            console.log("[FileBrowser] No video files found to add to playlist");
+            console.log("[FileBrowser] No video files found to add to queue");
           }
         }
       }
@@ -713,9 +712,9 @@
           <ContextMenu.Item
             class="text-zinc-200 hover:bg-zinc-700 focus:bg-zinc-700"
             onclick={() => {
-              console.log("Adding to playlist:", item);
+              console.log("Adding to queue:", item);
               if (item.path && item.name) {
-                PlaylistManager.addItemToPlaylist(playlistState.currentPlaylistId, {
+                QueueManager.addToQueue({
                   name: item.name,
                   path: item.path,
                   duration: item.duration
@@ -723,7 +722,7 @@
               }
             }}
           >
-            Add to Playlist
+            Add to Queue
           </ContextMenu.Item>
           <ContextMenu.Separator class="bg-zinc-700" />
           <ContextMenu.Item

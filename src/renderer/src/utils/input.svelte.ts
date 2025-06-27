@@ -1,7 +1,5 @@
-import { initializeHotkeys,  } from "./hotkeys.svelte";
+import { initializeHotkeys } from "./hotkeys.svelte";
 
 initializeHotkeys();
 
-
-
-export {cleanupHotkeys} from "./hotkeys.svelte";
+export { cleanupHotkeys } from "./hotkeys.svelte";

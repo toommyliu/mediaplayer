@@ -7,25 +7,19 @@
   import { logger } from "@/utils/logger";
   import Sidebar from "./components/sidebar.svelte";
   import VideoPlayer from "./components/video-player/video-player.svelte";
-  import {
-    fileBrowserState,
-    platformState,
-    playerState,
-    playlistState,
-    sidebarState
-  } from "./state.svelte";
+  import { fileBrowserState, platformState, playerState, sidebarState } from "./state.svelte";
   import { client, handlers } from "./tipc";
   import { transformDirectoryContents } from "./utils/file-browser.svelte";
-  import { PlaylistManager } from "./utils/playlist";
+  import { QueueManager } from "./utils/queue-manager";
   import { playVideo } from "./utils/video-playback";
 
-  PlaylistManager.initializeFromStorage();
+  QueueManager.initialize();
 
   async function getAllVideoFilesRecursive(
     folderPath: string,
     depth: number = 0
-  ): Promise<{ duration?: number, name: string; path: string; }[]> {
-    let videoFiles: { duration?: number, name: string; path: string; }[] = [];
+  ): Promise<{ duration?: number; name: string; path: string }[]> {
+    let videoFiles: { duration?: number; name: string; path: string }[] = [];
     const indent = "  ".repeat(depth);
     logger.debug(`${indent}Scanning folder: ${folderPath}`);
 
@@ -55,7 +49,9 @@
 
   handlers.addFile.listen(async (path) => {
     logger.debug("addFile:", path);
-    playVideo(`file://${path}`);
+    if (path.type === "file") {
+      playVideo(`file://${path.path}`);
+    }
   });
 
   handlers.addFolder.listen(async (folderData) => {
@@ -72,8 +68,6 @@
         playerState.currentTime = 0;
         playerState.duration = 0;
         playerState.isPlaying = false;
-        playerState.currentIndex = 0;
-        playerState.queue = [];
         if (playerState.videoElement) {
           playerState.videoElement.pause();
         }
@@ -89,32 +83,17 @@
 
           const allVideoFiles = await getAllVideoFilesRecursive(result.rootPath);
           if (allVideoFiles.length > 0) {
-            playerState.queue = allVideoFiles.map((vf) => `file://${vf.path}`);
-            playerState.currentIndex = 0;
+            // Clear existing queue and add new videos
+            QueueManager.clearQueue();
+            const success = QueueManager.addMultipleToQueue(allVideoFiles);
 
-            console.log(`Adding ${allVideoFiles.length} videos to playlist`);
-            const success = PlaylistManager.addFolderContentsToCurrentPlaylist(allVideoFiles);
             if (success) {
-              console.log("Successfully added folder contents to playlist");
+              console.log(`Successfully added ${allVideoFiles.length} videos to queue`);
             } else {
-              console.error("Failed to add folder contents to playlist");
+              console.error("Failed to add folder contents to queue");
             }
 
-            console.log(
-              `Playlist state before adding videos: ${playlistState.currentPlaylistId}, Items: ${playlistState.currentPlaylistItems.length}`
-            );
             console.log(`Found ${allVideoFiles.length} video files in all folders and subfolders`);
-
-            PlaylistManager.addFolderContentsToCurrentPlaylist(allVideoFiles);
-            // PlaylistManager.saveCurrentState();
-
-            console.log(
-              `Playlist state after adding videos: ${playlistState.currentPlaylistId}, Items: ${playlistState.currentPlaylistItems.length}`
-            );
-
-            console.log(
-              `Added ${allVideoFiles.length} videos recursively to current playlist (unsaved)`
-            );
           } else {
             console.log("No video files found recursively in the selected folder.");
           }
@@ -133,7 +112,7 @@
         fileBrowserState.originalPath = null;
       }
     } catch (error) {
-      console.error("Failed to load file system or add folder to playlist:", error);
+      console.error("Failed to load file system or add folder to queue:", error);
       fileBrowserState.error = "Failed to load file system. Please try again.";
       fileBrowserState.fileTree = null;
       fileBrowserState.currentPath = null;
@@ -147,8 +126,7 @@
     platformState.isWindows = res.isWindows;
     platformState.isMac = res.isMacOS;
     platformState.isLinux = res.isLinux;
-
-    PlaylistManager.initializeFromStorage();
+    platformState.pathSep = res.pathSep;
 
     await import("./utils/input.svelte");
   });

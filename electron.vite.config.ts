@@ -1,7 +1,7 @@
-import { defineConfig, externalizeDepsPlugin } from "electron-vite";
-import { svelte } from "@sveltejs/vite-plugin-svelte";
-import tailwindcss from "tailwindcss";
 import { resolve } from "node:path";
+import { svelte } from "@sveltejs/vite-plugin-svelte";
+import { defineConfig, externalizeDepsPlugin } from "electron-vite";
+import Icons from "unplugin-icons/vite";
 
 export default defineConfig({
   main: {
@@ -11,7 +11,12 @@ export default defineConfig({
     plugins: [externalizeDepsPlugin()]
   },
   renderer: {
-    plugins: [svelte()],
+    plugins: [
+      svelte(),
+      Icons({
+        compiler: "svelte"
+      })
+    ],
     resolve: {
       alias: {
         "@renderer": resolve("src/renderer/src"),

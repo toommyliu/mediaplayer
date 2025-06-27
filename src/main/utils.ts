@@ -1,12 +1,11 @@
-import { app, BrowserWindow, dialog, type OpenDialogOptions } from "electron";
-import { VIDEO_EXTENSIONS } from "./constants";
-import { readdir, stat } from "node:fs/promises";
+import { readdir, stat, chmod } from "node:fs/promises";
 import { extname, join, dirname, resolve } from "node:path";
-import { chmod } from "node:fs/promises";
+import { promisify } from "node:util";
 import ffmpegInstaller from "@ffmpeg-installer/ffmpeg";
 import ffprobeInstaller from "@ffprobe-installer/ffprobe";
+import { app, BrowserWindow, dialog, type OpenDialogOptions } from "electron";
 import ffmpeg from "fluent-ffmpeg";
-import { promisify } from "node:util";
+import { VIDEO_EXTENSIONS } from "./constants";
 import { logger } from "./logger";
 
 const ffprobeAsync = promisify(ffmpeg.ffprobe);
@@ -25,11 +24,11 @@ async function doFfmpegInit(): Promise<void> {
     const isExecutable = stats.mode & 0o111;
 
     if (stats.isFile()) {
-      if (!isExecutable) {
-        await chmod(ffmpegInstaller.path, 0o755);
-        logger.debug("fixed permissions for ffmpeg");
-      } else {
+      if (isExecutable) {
         logger.debug("ffmpeg already has execute permissions");
+      } else {
+        logger.debug("ffmpeg does not have execute permissions, fixing...");
+        await chmod(ffmpegInstaller.path, 0o755);
       }
     }
   } catch (error) {
@@ -41,11 +40,11 @@ async function doFfmpegInit(): Promise<void> {
     const isExecutable = stats.mode & 0o111;
 
     if (stats.isFile()) {
-      if (!isExecutable) {
-        await chmod(ffprobeInstaller.path, 0o755);
-        logger.debug("fixed permissions for ffprobe");
-      } else {
+      if (isExecutable) {
         logger.debug("ffprobe already has execute permissions");
+      } else {
+        logger.debug("ffprobe does not have execute permissions, fixing...");
+        await chmod(ffprobeInstaller.path, 0o755);
       }
     }
   } catch (error) {
@@ -55,6 +54,7 @@ async function doFfmpegInit(): Promise<void> {
   ffmpeg.setFfmpegPath(ffmpegInstaller.path);
   ffmpeg.setFfprobePath(ffprobeInstaller.path);
 
+  // eslint-disable-next-line require-atomic-updates
   isFfmpegInitialized = true;
 }
 
@@ -62,7 +62,6 @@ async function doFfmpegInit(): Promise<void> {
  * Get the duration of a video file.
  *
  * @param filePath - The path to the video file.
- *
  * @returns The video duration in seconds.
  */
 export async function getVideoDuration(filePath: string): Promise<number> {
@@ -70,8 +69,7 @@ export async function getVideoDuration(filePath: string): Promise<number> {
 
   try {
     const metadata = (await ffprobeAsync(filePath)) as FfmpegProbeMetadata;
-    const duration = metadata.format?.duration || 0;
-    return duration;
+    return metadata.format?.duration || 0;
   } catch (error) {
     logger.error(error, `Error getting video duration for ${filePath}`);
     return 0;
@@ -83,14 +81,10 @@ export async function getVideoDuration(filePath: string): Promise<number> {
  *
  * @param mode - The mode of the file browser, used to specify the entry types allowed.
  */
-export async function showFilePicker(mode: "file"): Promise<PickerResult | null>;
-export async function showFilePicker(mode: "folder"): Promise<PickerResult | null>;
-export async function showFilePicker(mode: "both"): Promise<PickerResult | null>;
 export async function showFilePicker(
-  mode: "file" | "folder" | "both"
-): Promise<string | PickerResult | null> {
-  const properties: Array<"openFile" | "openDirectory" | "multiSelections" | "createDirectory"> =
-    [];
+  mode: "both" | "file" | "folder"
+): Promise<PickerResult | string | null> {
+  const properties: ("createDirectory" | "multiSelections" | "openDirectory" | "openFile")[] = [];
 
   if (mode === "file") {
     properties.push("openFile", "multiSelections");
@@ -101,7 +95,7 @@ export async function showFilePicker(
   }
 
   const options: OpenDialogOptions = {
-    defaultPath: previousPath || app.getPath("downloads"),
+    defaultPath: previousPath ?? app.getPath("downloads"),
     properties,
     title: `Select ${mode === "file" ? "File" : mode === "folder" ? "Folder" : "File or Folder"}`,
     message: `Select ${mode === "file" ? "a file" : mode === "folder" ? "a folder" : "a file or folder"} to open`
@@ -114,6 +108,7 @@ export async function showFilePicker(
     ];
   }
 
+  // eslint-disable-next-line n/no-sync
   const filePaths = dialog.showOpenDialogSync(BrowserWindow.getFocusedWindow()!, options);
   if (!filePaths || filePaths.length === 0) return null;
 
@@ -240,26 +235,26 @@ export async function loadDirectoryContents(dirPath: string): Promise<DirectoryC
 
 export type PickerResult =
   | {
-      type: "file";
       path: string;
+      type: "file";
     }
   | {
-      type: "folder";
       rootPath: string;
       tree: PickerNode[];
+      type: "folder";
     };
 
 export type PickerNode = {
-  path?: string;
   name?: string;
+  path?: string;
 } & (
   | {
-      type: "video";
       duration: number;
+      type: "video";
     }
   | {
-      type: "folder";
       files: PickerNode[];
+      type: "folder";
     }
 );
 
@@ -268,25 +263,25 @@ export type FileItem = {
   path: string;
 } & (
   | {
-      type: "video";
       duration: number;
+      type: "video";
     }
   | {
-      type: "folder";
       files: FileItem[];
+      type: "folder";
     }
 );
 
 export type DirectoryContents = {
   currentPath: string;
-  parentPath: string | null;
-  isAtRoot: boolean;
   files: FileItem[];
+  isAtRoot: boolean;
+  parentPath: string | null;
 };
 
 type FfmpegProbeMetadata = {
   format: {
-    filename: string;
     duration: number;
+    filename: string;
   };
 };
