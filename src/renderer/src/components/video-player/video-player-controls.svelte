@@ -29,6 +29,11 @@
   let isVolumeHovering = $state(false);
   let isVolumeDragging = $state(false);
   let showSettingsDialog = $state(false);
+  let smoothProgressPercentage = $state(0);
+  let animationFrameId: number | null = null;
+
+  const lerp = (start: number, end: number, factor: number): number =>
+    start + (end - start) * factor;
 
   $effect(() => {
     if (!playerState.videoElement || !playerState.duration) return undefined;
@@ -49,6 +54,64 @@
 
     return () => {
       playerState.videoElement.removeEventListener("progress", handleProgress);
+    };
+  });
+
+  // Smooth progress animation effect with lerp
+  $effect(() => {
+    if (!playerState.duration) {
+      smoothProgressPercentage = 0;
+      return;
+    }
+
+    const targetPercentage = (playerState.currentTime / playerState.duration) * 100;
+
+    // If dragging, update immediately
+    if (isDragging) {
+      smoothProgressPercentage = targetPercentage;
+      return;
+    }
+
+    // For small changes or when seeking, update immediately
+    const diff = Math.abs(targetPercentage - smoothProgressPercentage);
+    if (diff > 5 || diff < 0.01) {
+      smoothProgressPercentage = targetPercentage;
+      return;
+    }
+
+    const startTime = performance.now();
+    const startPercentage = smoothProgressPercentage;
+
+    const animate = (currentTime: number): void => {
+      const elapsed = currentTime - startTime;
+      const duration = 100; // Animation duration in ms
+      const progress = Math.min(elapsed / duration, 1);
+
+      // Use a gentler easing for more natural movement
+      const easedProgress = progress * (2 - progress); // ease-out quad
+
+      smoothProgressPercentage = lerp(startPercentage, targetPercentage, easedProgress);
+
+      if (progress < 1 && !isDragging) {
+        animationFrameId = requestAnimationFrame(animate);
+      } else {
+        smoothProgressPercentage = targetPercentage;
+        animationFrameId = null;
+      }
+    };
+
+    // Cancel any existing animation
+    if (animationFrameId) {
+      cancelAnimationFrame(animationFrameId);
+    }
+
+    animationFrameId = requestAnimationFrame(animate);
+
+    return () => {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+      }
     };
   });
 
@@ -225,12 +288,12 @@
       rafId = null;
     };
 
-    const handleMouseMove = (e: MouseEvent): void => {
+    const handleMouseMove = (ev: MouseEvent): void => {
       if (isVolumeDragging) {
-        e.preventDefault();
+        ev.preventDefault();
 
         if (rafId === null) {
-          rafId = requestAnimationFrame(() => performVolumeUpdate(e.clientX));
+          rafId = requestAnimationFrame(() => performVolumeUpdate(ev.clientX));
         }
       }
     };
@@ -269,7 +332,9 @@
   };
 
   const progressPercentage = $derived(
-    playerState.duration > 0 ? (playerState.currentTime / playerState.duration) * 100 : 0
+    isDragging || !playerState.duration
+      ? (playerState.currentTime / playerState.duration) * 100 || 0
+      : smoothProgressPercentage
   );
 
   const hoverPercentage = $derived(
@@ -311,18 +376,18 @@
     >
       <!-- Buffered progress -->
       <div
-        class="absolute inset-0 h-full rounded-full bg-white/30"
-        class:transition-all={!isDragging}
+        class="absolute inset-0 h-full rounded-full bg-white/30 will-change-auto"
         style="width: {bufferedPercentage}%"
         aria-hidden="true"
       ></div>
 
       <!-- Current progress -->
       <div
-        class="absolute inset-0 h-full rounded-full bg-blue-500"
+        class="absolute inset-0 h-full rounded-full bg-blue-500 will-change-auto"
         class:transition-all={!isDragging}
-        class:duration-200={!isDragging}
-        style="width: {progressPercentage}%"
+        class:duration-75={!isDragging}
+        class:ease-linear={!isDragging}
+        style="width: {progressPercentage > 0 ? Math.max(progressPercentage, 0.5) : 0}%"
         aria-hidden="true"
       ></div>
 
@@ -330,9 +395,9 @@
       {#if playerState.duration > 0}
         <div
           class={cn(
-            "absolute top-1/2 h-4 w-4 rounded-full shadow-lg",
+            "absolute top-1/2 h-4 w-4 rounded-full shadow-lg will-change-transform",
             "border-2 border-white/50 bg-blue-500 shadow-blue-300/50",
-            !isDragging && "transition-all duration-200",
+            !isDragging && "transition-all duration-150 ease-out",
             isDragging
               ? "scale-150 border-white opacity-100 shadow-lg shadow-blue-500/50"
               : isHovering
@@ -347,7 +412,7 @@
       <!-- Hover time tooltip -->
       {#if isHovering && !isDragging && playerState.duration > 0}
         <div
-          class="absolute bottom-8 z-10 rounded-md bg-black/90 px-2 py-1 text-xs text-white shadow-lg backdrop-blur-xs"
+          class="absolute bottom-8 z-10 rounded-md bg-black/90 px-2 py-1 text-xs text-white shadow-lg backdrop-blur-xs will-change-transform"
           style="left: {hoverPercentage}%; transform: translateX(-50%)"
           aria-hidden="true"
         >
