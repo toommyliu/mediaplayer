@@ -1,6 +1,8 @@
 <script lang="ts">
+  /* eslint-disable import-x/no-duplicates */
   import { cubicOut } from "svelte/easing";
   import { fly } from "svelte/transition";
+  /* eslint-enable import-x/no-duplicates */
   import { SidebarTab } from "@/types";
   import { sidebarState } from "../state.svelte";
   import TabFileBrowser from "./sidebar/tab-file-browser.svelte";
