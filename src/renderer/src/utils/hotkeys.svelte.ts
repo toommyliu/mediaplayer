@@ -32,12 +32,24 @@ class HotkeyConfig {
 
   enabled = $state(true);
 
-  constructor() {
-    // console.log(
-    //   state.platformState.isMac ? "Using Mac modifier keys" : "Using non-Mac modifier keys"
-    // );
+  private initialized = $state(false);
+
+  public get isInitialized(): boolean {
+    return this.initialized;
+  }
+
+  public initialize(): void {
+    if (this.initialized) {
+      console.warn("Hotkeys already initialized");
+      return;
+    }
+
+    console.log(
+      state.platformState.isMac ? "Using Mac modifier keys" : "Using non-Mac modifier keys"
+    );
     this.modKey = state.platformState.isMac ? "command" : "ctrl";
     this.initializeDefaultConfig();
+    this.initialized = true;
   }
 
   private initializeDefaultConfig(): void {
@@ -365,7 +377,12 @@ class HotkeyConfig {
     }
   }
 
-  bindAllActions(): void {
+  public bindAllActions(): void {
+    if (!this.initialized) {
+      console.warn("Hotkeys not initialized yet, skipping binding");
+      return;
+    }
+
     if (!this.enabled) {
       console.warn("Hotkeys are disabled, not binding actions.");
       return;
@@ -401,7 +418,7 @@ class HotkeyConfig {
   }
 
   // Get all shortcuts for display purposes
-  getAllShortcuts(): {
+  public getAllShortcuts(): {
     category: string;
     context?: string;
     description: string;
@@ -409,6 +426,10 @@ class HotkeyConfig {
     id: string;
     keys: string;
   }[] {
+    if (!this.initialized) {
+      return [];
+    }
+
     const shortcuts: {
       category: string;
       context?: string;
@@ -459,7 +480,8 @@ export function setupMediaKeyHandlers(): void {
 }
 
 export function initializeHotkeys(): void {
-  // console.log("Initializing hotkeys...");
+  console.log("Initializing hotkeys...");
+  hotkeyConfig.initialize(); // Initialize config with platform-specific settings
   setupMediaKeyHandlers();
   hotkeyConfig.bindAllActions();
 

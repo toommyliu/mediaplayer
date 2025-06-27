@@ -9,8 +9,8 @@
   let isRecording = $state(false);
   let recordedKeys = $state<string>("");
   let originalKeys = $state<string>("");
-  let seekTime = $state(hotkeyConfig.seekTime);
-  let volumeStep = $state(hotkeyConfig.volumeStep * 100);
+  let seekTime = $state(hotkeyConfig.isInitialized ? hotkeyConfig.seekTime : 10);
+  let volumeStep = $state(hotkeyConfig.isInitialized ? hotkeyConfig.volumeStep * 100 : 10);
   let hasUnsavedChanges = $state(false);
   let activeTab = $state<string>("");
 
@@ -46,7 +46,9 @@
       if (!shouldClose) return;
     }
 
-    hotkeyConfig.bindAllActions();
+    if (hotkeyConfig.isInitialized) {
+      hotkeyConfig.bindAllActions();
+    }
     cancelEdit();
   }
 
@@ -110,14 +112,20 @@
     }
 
     // Ctrl/Cmd + S saves
-    if (!isRecording && event.key === "s" && (event.metaKey || event.ctrlKey) && recordedKeys && recordedKeys !== originalKeys) {
-        event.preventDefault();
-        saveHotkey();
-      }
+    if (
+      !isRecording &&
+      event.key === "s" &&
+      (event.metaKey || event.ctrlKey) &&
+      recordedKeys &&
+      recordedKeys !== originalKeys
+    ) {
+      event.preventDefault();
+      saveHotkey();
+    }
   }
 
   function saveHotkey(): void {
-    if (editingAction && recordedKeys.trim()) {
+    if (editingAction && recordedKeys.trim() && hotkeyConfig.isInitialized) {
       // Removed auto-save timeout clearing
       const keys = recordedKeys
         .split(",")
@@ -146,20 +154,28 @@
   }
 
   function toggleActionEnabled(actionId: string, enabled: boolean): void {
+    if (!hotkeyConfig.isInitialized) return;
     hotkeyConfig.toggleAction(actionId, enabled);
   }
 
   function updateSeekTime(): void {
+    if (!hotkeyConfig.isInitialized) return;
     hotkeyConfig.updateSeekTime(seekTime);
   }
 
   function updateVolumeStep(): void {
+    if (!hotkeyConfig.isInitialized) return;
     hotkeyConfig.updateVolumeStep(volumeStep / 100);
   }
 
   function resetToDefaults(): void {
     const shouldReset = confirm("This will reset all hotkeys to their default values. Continue?");
     if (!shouldReset) return;
+
+    if (!hotkeyConfig.isInitialized) {
+      console.warn("Hotkeys not initialized yet");
+      return;
+    }
 
     hotkeyConfig.disable();
     hotkeyConfig.seekTime = 10;
