@@ -2,17 +2,13 @@
   import IconArrowDown from "lucide-svelte/icons/arrow-down";
   import IconArrowUp from "lucide-svelte/icons/arrow-up";
   import IconMusic from "lucide-svelte/icons/music";
-  import IconTrash2 from "lucide-svelte/icons/trash-2";
   import IconX from "lucide-svelte/icons/x";
-  import * as AlertDialog from "@/components/ui/alert-dialog";
   import { ICON_SIZE } from "@/constants";
   import { playerState } from "@/state.svelte";
   import { makeTimeString } from "@/utils/makeTimeString";
   import { QueueManager } from "@/utils/queue-manager";
   import { cn } from "@/utils/utils";
   import { playVideo } from "@/utils/video-playback";
-
-  let showClearDialog = $state(false);
 
   function isCurrentlyPlaying(item: any): boolean {
     if (!playerState.currentVideo) return false;
@@ -78,26 +74,6 @@
 </script>
 
 <div class="flex h-full flex-col">
-  <!-- Queue Header -->
-  <div class="mb-4 border-b border-zinc-800 px-4 pb-3">
-    <div class="flex items-center justify-between">
-      <div class="flex items-center gap-2">
-        <h2 class="m-0 text-sm font-medium text-zinc-200">Queue</h2>
-        <span class="text-xs text-zinc-500">({playerState.queue.length} items)</span>
-      </div>
-
-      <div class="flex items-center gap-1">
-        <button
-          class="flex h-7 w-7 items-center justify-center rounded-md border-none bg-transparent text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-300"
-          title="Clear queue"
-          onclick={() => (showClearDialog = true)}
-        >
-          <IconTrash2 size={ICON_SIZE - 4} />
-        </button>
-      </div>
-    </div>
-  </div>
-
   <!-- Queue Items -->
   <div class="no-scrollbar flex-1 overflow-y-auto">
     {#if playerState.queue.length === 0}
@@ -182,19 +158,3 @@
     {/if}
   </div>
 </div>
-
-<!-- Clear queue confirmation dialog -->
-<AlertDialog.Root bind:open={showClearDialog}>
-  <AlertDialog.Content>
-    <AlertDialog.Header>
-      <AlertDialog.Title>Clear Queue</AlertDialog.Title>
-      <AlertDialog.Description>
-        Are you sure you want to clear the current queue? This action cannot be undone.
-      </AlertDialog.Description>
-    </AlertDialog.Header>
-    <AlertDialog.Footer>
-      <AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
-      <AlertDialog.Action onclick={confirmClearQueue}>Clear Queue</AlertDialog.Action>
-    </AlertDialog.Footer>
-  </AlertDialog.Content>
-</AlertDialog.Root>

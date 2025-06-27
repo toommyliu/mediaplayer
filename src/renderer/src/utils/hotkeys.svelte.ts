@@ -39,14 +39,8 @@ class HotkeyConfig {
   }
 
   public initialize(): void {
-    if (this.initialized) {
-      console.warn("Hotkeys already initialized");
-      return;
-    }
+    if (this.initialized) return;
 
-    console.log(
-      state.platformState.isMac ? "Using Mac modifier keys" : "Using non-Mac modifier keys"
-    );
     this.modKey = state.platformState.isMac ? "command" : "ctrl";
     this.initializeDefaultConfig();
     this.initialized = true;
@@ -480,7 +474,6 @@ export function setupMediaKeyHandlers(): void {
 }
 
 export function initializeHotkeys(): void {
-  console.log("Initializing hotkeys...");
   hotkeyConfig.initialize(); // Initialize config with platform-specific settings
   setupMediaKeyHandlers();
   hotkeyConfig.bindAllActions();

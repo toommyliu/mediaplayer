@@ -122,13 +122,12 @@
   });
 
   onMount(async () => {
-    console.log("call platformState.getPlatform()");
     const res = await client.getPlatform();
     platformState.isWindows = res.isWindows;
     platformState.isMac = res.isMacOS;
     platformState.isLinux = res.isLinux;
     platformState.pathSep = res.pathSep;
-    console.log("updated platformState");
+
     await import("./utils/input.svelte");
   });
 </script>
