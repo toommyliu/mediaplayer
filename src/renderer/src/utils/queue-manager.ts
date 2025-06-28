@@ -13,7 +13,7 @@ export class QueueManager {
   /**
    * Add an item to the queue
    */
-  public static addToQueue(item: Omit<QueueItem, "addedAt" | "id">): boolean {
+  public static addToQueue(item: Omit<QueueItem, "id">): boolean {
     const existingItem = playerState.queue.find((existing) => existing.path === item.path);
     if (existingItem) {
       console.warn(`Item already exists in queue: ${item.path}`);
@@ -22,8 +22,7 @@ export class QueueManager {
 
     const newItem: QueueItem = {
       ...item,
-      id: crypto.randomUUID(),
-      addedAt: new Date()
+      id: crypto.randomUUID()
     };
 
     playerState.queue.push(newItem);

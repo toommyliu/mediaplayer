@@ -1,7 +1,6 @@
 import { SidebarTab } from "./types";
 
 export type QueueItem = {
-  addedAt: Date;
   duration?: number;
   id: string;
   name: string;
