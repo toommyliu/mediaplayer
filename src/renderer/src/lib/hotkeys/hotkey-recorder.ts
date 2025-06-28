@@ -1,23 +1,29 @@
 // Hotkey recording utility for capturing key combinations
 
-export interface RecordedKeys {
-  keys: string[];
+export type RecordedKeys = {
   display: string;
-}
+  keys: string[];
+};
 
 export class HotkeyRecorder {
   private isRecording = false;
-  private pressedKeys = new Set<string>();
-  private onRecordComplete?: (result: RecordedKeys) => void;
-  private onRecordCancel?: () => void;
-  private recordingTimeout?: number;
 
-  constructor() {
-    this.handleKeyDown = this.handleKeyDown.bind(this);
-    this.handleKeyUp = this.handleKeyUp.bind(this);
+  private pressedKeys = new Set<string>();
+
+  private onRecordComplete?: (result: RecordedKeys) => void;
+
+  private onRecordCancel?: () => void;
+
+  private readonly keyDownRef: (ev: KeyboardEvent) => void;
+
+  private readonly keyUpRef: (ev: KeyboardEvent) => void;
+
+  public constructor() {
+    this.keyDownRef = (ev) => this.handleKeyDown(ev);
+    this.keyUpRef = (ev) => this.handleKeyUp(ev);
   }
 
-  startRecording(onComplete: (result: RecordedKeys) => void, onCancel?: () => void): void {
+  public startRecording(onComplete: (result: RecordedKeys) => void, onCancel?: () => void): void {
     if (this.isRecording) {
       this.stopRecording();
     }
@@ -27,27 +33,17 @@ export class HotkeyRecorder {
     this.onRecordComplete = onComplete;
     this.onRecordCancel = onCancel;
 
-    // Add event listeners
-    document.addEventListener("keydown", this.handleKeyDown, true);
-    document.addEventListener("keyup", this.handleKeyUp, true);
-
-    // Auto-stop recording after 10 seconds
-    this.recordingTimeout = window.setTimeout(() => {
-      this.cancelRecording();
-    }, 10000);
+    document.addEventListener("keydown", this.keyDownRef);
+    document.addEventListener("keyup", this.keyUpRef);
   }
 
-  stopRecording(): void {
+  public stopRecording(): void {
     if (!this.isRecording) return;
 
     this.isRecording = false;
-    document.removeEventListener("keydown", this.handleKeyDown, true);
-    document.removeEventListener("keyup", this.handleKeyUp, true);
 
-    if (this.recordingTimeout) {
-      clearTimeout(this.recordingTimeout);
-      this.recordingTimeout = undefined;
-    }
+    document.removeEventListener("keydown", this.keyDownRef);
+    document.removeEventListener("keyup", this.keyUpRef);
 
     if (this.pressedKeys.size > 0 && this.onRecordComplete) {
       const result = this.formatKeys();
@@ -57,17 +53,13 @@ export class HotkeyRecorder {
     this.cleanup();
   }
 
-  cancelRecording(): void {
+  public cancelRecording(): void {
     if (!this.isRecording) return;
 
     this.isRecording = false;
-    document.removeEventListener("keydown", this.handleKeyDown, true);
-    document.removeEventListener("keyup", this.handleKeyUp, true);
 
-    if (this.recordingTimeout) {
-      clearTimeout(this.recordingTimeout);
-      this.recordingTimeout = undefined;
-    }
+    document.removeEventListener("keydown", this.keyDownRef);
+    document.removeEventListener("keyup", this.keyUpRef);
 
     if (this.onRecordCancel) {
       this.onRecordCancel();
@@ -101,15 +93,14 @@ export class HotkeyRecorder {
     }
   }
 
-  private handleKeyUp(event: KeyboardEvent): void {
+  private handleKeyUp(ev: KeyboardEvent): void {
     if (!this.isRecording) return;
 
-    event.preventDefault();
-    event.stopPropagation();
+    ev.preventDefault();
+    ev.stopPropagation();
 
-    // If we have keys and this is the last key released, complete the recording
     if (this.pressedKeys.size > 0) {
-      // Small delay to allow for chord combinations
+      // eslint-disable-next-line no-restricted-globals
       setTimeout(() => {
         if (this.isRecording && this.pressedKeys.size > 0) {
           this.stopRecording();
@@ -118,13 +109,11 @@ export class HotkeyRecorder {
     }
   }
 
-  private normalizeKey(event: KeyboardEvent): string | null {
-    const { key, metaKey, ctrlKey, altKey, shiftKey } = event;
-
-    // Handle modifier keys
+  private normalizeKey(ev: KeyboardEvent): string | null {
+    const { key, metaKey, ctrlKey, altKey, shiftKey } = ev;
     const modifiers: string[] = [];
 
-    // Use cmd on Mac, ctrl on other platforms
+    // Platform-specific modifier
     if (metaKey) {
       modifiers.push("cmd");
     } else if (ctrlKey) {
@@ -139,9 +128,7 @@ export class HotkeyRecorder {
       modifiers.push("shift");
     }
 
-    // Handle the main key
     let mainKey = "";
-
     if (key === " ") {
       mainKey = "space";
     } else if (key === "Enter") {
@@ -169,7 +156,6 @@ export class HotkeyRecorder {
 
     if (!mainKey) return null;
 
-    // Combine modifiers and main key
     const parts = [...modifiers, mainKey];
     return parts.join("+");
   }
@@ -191,63 +177,48 @@ export class HotkeyRecorder {
       };
     }
   }
-
-  get recording(): boolean {
-    return this.isRecording;
-  }
-
-  get currentKeys(): string[] {
-    return Array.from(this.pressedKeys);
-  }
 }
 
 // Global recorder instance
 export const hotkeyRecorder = new HotkeyRecorder();
 
 // Utility function to format key combinations for display
-export function formatHotkeyDisplay(keys: string | string[]): string {
+export function formatHotkeyDisplay(keys: string[] | string): string {
   if (typeof keys === "string") {
     return keys;
   }
 
   return keys
-    .map((key) => {
-      // Capitalize and format for better display
-      return key
+    .map((key) =>
+      key
         .split("+")
-        .map((part) => {
-          switch (part) {
-            case "cmd":
-              return "⌘";
-            case "ctrl":
-              return "Ctrl";
-            case "alt":
-              return "Alt";
-            case "shift":
-              return "Shift";
-            case "space":
-              return "Space";
-            case "enter":
-              return "Enter";
-            case "tab":
-              return "Tab";
-            case "backspace":
-              return "Backspace";
-            case "delete":
-              return "Delete";
-            case "left":
-              return "←";
-            case "right":
-              return "→";
-            case "up":
-              return "↑";
-            case "down":
-              return "↓";
-            default:
-              return part.toUpperCase();
-          }
-        })
-        .join(" + ");
-    })
+        .map((key) => keyToChar(key.trim()))
+        .join(" + ")
+    )
     .join(", ");
+}
+
+function keyToChar(key: string): string {
+  switch (key) {
+    case "cmd":
+      return "⌘";
+    case "ctrl":
+      return "Ctrl";
+    case "alt":
+      return "Alt";
+    case "shift":
+      return "Shift";
+    case "space":
+      return "Space";
+    case "enter":
+      return "Enter";
+    case "tab":
+      return "Tab";
+    case "backspace":
+      return "Backspace";
+    case "delete":
+      return "Delete";
+    default:
+      return key.toUpperCase();
+  }
 }

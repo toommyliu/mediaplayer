@@ -2,7 +2,7 @@
   import Button from "@/components/ui/button/button.svelte";
   import { Checkbox } from "@/components/ui/checkbox";
   import * as Tabs from "@/components/ui/tabs";
-  import { hotkeyRecorder, formatHotkeyDisplay } from "@/utils/hotkey-recorder";
+  import { hotkeyRecorder, formatHotkeyDisplay } from "@/lib/hotkeys/hotkey-recorder";
   import { hotkeyConfig } from "@/utils/hotkeys.svelte";
 
   let editingAction = $state<string | null>(null);
