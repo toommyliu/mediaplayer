@@ -2,6 +2,9 @@
   import IconArrowDown from "lucide-svelte/icons/arrow-down";
   import IconArrowUp from "lucide-svelte/icons/arrow-up";
   import IconMusic from "lucide-svelte/icons/music";
+  import IconRepeat from "lucide-svelte/icons/repeat";
+  import IconRepeat1 from "lucide-svelte/icons/repeat-1";
+  import IconShuffle from "lucide-svelte/icons/shuffle";
   import IconX from "lucide-svelte/icons/x";
   import { ICON_SIZE } from "@/constants";
   import { playerState } from "@/state.svelte";
@@ -9,6 +12,8 @@
   import { QueueManager } from "@/utils/queue-manager";
   import { cn } from "@/utils/utils";
   import { playVideo } from "@/utils/video-playback";
+
+  let showClearDialog = $state(false);
 
   function isCurrentlyPlaying(item: any): boolean {
     if (!playerState.currentVideo) return false;
@@ -70,6 +75,40 @@
   function confirmClearQueue() {
     QueueManager.clearQueue();
     showClearDialog = false;
+  }
+
+  function shuffleQueue() {
+    QueueManager.shuffleQueue();
+  }
+
+  function toggleRepeat() {
+    QueueManager.toggleRepeatMode();
+  }
+
+  function getRepeatIcon() {
+    switch (playerState.repeatMode) {
+      case "one":
+        return IconRepeat1;
+      case "all":
+        return IconRepeat;
+      case "off":
+        return IconRepeat;
+      default:
+        return IconRepeat;
+    }
+  }
+
+  function getRepeatTitle() {
+    switch (playerState.repeatMode) {
+      case "off":
+        return "Repeat: Off";
+      case "all":
+        return "Repeat: All";
+      case "one":
+        return "Repeat: One";
+      default:
+        return "Repeat: Off";
+    }
   }
 </script>
 
@@ -156,5 +195,31 @@
         {/each}
       </div>
     {/if}
+  </div>
+
+  <!-- Footer with shuffle and repeat controls -->
+  <div class="mt-4 border-t border-zinc-800 p-1 pb-0">
+    <div class="flex items-center justify-center gap-2">
+      <button
+        class="flex h-8 w-8 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-300"
+        title="Shuffle queue"
+        onclick={shuffleQueue}
+      >
+        <IconShuffle size={ICON_SIZE - 4} />
+      </button>
+
+      <button
+        class={cn(
+          "flex h-8 w-8 items-center justify-center rounded transition-colors",
+          playerState.repeatMode === "off"
+            ? "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-300"
+            : "bg-blue-500/20 text-blue-400 hover:bg-blue-500/30"
+        )}
+        title={getRepeatTitle()}
+        onclick={toggleRepeat}
+      >
+        <svelte:component this={getRepeatIcon()} size={ICON_SIZE - 4} />
+      </button>
+    </div>
   </div>
 </div>

@@ -34,19 +34,33 @@ export function playVideo(src: string): void {
 }
 
 /**
- * Plays the previous video in the queue, cycling to the last video if at the beginning.
+ * Plays the previous video in the queue, respecting repeat modes.
  */
 export function playPreviousVideo(): void {
   if (!playerState.videoElement || !playerState.currentVideo) return;
   if (playerState.queue.length === 0) return;
 
   let newIndex = playerState.currentIndex - 1;
+
+  // Handle repeat modes when reaching the beginning of the queue
   if (newIndex < 0) {
-    newIndex = playerState.queue.length - 1;
+    if (playerState.repeatMode === "all") {
+      // Loop back to the last video
+      newIndex = playerState.queue.length - 1;
+    } else {
+      // For "off" mode, stop at the beginning
+      playerState.isPlaying = false;
+      if (playerState.videoElement) {
+        playerState.videoElement.pause();
+      }
+
+      return;
+    }
   }
 
   console.log("previousVideo: changing index from", playerState.currentIndex, "to", newIndex);
   console.log("previousVideo: queue length:", playerState.queue.length);
+  console.log("previousVideo: repeat mode:", playerState.repeatMode);
 
   playerState.currentIndex = newIndex;
   playerState.currentTime = 0;
@@ -58,19 +72,33 @@ export function playPreviousVideo(): void {
 }
 
 /**
- * Plays the next video in the queue, cycling to the first video if at the end.
+ * Plays the next video in the queue, respecting repeat modes.
  */
 export function playNextVideo(): void {
   if (!playerState.videoElement || !playerState.currentVideo) return;
   if (playerState.queue.length === 0) return;
 
   let newIndex = playerState.currentIndex + 1;
+
+  // Handle repeat modes when reaching the end of the queue
   if (newIndex >= playerState.queue.length) {
-    newIndex = 0;
+    if (playerState.repeatMode === "all") {
+      // Loop back to the first video
+      newIndex = 0;
+    } else {
+      // For "off" mode, stop at the end
+      playerState.isPlaying = false;
+      if (playerState.videoElement) {
+        playerState.videoElement.pause();
+      }
+
+      return;
+    }
   }
 
   console.log("nextVideo: changing index from", playerState.currentIndex, "to", newIndex);
   console.log("nextVideo: queue length:", playerState.queue.length);
+  console.log("nextVideo: repeat mode:", playerState.repeatMode);
 
   playerState.currentIndex = newIndex;
   playerState.currentTime = 0;

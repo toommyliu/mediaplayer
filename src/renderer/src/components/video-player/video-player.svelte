@@ -120,12 +120,43 @@
   }
 
   function handleEnded(): void {
-    console.log("Video ended, checking for next video");
+    console.log("Video ended, checking repeat mode:", playerState.repeatMode);
 
     const currentVideo = playerState.currentVideo;
     if (!currentVideo) return;
 
-    playNextVideo();
+    switch (playerState.repeatMode) {
+      case "one": {
+        // Repeat the current video
+        console.log("Repeating current video");
+        if (playerState.videoElement) {
+          playerState.videoElement.currentTime = 0;
+          playerState.currentTime = 0;
+          void playerState.videoElement.play();
+        }
+
+        break;
+      }
+
+      case "all": {
+        // Play next video, loop back to first when reaching the end
+        console.log("Playing next video (repeat all)");
+        playNextVideo();
+
+        break;
+      }
+
+      case "off": {
+        // Stop playback when video ends
+        console.log("Video ended, not repeating");
+        playerState.isPlaying = false;
+        if (playerState.videoElement) {
+          playerState.videoElement.pause();
+        }
+
+        break;
+      }
+    }
   }
 
   function showControlsTemporarily(): void {

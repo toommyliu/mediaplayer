@@ -130,4 +130,43 @@ export class QueueManager {
       playerState.currentIndex === 0 ? playerState.queue.length - 1 : playerState.currentIndex - 1;
     return playerState.queue[prevIndex];
   }
+
+  /**
+   * Shuffle the queue
+   */
+  public static shuffleQueue(): void {
+    if (playerState.queue.length <= 1) return;
+
+    const currentItem = playerState.queue[playerState.currentIndex];
+
+    // Create a new shuffled array excluding the current item
+    const otherItems = playerState.queue.filter((_, index) => index !== playerState.currentIndex);
+
+    // Fisher-Yates shuffle algorithm
+    for (let index = otherItems.length - 1; index > 0; index--) {
+      const randomIndex = Math.floor(Math.random() * (index + 1));
+      [otherItems[index], otherItems[randomIndex]] = [otherItems[randomIndex], otherItems[index]];
+    }
+
+    // Rebuild queue with current item first, then shuffled items
+    playerState.queue = [currentItem, ...otherItems];
+    playerState.currentIndex = 0;
+  }
+
+  /**
+   * Toggle repeat mode (off \> all \> one \> off)
+   */
+  public static toggleRepeatMode(): void {
+    switch (playerState.repeatMode) {
+      case "off":
+        playerState.repeatMode = "all";
+        break;
+      case "all":
+        playerState.repeatMode = "one";
+        break;
+      case "one":
+        playerState.repeatMode = "off";
+        break;
+    }
+  }
 }

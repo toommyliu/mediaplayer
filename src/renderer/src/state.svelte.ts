@@ -28,6 +28,9 @@ class PlayerState {
 
   isFullscreen = $state(false);
 
+  // Playback modes
+  public repeatMode = $state<"all" | "off" | "one">("off");
+
   get currentVideo() {
     const currentItem = this.queue[this.currentIndex];
     return currentItem ? `file://${currentItem.path}` : null;
