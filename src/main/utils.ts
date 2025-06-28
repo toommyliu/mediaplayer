@@ -124,6 +124,7 @@ export async function showFilePicker(
       const selectedPath = filePaths[0];
       const stats = await stat(selectedPath);
       if (stats.isFile()) {
+        // eslint-disable-next-line require-atomic-updates
         previousPath = dirname(selectedPath);
         logger.debug(`previousPath set to: ${previousPath}`);
         return {
@@ -131,6 +132,7 @@ export async function showFilePicker(
           path: selectedPath
         };
       } else if (stats.isDirectory()) {
+        // eslint-disable-next-line require-atomic-updates
         previousPath = selectedPath;
         logger.debug(`previousPath set to: ${previousPath}`);
         return await buildFileTree(selectedPath);

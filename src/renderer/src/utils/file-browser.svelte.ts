@@ -2,6 +2,7 @@ import { playerState, fileBrowserState, type FileSystemItem } from "@/state.svel
 import { client } from "@/tipc";
 import { logger } from "./logger";
 import { QueueManager } from "./queue-manager";
+import { playVideoElement } from "./video-playback";
 
 export function transformDirectoryContents(directoryContents): FileSystemItem[] {
   if (!directoryContents?.files) return [];
@@ -35,15 +36,9 @@ export async function navigateToDirectory(dirPath: string) {
       updatePlayerQueueForced(true);
 
       const allVideoFiles = await getAllVideoFilesRecursive(dirPath);
-      console.log(
-        `Navigated to directory ${dirPath}, found ${allVideoFiles.length} videos recursively`
-      );
 
       if (allVideoFiles.length > 0) {
         QueueManager.addMultipleToQueue(allVideoFiles);
-        console.log(
-          `Added ${allVideoFiles.length} videos from directory (including subfolders) to queue`
-        );
       }
     }
   } catch (error) {
@@ -87,11 +82,7 @@ export function updatePlayerQueueForced(preserveCurrentVideo: boolean = false) {
 
   if (currentVideo) {
     const newIndex = playerState.queue.indexOf(currentVideo);
-    if (newIndex !== -1) {
-      playerState.currentIndex = newIndex;
-    } else {
-      playerState.currentIndex = 0;
-    }
+    playerState.currentIndex = newIndex === -1 ? 0 : newIndex;
   } else {
     playerState.currentIndex = 0;
   }
@@ -115,12 +106,12 @@ export async function loadFileSystemStructure() {
 
       if (playerState.videoElement) {
         playerState.videoElement.src = `file://${result}`;
-        playerState.videoElement.play();
+        await playVideoElement();
       }
 
       // Add the video to the queue
       QueueManager.addToQueue({
-        name: result.split("/").pop() || "Unknown Video",
+        name: result.split("/").pop() ?? "Unknown Video",
         path: result,
         duration: 0
       });
@@ -191,24 +182,15 @@ export async function getAllVideoFilesRecursive(
 ): Promise<{ duration?: number; name: string; path: string }[]> {
   let videoFiles: { duration?: number; name: string; path: string }[] = [];
   const indent = "  ".repeat(depth);
-  console.log(`${indent}[FileManager] Scanning folder: ${folderPath}`);
-  logger.info(`[FileManager] Scanning folder: ${folderPath}`);
 
   try {
     const contents = await client.readDirectory(folderPath);
-    if (contents && contents.files) {
-      console.log(`${indent}[FileManager] Found ${contents.files.length} items in folder`);
-
+    if (contents?.files) {
       for (const item of contents.files) {
         if (item.type === "video" && item.path && item.name) {
           videoFiles.push({ name: item.name, path: item.path, duration: item.duration });
-          console.log(`${indent}[FileManager] - Found video: ${item.name}`);
         } else if (item.type === "folder" && item.path) {
-          console.log(`${indent}[FileManager] > Entering subfolder: ${item.name}`);
           const nestedVideos = await getAllVideoFilesRecursive(item.path, depth + 1);
-          console.log(
-            `${indent}[FileManager] < Subfolder ${item.name} returned ${nestedVideos.length} videos`
-          );
           videoFiles = videoFiles.concat(nestedVideos);
         }
       }
@@ -228,9 +210,13 @@ function extractDatePrefix(name: string): Date | null {
   const dateMatch = /^(\d{4})[./\-](\d{1,2})[./\-](\d{1,2})/.exec(name);
   if (dateMatch) {
     const [, year, month, day] = dateMatch;
-    const date = new Date(Number.parseInt(year), Number.parseInt(month) - 1, Number.parseInt(day));
-    // Verify it's a valid date
-    if (!isNaN(date.getTime())) {
+    const date = new Date(
+      Number.parseInt(year, 10),
+      Number.parseInt(month, 10) - 1,
+      Number.parseInt(day, 10)
+    );
+
+    if (!Number.isNaN(date.getTime())) {
       return date;
     }
   }
@@ -240,16 +226,16 @@ function extractDatePrefix(name: string): Date | null {
 
 function naturalCompare(a: string, b: string): number {
   // Split strings into chunks of letters and numbers
-  const chunksA = a.match(/(\d+|\D+)/g) || [];
-  const chunksB = b.match(/(\d+|\D+)/g) || [];
+  const chunksA = a.match(/(\d+|\D+)/g) ?? [];
+  const chunksB = b.match(/(\d+|\D+)/g) ?? [];
 
   const maxLength = Math.max(chunksA.length, chunksB.length);
 
-  for (let i = 0; i < maxLength; i++) {
-    const chunkA = chunksA[i] || "";
-    const chunkB = chunksB[i] || "";
+  for (let idx = 0; idx < maxLength; idx++) {
+    const chunkA = chunksA[idx] || "";
+    const chunkB = chunksB[idx] || "";
 
-    // If both chunks are numeric, compare as numbers
+    // Compare both chunks as numbers
     if (/^\d+$/.test(chunkA) && /^\d+$/.test(chunkB)) {
       const numA = Number.parseInt(chunkA, 10);
       const numB = Number.parseInt(chunkB, 10);
@@ -272,18 +258,17 @@ function naturalCompare(a: string, b: string): number {
 }
 
 function smartNameCompare(a: string, b: string): number {
-  // First, try to extract date prefixes
   const dateA = extractDatePrefix(a);
   const dateB = extractDatePrefix(b);
 
-  // If both have date prefixes, sort by date first
+  // Both have dates?
   if (dateA && dateB) {
     const dateCompare = dateA.getTime() - dateB.getTime();
     if (dateCompare !== 0) {
       return dateCompare;
     }
 
-    // If dates are the same, compare the rest of the filename
+    // Fallback: compare by the remaining filename
     const restA = a.replace(/^(\d{4})[./\-](\d{1,2})[./\-](\d{1,2})\s*/, "");
     const restB = b.replace(/^(\d{4})[./\-](\d{1,2})[./\-](\d{1,2})\s*/, "");
     return naturalCompare(restA, restB);
@@ -299,33 +284,35 @@ function smartNameCompare(a: string, b: string): number {
 
 function sortFileSystem(files: FileSystemItem[]): FileSystemItem[] {
   return [...files].sort((a, b) => {
-    // Folders first
     const aIsFolder = Boolean(a.files);
     const bIsFolder = Boolean(b.files);
 
+    // Folders first
     if (aIsFolder && !bIsFolder) return -1;
     if (!aIsFolder && bIsFolder) return 1;
 
-    // If both are folders or both are files, sort by the selected criteria
+    // Apply sorting based on the selected criteria
     switch (fileBrowserState.sortBy) {
-      case "name":
-        const aName = a.name || "";
-        const bName = b.name || "";
+      case "name": {
+        const aName = a.name ?? "";
+        const bName = b.name ?? "";
         const nameCompare = smartNameCompare(aName, bName);
         return fileBrowserState.sortDirection === "asc" ? nameCompare : -nameCompare;
+      }
 
-      case "duration":
+      case "duration": {
         if (aIsFolder || bIsFolder) {
-          const aName = a.name || "";
-          const bName = b.name || "";
+          const aName = a.name ?? "";
+          const bName = b.name ?? "";
           const nameCompare = smartNameCompare(aName, bName);
           return fileBrowserState.sortDirection === "asc" ? nameCompare : -nameCompare;
         }
 
-        const aDuration = a.duration || 0;
-        const bDuration = b.duration || 0;
+        const aDuration = a.duration ?? 0;
+        const bDuration = b.duration ?? 0;
         const durationCompare = aDuration - bDuration;
         return fileBrowserState.sortDirection === "asc" ? durationCompare : -durationCompare;
+      }
 
       default:
         return 0;

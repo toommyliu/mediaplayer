@@ -1,6 +1,12 @@
 import { playerState } from "../state.svelte";
 import { logger } from "./logger";
 
+export async function playVideoElement() {
+  await playerState.videoElement?.play().catch((error) => {
+    logger.error("Error playing video element:", error);
+  });
+}
+
 /**
  * Plays a video from the source URL.
  *

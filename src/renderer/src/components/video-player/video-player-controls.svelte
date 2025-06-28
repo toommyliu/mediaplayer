@@ -9,17 +9,22 @@
   import Settings from "lucide-svelte/icons/settings";
   import SkipBack from "lucide-svelte/icons/skip-back";
   import SkipForward from "lucide-svelte/icons/skip-forward";
+  import Volume1 from "lucide-svelte/icons/volume-1";
+  import Volume2 from "lucide-svelte/icons/volume-2";
+  import VolumeX from "lucide-svelte/icons/volume-x";
   import { Button } from "@/components/ui/button";
   import * as Tooltip from "@/components/ui/tooltip";
   import { ICON_SIZE } from "@/constants";
   import { playerState, sidebarState } from "@/state.svelte";
+  import { client } from "@/tipc";
   import { makeTimeString } from "@/utils/makeTimeString";
   import { cn } from "@/utils/utils";
-  import Volume1 from "lucide-svelte/icons/volume-1";
-  import Volume2 from "lucide-svelte/icons/volume-2";
-  import VolumeX from "lucide-svelte/icons/volume-x";
-  import { client } from "@/tipc";
-  import { playNextVideo, playPreviousVideo, seekToRelative } from "@/utils/video-playback";
+  import {
+    playNextVideo,
+    playPreviousVideo,
+    playVideoElement,
+    seekToRelative
+  } from "@/utils/video-playback";
   import SettingsDialog from "../settings-dialog.svelte";
 
   let isDragging = $state(false);
@@ -118,10 +123,10 @@
   const handleSeek = (ev: MouseEvent, progressBar?: HTMLElement, barRect?: DOMRect): void => {
     if (!playerState.videoElement || !playerState.duration) return;
 
-    const target = progressBar || (ev.currentTarget as HTMLElement);
+    const target = progressBar ?? (ev.currentTarget as HTMLElement);
     if (!target) return;
 
-    const rect = barRect || target.getBoundingClientRect();
+    const rect = barRect ?? target.getBoundingClientRect();
     const percent = Math.max(0, Math.min(1, (ev.clientX - rect.left) / rect.width));
     const newTime = percent * playerState.duration;
 
@@ -161,19 +166,15 @@
       frameId = null;
     };
 
-    const handleMouseMove = (e: MouseEvent): void => {
+    const handleMouseMove = (ev: MouseEvent): void => {
       if (isDragging) {
-        lastClientX = e.clientX;
-
-        if (frameId === null) {
-          frameId = requestAnimationFrame(performSeekUpdate);
-        }
-
-        e.preventDefault();
+        lastClientX = ev.clientX;
+        frameId ??= requestAnimationFrame(performSeekUpdate);
+        ev.preventDefault();
       }
     };
 
-    const handleMouseUp = (): void => {
+    const handleMouseUp = async (): Promise<void> => {
       isDragging = false;
 
       if (frameId !== null) {
@@ -182,14 +183,10 @@
 
       if (wasPlaying && playerState.videoElement) {
         if (playerState.videoElement.readyState >= 2) {
-          playerState.videoElement.play().catch((error) => {
-            console.error("Error resuming playback after seek:", error);
-          });
+          await playVideoElement();
         } else {
-          const onCanPlay = (): void => {
-            playerState.videoElement?.play().catch((error) => {
-              console.error("Error resuming playback after seek:", error);
-            });
+          const onCanPlay = async (): Promise<void> => {
+            await playVideoElement();
             playerState.videoElement?.removeEventListener("canplay", onCanPlay);
           };
 
@@ -218,16 +215,15 @@
     }
   };
 
-  const togglePlay = (): void => {
+  const togglePlay = async (): Promise<void> => {
     if (!playerState.videoElement || !playerState.currentVideo) return;
 
     if (playerState.isPlaying) {
       playerState.videoElement.pause();
       playerState.isPlaying = false;
     } else {
-      playerState.videoElement.play().catch((error) => {
-        console.error("Error playing video:", error);
-      });
+      await playVideoElement();
+      // eslint-disable-next-line require-atomic-updates
       playerState.isPlaying = true;
     }
   };
@@ -241,7 +237,7 @@
   };
 
   const handleVolumeSeek = (ev: MouseEvent, volumeBar?: HTMLElement): void => {
-    const target = volumeBar || (ev.currentTarget as HTMLElement);
+    const target = volumeBar ?? (ev.currentTarget as HTMLElement);
     if (!target) return;
 
     const rect = target.getBoundingClientRect();
@@ -271,7 +267,6 @@
     let rafId: number | null = null;
 
     const performVolumeUpdate = (clientX: number): void => {
-      // Get fresh rect on each update to handle dynamic width changes
       const rect = volumeBar.getBoundingClientRect();
       const percent = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
 
@@ -291,10 +286,7 @@
     const handleMouseMove = (ev: MouseEvent): void => {
       if (isVolumeDragging) {
         ev.preventDefault();
-
-        if (rafId === null) {
-          rafId = requestAnimationFrame(() => performVolumeUpdate(ev.clientX));
-        }
+        rafId ??= requestAnimationFrame(() => performVolumeUpdate(ev.clientX));
       }
     };
 
