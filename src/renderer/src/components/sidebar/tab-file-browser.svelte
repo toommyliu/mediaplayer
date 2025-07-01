@@ -740,7 +740,8 @@
     </ContextMenu.Root>
 
     {#if fileItemView.isFolder && fileItemView.isExpanded && fileItemView.item.files}
-      {#each fileItemView.item.files as child}
+      {#each fileItemView.item.files as child (`${child.path}-${child.name}`)}
+        <!-- eslint-disable-next-line @typescript-eslint/no-confusing-void-expression, sonarjs/no-use-of-empty-return-value -->
         {@render FileSystemItemComponent(child, fileItemView.depth + 1)}
       {/each}
     {/if}

@@ -74,20 +74,20 @@ export class HotkeyRecorder {
     this.onRecordCancel = undefined;
   }
 
-  private handleKeyDown(event: KeyboardEvent): void {
+  private handleKeyDown(ev: KeyboardEvent): void {
     if (!this.isRecording) return;
 
-    event.preventDefault();
-    event.stopPropagation();
+    ev.preventDefault();
+    ev.stopPropagation();
 
     // Handle special case for Escape to cancel
-    if (event.key === "Escape") {
+    if (ev.key === "Escape") {
       this.cancelRecording();
       return;
     }
 
     // Add the key to our pressed keys set
-    const key = this.normalizeKey(event);
+    const key = this.normalizeKey(ev);
     if (key) {
       this.pressedKeys.add(key);
     }
