@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { setTimeout, clearTimeout } from "node:timers";
+
   import { playerState } from "@/state.svelte";
   import { loadFileSystemStructure } from "@/utils/file-browser.svelte";
   import { cn } from "@/utils/utils";
@@ -120,43 +122,23 @@
   }
 
   function handleEnded(): void {
-    console.log("Video ended, checking repeat mode:", playerState.repeatMode);
-
     const currentVideo = playerState.currentVideo;
     if (!currentVideo) return;
 
-    switch (playerState.repeatMode) {
-      case "one": {
-        // Repeat the current video
-        console.log("Repeating current video");
-        if (playerState.videoElement) {
-          playerState.videoElement.currentTime = 0;
-          playerState.currentTime = 0;
-          void playerState.videoElement.play();
-        }
-
-        break;
+    if (playerState.repeatMode === "one") {
+      // Repeat the current video
+      console.log("Repeating current video");
+      if (playerState.videoElement) {
+        playerState.videoElement.currentTime = 0;
+        playerState.currentTime = 0;
+        void playerState.videoElement.play();
       }
 
-      case "all": {
-        // Play next video, loop back to first when reaching the end
-        console.log("Playing next video (repeat all)");
-        playNextVideo();
-
-        break;
-      }
-
-      case "off": {
-        // Stop playback when video ends
-        console.log("Video ended, not repeating");
-        playerState.isPlaying = false;
-        if (playerState.videoElement) {
-          playerState.videoElement.pause();
-        }
-
-        break;
-      }
+      return;
     }
+
+    // Always attempt to play next video for repeatMode 'all' and 'off'.
+    playNextVideo();
   }
 
   function showControlsTemporarily(): void {

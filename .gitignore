@@ -6,3 +6,4 @@ out
 *.log*
 
 *.env*
+.github/copilot-instructions.md
