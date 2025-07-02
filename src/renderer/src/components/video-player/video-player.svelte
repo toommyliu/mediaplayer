@@ -1,6 +1,4 @@
 <script lang="ts">
-  import { setTimeout, clearTimeout } from "node:timers";
-
   import { playerState } from "@/state.svelte";
   import { loadFileSystemStructure } from "@/utils/file-browser.svelte";
   import { cn } from "@/utils/utils";

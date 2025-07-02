@@ -25,6 +25,10 @@ export default [
         extraFileExtensions: [".svelte"],
         parser: ts.parser,
         svelteConfig
+      },
+      globals: {
+        ...globals.browser,
+        ...globals.node
       }
     }
   },
@@ -44,6 +48,9 @@ export default [
         ...globals.browser,
         ...globals.node
       }
+    },
+    rules: {
+      "no-restricted-globals": "off"
     }
   },
   {
