@@ -2,11 +2,11 @@
   import AlertCircle from "lucide-svelte/icons/alert-circle";
   import ArrowDown01 from "lucide-svelte/icons/arrow-down-01";
   import ArrowDownAZ from "lucide-svelte/icons/arrow-down-a-z";
-  import ArrowLeft from "lucide-svelte/icons/arrow-left";
   import ArrowUp10 from "lucide-svelte/icons/arrow-up-10";
   import ArrowUpAZ from "lucide-svelte/icons/arrow-up-a-z";
   import FolderPlus from "lucide-svelte/icons/folder-plus";
   import Loader2 from "lucide-svelte/icons/loader-2";
+  import ListRestart from "lucide-svelte/icons/list-restart";
   import { fade } from "svelte/transition";
   import {
     navigateToDirectory,
@@ -21,6 +21,7 @@
   import { QueueManager } from "../../utils/queue-manager";
   import { playVideo } from "../../utils/video-playback";
   import * as ContextMenu from "../ui/context-menu";
+  import Button from "@/components/ui/button/button.svelte";
 
   const isEmpty = $derived(fileBrowserState.fileSystem.length === 0);
 
@@ -379,13 +380,14 @@
           <p class="mb-4 max-w-xs text-sm text-zinc-500">
             Please upload some media files to get started
           </p>
-          <button
+          <Button />
+          <!-- <button
             onclick={resetAndBrowse}
             class="flex items-center gap-2 rounded-lg bg-blue-800/40 px-4 py-2 text-xs font-medium text-blue-300 transition-all duration-200 hover:bg-blue-800/60 hover:text-blue-200"
           >
             <FolderPlus class="h-4 w-4" />
             Browse files
-          </button>
+          </button> -->
         </div>
       {:else}
         <div class="space-y-2">
@@ -402,10 +404,9 @@
               title="Go back"
             >
               <div class="flex min-h-[28px] w-full items-center rounded-md hover:bg-zinc-800/40">
-                <div class="mr-2 w-4 flex-shrink-0"></div>
                 <div class="flex min-h-[28px] min-w-0 flex-1 items-center">
                   <span
-                    class="flex-1 truncate text-sm font-medium text-zinc-300 group-hover:text-zinc-100"
+                    class="ml-4 flex-1 text-sm font-medium text-zinc-300 group-hover:text-zinc-100"
                   >
                     ..
                   </span>
@@ -420,41 +421,47 @@
       {/if}
     </div>
 
-    <!-- Footer with sort controls -->
     <div class="mt-4 border-t border-zinc-800 bg-zinc-900/40 p-1 pb-0">
-      <div class="flex items-center justify-center gap-2">
-        <button
-          class="flex h-8 items-center gap-1 rounded px-2 text-sm text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-300"
-          class:selected={fileBrowserState.sortBy === "name"}
-          aria-pressed={fileBrowserState.sortBy === "name"}
-          onclick={() => setSortBy("name")}
-          title="Sort by name"
-        >
-          {#if fileBrowserState.sortBy === "name"}
-            {#if fileBrowserState.sortDirection === "asc"}
-              <ArrowUpAZ class="h-5 w-5" />
-            {:else}
-              <ArrowDownAZ class="h-5 w-5" />
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex flex-row items-center gap-2">
+          <button
+            class="flex h-8 items-center gap-1 rounded px-2 text-sm text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-300"
+            class:selected={fileBrowserState.sortBy === "name"}
+            aria-pressed={fileBrowserState.sortBy === "name"}
+            onclick={() => setSortBy("name")}
+            title="Sort by name"
+          >
+            {#if fileBrowserState.sortBy === "name"}
+              {#if fileBrowserState.sortDirection === "asc"}
+                <ArrowUpAZ class="h-5 w-5" />
+              {:else}
+                <ArrowDownAZ class="h-5 w-5" />
+              {/if}
             {/if}
-          {/if}
-          <span>Name</span>
-        </button>
-        <button
-          class="flex h-8 items-center gap-1 rounded px-2 text-sm text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-300"
-          class:selected={fileBrowserState.sortBy === "duration"}
-          aria-pressed={fileBrowserState.sortBy === "duration"}
-          onclick={() => setSortBy("duration")}
-          title="Sort by duration"
-        >
-          {#if fileBrowserState.sortBy === "duration"}
-            {#if fileBrowserState.sortDirection === "asc"}
-              <ArrowUp10 class="h-5 w-5" />
-            {:else}
-              <ArrowDown01 class="h-5 w-5" />
+            <span>Name</span>
+          </button>
+          <button
+            class="flex h-8 items-center gap-1 rounded px-2 text-sm text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-300"
+            class:selected={fileBrowserState.sortBy === "duration"}
+            aria-pressed={fileBrowserState.sortBy === "duration"}
+            onclick={() => setSortBy("duration")}
+            title="Sort by duration"
+          >
+            {#if fileBrowserState.sortBy === "duration"}
+              {#if fileBrowserState.sortDirection === "asc"}
+                <ArrowUp10 class="h-5 w-5" />
+              {:else}
+                <ArrowDown01 class="h-5 w-5" />
+              {/if}
             {/if}
-          {/if}
-          <span>Duration</span>
-        </button>
+            <span>Duration</span>
+          </button>
+        </div>
+        <div class="flex items-center gap-2">
+          <Button size="icon" variant="ghost" onclick={resetAndBrowse} title="Browse files">
+            <ListRestart class="h-4 w-4" />
+          </Button>
+        </div>
       </div>
     </div>
   {/if}
