@@ -89,8 +89,6 @@ class FileBrowserState {
 
   sortDirection = $state<"asc" | "desc">("asc");
 
-  searchQuery = $state("");
-
   isLoading = $state(false);
 
   loadingFolders = $state(new Set<string>());
