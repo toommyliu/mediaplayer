@@ -392,7 +392,7 @@
           {#if !fileBrowserState.isAtRoot && fileBrowserState.currentPath}
             <div
               class={cn(
-                "group relative z-10 flex cursor-pointer items-center transition-all duration-200",
+                "group relative z-10 flex min-h-[28px] cursor-pointer items-center transition-all duration-200",
                 fileBrowserState.isLoading && "cursor-not-allowed opacity-50"
               )}
               onclick={async () => {
@@ -401,20 +401,9 @@
               }}
               title="Go back"
             >
-              <div
-                class="flex w-full items-center rounded-md hover:bg-zinc-800/40"
-                style="padding-left: 8px;"
-              >
-                <div class="mr-2 w-4 flex-shrink-0">
-                  {#if fileBrowserState.isLoading}
-                    <Loader2 class="h-4 w-4 animate-spin text-blue-400" />
-                  {:else}
-                    <ArrowLeft class="h-4 w-4 text-blue-400" />
-                  {/if}
-                </div>
-
-                <!-- Content -->
-                <div class="flex min-w-0 flex-1 items-center py-0.5">
+              <div class="flex min-h-[28px] w-full items-center rounded-md hover:bg-zinc-800/40">
+                <div class="mr-2 w-4 flex-shrink-0"></div>
+                <div class="flex min-h-[28px] min-w-0 flex-1 items-center">
                   <span
                     class="flex-1 truncate text-sm font-medium text-zinc-300 group-hover:text-zinc-100"
                   >
@@ -488,14 +477,14 @@
     >
       <ContextMenu.Trigger
         class={cn(
-          "group relative z-10 flex cursor-pointer items-center transition-all duration-200",
+          "group relative z-10 flex min-h-[28px] cursor-pointer items-center transition-all duration-200",
           fileBrowserState.isLoading && "cursor-not-allowed opacity-50"
         )}
         onclick={(ev) => handleItemClick(ev, item)}
       >
         <div
           class={cn(
-            "flex w-full items-center rounded-md",
+            "flex min-h-[28px] w-full items-center rounded-md",
             fileItemView.isCurrentlyPlaying
               ? "border-blue-500/30 bg-blue-500/20 hover:bg-blue-500/25"
               : "hover:bg-zinc-800/40"
@@ -505,7 +494,7 @@
           <div class="mr-2 w-4 flex-shrink-0"></div>
 
           <!-- Content -->
-          <div class="flex min-w-0 flex-1 items-center" title={item.name!}>
+          <div class="flex min-h-[28px] min-w-0 flex-1 items-center" title={item.name!}>
             <span
               class={cn(
                 "flex-1 truncate text-sm font-medium",
