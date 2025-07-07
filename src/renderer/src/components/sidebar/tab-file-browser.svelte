@@ -255,6 +255,8 @@
 
     // Clear the existing queue when browsing a new folder
     QueueManager.clearQueue();
+    playerState.currentTime = 0;
+    playerState.duration = 0;
 
     try {
       fileBrowserState.isLoading = true;
