@@ -1,10 +1,10 @@
+import { sep } from "node:path";
 import { tipc } from "@egoist/tipc/main";
 import { platform } from "@electron-toolkit/utils";
 import { shell } from "electron";
 import { logger } from "./logger";
 import { showFilePicker, loadDirectoryContents, type PickerResult } from "./utils";
 import { mainWindow } from ".";
-import { sep } from "node:path";
 
 export const tipcInstance = tipc.create();
 

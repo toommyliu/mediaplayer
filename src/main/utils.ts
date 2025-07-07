@@ -83,7 +83,7 @@ export async function getVideoDuration(filePath: string): Promise<number> {
  */
 export async function showFilePicker(
   mode: "both" | "file" | "folder"
-): Promise<PickerResult | string | null> {
+): Promise<PickerResult | null> {
   const properties: ("createDirectory" | "multiSelections" | "openDirectory" | "openFile")[] = [];
 
   if (mode === "file") {

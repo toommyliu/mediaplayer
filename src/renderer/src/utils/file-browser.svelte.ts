@@ -1,8 +1,7 @@
-import { playerState, fileBrowserState, type FileSystemItem } from "@/state.svelte";
+import { fileBrowserState, playerState, type FileSystemItem } from "@/state.svelte";
 import { client } from "@/tipc";
-import { logger } from "./logger";
 import { QueueManager } from "./queue-manager";
-import { playVideoElement } from "./video-playback";
+import { playVideo } from "./video-playback";
 
 export function transformDirectoryContents(directoryContents): FileSystemItem[] {
   if (!directoryContents?.files) return [];
@@ -97,24 +96,17 @@ export async function loadFileSystemStructure() {
     console.log("loadFileBrowser result:", result);
 
     // Immediately play the video (if it's a string, it should be a video file path)
-    if (typeof result === "string" && result) {
-      playerState.queue = [`file://${result}`];
-      playerState.currentIndex = 0;
-      playerState.currentTime = 0;
-      playerState.duration = 0;
-      playerState.isPlaying = true;
+    if (result?.type === "file") {
+      console.log("result.path", result.path);
 
-      if (playerState.videoElement) {
-        playerState.videoElement.src = `file://${result}`;
-        await playVideoElement();
-      }
-
-      // Add the video to the queue
+      QueueManager.clearQueue();
       QueueManager.addToQueue({
-        name: result.split("/").pop() ?? "Unknown Video",
-        path: result,
+        name: result.path.split("/").pop() ?? "Unknown Video",
+        path: result.path,
         duration: 0
       });
+
+      playVideo(`file://${result.path}`);
 
       return;
     }

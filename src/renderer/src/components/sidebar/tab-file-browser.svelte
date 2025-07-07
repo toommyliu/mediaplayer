@@ -262,19 +262,19 @@
       console.log("Selected file or folder:", res);
 
       // Single file selected
-      if (typeof res === "string") {
+      if (res.type === "file") {
         // Add single file to queue and play it
-        const fileName = res.split(/[/\\]/).pop() ?? "Unknown Video";
+        const fileName = res.path.split(/[/\\]/).pop() ?? "Unknown Video";
         QueueManager.addToQueue({
           name: fileName,
-          path: res,
+          path: res.path,
           duration: undefined
         });
-        playVideo(`file://${res}`);
+        playVideo(`file://${res.path}`);
         return;
       }
 
-      if (res?.rootPath) {
+      if (res.type === "folder") {
         fileBrowserState.originalPath = res.rootPath;
 
         const dirResult = await client.readDirectory(res.rootPath);

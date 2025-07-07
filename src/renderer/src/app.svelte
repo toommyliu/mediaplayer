@@ -47,10 +47,17 @@
     return videoFiles;
   }
 
-  handlers.addFile.listen(async (path) => {
-    logger.debug("addFile:", path);
-    if (path.type === "file") {
-      playVideo(`file://${path.path}`);
+  handlers.addFile.listen(async (res) => {
+    logger.debug("addFile:", res);
+    if (res.type === "file") {
+      // Clear the queue and add the selected file
+      QueueManager.clearQueue();
+      QueueManager.addToQueue({
+        name: res.path.split("/").pop() ?? "Video",
+        path: res.path
+      });
+      playerState.currentIndex = 0;
+      playVideo(`file://${res.path}`);
     }
   });
 
@@ -60,9 +67,20 @@
       const result = folderData;
       console.log("loadFileBrowser result:", result);
 
-      if (!result) return;
+      if (!result) {
+        console.log("No result received from loadFileBrowser");
+        return;
+      }
 
-      if (result.type === "folder") {
+      if (result.type === "file") {
+        console.log("Adding single file to queue:", result.path);
+
+        QueueManager.clearQueue();
+        QueueManager.addToQueue({
+          name: result.path || (result.path.split("/").pop() ?? "Video"),
+          path: result.path
+        });
+      } else if (result.type === "folder") {
         fileBrowserState.originalPath = result.rootPath;
 
         playerState.currentTime = 0;
