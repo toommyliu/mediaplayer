@@ -513,7 +513,10 @@
                 !fileItemView.isVideo && "text-zinc-300 group-hover:text-zinc-100"
               )}
             >
-              {item!.name}{item!.type === "folder" && "/"}
+              {item!.name}
+              {#if item!.type === "folder"}
+                /
+              {/if}
             </span>
 
             {#if fileItemView.isVideo}
