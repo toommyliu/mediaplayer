@@ -11,7 +11,7 @@
   class:opacity-0={!showOverlay}
 >
   <div class="text-sm font-medium">
-    {playerState.currentVideo?.split("/").pop() || "Unknown"}
+    {playerState.currentVideo?.split("/").pop() ?? "Unknown"}
   </div>
   <div class="mt-1 text-xs text-gray-300">
     {makeTimeString(playerState.currentTime)} / {makeTimeString(playerState.duration)}

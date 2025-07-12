@@ -250,8 +250,7 @@
       </video>
 
       <VideoPlayerTitle {showOverlay} />
+      <VideoPlayerControls {showOverlay} />
     {/if}
   </div>
-
-  <VideoPlayerControls />
 </div>
