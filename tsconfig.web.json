@@ -18,11 +18,17 @@
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "baseUrl": ".",
     "paths": {
-      "@/*": [
+      "$/*": [
         "./src/renderer/src/*"
       ],
-      "@renderer/*": [
-        "src/renderer/src/*"
+      "$components/*": [
+        "src/renderer/src/lib/components/*"
+      ],
+      "$ui/*": [
+        "src/renderer/src/lib/components/ui/*"
+      ],
+      "$lib/*": [
+        "src/renderer/src/lib/*"
       ],
     },
     "strictNullChecks": true

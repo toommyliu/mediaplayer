@@ -4,7 +4,10 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": [
+      "$lib/*": [
+        "./src/renderer/src/lib/*"
+      ],
+      "$/*": [
         "./src/renderer/src/*"
       ]
     },

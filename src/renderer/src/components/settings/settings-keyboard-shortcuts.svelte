@@ -1,9 +1,9 @@
 <script lang="ts">
-  import Button from "@/components/ui/button/button.svelte";
-  import { Checkbox } from "@/components/ui/checkbox";
-  import * as Tabs from "@/components/ui/tabs";
-  import { hotkeyRecorder, formatHotkeyDisplay } from "@/lib/hotkeys/hotkey-recorder";
-  import { hotkeyConfig } from "@/utils/hotkeys.svelte";
+  import { hotkeyConfig } from "$/utils/hotkeys.svelte";
+  import { Checkbox } from "$lib/components/ui/checkbox";
+  import * as Tabs from "$lib/components/ui/tabs";
+  import { hotkeyRecorder, formatHotkeyDisplay } from "$lib/hotkeys/hotkey-recorder";
+  import Button from "$ui/button/button.svelte";
 
   let editingAction = $state<string | null>(null);
   let isRecording = $state(false);
@@ -49,6 +49,7 @@
     if (hotkeyConfig.isInitialized) {
       hotkeyConfig.bindAllActions();
     }
+
     cancelEdit();
   }
 

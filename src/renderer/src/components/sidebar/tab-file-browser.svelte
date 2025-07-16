@@ -5,14 +5,16 @@
   import ArrowUp10 from "lucide-svelte/icons/arrow-up-10";
   import ArrowUpAZ from "lucide-svelte/icons/arrow-up-a-z";
   import FolderPlus from "lucide-svelte/icons/folder-plus";
-  import Loader2 from "lucide-svelte/icons/loader-2";
   import ListRestart from "lucide-svelte/icons/list-restart";
+  import Loader2 from "lucide-svelte/icons/loader-2";
   import { fade } from "svelte/transition";
+  import Button from "$ui/button/button.svelte";
   import {
     navigateToDirectory,
     navigateToParent,
     transformDirectoryContents
   } from "@/utils/file-browser.svelte";
+  import test from "$/utils/";
   import { cn } from "@/utils/utils";
   import type { FileSystemItem } from "../../state.svelte";
   import { fileBrowserState, platformState, playerState } from "../../state.svelte";
@@ -21,7 +23,6 @@
   import { QueueManager } from "../../utils/queue-manager";
   import { playVideo } from "../../utils/video-playback";
   import * as ContextMenu from "../ui/context-menu";
-  import Button from "@/components/ui/button/button.svelte";
 
   const isEmpty = $derived(fileBrowserState.fileSystem.length === 0);
 
