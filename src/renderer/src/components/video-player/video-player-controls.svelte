@@ -325,10 +325,6 @@
       ? (playerState.currentTime / playerState.duration) * 100 || 0
       : smoothProgressPercentage
   );
-
-  const hoverPercentage = $derived(
-    playerState.duration > 0 ? (hoverTime / playerState.duration) * 100 : 0
-  );
 </script>
 
 {#if showOverlay}
@@ -553,15 +549,6 @@
           ></div>
         </div>
       </div>
-    </div>
-
-    <!-- Time Display -->
-    <div
-      class="flex items-center gap-1 rounded-md bg-black/50 px-3 py-2.5 font-mono text-sm text-white/90 backdrop-blur-md"
-    >
-      <time>{makeTimeString(playerState.currentTime)}</time>
-      <span class="text-white/60">/</span>
-      <time>{makeTimeString(playerState.duration)}</time>
     </div>
   </div>
 
