@@ -8,21 +8,20 @@
   import ListRestart from "lucide-svelte/icons/list-restart";
   import Loader2 from "lucide-svelte/icons/loader-2";
   import { fade } from "svelte/transition";
-  import Button from "$ui/button/button.svelte";
+  import type { FileSystemItem } from "$/state.svelte";
+  import { fileBrowserState, platformState, playerState } from "$/state.svelte";
+  import { client } from "$/tipc";
   import {
     navigateToDirectory,
     navigateToParent,
     transformDirectoryContents
-  } from "@/utils/file-browser.svelte";
-  import test from "$/utils/";
-  import { cn } from "@/utils/utils";
-  import type { FileSystemItem } from "../../state.svelte";
-  import { fileBrowserState, platformState, playerState } from "../../state.svelte";
-  import { client } from "../../tipc";
-  import { showItemInFolder } from "../../utils";
-  import { QueueManager } from "../../utils/queue-manager";
-  import { playVideo } from "../../utils/video-playback";
-  import * as ContextMenu from "../ui/context-menu";
+  } from "$lib/file-browser.svelte";
+  import { QueueManager } from "$lib/queue-manager";
+  import { showItemInFolder } from "$lib/showItemInFolder";
+  import { cn } from "$lib/utils";
+  import { playVideo } from "$lib/video-playback";
+  import Button from "$ui/button/button.svelte";
+  import * as ContextMenu from "$ui/context-menu/";
 
   const isEmpty = $derived(fileBrowserState.fileSystem.length === 0);
 
@@ -196,7 +195,7 @@
       fileBrowserState.loadingFolders = new Set(fileBrowserState.loadingFolders);
 
       const result = await client.readDirectory(folderPath);
-      if (result && result.files) {
+      if (result?.files) {
         const folderContents = transformDirectoryContents(result);
         updateFolderContents(fileBrowserState.fileSystem, folderPath, folderContents);
       }

@@ -1,17 +1,17 @@
 <script lang="ts">
   import AlertTriangle from "lucide-svelte/icons/alert-triangle";
-  import X from "lucide-svelte/icons/x";
+  import IconX from "lucide-svelte/icons/x";
   import { ModeWatcher } from "mode-watcher";
   import { Pane, PaneGroup, PaneResizer } from "paneforge";
   import { onMount } from "svelte";
-  import { logger } from "@/utils/logger";
-  import Sidebar from "./components/sidebar.svelte";
-  import VideoPlayer from "./components/video-player/video-player.svelte";
   import { fileBrowserState, platformState, playerState, sidebarState } from "./state.svelte";
   import { client, handlers } from "./tipc";
-  import { transformDirectoryContents } from "./utils/file-browser.svelte";
-  import { QueueManager } from "./utils/queue-manager";
-  import { playVideo } from "./utils/video-playback";
+  import Sidebar from "$components/sidebar.svelte";
+  import VideoPlayer from "$components/video-player/video-player.svelte";
+  import { transformDirectoryContents } from "$lib/file-browser.svelte";
+  import { logger } from "$lib/logger";
+  import { QueueManager } from "$lib/queue-manager";
+  import { playVideo } from "$lib/video-playback";
 
   QueueManager.initialize();
 
@@ -146,7 +146,7 @@
     platformState.isLinux = res.isLinux;
     platformState.pathSep = res.pathSep;
 
-    await import("./utils/input.svelte");
+    await import("./lib/input.svelte");
   });
 </script>
 
@@ -166,7 +166,7 @@
                 onclick={() => (playerState.error = null)}
                 class="ml-2 rounded px-2 py-1 hover:bg-red-600"
               >
-                <X size={16} />
+                <IconX size={16} />
               </button>
             </div>
           {/if}

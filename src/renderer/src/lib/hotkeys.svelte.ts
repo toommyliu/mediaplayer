@@ -1,7 +1,7 @@
 import Mousetrap from "mousetrap";
-import * as state from "@/state.svelte";
-import { handlers } from "@/tipc";
-import { SidebarTab } from "@/types";
+import * as state from "$/state.svelte";
+import { handlers } from "$/tipc";
+import { SidebarTab } from "$/types";
 import { navigateToParent } from "./file-browser.svelte";
 import { logger } from "./logger";
 import { playNextVideo, playPreviousVideo } from "./video-playback";

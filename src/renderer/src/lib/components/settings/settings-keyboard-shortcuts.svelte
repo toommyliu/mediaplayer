@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { hotkeyConfig } from "$/utils/hotkeys.svelte";
   import { Checkbox } from "$lib/components/ui/checkbox";
   import * as Tabs from "$lib/components/ui/tabs";
   import { hotkeyRecorder, formatHotkeyDisplay } from "$lib/hotkeys/hotkey-recorder";
+  import { hotkeyConfig } from "$lib/hotkeys.svelte";
   import Button from "$ui/button/button.svelte";
 
   let editingAction = $state<string | null>(null);

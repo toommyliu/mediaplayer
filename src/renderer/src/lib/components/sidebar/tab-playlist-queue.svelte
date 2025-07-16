@@ -6,14 +6,12 @@
   import IconRepeat1 from "lucide-svelte/icons/repeat-1";
   import IconShuffle from "lucide-svelte/icons/shuffle";
   import IconX from "lucide-svelte/icons/x";
-  import { ICON_SIZE } from "@/constants";
-  import { playerState } from "@/state.svelte";
-  import { makeTimeString } from "@/utils/makeTimeString";
-  import { QueueManager } from "@/utils/queue-manager";
-  import { cn } from "@/utils/utils";
-  import { playVideo } from "@/utils/video-playback";
-
-  let showClearDialog = $state(false);
+  import { playerState } from "$/state.svelte";
+  import { ICON_SIZE } from "$lib/constants";
+  import { makeTimeString } from "$lib/makeTimeString";
+  import { QueueManager } from "$lib/queue-manager";
+  import { cn } from "$lib/utils";
+  import { playVideo } from "$lib/video-playback";
 
   function isCurrentlyPlaying(item: any): boolean {
     if (!playerState.currentVideo) return false;
@@ -70,11 +68,6 @@
     if (index < playerState.queue.length - 1) {
       QueueManager.moveItem(index, index + 1);
     }
-  }
-
-  function confirmClearQueue() {
-    QueueManager.clearQueue();
-    showClearDialog = false;
   }
 
   function shuffleQueue() {

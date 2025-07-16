@@ -1,5 +1,5 @@
-import { fileBrowserState, playerState, type FileSystemItem } from "@/state.svelte";
-import { client } from "@/tipc";
+import { fileBrowserState, playerState, type FileSystemItem } from "$/state.svelte";
+import { client } from "$/tipc";
 import { QueueManager } from "./queue-manager";
 import { playVideo } from "./video-playback";
 

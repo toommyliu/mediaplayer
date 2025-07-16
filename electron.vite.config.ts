@@ -19,10 +19,11 @@ export default defineConfig({
     ],
     resolve: {
       alias: {
-        "~renderer": resolve("src/renderer/src"),
-        "~": resolve("src/renderer/src"),
-        $lib: resolve("src/renderer/src/lib"),
-        $: resolve("src/renderer/src")
+        $components: resolve("src/renderer/src/lib/components/"),
+        $ui: resolve("src/renderer/src/lib/components/ui/"),
+        $main: resolve("src/main/"),
+        $lib: resolve("src/renderer/src/lib/"),
+        $: resolve("src/renderer/src/")
       }
     }
   }

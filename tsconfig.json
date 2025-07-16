@@ -4,12 +4,21 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "$lib/*": [
-        "./src/renderer/src/lib/*"
-      ],
       "$/*": [
         "./src/renderer/src/*"
-      ]
+      ],
+      "$components/*": [
+        "src/renderer/src/lib/components/*"
+      ],
+      "$ui/*": [
+        "src/renderer/src/lib/components/ui/*"
+      ],
+      "$lib/*": [
+        "src/renderer/src/lib/*"
+      ],
+      "$main/*": [
+        "src/main/*"
+      ],
     },
   }
 }

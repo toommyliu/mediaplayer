@@ -30,6 +30,9 @@
       "$lib/*": [
         "src/renderer/src/lib/*"
       ],
+      "$main/*": [
+        "src/main/*"
+      ],
     },
     "strictNullChecks": true
   }

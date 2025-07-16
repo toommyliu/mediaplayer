@@ -2,7 +2,7 @@
   import MoonIcon from "@lucide/svelte/icons/moon";
   import SunIcon from "@lucide/svelte/icons/sun";
   import { setMode } from "mode-watcher";
-  import * as DropdownMenu from "@/components/ui/dropdown-menu/";
+  import * as DropdownMenu from "$ui/dropdown-menu/";
 </script>
 
 <DropdownMenu.Root>
