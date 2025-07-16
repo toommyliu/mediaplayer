@@ -325,6 +325,10 @@
       ? (playerState.currentTime / playerState.duration) * 100 || 0
       : smoothProgressPercentage
   );
+
+  const hoverPercentage = $derived(
+    playerState.duration > 0 ? (hoverTime / playerState.duration) * 100 : 0
+  );
 </script>
 
 {#if showOverlay}
