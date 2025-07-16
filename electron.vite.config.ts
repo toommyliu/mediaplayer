@@ -19,8 +19,8 @@ export default defineConfig({
     ],
     resolve: {
       alias: {
-        $components: resolve("src/renderer/src/lib/components/"),
-        $ui: resolve("src/renderer/src/lib/components/ui/"),
+        $components: resolve("src/renderer/src/components/"),
+        $ui: resolve("src/renderer/src/components/ui/"),
         $main: resolve("src/main/"),
         $lib: resolve("src/renderer/src/lib/"),
         $: resolve("src/renderer/src/")

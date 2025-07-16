@@ -1,9 +1,9 @@
 <script lang="ts">
-  import { Checkbox } from "$lib/components/ui/checkbox";
-  import * as Tabs from "$lib/components/ui/tabs";
-  import { hotkeyRecorder, formatHotkeyDisplay } from "$lib/hotkeys/hotkey-recorder";
+  import { formatHotkeyDisplay, hotkeyRecorder } from "$lib/hotkeys/hotkey-recorder";
   import { hotkeyConfig } from "$lib/hotkeys.svelte";
   import Button from "$ui/button/button.svelte";
+  import { Checkbox } from "$ui/checkbox";
+  import * as Tabs from "$ui/tabs/";
 
   let editingAction = $state<string | null>(null);
   let isRecording = $state(false);

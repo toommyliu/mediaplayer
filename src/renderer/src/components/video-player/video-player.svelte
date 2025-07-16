@@ -1,10 +1,10 @@
 <script lang="ts">
-  import VideoPlayerControls from "./video-player-controls.svelte";
-  import VideoPlayerTitle from "./video-player-title.svelte";
   import { playerState } from "$/state.svelte";
   import { loadFileSystemStructure } from "$lib/file-browser.svelte";
   import { cn } from "$lib/utils";
   import { playNextVideo } from "$lib/video-playback";
+  import VideoPlayerControls from "./video-player-controls.svelte";
+  import VideoPlayerTitle from "./video-player-title.svelte";
 
   let controlsTimeout: number | null = null;
   let overlayTimeout: number | null = null;

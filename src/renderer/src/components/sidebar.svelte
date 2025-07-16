@@ -3,11 +3,11 @@
   import { cubicOut } from "svelte/easing";
   import { fly } from "svelte/transition";
   /* eslint-enable import-x/no-duplicates */
-  import TabFileBrowser from "./sidebar/tab-file-browser.svelte";
-  import TabQueue from "./sidebar/tab-playlist-queue.svelte";
   import { sidebarState } from "$/state.svelte";
   import { SidebarTab } from "$/types";
   import * as Tabs from "$ui/tabs/";
+  import TabFileBrowser from "./sidebar/tab-file-browser.svelte";
+  import TabQueue from "./sidebar/tab-playlist-queue.svelte";
 
   let previousTab = $state(sidebarState.currentTab);
 

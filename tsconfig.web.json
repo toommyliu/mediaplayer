@@ -22,10 +22,10 @@
         "./src/renderer/src/*"
       ],
       "$components/*": [
-        "src/renderer/src/lib/components/*"
+        "src/renderer/src/components/*"
       ],
       "$ui/*": [
-        "src/renderer/src/lib/components/ui/*"
+        "src/renderer/src/components/ui/*"
       ],
       "$lib/*": [
         "src/renderer/src/lib/*"
