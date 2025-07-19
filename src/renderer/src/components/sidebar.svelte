@@ -4,10 +4,10 @@
   import { fly } from "svelte/transition";
   /* eslint-enable import-x/no-duplicates */
   import { SidebarTab } from "$/types";
+  import { sidebarState } from "$lib/state/sidebar.svelte";
   import * as Tabs from "$ui/tabs/";
   import TabFileBrowser from "./sidebar/tab-file-browser.svelte";
   import TabQueue from "./sidebar/tab-playlist-queue.svelte";
-  import { sidebarState } from "$lib/state/sidebar.svelte";
 </script>
 
 <div class="border-sidebar-border bg-sidebar flex h-full flex-col border-r p-4 backdrop-blur-xl">

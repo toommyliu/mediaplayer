@@ -147,18 +147,11 @@ export async function loadFileSystemStructure() {
         }
       } else if (result === null) {
         console.warn("No video files found in the selected folder (1)");
-        fileBrowserState.error = null;
-        fileBrowserState.fileTree = null;
-        fileBrowserState.currentPath = null;
-        fileBrowserState.isAtRoot = false;
-        fileBrowserState.originalPath = null;
+        fileBrowserState.reset();
       } else {
         console.warn("No video files found in the selected folder (2)");
         fileBrowserState.error = "No video files found in the selected folder";
-        fileBrowserState.fileTree = null;
-        fileBrowserState.currentPath = null;
-        fileBrowserState.isAtRoot = false;
-        fileBrowserState.originalPath = null;
+        fileBrowserState.reset();
       }
     }
   } catch (error) {

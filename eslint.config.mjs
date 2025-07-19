@@ -60,5 +60,10 @@ export default [
         project: "./tsconfig.node.json"
       }
     }
+  },
+  {
+    rules: {
+      "require-atomic-updates": "off"
+    }
   }
 ];

@@ -1,15 +1,15 @@
 import Mousetrap from "mousetrap";
-import { fileBrowserState } from "$lib/state/file-browser.svelte";
-import { queue } from "$lib/state/queue.svelte";
 import { handlers } from "$/tipc";
 import { SidebarTab } from "$/types";
+import { fileBrowserState } from "$lib/state/file-browser.svelte";
 import { platformState } from "$lib/state/platform.svelte";
+import { playerState } from "$lib/state/player.svelte";
+import { queue } from "$lib/state/queue.svelte";
+import { sidebarState } from "$lib/state/sidebar.svelte";
 import { volume } from "$lib/state/volume.svelte";
 import { navigateToParent } from "./file-browser.svelte";
 import { logger } from "./logger";
 import { playNextVideo, playPreviousVideo } from "./video-playback";
-import { playerState } from "$lib/state/player.svelte";
-import { sidebarState } from "$lib/state/sidebar.svelte";
 
 type HotkeyAction = {
   context?: "file-browser" | "global" | "sidebar" | "video";
