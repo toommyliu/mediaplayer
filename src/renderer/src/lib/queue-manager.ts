@@ -1,4 +1,3 @@
-import { logger } from "./logger";
 import { playerState } from "./state/player.svelte";
 import { queue, type QueueItem } from "./state/queue.svelte";
 
@@ -15,19 +14,10 @@ export class QueueManager {
    * Add an item to the queue
    */
   public static addToQueue(item: Omit<QueueItem, "id">): boolean {
-    console.log(`[QueueManager] addToQueue called with:`, item);
-
-    // Validate required fields
-    if (!item.name || !item.path) {
-      console.warn(`[QueueManager] Invalid item - missing name or path:`, item);
-      return false;
-    }
-
     const existingItem = queue.items.find((existing) => existing.path === item.path);
 
     // TODO: allow duplicates?
     if (existingItem) {
-      console.warn(`[QueueManager] Item already exists in queue: ${item.path}`);
       return false;
     }
 
@@ -36,57 +26,21 @@ export class QueueManager {
       id: crypto.randomUUID()
     };
 
-    console.log(`[QueueManager] Adding new item to queue:`, newItem);
     queue.items = [...queue.items, newItem];
-    console.log(`[QueueManager] Queue items after addition:`, queue.items.length, "items");
     return true;
   }
 
   /**
    * Add multiple items to the queue
    */
-  public static addMultipleToQueue(
-    items: { duration?: number; name: string; path: string }[]
-  ): boolean {
-    console.log(`[QueueManager] Adding ${items.length} items to queue`);
-    let added = 0;
-    const failed: { name: string; path: string; reason: string }[] = [];
-
+  public static addMultipleToQueue(items: { duration?: number; name: string; path: string }[]) {
     for (const item of items) {
-      console.log(`[QueueManager] Processing item:`, item);
-
       if (!item.name || !item.path) {
-        failed.push({
-          name: item.name || "Unknown",
-          path: item.path || "Unknown",
-          reason: "Missing name or path"
-        });
         continue;
       }
 
-      const success = this.addToQueue(item);
-      if (success) {
-        added++;
-        console.log(`[QueueManager] Successfully added: ${item.name}`);
-      } else {
-        failed.push({ name: item.name, path: item.path, reason: "Already exists or other error" });
-      }
+      this.addToQueue(item);
     }
-
-    if (added > 0) {
-      logger.debug(`Added ${added} items to queue`);
-      console.log(
-        `[QueueManager] Successfully added ${added} items to queue. Total queue size: ${queue.items.length}`
-      );
-    }
-
-    if (failed.length > 0) {
-      logger.warn(`Failed to add ${failed.length} items to queue:`, failed);
-      console.warn(`[QueueManager] Failed to add ${failed.length} items:`, failed);
-    }
-
-    console.log(`[QueueManager] Final queue state:`, queue.items);
-    return added === items.length;
   }
 
   /**
