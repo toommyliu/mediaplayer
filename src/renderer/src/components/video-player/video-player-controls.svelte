@@ -10,18 +10,18 @@
   import Volume1 from "lucide-svelte/icons/volume-1";
   import Volume2 from "lucide-svelte/icons/volume-2";
   import VolumeX from "lucide-svelte/icons/volume-x";
-  import { queue } from "$lib/state/queue.svelte";
   import { client } from "$/tipc";
   import SettingsDialog from "$components/settings-dialog.svelte";
   import { ICON_SIZE } from "$lib/constants";
   import { makeTimeString } from "$lib/makeTimeString";
   import { playerState } from "$lib/state/player.svelte";
+  import { queue } from "$lib/state/queue.svelte";
   import { sidebarState } from "$lib/state/sidebar.svelte";
+  import { volume } from "$lib/state/volume.svelte";
   import { cn } from "$lib/utils";
   import { playNextVideo, playPreviousVideo, playVideoElement } from "$lib/video-playback";
   import Button from "$ui/button/button.svelte";
   import * as Tooltip from "$ui/tooltip/";
-  import { volume } from "$lib/state/volume.svelte";
 
   let isDragging = $state(false);
   let hoverTime = $state(0);

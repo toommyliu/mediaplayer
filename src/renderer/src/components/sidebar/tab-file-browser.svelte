@@ -8,7 +8,6 @@
   import ListRestart from "lucide-svelte/icons/list-restart";
   import Loader2 from "lucide-svelte/icons/loader-2";
   import { fade } from "svelte/transition";
-  import { fileBrowserState, type FileSystemItem } from "$lib/state/file-browser.svelte";
   import { client } from "$/tipc";
   import {
     navigateToDirectory,
@@ -17,12 +16,13 @@
   } from "$lib/file-browser.svelte";
   import { QueueManager } from "$lib/queue-manager";
   import { showItemInFolder } from "$lib/showItemInFolder";
+  import { fileBrowserState, type FileSystemItem } from "$lib/state/file-browser.svelte";
+  import { platformState } from "$lib/state/platform.svelte";
   import { playerState } from "$lib/state/player.svelte";
   import { cn } from "$lib/utils";
   import { playVideo } from "$lib/video-playback";
   import Button from "$ui/button/button.svelte";
   import * as ContextMenu from "$ui/context-menu/";
-  import { platformState } from "$lib/state/platform.svelte";
 
   const hasNoFiles = $derived(fileBrowserState.fileSystem.length === 0);
 

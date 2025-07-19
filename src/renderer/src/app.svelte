@@ -11,10 +11,10 @@
   import { QueueManager } from "$lib/queue-manager";
   import { fileBrowserState } from "$lib/state/file-browser.svelte";
   import { platformState } from "$lib/state/platform.svelte";
-  import { playVideo } from "$lib/video-playback";
-  import { client, handlers } from "./tipc";
   import { playerState } from "$lib/state/player.svelte";
   import { sidebarState } from "$lib/state/sidebar.svelte";
+  import { playVideo } from "$lib/video-playback";
+  import { client, handlers } from "./tipc";
 
   QueueManager.initialize();
 

@@ -1,7 +1,7 @@
 <script lang="ts">
+  import { makeTimeString } from "$lib/makeTimeString";
   import { playerState } from "$lib/state/player.svelte";
   import { queue } from "$lib/state/queue.svelte";
-  import { makeTimeString } from "$lib/makeTimeString";
   import { volume } from "$lib/state/volume.svelte";
 
   const { showOverlay }: { showOverlay: boolean } = $props();
