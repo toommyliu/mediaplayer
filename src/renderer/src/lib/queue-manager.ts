@@ -1,6 +1,6 @@
+import { logger } from "./logger";
 import { playerState } from "./state/player.svelte";
 import { queue, type QueueItem } from "./state/queue.svelte";
-import { logger } from "./logger";
 
 export class QueueManager {
   /**
@@ -16,6 +16,7 @@ export class QueueManager {
    */
   public static addToQueue(item: Omit<QueueItem, "id">): boolean {
     const existingItem = queue.items.find((existing) => existing.path === item.path);
+
     // TODO: allow duplicates?
     if (existingItem) {
       console.warn(`Item already exists in queue: ${item.path}`);

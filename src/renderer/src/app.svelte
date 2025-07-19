@@ -4,13 +4,13 @@
   import { ModeWatcher } from "mode-watcher";
   import { Pane, PaneGroup, PaneResizer } from "paneforge";
   import { onMount } from "svelte";
-  import { fileBrowserState } from "$lib/state/file-browser.svelte";
-  import { platformState } from "$lib/state/platform.svelte";
   import Sidebar from "$components/sidebar.svelte";
   import VideoPlayer from "$components/video-player/video-player.svelte";
   import { transformDirectoryContents } from "$lib/file-browser.svelte";
   import { logger } from "$lib/logger";
   import { QueueManager } from "$lib/queue-manager";
+  import { fileBrowserState } from "$lib/state/file-browser.svelte";
+  import { platformState } from "$lib/state/platform.svelte";
   import { playVideo } from "$lib/video-playback";
   import { client, handlers } from "./tipc";
   import { playerState } from "$lib/state/player.svelte";
@@ -127,18 +127,12 @@
       } else {
         console.warn("Invalid folderData received for add-folder-to-browser:", folderData);
         fileBrowserState.error = "Invalid folder data received.";
-        fileBrowserState.fileTree = null;
-        fileBrowserState.currentPath = null;
-        fileBrowserState.isAtRoot = false;
-        fileBrowserState.originalPath = null;
+        fileBrowserState.reset();
       }
     } catch (error) {
       console.error("Failed to load file system or add folder to queue:", error);
       fileBrowserState.error = "Failed to load file system. Please try again.";
-      fileBrowserState.fileTree = null;
-      fileBrowserState.currentPath = null;
-      fileBrowserState.isAtRoot = false;
-      fileBrowserState.originalPath = null;
+      fileBrowserState.reset();
     }
   });
 

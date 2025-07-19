@@ -24,6 +24,15 @@ class FileBrowserState {
   public get fileSystem() {
     return this.fileTree?.files ?? [];
   }
+
+  public reset() {
+    this.fileTree = null;
+    this.currentPath = null;
+    this.isAtRoot = false;
+    this.originalPath = null;
+    this.isLoading = false;
+    this.expandedFolders.clear();
+  }
 }
 
 export const fileBrowserState = new FileBrowserState();
