@@ -213,44 +213,41 @@
   });
 </script>
 
-<div class="flex h-full w-full flex-col bg-zinc-950">
-  <!-- Video container -->
-  <div
-    class={cn(
-      "group relative flex h-[90%] w-full flex-1 items-center justify-center",
-      !playerState.currentVideo &&
-        "cursor-pointer transition-all duration-300 ease-out hover:bg-slate-100/15 hover:shadow-inner hover:backdrop-blur-md"
-    )}
-    onmousemove={handleMouseMove}
-    onclick={handleClick}
-    ondblclick={handleDblClick}
-    id="video-player"
-  >
-    {#if playerState.currentVideo}
-      <video
-        bind:this={playerState.videoElement}
-        src={playerState.currentVideo}
-        class="video-no-controls h-full w-full cursor-pointer object-contain"
-        onloadstart={handleLoadStart}
-        onloadeddata={handleLoadedData}
-        onloadedmetadata={handleLoadedMetadata}
-        ontimeupdate={handleTimeUpdate}
-        onseeked={handleSeeked}
-        onerror={handleError}
-        oncanplay={handleCanPlay}
-        onplay={handlePlay}
-        onpause={handlePause}
-        onended={handleEnded}
-        preload="metadata"
-        crossorigin="anonymous"
-        controls={false}
-        controlslist="nodownload nofullscreen noremoteplayback"
-        disablepictureinpicture
-      >
-      </video>
+<div
+  class={cn(
+    "group relative flex h-[90%] w-full flex-1 items-center justify-center",
+    !playerState.currentVideo &&
+      "cursor-pointer transition-all duration-300 ease-out hover:bg-slate-100/15 hover:shadow-inner hover:backdrop-blur-md"
+  )}
+  onmousemove={handleMouseMove}
+  onclick={handleClick}
+  ondblclick={handleDblClick}
+  id="video-player"
+>
+  {#if playerState.currentVideo}
+    <video
+      bind:this={playerState.videoElement}
+      src={playerState.currentVideo}
+      class="video-no-controls h-full w-full cursor-pointer object-contain"
+      onloadstart={handleLoadStart}
+      onloadeddata={handleLoadedData}
+      onloadedmetadata={handleLoadedMetadata}
+      ontimeupdate={handleTimeUpdate}
+      onseeked={handleSeeked}
+      onerror={handleError}
+      oncanplay={handleCanPlay}
+      onplay={handlePlay}
+      onpause={handlePause}
+      onended={handleEnded}
+      preload="metadata"
+      crossorigin="anonymous"
+      controls={false}
+      controlslist="nodownload nofullscreen noremoteplayback"
+      disablepictureinpicture
+    >
+    </video>
 
-      <VideoPlayerTitle {showOverlay} />
-      <VideoPlayerControls {showOverlay} />
-    {/if}
-  </div>
+    <VideoPlayerTitle {showOverlay} />
+    <VideoPlayerControls {showOverlay} />
+  {/if}
 </div>

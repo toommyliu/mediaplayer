@@ -4,14 +4,14 @@
   import { ModeWatcher } from "mode-watcher";
   import { Pane, PaneGroup, PaneResizer } from "paneforge";
   import { onMount } from "svelte";
-  import { fileBrowserState, platformState, playerState, sidebarState } from "./state.svelte";
-  import { client, handlers } from "./tipc";
   import Sidebar from "$components/sidebar.svelte";
   import VideoPlayer from "$components/video-player/video-player.svelte";
   import { transformDirectoryContents } from "$lib/file-browser.svelte";
   import { logger } from "$lib/logger";
   import { QueueManager } from "$lib/queue-manager";
   import { playVideo } from "$lib/video-playback";
+  import { fileBrowserState, platformState, playerState, sidebarState } from "./state.svelte";
+  import { client, handlers } from "./tipc";
 
   QueueManager.initialize();
 
@@ -171,7 +171,9 @@
             </div>
           {/if}
 
-          <VideoPlayer />
+          <div class="flex h-full w-full flex-col bg-zinc-950">
+            <VideoPlayer />
+          </div>
         </main>
       </Pane>
 
