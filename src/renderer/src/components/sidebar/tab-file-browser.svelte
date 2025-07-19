@@ -8,8 +8,10 @@
   import ListRestart from "lucide-svelte/icons/list-restart";
   import Loader2 from "lucide-svelte/icons/loader-2";
   import { fade } from "svelte/transition";
+  import { queue } from "$/lib/state/queue.svelte";
   import { client } from "$/tipc";
   import {
+    loadFileSystemStructure,
     navigateToDirectory,
     navigateToParent,
     transformDirectoryContents
@@ -45,7 +47,7 @@
       toggleFolder(item.path);
       fileBrowserState.fileTree = { ...fileBrowserState.fileTree! };
     } else if (item.duration !== undefined) {
-      playVideo(`file://${item.path}`);
+      playVideo(item.path);
     }
   }
 
@@ -250,81 +252,13 @@
   async function resetAndBrowse() {
     console.log("resetAndBrowse called");
 
-    fileBrowserState.fileTree = null;
-    fileBrowserState.expandedFolders.clear();
-    fileBrowserState.loadingFolders.clear();
-
-    // Clear the existing queue when browsing a new folder
-    QueueManager.clearQueue();
-    playerState.currentTime = 0;
-    playerState.duration = 0;
+    fileBrowserState.reset();
+    queue.clear();
+    playerState.reset();
 
     try {
       fileBrowserState.isLoading = true;
-      const res = await client.selectFileOrFolder();
-      console.log("Selected file or folder:", res);
-
-      // Single file selected
-      if (res.type === "file") {
-        // Add single file to queue and play it
-        const fileName = res.path.split(/[/\\]/).pop() ?? "Unknown Video";
-        QueueManager.addToQueue({
-          name: fileName,
-          path: res.path,
-          duration: undefined
-        });
-        playVideo(`file://${res.path}`);
-        return;
-      }
-
-      if (res.type === "folder") {
-        fileBrowserState.originalPath = res.rootPath;
-
-        const dirResult = await client.readDirectory(res.rootPath);
-        console.log("Directory result:", dirResult);
-        if (dirResult) {
-          fileBrowserState.fileTree = {
-            rootPath: dirResult.currentPath,
-            files: transformDirectoryContents(dirResult)
-          };
-          console.log("Final files", fileBrowserState.fileTree.files);
-          fileBrowserState.currentPath = dirResult.currentPath;
-          fileBrowserState.isAtRoot = dirResult.isAtRoot;
-          console.log(
-            "Set state - currentPath:",
-            fileBrowserState.currentPath,
-            "isAtRoot:",
-            fileBrowserState.isAtRoot
-          );
-
-          const allFiles = fileBrowserState.fileTree.files;
-          const videoFiles = allFiles.filter(
-            (file) => file.type === "video" && file.duration !== undefined && file.path && file.name
-          );
-
-          console.log(`[FileBrowser] Found ${videoFiles.length} video files in directory`);
-
-          if (videoFiles.length > 0) {
-            console.log(`[FileBrowser] Attempting to add ${videoFiles.length} videos to queue`);
-            const success = QueueManager.addMultipleToQueue(
-              videoFiles.map((file) => ({
-                name: file.name!,
-                path: file.path!,
-                duration: file.duration
-              }))
-            );
-            console.log(`[FileBrowser] Add to queue result: ${success}`);
-
-            if (success) {
-              console.log(`[FileBrowser] Successfully added ${videoFiles.length} videos to queue`);
-            } else {
-              console.warn(`[FileBrowser] Failed to add videos to queue`);
-            }
-          } else {
-            console.log("[FileBrowser] No video files found to add to queue");
-          }
-        }
-      }
+      await loadFileSystemStructure();
     } catch (error) {
       console.error("Failed to browse and load directory:", error);
       fileBrowserState.error = "Failed to load directory. Please try again.";

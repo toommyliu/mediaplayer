@@ -35,7 +35,7 @@
       if (queueLength > 1) {
         if (currentIndex < queueLength - 1) {
           const nextItem = queue.items[currentIndex + 1];
-          nextVideoToPlay = `file://${nextItem.path}`;
+          nextVideoToPlay = nextItem.path;
         } else if (currentIndex > 0) {
           const prevItem = queue.items[currentIndex - 1];
           nextVideoToPlay = `file://${prevItem.path}`;
@@ -133,7 +133,7 @@
 
             <!-- Video Info -->
             <div class="min-w-0 flex-1">
-              <div class="truncate font-medium text-zinc-200">
+              <div class="font-medium text-zinc-200">
                 {item.name ?? "Unknown Video"}
               </div>
               {#if item.duration}

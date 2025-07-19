@@ -1,5 +1,3 @@
-// Hotkey recording utility for capturing key combinations
-
 export type RecordedKeys = {
   display: string;
   keys: string[];
@@ -100,7 +98,6 @@ export class HotkeyRecorder {
     ev.stopPropagation();
 
     if (this.pressedKeys.size > 0) {
-      // eslint-disable-next-line no-restricted-globals
       setTimeout(() => {
         if (this.isRecording && this.pressedKeys.size > 0) {
           this.stopRecording();
@@ -113,7 +110,6 @@ export class HotkeyRecorder {
     const { key, metaKey, ctrlKey, altKey, shiftKey } = ev;
     const modifiers: string[] = [];
 
-    // Platform-specific modifier
     if (metaKey) {
       modifiers.push("cmd");
     } else if (ctrlKey) {
@@ -144,7 +140,6 @@ export class HotkeyRecorder {
     } else if (key.startsWith("F") && /^F\d+$/.test(key)) {
       mainKey = key.toLowerCase();
     } else if (key.length === 1) {
-      // Regular character key
       mainKey = key.toLowerCase();
     } else if (key === "Meta" || key === "Control" || key === "Alt" || key === "Shift") {
       // Don't record bare modifier keys
@@ -179,10 +174,8 @@ export class HotkeyRecorder {
   }
 }
 
-// Global recorder instance
 export const hotkeyRecorder = new HotkeyRecorder();
 
-// Utility function to format key combinations for display
 export function formatHotkeyDisplay(keys: string[] | string): string {
   if (typeof keys === "string") {
     return keys;

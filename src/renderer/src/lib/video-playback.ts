@@ -19,10 +19,14 @@ export function playVideo(src: string): void {
   playerState.isLoading = true;
   playerState.error = null;
 
+  const videoUrl = src.startsWith("file://") ? src : `file://${src}`;
+  playerState.currentVideo = videoUrl;
+
   const queueIndex = queue.items.findIndex((item) => item.path === src);
 
   if (queueIndex === -1) {
     console.warn("Video not found in queue:", src);
+    console.warn("Current queue items:", queue.items);
     return;
   }
 
@@ -62,6 +66,10 @@ export function playPreviousVideo(): void {
   console.log("previousVideo: repeat mode:", queue.repeatMode);
 
   queue.index = newIndex;
+  const currentItem = queue.currentItem;
+  if (currentItem) {
+    playerState.currentVideo = `file://${currentItem.path}`;
+  }
   playerState.currentTime = 0;
 
   if (playerState.videoElement) {
@@ -97,6 +105,10 @@ export function playNextVideo(): void {
   console.log("nextVideo: repeat mode:", queue.repeatMode);
 
   queue.index = newIndex;
+  const currentItem = queue.currentItem;
+  if (currentItem) {
+    playerState.currentVideo = `file://${currentItem.path}`;
+  }
   playerState.currentTime = 0;
 
   if (playerState.videoElement) {
