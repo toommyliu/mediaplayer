@@ -133,7 +133,7 @@
 
             <!-- Video Info -->
             <div class="min-w-0 flex-1">
-              <div class="truncate font-medium text-zinc-200">
+              <div class="font-medium text-zinc-200">
                 {item.name ?? "Unknown Video"}
               </div>
               {#if item.duration}

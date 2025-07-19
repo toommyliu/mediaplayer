@@ -16,6 +16,14 @@ class PlayerState {
   public repeatMode = $state<"all" | "off" | "one">("off");
 
   public videoElement = $state<HTMLVideoElement | null>(null);
+
+  public currentVideo = $state<string | null>(null);
+
+  public reset() {
+    this.isPlaying = false;
+    this.currentTime = 0;
+    this.duration = 0;
+  }
 }
 
 export const playerState = new PlayerState();

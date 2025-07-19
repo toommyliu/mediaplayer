@@ -10,6 +10,11 @@ class QueueState {
   }
 
   public repeatMode = $state<RepeatMode>(RepeatMode.Off);
+
+  public clear() {
+    this.items = [];
+    this.index = 0;
+  }
 }
 
 export const queue = new QueueState();

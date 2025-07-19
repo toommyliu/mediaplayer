@@ -8,9 +8,9 @@
   import ListRestart from "lucide-svelte/icons/list-restart";
   import Loader2 from "lucide-svelte/icons/loader-2";
   import { fade } from "svelte/transition";
+  import { queue } from "$/lib/state/queue.svelte";
   import { client } from "$/tipc";
   import {
-    getAllVideoFilesRecursive,
     loadFileSystemStructure,
     navigateToDirectory,
     navigateToParent,
@@ -252,19 +252,12 @@
   async function resetAndBrowse() {
     console.log("resetAndBrowse called");
 
-    fileBrowserState.fileTree = null;
-    fileBrowserState.expandedFolders.clear();
-    fileBrowserState.loadingFolders.clear();
-
-    // Clear the existing queue when browsing a new folder
-    QueueManager.clearQueue();
-    playerState.currentTime = 0;
-    playerState.duration = 0;
+    fileBrowserState.reset();
+    queue.clear();
+    playerState.reset();
 
     try {
       fileBrowserState.isLoading = true;
-
-      // Use the centralized loadFileSystemStructure function
       await loadFileSystemStructure();
     } catch (error) {
       console.error("Failed to browse and load directory:", error);
