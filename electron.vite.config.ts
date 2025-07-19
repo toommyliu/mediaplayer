@@ -23,7 +23,8 @@ export default defineConfig({
         $ui: resolve("src/renderer/src/components/ui/"),
         $main: resolve("src/main/"),
         $lib: resolve("src/renderer/src/lib/"),
-        $: resolve("src/renderer/src/")
+        $: resolve("src/renderer/src/"),
+        $hooks: resolve("src/renderer/src/hooks/")
       }
     }
   }

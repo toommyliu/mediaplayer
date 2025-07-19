@@ -614,4 +614,4 @@
   </div>
 {/if}
 
-<SettingsDialog bind:open={showSettingsDialog} />
+<SettingsDialog open={true} />

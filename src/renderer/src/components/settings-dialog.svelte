@@ -13,8 +13,6 @@
 
   const SettingsCategory = {
     General: "general",
-    Playback: "playback",
-    Audio: "audio",
     Shortcuts: "shortcuts"
   } as const;
 
@@ -29,7 +27,7 @@
     }
   ];
 
-  let selectedCategory: string = $state(SettingsCategory.General);
+  let selectedCategory: string = $state(SettingsCategory.Shortcuts);
 </script>
 
 <Dialog.Root bind:open={isOpen}>

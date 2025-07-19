@@ -31,8 +31,8 @@ export class HotkeyRecorder {
     this.onRecordComplete = onComplete;
     this.onRecordCancel = onCancel;
 
-    document.addEventListener("keydown", this.keyDownRef);
-    document.addEventListener("keyup", this.keyUpRef);
+    window.addEventListener("keydown", this.keyDownRef, { capture: true });
+    window.addEventListener("keyup", this.keyUpRef, { capture: true });
   }
 
   public stopRecording(): void {
@@ -40,11 +40,11 @@ export class HotkeyRecorder {
 
     this.isRecording = false;
 
-    document.removeEventListener("keydown", this.keyDownRef);
-    document.removeEventListener("keyup", this.keyUpRef);
+    window.removeEventListener("keydown", this.keyDownRef, { capture: true });
+    window.removeEventListener("keyup", this.keyUpRef, { capture: true });
 
-    if (this.pressedKeys.size > 0 && this.onRecordComplete) {
-      const result = this.formatKeys();
+    if (this.onRecordComplete) {
+      const result = this.pressedKeys.size > 0 ? this.formatKeys() : { keys: [], display: "" };
       this.onRecordComplete(result);
     }
 
@@ -56,8 +56,8 @@ export class HotkeyRecorder {
 
     this.isRecording = false;
 
-    document.removeEventListener("keydown", this.keyDownRef);
-    document.removeEventListener("keyup", this.keyUpRef);
+    window.removeEventListener("keydown", this.keyDownRef, { capture: true });
+    window.removeEventListener("keyup", this.keyUpRef, { capture: true });
 
     if (this.onRecordCancel) {
       this.onRecordCancel();
@@ -78,9 +78,10 @@ export class HotkeyRecorder {
     ev.preventDefault();
     ev.stopPropagation();
 
-    // Handle special case for Escape to cancel
     if (ev.key === "Escape") {
-      this.cancelRecording();
+      // Complete recording with empty keys when ESC is pressed
+      this.pressedKeys.clear();
+      this.stopRecording();
       return;
     }
 

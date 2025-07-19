@@ -11,8 +11,14 @@ class VolumeState {
 
   public set value(newValue: number) {
     this._value = Math.max(0, Math.min(1, newValue));
+
+    if (this.value === 0) {
+      this.isMuted = true;
+    }
+
     if (playerState.videoElement) {
       playerState.videoElement.volume = this._value;
+      playerState.videoElement.muted = this._isMuted;
     }
   }
 
