@@ -10,6 +10,7 @@ import { volume } from "$lib/state/volume.svelte";
 import { navigateToParent } from "./file-browser.svelte";
 import { logger } from "./logger";
 import { playNextVideo, playPreviousVideo } from "./video-playback";
+import { SEEK_TIME_STEP, VOLUME_STEP } from "./constants";
 
 type HotkeyAction = {
   context?: "file-browser" | "global" | "sidebar" | "video";
@@ -30,10 +31,6 @@ class HotkeyConfig {
   categories = $state<HotkeyCategory[]>([]);
 
   modKey = $state<string>("");
-
-  seekTime = $state(10);
-
-  volumeStep = $state(0.1);
 
   enabled = $state(true);
 
@@ -82,7 +79,7 @@ class HotkeyConfig {
           },
           {
             id: "seekBackward",
-            description: `Seek backward ${this.seekTime}s`,
+            description: "Seek backward",
             keys: ["left"],
             handler: this.seekBackward,
             context: "video",
@@ -90,7 +87,7 @@ class HotkeyConfig {
           },
           {
             id: "seekForward",
-            description: `Seek forward ${this.seekTime}s`,
+            description: "Seek forward",
             keys: ["right"],
             handler: this.seekForward,
             context: "video",
@@ -217,7 +214,7 @@ class HotkeyConfig {
   private readonly seekBackward = (ev: KeyboardEvent): void => {
     ev.preventDefault();
     if (queue.currentItem) {
-      const newTime = Math.max(0, playerState.currentTime - this.seekTime);
+      const newTime = Math.max(0, playerState.currentTime - SEEK_TIME_STEP);
       playerState.currentTime = newTime;
       if (playerState.videoElement) {
         playerState.videoElement.currentTime = newTime;
@@ -228,7 +225,7 @@ class HotkeyConfig {
   private readonly seekForward = (ev: KeyboardEvent): void => {
     ev.preventDefault();
     if (queue.currentItem) {
-      const newTime = Math.min(playerState.duration, playerState.currentTime + this.seekTime);
+      const newTime = Math.min(playerState.duration, playerState.currentTime + SEEK_TIME_STEP);
       playerState.currentTime = newTime;
       if (playerState.videoElement) {
         playerState.videoElement.currentTime = newTime;
@@ -239,7 +236,7 @@ class HotkeyConfig {
   private readonly volumeUp = (ev: KeyboardEvent): void => {
     ev.preventDefault();
     if (playerState.videoElement) {
-      const newVolume = Math.min(1, volume.value + this.volumeStep);
+      const newVolume = Math.min(1, volume.value + VOLUME_STEP);
       volume.value = newVolume;
       volume.isMuted = false;
     }
@@ -248,7 +245,7 @@ class HotkeyConfig {
   private readonly volumeDown = (ev: KeyboardEvent): void => {
     ev.preventDefault();
     if (playerState.videoElement) {
-      const newVolume = Math.max(0, volume.value - this.volumeStep);
+      const newVolume = Math.max(0, volume.value - VOLUME_STEP);
       volume.value = newVolume;
       volume.isMuted = newVolume === 0;
     }
@@ -302,23 +299,6 @@ class HotkeyConfig {
       }
     }
   };
-
-  // Configuration methods
-  updateSeekTime(newTime: number): void {
-    this.seekTime = newTime;
-    // Update descriptions
-    const playbackCategory = this.categories.find((c) => c.name === "Playback");
-    if (playbackCategory) {
-      const seekBackward = playbackCategory.actions.find((a) => a.id === "seekBackward");
-      const seekForward = playbackCategory.actions.find((a) => a.id === "seekForward");
-      if (seekBackward) seekBackward.description = `Seek backward ${newTime}s`;
-      if (seekForward) seekForward.description = `Seek forward ${newTime}s`;
-    }
-  }
-
-  updateVolumeStep(newStep: number): void {
-    this.volumeStep = Math.max(0.01, Math.min(0.5, newStep));
-  }
 
   updateHotkey(actionId: string, newKeys: string[]): boolean {
     for (const category of this.categories) {

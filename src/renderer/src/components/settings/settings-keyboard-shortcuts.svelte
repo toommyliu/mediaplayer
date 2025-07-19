@@ -9,8 +9,6 @@
   let isRecording = $state(false);
   let recordedKeys = $state<string>("");
   let originalKeys = $state<string>("");
-  let seekTime = $state(hotkeyConfig.isInitialized ? hotkeyConfig.seekTime : 10);
-  let volumeStep = $state(hotkeyConfig.isInitialized ? hotkeyConfig.volumeStep * 100 : 10);
   let hasUnsavedChanges = $state(false);
   let activeTab = $state<string>("");
 
@@ -159,16 +157,6 @@
     hotkeyConfig.toggleAction(actionId, enabled);
   }
 
-  function updateSeekTime(): void {
-    if (!hotkeyConfig.isInitialized) return;
-    hotkeyConfig.updateSeekTime(seekTime);
-  }
-
-  function updateVolumeStep(): void {
-    if (!hotkeyConfig.isInitialized) return;
-    hotkeyConfig.updateVolumeStep(volumeStep / 100);
-  }
-
   function resetToDefaults(): void {
     const shouldReset = confirm("This will reset all hotkeys to their default values. Continue?");
     if (!shouldReset) return;
@@ -179,11 +167,7 @@
     }
 
     hotkeyConfig.disable();
-    hotkeyConfig.seekTime = 10;
-    hotkeyConfig.volumeStep = 0.1;
     hotkeyConfig.enable();
-    seekTime = hotkeyConfig.seekTime;
-    volumeStep = hotkeyConfig.volumeStep * 100;
 
     // Cancel any current edits
     cancelEdit();
@@ -191,34 +175,6 @@
 </script>
 
 <div class="flex h-full flex-col space-y-8">
-  <div class="flex-shrink-0 space-y-4">
-    <!-- Global Settings -->
-    <div class="border-border bg-muted grid grid-cols-1 gap-4 rounded-lg border p-4 sm:grid-cols-2">
-      <div class="space-y-2">
-        <label class="text-foreground text-sm font-medium"> Seek Time (seconds) </label>
-        <input
-          type="number"
-          bind:value={seekTime}
-          onchange={updateSeekTime}
-          min="1"
-          max="60"
-          class="border-input bg-background text-foreground focus:border-ring focus:ring-ring/20 w-full rounded-md border px-3 py-2 text-sm focus:ring-2"
-        />
-      </div>
-      <div class="space-y-2">
-        <label class="text-foreground text-sm font-medium"> Volume Step (%) </label>
-        <input
-          type="number"
-          bind:value={volumeStep}
-          onchange={updateVolumeStep}
-          min="1"
-          max="50"
-          class="border-input bg-background text-foreground focus:border-ring focus:ring-ring/20 w-full rounded-md border px-3 py-2 text-sm focus:ring-2"
-        />
-      </div>
-    </div>
-  </div>
-
   <div class="flex h-full min-h-0 flex-col space-y-6">
     <Tabs.Root bind:value={activeTab} class="flex h-full flex-col">
       <Tabs.List
