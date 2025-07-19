@@ -4,14 +4,17 @@
   import { ModeWatcher } from "mode-watcher";
   import { Pane, PaneGroup, PaneResizer } from "paneforge";
   import { onMount } from "svelte";
+  import { fileBrowserState } from "$lib/state/file-browser.svelte";
+  import { platformState } from "$lib/state/platform.svelte";
   import Sidebar from "$components/sidebar.svelte";
   import VideoPlayer from "$components/video-player/video-player.svelte";
   import { transformDirectoryContents } from "$lib/file-browser.svelte";
   import { logger } from "$lib/logger";
   import { QueueManager } from "$lib/queue-manager";
   import { playVideo } from "$lib/video-playback";
-  import { fileBrowserState, platformState, playerState, sidebarState } from "./state.svelte";
   import { client, handlers } from "./tipc";
+  import { playerState } from "$lib/state/player.svelte";
+  import { sidebarState } from "$lib/state/sidebar.svelte";
 
   QueueManager.initialize();
 
@@ -144,7 +147,6 @@
     platformState.isWindows = res.isWindows;
     platformState.isMac = res.isMacOS;
     platformState.isLinux = res.isLinux;
-    platformState.pathSep = res.pathSep;
 
     await import("./lib/input.svelte");
   });

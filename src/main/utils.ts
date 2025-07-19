@@ -1,5 +1,5 @@
-import { readdir, stat, chmod } from "node:fs/promises";
-import { extname, join, dirname, resolve } from "node:path";
+import { chmod, readdir, stat } from "node:fs/promises";
+import { dirname, extname, join, resolve } from "node:path";
 import { promisify } from "node:util";
 import ffmpegInstaller from "@ffmpeg-installer/ffmpeg";
 import ffprobeInstaller from "@ffprobe-installer/ffprobe";
@@ -7,6 +7,8 @@ import { app, BrowserWindow, dialog, type OpenDialogOptions } from "electron";
 import ffmpeg from "fluent-ffmpeg";
 import { VIDEO_EXTENSIONS } from "./constants";
 import { logger } from "./logger";
+
+const makeFilePath = (path: string): string => `file://${path}`;
 
 const ffprobeAsync = promisify(ffmpeg.ffprobe);
 let isFfmpegInitialized = false;
@@ -129,7 +131,7 @@ export async function showFilePicker(
         logger.debug(`previousPath set to: ${previousPath}`);
         return {
           type: "file",
-          path: selectedPath
+          path: makeFilePath(selectedPath)
         };
       } else if (stats.isDirectory()) {
         // eslint-disable-next-line require-atomic-updates
@@ -172,7 +174,7 @@ async function buildFileTree(dirPath: string): Promise<PickerResult> {
       const filePath = join(dirPath, entry.name);
       if (VIDEO_EXTENSIONS.some((ext) => extname(filePath).toLowerCase() === `.${ext}`)) {
         ret.tree.push({
-          path: filePath,
+          path: makeFilePath(filePath),
           name: entry.name,
           type: "video",
           duration: await getVideoDuration(filePath)

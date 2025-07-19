@@ -1,6 +1,7 @@
 <script lang="ts">
-  import { playerState } from "$/state.svelte";
   import { loadFileSystemStructure } from "$lib/file-browser.svelte";
+  import { playerState } from "$lib/state/player.svelte";
+  import { queue } from "$lib/state/queue.svelte";
   import { cn } from "$lib/utils";
   import { playNextVideo } from "$lib/video-playback";
   import VideoPlayerControls from "./video-player-controls.svelte";
@@ -185,12 +186,12 @@
     }
 
     if (target.tagName === "VIDEO" || target.id === "video-player") {
-      if (!playerState.currentVideo) {
+      if (!queue.currentItem) {
         await loadFileSystemStructure();
-      } else if (playerState.videoElement.paused) {
-        await playerState.videoElement.play();
+      } else if (playerState.videoElement!.paused) {
+        await playerState.videoElement!.play();
       } else {
-        playerState.videoElement.pause();
+        playerState.videoElement!.pause();
       }
     }
   }
@@ -204,19 +205,19 @@
     }
   });
 
-  $effect(() => {
-    if (playerState.videoElement) {
-      playerState.videoElement.volume = playerState.isMuted ? 0 : playerState.volume;
-      playerState.videoElement.muted = playerState.isMuted;
-      playerState.videoElement = playerState.videoElement;
-    }
-  });
+  // $effect(() => {
+  //   if (playerState.videoElement) {
+  //     playerState.videoElement.volume = playerState.isMuted ? 0 : playerState.volume;
+  //     playerState.videoElement.muted = playerState.isMuted;
+  //     playerState.videoElement = playerState.videoElement;
+  //   }
+  // });
 </script>
 
 <div
   class={cn(
     "group relative flex h-[90%] w-full flex-1 items-center justify-center",
-    !playerState.currentVideo &&
+    !queue.currentItem &&
       "cursor-pointer transition-all duration-300 ease-out hover:bg-slate-100/15 hover:shadow-inner hover:backdrop-blur-md"
   )}
   onmousemove={handleMouseMove}
@@ -224,10 +225,10 @@
   ondblclick={handleDblClick}
   id="video-player"
 >
-  {#if playerState.currentVideo}
+  {#if queue.currentItem}
     <video
       bind:this={playerState.videoElement}
-      src={playerState.currentVideo}
+      src={queue.currentItem.path}
       class="video-no-controls h-full w-full cursor-pointer object-contain"
       onloadstart={handleLoadStart}
       onloadeddata={handleLoadedData}
@@ -240,7 +241,6 @@
       onpause={handlePause}
       onended={handleEnded}
       preload="metadata"
-      crossorigin="anonymous"
       controls={false}
       controlslist="nodownload nofullscreen noremoteplayback"
       disablepictureinpicture

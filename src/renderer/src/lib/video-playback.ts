@@ -1,5 +1,6 @@
-import { playerState } from "../state.svelte";
 import { logger } from "./logger";
+import { playerState } from "./state/player.svelte";
+import { queue } from "./state/queue.svelte";
 
 export async function playVideoElement() {
   await playerState.videoElement?.play().catch((error) => {
@@ -18,19 +19,14 @@ export function playVideo(src: string): void {
   playerState.isLoading = true;
   playerState.error = null;
 
-  const normalizedSrc = src.startsWith("file://") ? src : `file://${src}`;
-
-  // Find the item in the queue by path
-  const queueIndex = playerState.queue.findIndex((item) => `file://${item.path}` === normalizedSrc);
+  const queueIndex = queue.items.findIndex((item) => item.path === src);
 
   if (queueIndex === -1) {
-    // Video not in queue - this shouldn't happen in the new queue-only system
-    console.warn("Video not found in queue:", normalizedSrc);
+    console.warn("Video not found in queue:", src);
     return;
   }
 
-  playerState.currentIndex = queueIndex;
-
+  queue.index = queueIndex;
   playerState.currentTime = 0;
 
   if (playerState.videoElement) {
@@ -43,14 +39,14 @@ export function playVideo(src: string): void {
  * Plays the previous video in the queue, respecting repeat modes.
  */
 export function playPreviousVideo(): void {
-  if (!playerState.videoElement || !playerState.currentVideo) return;
-  if (playerState.queue.length === 0) return;
+  if (!playerState.videoElement || !queue.currentItem) return;
+  if (queue.items.length === 0) return;
 
-  let newIndex = playerState.currentIndex - 1;
+  let newIndex = queue.index - 1;
 
   // Handle repeat modes when reaching the beginning of the queue
   if (newIndex < 0) {
-    if (playerState.repeatMode === "all") {
+    if (queue.repeatMode === "all") {
       // Loop back to the last video
       newIndex = playerState.queue.length - 1;
     } else {

@@ -10,15 +10,18 @@
   import Volume1 from "lucide-svelte/icons/volume-1";
   import Volume2 from "lucide-svelte/icons/volume-2";
   import VolumeX from "lucide-svelte/icons/volume-x";
-  import { playerState, sidebarState } from "$/state.svelte";
+  import { queue } from "$lib/state/queue.svelte";
   import { client } from "$/tipc";
   import SettingsDialog from "$components/settings-dialog.svelte";
   import { ICON_SIZE } from "$lib/constants";
   import { makeTimeString } from "$lib/makeTimeString";
+  import { playerState } from "$lib/state/player.svelte";
+  import { sidebarState } from "$lib/state/sidebar.svelte";
   import { cn } from "$lib/utils";
   import { playNextVideo, playPreviousVideo, playVideoElement } from "$lib/video-playback";
   import Button from "$ui/button/button.svelte";
   import * as Tooltip from "$ui/tooltip/";
+  import { volume } from "$lib/state/volume.svelte";
 
   let isDragging = $state(false);
   let hoverTime = $state(0);
@@ -213,23 +216,23 @@
   };
 
   const togglePlay = async (): Promise<void> => {
-    if (!playerState.videoElement || !playerState.currentVideo) return;
+    if (!playerState.videoElement || !queue.currentItem) return;
 
     if (playerState.isPlaying) {
       playerState.videoElement.pause();
       playerState.isPlaying = false;
     } else {
       await playVideoElement();
-      // eslint-disable-next-line require-atomic-updates
       playerState.isPlaying = true;
     }
   };
 
   const toggleMute = (): void => {
-    playerState.isMuted = !playerState.isMuted;
+    volume.isMuted = !volume.isMuted;
+
     if (playerState.videoElement) {
-      playerState.videoElement.muted = playerState.isMuted;
-      playerState.videoElement.volume = playerState.isMuted ? 0 : playerState.volume;
+      playerState.videoElement.muted = volume.isMuted;
+      playerState.videoElement.volume = volume.isMuted ? 0 : volume.value;
     }
   };
 
@@ -243,14 +246,9 @@
     const newVolume = percent;
     const newMuted = percent === 0;
 
-    if (playerState.volume !== newVolume || playerState.isMuted !== newMuted) {
-      playerState.volume = newVolume;
-      playerState.isMuted = newMuted;
-
-      if (playerState.videoElement) {
-        playerState.videoElement.volume = newVolume;
-        playerState.videoElement.muted = newMuted;
-      }
+    if (volume.value !== newVolume || volume.isMuted !== newMuted) {
+      volume.value = newVolume;
+      volume.isMuted = newMuted;
     }
   };
 
@@ -267,14 +265,9 @@
       const rect = volumeBar.getBoundingClientRect();
       const percent = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
 
-      if (playerState.volume !== percent) {
-        playerState.volume = percent;
-        playerState.isMuted = percent === 0;
-
-        if (playerState.videoElement) {
-          playerState.videoElement.volume = percent;
-          playerState.videoElement.muted = percent === 0;
-        }
+      if (volume.value !== percent) {
+        volume.value = percent;
+        volume.isMuted = percent === 0;
       }
 
       rafId = null;
@@ -417,7 +410,7 @@
               size="icon"
               onclick={playPreviousVideo}
               class="h-8 w-8 text-white transition-all duration-200 hover:bg-white/20 hover:text-blue-400 focus-visible:ring-blue-400"
-              disabled={!playerState.currentVideo || playerState.isLoading}
+              disabled={!queue.currentItem || playerState.isLoading}
             >
               <Rewind size={ICON_SIZE} />
             </Button>
@@ -437,8 +430,7 @@
               size="icon"
               onclick={togglePlay}
               class="h-8 w-8 text-white transition-all duration-200 hover:bg-white/20 hover:text-blue-400 focus-visible:ring-blue-400"
-              disabled={!playerState.currentVideo || playerState.isLoading}
-              aria-label={playerState.isPlaying ? "Pause video" : "Play video"}
+              disabled={!queue.currentItem || playerState.isLoading}
             >
               {#if playerState.isPlaying}
                 <Pause size={ICON_SIZE} />
@@ -462,7 +454,7 @@
               size="icon"
               onclick={playNextVideo}
               class="h-8 w-8 text-white transition-all duration-200 hover:bg-white/20 hover:text-blue-400 focus-visible:ring-blue-400"
-              disabled={!playerState.currentVideo || playerState.isLoading}
+              disabled={!queue.currentItem || playerState.isLoading}
             >
               <FastForward size={ICON_SIZE} />
             </Button>
@@ -492,11 +484,10 @@
               size="icon"
               onclick={toggleMute}
               class="h-8 w-8 text-white transition-all duration-200 hover:bg-white/20 hover:text-blue-400 focus-visible:ring-blue-400"
-              aria-label={playerState.isMuted ? "Unmute (M)" : "Mute (M)"}
             >
-              {#if playerState.isMuted || playerState.volume === 0}
+              {#if volume.isMuted ?? volume.value === 0}
                 <VolumeX size={ICON_SIZE} />
-              {:else if playerState.volume <= 0.33}
+              {:else if volume.value <= 0.33}
                 <Volume1 size={ICON_SIZE} />
               {:else}
                 <Volume2 size={ICON_SIZE} />
@@ -504,7 +495,7 @@
             </Button>
           </Tooltip.Trigger>
           <Tooltip.Content>
-            <p>{playerState.isMuted ? "Unmute (M)" : "Mute (M)"}</p>
+            <p>{volume.isMuted ? "Unmute" : "Mute"}</p>
           </Tooltip.Content>
         </Tooltip.Root>
       </Tooltip.Provider>
@@ -524,11 +515,6 @@
           onclick={handleVolumeClick}
           onmousedown={handleVolumeMouseDown}
           role="slider"
-          aria-label="Volume control"
-          aria-valuemin={0}
-          aria-valuemax={1}
-          aria-valuenow={playerState.isMuted ? 0 : playerState.volume}
-          aria-valuetext={`Volume ${Math.round((playerState.isMuted ? 0 : playerState.volume) * 100)}%`}
           tabindex={0}
         >
           <div
@@ -536,7 +522,7 @@
               "absolute inset-0 h-full rounded-full bg-blue-500",
               !isVolumeDragging && "transition-all duration-200"
             )}
-            style="width: {(playerState.isMuted ? 0 : playerState.volume) * 100}%"
+            style="width: {(volume.isMuted ? 0 : volume.value) * 100}%"
             aria-hidden="true"
           ></div>
 
@@ -547,7 +533,7 @@
               !isVolumeDragging && "transition-all duration-100",
               isVolumeDragging || isVolumeHovering ? "opacity-100" : "opacity-0"
             )}
-            style="left: {(playerState.isMuted ? 0 : playerState.volume) *
+            style="left: {(volume.isMuted ? 0 : volume.value) *
               100}%; transform: translateX(-50%) translateY(-50%); z-index: 10;"
             aria-hidden="true"
           ></div>

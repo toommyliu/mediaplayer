@@ -3,8 +3,8 @@
   import { cubicOut } from "svelte/easing";
   import { fly } from "svelte/transition";
   /* eslint-enable import-x/no-duplicates */
-  import { sidebarState } from "$/state.svelte";
   import { SidebarTab } from "$/types";
+  import { sidebarState } from "$lib/state/sidebar.svelte";
   import * as Tabs from "$ui/tabs/";
   import TabFileBrowser from "./sidebar/tab-file-browser.svelte";
   import TabQueue from "./sidebar/tab-playlist-queue.svelte";

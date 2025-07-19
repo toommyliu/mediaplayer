@@ -8,8 +8,7 @@
   import ListRestart from "lucide-svelte/icons/list-restart";
   import Loader2 from "lucide-svelte/icons/loader-2";
   import { fade } from "svelte/transition";
-  import type { FileSystemItem } from "$/state.svelte";
-  import { fileBrowserState, platformState, playerState } from "$/state.svelte";
+  import { fileBrowserState, type FileSystemItem } from "$lib/state/file-browser.svelte";
   import { client } from "$/tipc";
   import {
     navigateToDirectory,
@@ -18,12 +17,14 @@
   } from "$lib/file-browser.svelte";
   import { QueueManager } from "$lib/queue-manager";
   import { showItemInFolder } from "$lib/showItemInFolder";
+  import { playerState } from "$lib/state/player.svelte";
   import { cn } from "$lib/utils";
   import { playVideo } from "$lib/video-playback";
   import Button from "$ui/button/button.svelte";
   import * as ContextMenu from "$ui/context-menu/";
+  import { platformState } from "$lib/state/platform.svelte";
 
-  const isEmpty = $derived(fileBrowserState.fileSystem.length === 0);
+  const hasNoFiles = $derived(fileBrowserState.fileSystem.length === 0);
 
   const sortedFileSystem = $derived(() => [...fileBrowserState.fileSystem].sort(compareItems));
 
@@ -49,7 +50,7 @@
   }
 
   async function handleEmptyDblClick(event: MouseEvent) {
-    if (isEmpty && event.detail === 2) {
+    if (hasNoFiles && event.detail === 2) {
       await resetAndBrowse();
     }
   }
@@ -349,7 +350,7 @@
     </div>
   {/if}
 
-  {#if isEmpty}
+  {#if hasNoFiles}
     <div
       class="flex h-full cursor-pointer items-center justify-center"
       ondblclick={fileBrowserState.isLoading ? undefined : handleEmptyDblClick}
@@ -372,7 +373,7 @@
   {:else}
     <!-- File system list -->
     <div class="no-scrollbar flex-1 overflow-y-auto">
-      {#if isEmpty}
+      {#if hasNoFiles}
         <!-- No media files found message -->
         <div class="flex h-full flex-col items-center justify-center p-4 text-center">
           <div class="mb-4 rounded-full bg-zinc-800/50 p-3">
@@ -383,13 +384,6 @@
             Please upload some media files to get started
           </p>
           <Button />
-          <!-- <button
-            onclick={resetAndBrowse}
-            class="flex items-center gap-2 rounded-lg bg-blue-800/40 px-4 py-2 text-xs font-medium text-blue-300 transition-all duration-200 hover:bg-blue-800/60 hover:text-blue-200"
-          >
-            <FolderPlus class="h-4 w-4" />
-            Browse files
-          </button> -->
         </div>
       {:else}
         <div class="space-y-2">

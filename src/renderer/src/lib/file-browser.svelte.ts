@@ -1,4 +1,6 @@
-import { fileBrowserState, playerState, type FileSystemItem } from "$/state.svelte";
+import { fileBrowserState, type FileSystemItem } from "$lib/state/file-browser.svelte";
+import { playerState } from "$lib/state/player.svelte";
+import { queue } from "$lib/state/queue.svelte";
 import { client } from "$/tipc";
 import { QueueManager } from "./queue-manager";
 import { playVideo } from "./video-playback";
@@ -65,25 +67,29 @@ export async function navigateToParent() {
 }
 
 export function updatePlayerQueueForced(preserveCurrentVideo: boolean = false) {
-  const currentVideo = preserveCurrentVideo ? playerState.currentVideo : null;
+  const currentVideo = preserveCurrentVideo ? queue.currentItem : null;
 
-  playerState.queue = fileBrowserState.fileSystem.flatMap(function flatten(entry): string[] {
+  queue.items = fileBrowserState.fileSystem.flatMap(function flatten(entry) {
     if (entry.files) {
       return entry.files?.flatMap(flatten) ?? [];
     }
 
     if (entry.path && entry.duration !== undefined) {
-      return [`file://${entry.path}`];
+      return {
+        name: entry.name ?? entry.path.split("/").pop() ?? "Unknown Video",
+        path: entry.path,
+        duration: entry.duration
+      };
     }
 
     return [];
   });
 
   if (currentVideo) {
-    const newIndex = playerState.queue.indexOf(currentVideo);
-    playerState.currentIndex = newIndex === -1 ? 0 : newIndex;
+    const newIndex = queue.items.indexOf(currentVideo);
+    queue.index = newIndex === -1 ? 0 : newIndex;
   } else {
-    playerState.currentIndex = 0;
+    queue.index = 0;
   }
 }
 
@@ -117,8 +123,7 @@ export async function loadFileSystemStructure() {
       playerState.currentTime = 0;
       playerState.duration = 0;
       playerState.isPlaying = false;
-      playerState.currentIndex = 0;
-      playerState.queue = [];
+      QueueManager.clearQueue();
       if (playerState.videoElement) {
         playerState.videoElement.pause();
       }
