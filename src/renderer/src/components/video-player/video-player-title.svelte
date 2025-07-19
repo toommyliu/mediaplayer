@@ -1,6 +1,8 @@
 <script lang="ts">
-  import { playerState } from "@/state.svelte";
-  import { makeTimeString } from "@/utils/makeTimeString";
+  import { makeTimeString } from "$lib/makeTimeString";
+  import { playerState } from "$lib/state/player.svelte";
+  import { queue } from "$lib/state/queue.svelte";
+  import { volume } from "$lib/state/volume.svelte";
 
   const { showOverlay }: { showOverlay: boolean } = $props();
 </script>
@@ -11,14 +13,14 @@
   class:opacity-0={!showOverlay}
 >
   <div class="text-sm font-medium">
-    {playerState.currentVideo?.split("/").pop() ?? "Unknown"}
+    {queue.currentItem?.path?.split("/").pop() ?? "Unknown"}
   </div>
   <div class="mt-1 text-xs text-gray-300">
     {makeTimeString(playerState.currentTime)} / {makeTimeString(playerState.duration)}
   </div>
   <div class="mt-1 text-xs text-gray-300">
     {playerState.isPlaying ? "Playing" : "Paused"} • Volume: {Math.round(
-      playerState.volume * 100
-    )}%{playerState.isMuted ? " (Muted)" : ""}
+      volume.value * 100
+    )}%{volume.isMuted ? " (Muted)" : ""}
   </div>
 </div>

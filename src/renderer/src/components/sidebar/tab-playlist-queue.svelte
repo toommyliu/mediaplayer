@@ -6,42 +6,38 @@
   import IconRepeat1 from "lucide-svelte/icons/repeat-1";
   import IconShuffle from "lucide-svelte/icons/shuffle";
   import IconX from "lucide-svelte/icons/x";
-  import { ICON_SIZE } from "@/constants";
-  import { playerState } from "@/state.svelte";
-  import { makeTimeString } from "@/utils/makeTimeString";
-  import { QueueManager } from "@/utils/queue-manager";
-  import { cn } from "@/utils/utils";
-  import { playVideo } from "@/utils/video-playback";
+  import type { FileSystemItem } from "$lib/state/file-browser.svelte";
+  import { ICON_SIZE } from "$lib/constants";
+  import { makeTimeString } from "$lib/makeTimeString";
+  import { QueueManager } from "$lib/queue-manager";
+  import { playerState } from "$lib/state/player.svelte";
+  import { queue } from "$lib/state/queue.svelte";
+  import { cn } from "$lib/utils";
+  import { playVideo } from "$lib/video-playback";
 
-  let showClearDialog = $state(false);
-
-  function isCurrentlyPlaying(item: any): boolean {
-    if (!playerState.currentVideo) return false;
-    return playerState.currentVideo === `file://${item.path}`;
+  function isCurrentlyPlaying(item: FileSystemItem): boolean {
+    return queue?.currentItem?.path === item.path;
   }
 
-  function handleItemClick(item: any) {
-    const videoSrc = `file://${item.path}`;
-    playVideo(videoSrc);
+  function handleItemClick(item: FileSystemItem) {
+    playVideo(item!.path!);
   }
 
   function removeFromQueue(itemId: string) {
-    const itemToRemove = playerState.queue.find((item) => item.id === itemId);
+    const itemToRemove = queue.items.find((item) => item.id === itemId);
 
-    // The current video is being removed
     if (itemToRemove && isCurrentlyPlaying(itemToRemove)) {
-      const currentIndex = playerState.queue.findIndex((item) => item.id === itemId);
-      const queueLength = playerState.queue.length;
+      const currentIndex = queue.items.findIndex((item) => item.id === itemId);
+      const queueLength = queue.items.length;
 
       let nextVideoToPlay: string | null = null;
 
       if (queueLength > 1) {
-        // Determine the next video to play after removal
         if (currentIndex < queueLength - 1) {
-          const nextItem = playerState.queue[currentIndex + 1];
+          const nextItem = queue.items[currentIndex + 1];
           nextVideoToPlay = `file://${nextItem.path}`;
         } else if (currentIndex > 0) {
-          const prevItem = playerState.queue[currentIndex - 1];
+          const prevItem = queue.items[currentIndex - 1];
           nextVideoToPlay = `file://${prevItem.path}`;
         }
       }
@@ -67,14 +63,7 @@
   }
 
   function moveItemDown(index: number) {
-    if (index < playerState.queue.length - 1) {
-      QueueManager.moveItem(index, index + 1);
-    }
-  }
-
-  function confirmClearQueue() {
-    QueueManager.clearQueue();
-    showClearDialog = false;
+    if (index < queue.items.length - 1) QueueManager.moveItem(index, index + 1);
   }
 
   function shuffleQueue() {
@@ -115,7 +104,7 @@
 <div class="flex h-full flex-col">
   <!-- Queue Items -->
   <div class="no-scrollbar flex-1 overflow-y-auto">
-    {#if playerState.queue.length === 0}
+    {#if queue.items.length === 0}
       <div class="flex h-full items-center justify-center">
         <div class="text-center text-zinc-500">
           <IconMusic size={32} class="mx-auto mb-2 opacity-50" />
@@ -125,7 +114,7 @@
       </div>
     {:else}
       <div class="space-y-1">
-        {#each playerState.queue as item, index (item.id)}
+        {#each queue.items as item, index (item.id)}
           <div
             class={cn(
               "group flex cursor-pointer items-center gap-2 rounded-md p-2 text-sm transition-colors",
@@ -176,7 +165,7 @@
                   ev.stopPropagation();
                   moveItemDown(index);
                 }}
-                disabled={index === playerState.queue.length - 1}
+                disabled={index === queue.items.length - 1}
               >
                 <IconArrowDown size={ICON_SIZE - 6} />
               </button>

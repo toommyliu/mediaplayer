@@ -7,11 +7,10 @@ import svelte from "eslint-plugin-svelte";
 import ts from "typescript-eslint";
 import svelteConfig from "./svelte.config.mjs";
 import globals from "globals";
+import { defineConfig, globalIgnores } from "eslint/config";
 
-export default [
-  {
-    ignores: ["**/dist/*", "./**/*.js", "./**/*.mjs"]
-  },
+export default defineConfig([
+  globalIgnores(["**/dist/*", "./**/*.js", "./**/*.mjs", "src/renderer/src/components/ui/**/*"]),
   ...common,
   ...browser,
   ...node,
@@ -60,5 +59,10 @@ export default [
         project: "./tsconfig.node.json"
       }
     }
+  },
+  {
+    rules: {
+      "require-atomic-updates": "off"
+    }
   }
-];
+]);

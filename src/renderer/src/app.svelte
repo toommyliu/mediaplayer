@@ -1,17 +1,20 @@
 <script lang="ts">
   import AlertTriangle from "lucide-svelte/icons/alert-triangle";
-  import X from "lucide-svelte/icons/x";
+  import IconX from "lucide-svelte/icons/x";
   import { ModeWatcher } from "mode-watcher";
   import { Pane, PaneGroup, PaneResizer } from "paneforge";
   import { onMount } from "svelte";
-  import { logger } from "@/utils/logger";
-  import Sidebar from "./components/sidebar.svelte";
-  import VideoPlayer from "./components/video-player/video-player.svelte";
-  import { fileBrowserState, platformState, playerState, sidebarState } from "./state.svelte";
+  import Sidebar from "$components/sidebar.svelte";
+  import VideoPlayer from "$components/video-player/video-player.svelte";
+  import { transformDirectoryContents } from "$lib/file-browser.svelte";
+  import { logger } from "$lib/logger";
+  import { QueueManager } from "$lib/queue-manager";
+  import { fileBrowserState } from "$lib/state/file-browser.svelte";
+  import { platformState } from "$lib/state/platform.svelte";
+  import { playerState } from "$lib/state/player.svelte";
+  import { sidebarState } from "$lib/state/sidebar.svelte";
+  import { playVideo } from "$lib/video-playback";
   import { client, handlers } from "./tipc";
-  import { transformDirectoryContents } from "./utils/file-browser.svelte";
-  import { QueueManager } from "./utils/queue-manager";
-  import { playVideo } from "./utils/video-playback";
 
   QueueManager.initialize();
 
@@ -124,18 +127,12 @@
       } else {
         console.warn("Invalid folderData received for add-folder-to-browser:", folderData);
         fileBrowserState.error = "Invalid folder data received.";
-        fileBrowserState.fileTree = null;
-        fileBrowserState.currentPath = null;
-        fileBrowserState.isAtRoot = false;
-        fileBrowserState.originalPath = null;
+        fileBrowserState.reset();
       }
     } catch (error) {
       console.error("Failed to load file system or add folder to queue:", error);
       fileBrowserState.error = "Failed to load file system. Please try again.";
-      fileBrowserState.fileTree = null;
-      fileBrowserState.currentPath = null;
-      fileBrowserState.isAtRoot = false;
-      fileBrowserState.originalPath = null;
+      fileBrowserState.reset();
     }
   });
 
@@ -144,9 +141,8 @@
     platformState.isWindows = res.isWindows;
     platformState.isMac = res.isMacOS;
     platformState.isLinux = res.isLinux;
-    platformState.pathSep = res.pathSep;
 
-    await import("./utils/input.svelte");
+    await import("./lib/input.svelte");
   });
 </script>
 
@@ -166,12 +162,14 @@
                 onclick={() => (playerState.error = null)}
                 class="ml-2 rounded px-2 py-1 hover:bg-red-600"
               >
-                <X size={16} />
+                <IconX size={16} />
               </button>
             </div>
           {/if}
 
-          <VideoPlayer />
+          <div class="flex h-full w-full flex-col bg-zinc-950">
+            <VideoPlayer />
+          </div>
         </main>
       </Pane>
 

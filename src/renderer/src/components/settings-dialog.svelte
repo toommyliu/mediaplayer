@@ -1,5 +1,4 @@
 <script lang="ts">
-
   import ChevronDownIcon from "lucide-svelte/icons/chevron-down";
   import IconKeyboard from "lucide-svelte/icons/keyboard";
   import MonitorIcon from "lucide-svelte/icons/monitor";
@@ -9,10 +8,10 @@
   import SunIcon from "lucide-svelte/icons/sun";
   import IconVolume2 from "lucide-svelte/icons/volume-2";
   import { resetMode, setMode, mode } from "mode-watcher";
-  import * as Dialog from "@/components/ui/dialog";
-  import * as DropdownMenu from "@/components/ui/dropdown-menu/";
-  import { Label } from "@/components/ui/label";
-  import SettingsKeyboardShortcuts from "./settings/settings-keyboard-shortcuts.svelte";
+  import SettingsKeyboardShortcuts from "$components/settings/settings-keyboard-shortcuts.svelte";
+  import * as Dialog from "$ui/dialog";
+  import * as DropdownMenu from "$ui/dropdown-menu/";
+  import { Label } from "$ui/label";
 
   let { open: isOpen = $bindable() }: { open: boolean } = $props();
 

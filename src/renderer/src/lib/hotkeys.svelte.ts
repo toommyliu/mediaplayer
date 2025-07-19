@@ -1,7 +1,12 @@
 import Mousetrap from "mousetrap";
-import * as state from "@/state.svelte";
-import { handlers } from "@/tipc";
-import { SidebarTab } from "@/types";
+import { handlers } from "$/tipc";
+import { SidebarTab } from "$/types";
+import { fileBrowserState } from "$lib/state/file-browser.svelte";
+import { platformState } from "$lib/state/platform.svelte";
+import { playerState } from "$lib/state/player.svelte";
+import { queue } from "$lib/state/queue.svelte";
+import { sidebarState } from "$lib/state/sidebar.svelte";
+import { volume } from "$lib/state/volume.svelte";
 import { navigateToParent } from "./file-browser.svelte";
 import { logger } from "./logger";
 import { playNextVideo, playPreviousVideo } from "./video-playback";
@@ -41,7 +46,7 @@ class HotkeyConfig {
   public initialize(): void {
     if (this.initialized) return;
 
-    this.modKey = state.platformState.isMac ? "command" : "ctrl";
+    this.modKey = platformState.isMac ? "command" : "ctrl";
     this.initializeDefaultConfig();
     this.initialized = true;
   }
@@ -185,111 +190,102 @@ class HotkeyConfig {
   // Action handlers
   private readonly togglePlayback = (ev: KeyboardEvent): void => {
     ev.preventDefault();
-    if (state.playerState.currentVideo) {
-      state.playerState.isPlaying = !state.playerState.isPlaying;
-      if (state.playerState.isPlaying) {
-        state.playerState.videoElement?.play().catch(() => {});
+    if (queue.currentItem) {
+      playerState.isPlaying = !playerState.isPlaying;
+      if (playerState.isPlaying) {
+        playerState.videoElement?.play().catch(() => {});
       } else {
-        state.playerState.videoElement?.pause();
+        playerState.videoElement?.pause();
       }
     }
   };
 
   private readonly previousVideo = (ev: KeyboardEvent): void => {
     ev.preventDefault();
-    if (state.playerState.currentVideo) {
+    if (queue.currentItem) {
       playPreviousVideo();
     }
   };
 
   private readonly nextVideo = (ev: KeyboardEvent): void => {
     ev.preventDefault();
-    if (state.playerState.currentVideo) {
+    if (queue.currentItem) {
       playNextVideo();
     }
   };
 
   private readonly seekBackward = (ev: KeyboardEvent): void => {
     ev.preventDefault();
-    if (state.playerState.currentVideo) {
-      const newTime = Math.max(0, state.playerState.currentTime - this.seekTime);
-      state.playerState.currentTime = newTime;
-      if (state.playerState.videoElement) {
-        state.playerState.videoElement.currentTime = newTime;
+    if (queue.currentItem) {
+      const newTime = Math.max(0, playerState.currentTime - this.seekTime);
+      playerState.currentTime = newTime;
+      if (playerState.videoElement) {
+        playerState.videoElement.currentTime = newTime;
       }
     }
   };
 
   private readonly seekForward = (ev: KeyboardEvent): void => {
     ev.preventDefault();
-    if (state.playerState.currentVideo) {
-      const newTime = Math.min(
-        state.playerState.duration,
-        state.playerState.currentTime + this.seekTime
-      );
-      state.playerState.currentTime = newTime;
-      if (state.playerState.videoElement) {
-        state.playerState.videoElement.currentTime = newTime;
+    if (queue.currentItem) {
+      const newTime = Math.min(playerState.duration, playerState.currentTime + this.seekTime);
+      playerState.currentTime = newTime;
+      if (playerState.videoElement) {
+        playerState.videoElement.currentTime = newTime;
       }
     }
   };
 
   private readonly volumeUp = (ev: KeyboardEvent): void => {
     ev.preventDefault();
-    if (state.playerState.videoElement) {
-      const newVolume = Math.min(1, state.playerState.volume + this.volumeStep);
-      state.playerState.volume = newVolume;
-      state.playerState.videoElement.volume = newVolume;
-      if (state.playerState.isMuted) {
-        state.playerState.isMuted = false;
-        state.playerState.videoElement.muted = false;
-      }
+    if (playerState.videoElement) {
+      const newVolume = Math.min(1, volume.value + this.volumeStep);
+      volume.value = newVolume;
+      volume.isMuted = false;
     }
   };
 
   private readonly volumeDown = (ev: KeyboardEvent): void => {
     ev.preventDefault();
-    if (state.playerState.videoElement) {
-      const newVolume = Math.max(0, state.playerState.volume - this.volumeStep);
-      state.playerState.volume = newVolume;
-      state.playerState.videoElement.volume = newVolume;
+    if (playerState.videoElement) {
+      const newVolume = Math.max(0, volume.value - this.volumeStep);
+      volume.value = newVolume;
+      volume.isMuted = newVolume === 0;
     }
   };
 
   private readonly toggleMute = (ev: KeyboardEvent): void => {
     ev.preventDefault();
-    if (state.playerState.videoElement) {
-      state.playerState.isMuted = !state.playerState.isMuted;
-      state.playerState.videoElement.muted = state.playerState.isMuted;
+    if (playerState.videoElement) {
+      volume.isMuted = !volume.isMuted;
     }
   };
 
   private readonly toggleFullscreen = (ev: KeyboardEvent): void => {
     ev.preventDefault();
-    state.playerState.isFullscreen = !state.playerState.isFullscreen;
-    // You might want to add actual fullscreen API calls here
+    playerState.isFullscreen = !playerState.isFullscreen;
   };
 
   private readonly showFileBrowser = (ev: KeyboardEvent): void => {
     console.log("showFileBrowser");
     ev.preventDefault();
-    state.sidebarState.currentTab = SidebarTab.FileBrowser;
+    sidebarState.currentTab = SidebarTab.FileBrowser;
   };
 
   private readonly showQueue = (ev: KeyboardEvent): void => {
     console.log("showQueue");
     ev.preventDefault();
-    state.sidebarState.currentTab = SidebarTab.Queue;
+    sidebarState.currentTab = SidebarTab.Queue;
   };
 
   private readonly toggleSidebar = (ev: KeyboardEvent): void => {
     ev.preventDefault();
-    state.sidebarState.isOpen = !state.sidebarState.isOpen;
+    sidebarState.isOpen = !sidebarState.isOpen;
   };
 
   private readonly fileBrowserBack = (ev: KeyboardEvent): void => {
     ev.preventDefault();
-    if (!state.fileBrowserState.currentPath || state.fileBrowserState.isAtRoot) return;
+    if (!fileBrowserState.currentPath || fileBrowserState.isAtRoot) return;
 
     navigateToParent().catch((error) => {
       logger.error("Failed to navigate to parent directory:", error);
@@ -298,11 +294,11 @@ class HotkeyConfig {
 
   private readonly jumpToPercent = (ev: KeyboardEvent, percent: number): void => {
     ev.preventDefault();
-    if (state.playerState.currentVideo) {
-      const jumpTime = percent * state.playerState.duration;
-      state.playerState.currentTime = jumpTime;
-      if (state.playerState.videoElement) {
-        state.playerState.videoElement.currentTime = jumpTime;
+    if (queue.currentItem) {
+      const jumpTime = percent * playerState.duration;
+      playerState.currentTime = jumpTime;
+      if (playerState.videoElement) {
+        playerState.videoElement.currentTime = jumpTime;
       }
     }
   };
@@ -462,7 +458,7 @@ export function setupMediaKeyHandlers(): void {
   });
 
   handlers.mediaPlayPause.listen(() => {
-    if (state.playerState.currentVideo) {
+    if (queue.currentItem) {
       state.playerState.isPlaying = !state.playerState.isPlaying;
       if (state.playerState.isPlaying) {
         state.playerState.videoElement?.play().catch(() => {});
