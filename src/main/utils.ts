@@ -8,7 +8,7 @@ import ffmpeg from "fluent-ffmpeg";
 import { VIDEO_EXTENSIONS } from "./constants";
 import { logger } from "./logger";
 
-const makeFilePath = (path: string): string => `file://${path}`;
+const makeFilePath = (path: string): string => path;
 
 const ffprobeAsync = promisify(ffmpeg.ffprobe);
 let isFfmpegInitialized = false;

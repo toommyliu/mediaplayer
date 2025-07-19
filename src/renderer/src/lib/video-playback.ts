@@ -23,6 +23,7 @@ export function playVideo(src: string): void {
 
   if (queueIndex === -1) {
     console.warn("Video not found in queue:", src);
+    console.warn("Current queue items:", queue.items);
     return;
   }
 

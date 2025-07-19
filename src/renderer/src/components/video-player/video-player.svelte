@@ -228,7 +228,7 @@
   {#if queue.currentItem}
     <video
       bind:this={playerState.videoElement}
-      src={queue.currentItem.path}
+      src={`file://${queue.currentItem.path}`}
       class="video-no-controls h-full w-full cursor-pointer object-contain"
       onloadstart={handleLoadStart}
       onloadeddata={handleLoadedData}
