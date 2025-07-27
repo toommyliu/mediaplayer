@@ -229,7 +229,7 @@
     <video
       bind:this={playerState.videoElement}
       src={`file://${queue.currentItem.path}`}
-      class="video-no-controls h-full w-full object-contain"
+      class="pointer-events-none aspect-video h-full w-full object-cover object-center"
       onloadstart={handleLoadStart}
       onloadeddata={handleLoadedData}
       onloadedmetadata={handleLoadedMetadata}
@@ -247,7 +247,7 @@
     >
     </video>
 
-    <VideoPlayerTitle {showOverlay} />
+    <!-- <VideoPlayerTitle {showOverlay} /> -->
     <VideoPlayerControls {showOverlay} />
   {/if}
 </div>

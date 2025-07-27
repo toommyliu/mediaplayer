@@ -325,12 +325,13 @@
 </script>
 
 {#if showOverlay}
-  <div class="absolute right-0 bottom-20 left-0 z-40 mx-8">
+  <div class="absolute right-0 bottom-20 left-0 z-40 mx-8 grow rounded-full bg-white/20">
     <div
       class={cn(
-        "group relative h-2 rounded-full bg-black/50 backdrop-blur-sm",
-        !isDragging && "transition-colors duration-200",
-        isDragging && "bg-black/70 shadow-inner shadow-blue-500/30"
+        "group relative h-2 rounded-full bg-black/50 backdrop-blur-sm lg:h-3",
+        isDragging
+          ? "bg-black/70 shadow-inner shadow-blue-500/30"
+          : "transition-colors duration-200"
       )}
       onclick={handleProgressClick}
       onmousedown={handleProgressMouseDown}
@@ -338,49 +339,17 @@
       onmouseenter={() => (isHovering = true)}
       onmouseleave={() => (isHovering = false)}
       role="slider"
-      aria-label="Video progress"
-      aria-valuemin={0}
-      aria-valuemax={playerState.duration}
-      aria-valuenow={playerState.currentTime}
-      aria-valuetext={`${makeTimeString(playerState.currentTime)} of ${makeTimeString(playerState.duration)}`}
       tabindex={0}
     >
-      <!-- Buffered progress -->
       <div
-        class="absolute inset-0 h-full rounded-full bg-white/30 will-change-auto"
-        style="width: {bufferedPercentage}%"
-        aria-hidden="true"
-      ></div>
-
-      <!-- Current progress -->
-      <div
-        class="absolute inset-0 h-full rounded-full bg-blue-500 will-change-auto"
-        class:transition-all={!isDragging}
-        class:duration-75={!isDragging}
-        class:ease-linear={!isDragging}
+        class={cn("absolute h-2 grow rounded-full bg-white backdrop-blur-sm lg:h-3", {
+          "transition-all": !isDragging,
+          "duration-75": !isDragging,
+          "ease-linear": !isDragging
+        })}
         style="width: {progressPercentage > 0 ? Math.max(progressPercentage, 0.5) : 0}%"
-        aria-hidden="true"
       ></div>
 
-      <!-- Progress thumb -->
-      {#if playerState.duration > 0}
-        <div
-          class={cn(
-            "absolute top-1/2 h-4 w-4 rounded-full shadow-lg will-change-transform",
-            "border-2 border-white/50 bg-blue-500 shadow-blue-300/50",
-            !isDragging && "transition-all duration-150 ease-out",
-            isDragging
-              ? "scale-150 border-white opacity-100 shadow-lg shadow-blue-500/50"
-              : isHovering
-                ? "scale-125 opacity-100"
-                : "scale-100 opacity-0"
-          )}
-          style="left: {progressPercentage}%; transform: translateX(-50%) translateY(-50%)"
-          aria-hidden="true"
-        ></div>
-      {/if}
-
-      <!-- Hover time tooltip -->
       {#if isHovering && !isDragging && playerState.duration > 0}
         <div
           class="absolute bottom-8 z-10 rounded-md bg-black/90 px-2 py-1 text-xs text-white shadow-lg backdrop-blur-xs will-change-transform"
@@ -507,7 +476,7 @@
       >
         <div
           class={cn(
-            "group relative h-2 rounded-full bg-white/20",
+            "group relative h-2 rounded-full bg-white/20 lg:h-3",
             !isVolumeDragging && "transition-colors duration-200",
             isVolumeDragging && "bg-white/30"
           )}
@@ -611,5 +580,3 @@
     </Tooltip.Provider>
   </div>
 {/if}
-
-<Settings bind:open={showSettingsDialog} />
