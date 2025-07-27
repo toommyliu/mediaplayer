@@ -1,3 +1,5 @@
+import { cmdOrCtrl, optionOrAlt } from "$hooks/is-mac.svelte";
+
 export type RecordedKeys = {
   display: string;
   keys: string[];
@@ -6,7 +8,9 @@ export type RecordedKeys = {
 export class HotkeyRecorder {
   private isRecording = false;
 
-  private pressedKeys = new Set<string>();
+  private currentCombo: Set<string> = new Set();
+
+  private recordedCombo: string[] = [];
 
   private onRecordComplete?: (result: RecordedKeys) => void;
 
@@ -27,7 +31,8 @@ export class HotkeyRecorder {
     }
 
     this.isRecording = true;
-    this.pressedKeys.clear();
+    this.currentCombo.clear();
+    this.recordedCombo = [];
     this.onRecordComplete = onComplete;
     this.onRecordCancel = onCancel;
 
@@ -44,7 +49,7 @@ export class HotkeyRecorder {
     window.removeEventListener("keyup", this.keyUpRef, { capture: true });
 
     if (this.onRecordComplete) {
-      const result = this.pressedKeys.size > 0 ? this.formatKeys() : { keys: [], display: "" };
+      const result = this.recordedCombo.length > 0 ? this.formatKeys() : { keys: [], display: "" };
       this.onRecordComplete(result);
     }
 
@@ -67,7 +72,8 @@ export class HotkeyRecorder {
   }
 
   private cleanup(): void {
-    this.pressedKeys.clear();
+    this.currentCombo.clear();
+    this.recordedCombo = [];
     this.onRecordComplete = undefined;
     this.onRecordCancel = undefined;
   }
@@ -80,15 +86,22 @@ export class HotkeyRecorder {
 
     if (ev.key === "Escape") {
       // Complete recording with empty keys when ESC is pressed
-      this.pressedKeys.clear();
+      this.currentCombo.clear();
+      this.recordedCombo = [];
       this.stopRecording();
       return;
     }
 
-    // Add the key to our pressed keys set
+    // Only allow one combination per recording
+    if (this.recordedCombo.length > 0) {
+      // Already recorded, ignore further keydowns
+      return;
+    }
+
+    // Add the key to our current combo set
     const key = this.normalizeKey(ev);
     if (key) {
-      this.pressedKeys.add(key);
+      this.currentCombo.add(key);
     }
   }
 
@@ -98,12 +111,17 @@ export class HotkeyRecorder {
     ev.preventDefault();
     ev.stopPropagation();
 
-    if (this.pressedKeys.size > 0) {
-      setTimeout(() => {
-        if (this.isRecording && this.pressedKeys.size > 0) {
-          this.stopRecording();
-        }
-      }, 100);
+    if (this.currentCombo.size > 0 && this.recordedCombo.length === 0) {
+      // On first keyup, record the combo and stop
+      this.recordedCombo = [
+        Array.from(this.currentCombo)
+          .sort((a, b) => a.localeCompare(b))
+          .join("+")
+      ];
+
+      if (this.isRecording) {
+        this.stopRecording();
+      }
     }
   }
 
@@ -157,19 +175,15 @@ export class HotkeyRecorder {
   }
 
   private formatKeys(): RecordedKeys {
-    const keysArray = Array.from(this.pressedKeys);
-
-    // If we have multiple keys, it might be a chord
-    if (keysArray.length === 1) {
+    if (this.recordedCombo.length === 1) {
       return {
-        keys: keysArray,
-        display: keysArray[0]
+        keys: this.recordedCombo,
+        display: this.recordedCombo[0]
       };
     } else {
-      // For multiple keys, join them as alternatives
       return {
-        keys: keysArray,
-        display: keysArray.join(" or ")
+        keys: [],
+        display: ""
       };
     }
   }
@@ -195,11 +209,11 @@ export function formatHotkeyDisplay(keys: string[] | string): string {
 function keyToChar(key: string): string {
   switch (key) {
     case "cmd":
-      return "⌘";
     case "ctrl":
-      return "Ctrl";
+      return cmdOrCtrl;
     case "alt":
-      return "Alt";
+    case "option":
+      return optionOrAlt;
     case "shift":
       return "Shift";
     case "space":

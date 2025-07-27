@@ -44,6 +44,9 @@ importers:
       paneforge:
         specifier: ^0.0.6
         version: 0.0.6(svelte@5.34.1)
+      runed:
+        specifier: ^0.31.1
+        version: 0.31.1(svelte@5.34.1)
     devDependencies:
       '@electron-toolkit/eslint-config-prettier':
         specifier: ^3.0.0
@@ -3992,6 +3995,11 @@ packages:
 
   runed@0.29.2:
     resolution: {integrity: sha512-0cq6cA6sYGZwl/FvVqjx9YN+1xEBu9sDDyuWdDW1yWX7JF2wmvmVKfH+hVCZs+csW+P3ARH92MjI3H9QTagOQA==}
+    peerDependencies:
+      svelte: ^5.7.0
+
+  runed@0.31.1:
+    resolution: {integrity: sha512-v3czcTnO+EJjiPvD4dwIqfTdHLZ8oH0zJheKqAHh9QMViY7Qb29UlAMRpX7ZtHh7AFqV60KmfxaJ9QMy+L1igQ==}
     peerDependencies:
       svelte: ^5.7.0
 
@@ -9224,6 +9232,11 @@ snapshots:
       svelte: 5.34.1
 
   runed@0.29.2(svelte@5.34.1):
+    dependencies:
+      esm-env: 1.2.2
+      svelte: 5.34.1
+
+  runed@0.31.1(svelte@5.34.1):
     dependencies:
       esm-env: 1.2.2
       svelte: 5.34.1

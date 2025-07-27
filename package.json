@@ -31,7 +31,8 @@
     "lucide-svelte": "^0.515.0",
     "mode-watcher": "^1.0.8",
     "mousetrap": "^1.6.5",
-    "paneforge": "^0.0.6"
+    "paneforge": "^0.0.6",
+    "runed": "^0.31.1"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config-prettier": "^3.0.0",
