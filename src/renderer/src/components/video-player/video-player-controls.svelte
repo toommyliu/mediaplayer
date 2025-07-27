@@ -6,12 +6,12 @@
   import Pause from "lucide-svelte/icons/pause";
   import Play from "lucide-svelte/icons/play";
   import Rewind from "lucide-svelte/icons/rewind";
-  import Settings from "lucide-svelte/icons/settings";
+  import IconSettings from "lucide-svelte/icons/settings";
   import Volume1 from "lucide-svelte/icons/volume-1";
   import Volume2 from "lucide-svelte/icons/volume-2";
   import VolumeX from "lucide-svelte/icons/volume-x";
+  import Settings from "$/components/Settings.svelte";
   import { client } from "$/tipc";
-  import SettingsDialog from "$components/settings-dialog.svelte";
   import { ICON_SIZE } from "$lib/constants";
   import { makeTimeString } from "$lib/makeTimeString";
   import { playerState } from "$lib/state/player.svelte";
@@ -543,7 +543,6 @@
 
   <!-- Bottom Right Controls - Floating group -->
   <div class="absolute right-6 bottom-6 z-40 flex items-center gap-2">
-    <!-- Settings -->
     <Tooltip.Provider>
       <Tooltip.Root>
         <Tooltip.Trigger>
@@ -554,7 +553,7 @@
             class="h-8 w-8 rounded-full bg-black/50 text-white backdrop-blur-md transition-all duration-200 hover:bg-black/70 hover:text-blue-400 focus-visible:ring-blue-400"
             aria-label="Open settings"
           >
-            <Settings size={ICON_SIZE} />
+            <IconSettings size={ICON_SIZE} />
           </Button>
         </Tooltip.Trigger>
         <Tooltip.Content>
@@ -613,4 +612,4 @@
   </div>
 {/if}
 
-<SettingsDialog bind:open={showSettingsDialog} />
+<Settings bind:open={showSettingsDialog} />
