@@ -218,7 +218,7 @@
   class={cn(
     "group relative flex h-[90%] w-full flex-1 items-center justify-center",
     !queue.currentItem &&
-      "cursor-pointer transition-all duration-300 ease-out hover:bg-slate-100/15 hover:shadow-inner hover:backdrop-blur-md"
+      "transition-all duration-300 ease-out hover:bg-slate-100/15 hover:shadow-inner hover:backdrop-blur-md"
   )}
   onmousemove={handleMouseMove}
   onclick={handleClick}
@@ -229,7 +229,7 @@
     <video
       bind:this={playerState.videoElement}
       src={`file://${queue.currentItem.path}`}
-      class="video-no-controls h-full w-full cursor-pointer object-contain"
+      class="video-no-controls h-full w-full object-contain"
       onloadstart={handleLoadStart}
       onloadeddata={handleLoadedData}
       onloadedmetadata={handleLoadedMetadata}

@@ -141,14 +141,7 @@ export async function loadFileSystemStructure() {
         console.log(`Found ${allVideoFiles.length} video files recursively in ${result.rootPath}`);
 
         if (allVideoFiles.length > 0) {
-          const success = QueueManager.addMultipleToQueue(allVideoFiles);
-          if (success) {
-            console.log(`Successfully added ${allVideoFiles.length} videos recursively to queue`);
-          } else {
-            console.warn(
-              `Failed to add some videos to queue. Check for duplicates or invalid files.`
-            );
-          }
+          QueueManager.addMultipleToQueue(allVideoFiles);
         }
       } else if (result === null) {
         console.warn("No video files found in the selected folder (1)");
@@ -182,29 +175,17 @@ export async function getAllVideoFilesRecursive(
 
   try {
     const contents = await client.readDirectory(folderPath);
-    console.log(`${indent}[getAllVideoFilesRecursive] Directory contents:`, contents);
 
     if (contents?.files) {
-      console.log(`${indent}[getAllVideoFilesRecursive] Found ${contents.files.length} items`);
-
       for (const item of contents.files) {
-        console.log(`${indent}[getAllVideoFilesRecursive] Processing item:`, item);
-
         if (item.type === "video" && item.path && item.name) {
           const videoFile = { name: item.name, path: item.path, duration: item.duration };
           videoFiles.push(videoFile);
-          console.log(`${indent}[getAllVideoFilesRecursive] Added video file:`, videoFile);
         } else if (item.type === "folder" && item.path) {
-          console.log(`${indent}[getAllVideoFilesRecursive] Recursing into folder: ${item.path}`);
           const nestedVideos = await getAllVideoFilesRecursive(item.path, depth + 1);
-          console.log(
-            `${indent}[getAllVideoFilesRecursive] Found ${nestedVideos.length} videos in ${item.path}`
-          );
           videoFiles = videoFiles.concat(nestedVideos);
         }
       }
-    } else {
-      console.log(`${indent}[getAllVideoFilesRecursive] No files found in directory`);
     }
   } catch (error) {
     console.error(
@@ -213,9 +194,6 @@ export async function getAllVideoFilesRecursive(
     );
   }
 
-  console.log(
-    `${indent}[getAllVideoFilesRecursive] Returning ${videoFiles.length} video files from ${folderPath}`
-  );
   return videoFiles;
 }
 

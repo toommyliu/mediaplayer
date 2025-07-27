@@ -16,6 +16,9 @@
       "$lib/*": [
         "src/renderer/src/lib/*"
       ],
+      "$hooks/*": [
+        "src/renderer/src/hooks/*"
+      ],
       "$main/*": [
         "src/main/*"
       ],
