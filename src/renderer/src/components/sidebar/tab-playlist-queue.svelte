@@ -117,7 +117,7 @@
         {#each queue.items as item, index (item.id)}
           <div
             class={cn(
-              "group flex cursor-pointer items-center gap-2 rounded-md p-2 text-sm transition-colors",
+              "group flex items-center gap-2 rounded-md p-2 text-sm transition-colors",
               isCurrentlyPlaying(item)
                 ? "bg-blue-500/20 text-blue-400"
                 : "text-zinc-200 hover:bg-zinc-800/50"

@@ -325,11 +325,10 @@
 </script>
 
 {#if showOverlay}
-  <!-- Progress Bar - Floating at bottom -->
   <div class="absolute right-0 bottom-20 left-0 z-40 mx-8">
     <div
       class={cn(
-        "group relative h-2 cursor-pointer rounded-full bg-black/50 backdrop-blur-sm",
+        "group relative h-2 rounded-full bg-black/50 backdrop-blur-sm",
         !isDragging && "transition-colors duration-200",
         isDragging && "bg-black/70 shadow-inner shadow-blue-500/30"
       )}
@@ -508,7 +507,7 @@
       >
         <div
           class={cn(
-            "group relative h-2 cursor-pointer rounded-full bg-white/20",
+            "group relative h-2 rounded-full bg-white/20",
             !isVolumeDragging && "transition-colors duration-200",
             isVolumeDragging && "bg-white/30"
           )}
@@ -614,4 +613,4 @@
   </div>
 {/if}
 
-<SettingsDialog open={true} />
+<SettingsDialog bind:open={showSettingsDialog} />

@@ -286,7 +286,7 @@
 
   {#if hasNoFiles}
     <div
-      class="flex h-full cursor-pointer items-center justify-center"
+      class="flex h-full items-center justify-center"
       ondblclick={fileBrowserState.isLoading ? undefined : handleEmptyDblClick}
       role="button"
       tabindex="0"
@@ -324,7 +324,7 @@
           {#if !fileBrowserState.isAtRoot && fileBrowserState.currentPath}
             <div
               class={cn(
-                "group relative z-10 flex min-h-[28px] cursor-pointer items-center transition-all duration-200",
+                "group relative z-10 flex min-h-[28px] items-center transition-all duration-200",
                 fileBrowserState.isLoading && "cursor-not-allowed opacity-50"
               )}
               onclick={async () => {
@@ -414,7 +414,7 @@
     >
       <ContextMenu.Trigger
         class={cn(
-          "group relative z-10 flex min-h-[28px] cursor-pointer items-center transition-all duration-200",
+          "group relative z-10 flex min-h-[28px] items-center transition-all duration-200",
           fileBrowserState.isLoading && "cursor-not-allowed opacity-50"
         )}
         onclick={(ev) => handleItemClick(ev, item)}
