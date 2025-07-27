@@ -62,7 +62,8 @@ export default defineConfig([
   },
   {
     rules: {
-      "require-atomic-updates": "off"
+      "require-atomic-updates": "off",
+      "import-x/order": "off"
     }
   }
 ]);
