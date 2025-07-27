@@ -21,7 +21,7 @@
     }
   ];
 
-  let selectedCategory: string = $state(SettingsCategory.Shortcuts);
+  let selectedTab: string = $state(SettingsCategory.General);
 </script>
 
 <Dialog.Root bind:open={isOpen}>
@@ -36,11 +36,11 @@
             <nav class="space-y-1">
               {#each categoryItems as category (category.id)}
                 <button
-                  class="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-all duration-200 {selectedCategory ===
+                  class="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-all duration-200 {selectedTab ===
                   category.id
                     ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-lg'
                     : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'}"
-                  onclick={() => (selectedCategory = category.id)}
+                  onclick={() => (selectedTab = category.id)}
                 >
                   <div class="text-sm font-medium">{category.label}</div>
                 </button>
@@ -51,9 +51,9 @@
       </aside>
 
       <main class="flex-1 p-6">
-        {#if selectedCategory === SettingsCategory.General}
+        {#if selectedTab === SettingsCategory.General}
           <SettingsTabGeneral />
-        {:else if selectedCategory === SettingsCategory.Shortcuts}
+        {:else if selectedTab === SettingsCategory.Shortcuts}
           <SettingsKeyboardShortcuts />
         {/if}
       </main>
