@@ -18,42 +18,34 @@
   let sliderRef = $state<HTMLDivElement | null>(null);
   let containerRef = $state<HTMLDivElement | null>(null);
 
-  function setHover(hover: boolean) {
-    if (hover) {
-      if (hideTimeout) {
-        clearTimeout(hideTimeout);
-        hideTimeout = null;
-      }
-
-      isHovering = true;
-    } else {
+  $effect(() => {
+    if (isHovering && hideTimeout) {
+      clearTimeout(hideTimeout);
+      hideTimeout = null;
+    } else if (!isHovering) {
       if (hideTimeout) clearTimeout(hideTimeout);
+
       hideTimeout = setTimeout(() => {
         isHovering = false;
         hideTimeout = null;
       }, 150);
     }
-  }
-
-  function handleMouseEnter() {
-    setHover(true);
-  }
+  });
 
   function handleMouseLeave(ev: MouseEvent) {
     // If the mouse is moving to a child of the container, do nothing.
     if (containerRef?.contains(ev.relatedTarget as Node)) return;
-
-    setHover(false);
+    isHovering = false;
   }
 
   function getSliderValueFromEvent(ev: MouseEvent | TouchEvent) {
     if (!sliderRef) return volume.value;
+
     const rect = sliderRef.getBoundingClientRect();
     let clientX = 0;
+
     if (ev instanceof MouseEvent) {
       clientX = ev.clientX;
-    } else if (ev.touches && ev.touches.length > 0) {
-      clientX = ev.touches[0].clientX;
     }
 
     let percent = (clientX - rect.left) / rect.width;
@@ -71,12 +63,10 @@
 
   function handleSliderPointerDown(ev: MouseEvent | TouchEvent) {
     isDragging = true;
-    document.body.style.userSelect = "none";
+
     updateSlider(ev);
     window.addEventListener("mousemove", handleSliderPointerMove);
-    window.addEventListener("touchmove", handleSliderPointerMove);
     window.addEventListener("mouseup", handleSliderPointerUp);
-    window.addEventListener("touchend", handleSliderPointerUp);
   }
 
   function handleSliderPointerMove(ev: MouseEvent | TouchEvent) {
@@ -85,30 +75,25 @@
 
   function handleSliderPointerUp(ev: MouseEvent | TouchEvent) {
     isDragging = false;
-    document.body.style.userSelect = "";
+
     updateSlider(ev);
+
     window.removeEventListener("mousemove", handleSliderPointerMove);
-    window.removeEventListener("touchmove", handleSliderPointerMove);
     window.removeEventListener("mouseup", handleSliderPointerUp);
-    window.removeEventListener("touchend", handleSliderPointerUp);
   }
 
   function updateSlider(ev: MouseEvent | TouchEvent) {
     if (ev instanceof MouseEvent && ev.clientX === 0) return;
-    if (ev instanceof TouchEvent && ev.touches.length === 0) return;
 
     const value = getSliderValueFromEvent(ev);
     volume.value = value;
-    if (volume.isMuted && value > 0) {
-      volume.isMuted = false;
-    }
   }
 </script>
 
 <div
   bind:this={containerRef}
   class="flex items-center rounded-md"
-  onmouseenter={handleMouseEnter}
+  onmouseenter={() => (isHovering = true)}
   onmouseleave={handleMouseLeave}
 >
   <Tooltip.Provider>
@@ -119,7 +104,7 @@
           size="icon"
           class="flex-shrink-0"
           onclick={() => (volume.isMuted = !volume.isMuted)}
-          onmouseenter={handleMouseEnter}
+          onmouseenter={() => (isHovering = true)}
         >
           {#if volume.isMuted}
             <LucideVolumeX class="size-4 text-white" />
@@ -178,10 +163,10 @@
         ></div>
         <div
           class={cn(
-            "absolute -top-1/2 h-3 w-3 rounded-full bg-white shadow",
+            "absolute -top-1/2 h-3 w-3 -translate-x-1/2 transform rounded-full bg-white shadow",
             !isDragging && "transition-all duration-200"
           )}
-          style="left: {(volume.isMuted ? 0 : volume.value) * 100}%; transform: translateX(-50%);"
+          style="left: {(volume.isMuted ? 0 : volume.value) * 100}%;"
         ></div>
       </div>
     {/if}
