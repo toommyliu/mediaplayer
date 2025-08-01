@@ -229,7 +229,7 @@
     <video
       bind:this={playerState.videoElement}
       src={`file://${queue.currentItem.path}`}
-      class="pointer-events-none aspect-video h-full w-full object-cover object-center"
+      class="pointer-events-none h-[90%] w-full"
       onloadstart={handleLoadStart}
       onloadeddata={handleLoadedData}
       onloadedmetadata={handleLoadedMetadata}

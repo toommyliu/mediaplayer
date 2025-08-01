@@ -318,12 +318,10 @@
 </script>
 
 {#if showOverlay}
-  <!-- Unified background only for controls area -->
   <div
     class="absolute inset-x-0 bottom-0 z-30 bg-gradient-to-t from-black/80 to-transparent pt-16 pb-6"
     transition:fade={{ duration: 300 }}
   >
-    <!-- Progress Bar Container -->
     <div class="mx-8 mb-4">
       <div
         class="relative z-10 flex items-center justify-between px-1 pb-2 font-mono text-xs text-white select-none"
@@ -339,7 +337,7 @@
       </div>
       <div
         class={cn(
-          "group relative h-2 rounded-full bg-black/50 lg:h-3",
+          "group relative h-2 rounded-full bg-white/20 lg:h-3",
           isDragging
             ? "bg-black/70 shadow-inner shadow-blue-500/30"
             : "transition-colors duration-200"
@@ -362,7 +360,6 @@
           <div
             class="absolute bottom-8 z-10 rounded-md bg-black/90 px-2 py-1 text-xs text-white shadow-lg"
             style="left: {hoverPercentage}%; transform: translateX(-50%)"
-            aria-hidden="true"
           >
             {makeTimeString(hoverTime)}
             <div
@@ -373,12 +370,9 @@
       </div>
     </div>
 
-    <!-- Bottom Controls Container -->
-    <div class="flex items-center justify-between px-6">
-      <!-- Left Controls -->
+    <div class="flex items-center justify-between px-8">
       <div class="flex items-center gap-4">
-        <!-- Playback Controls Group -->
-        <div class="flex items-center gap-2 rounded-md bg-black/50 p-2 backdrop-blur-md">
+        <div class="flex grow items-center gap-2 rounded-md bg-black/50 backdrop-blur-md">
           <PreviousButton />
           <PlayButton />
           <ForwardButton />
