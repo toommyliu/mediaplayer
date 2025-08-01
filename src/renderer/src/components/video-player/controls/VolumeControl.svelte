@@ -148,7 +148,7 @@
         out:fade={{ duration: 100 }}
         bind:this={sliderRef}
         class={cn(
-          "relative h-1.5 w-full cursor-pointer rounded-full bg-white/20",
+          "relative h-1.5 w-full rounded-full bg-white/20",
           isDragging ? "bg-white/30" : ""
         )}
         role="slider"
@@ -159,21 +159,10 @@
         onkeydown={(ev) => {
           if (ev.key === "ArrowLeft" || ev.key === "ArrowDown") {
             ev.preventDefault();
-            const newValue = volume.value - 0.05;
-            volume.value = Math.max(0, newValue);
-            if (volume.isMuted && volume.value > 0) volume.isMuted = false;
+            volume.decreaseTick();
           } else if (ev.key === "ArrowRight" || ev.key === "ArrowUp") {
             ev.preventDefault();
-            const newValue = volume.value + 0.05;
-            volume.value = Math.min(1, newValue);
-            if (volume.isMuted && volume.value > 0) volume.isMuted = false;
-          } else if (ev.key === "Home") {
-            ev.preventDefault();
-            volume.value = 0;
-          } else if (ev.key === "End") {
-            ev.preventDefault();
-            volume.value = 1;
-            if (volume.isMuted) volume.isMuted = false;
+            volume.increaseTick();
           } else if (ev.key === " " || ev.key === "Enter") {
             ev.preventDefault();
             volume.isMuted = !volume.isMuted;
