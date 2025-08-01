@@ -61,7 +61,7 @@
     }
   }
 
-  function handleSliderPointerDown(ev: MouseEvent | TouchEvent) {
+  function handleSliderPointerDown(ev: MouseEvent) {
     isDragging = true;
 
     updateSlider(ev);
@@ -69,11 +69,11 @@
     window.addEventListener("mouseup", handleSliderPointerUp);
   }
 
-  function handleSliderPointerMove(ev: MouseEvent | TouchEvent) {
+  function handleSliderPointerMove(ev: MouseEvent) {
     updateSlider(ev);
   }
 
-  function handleSliderPointerUp(ev: MouseEvent | TouchEvent) {
+  function handleSliderPointerUp(ev: MouseEvent) {
     isDragging = false;
 
     updateSlider(ev);
@@ -82,7 +82,7 @@
     window.removeEventListener("mouseup", handleSliderPointerUp);
   }
 
-  function updateSlider(ev: MouseEvent | TouchEvent) {
+  function updateSlider(ev: MouseEvent) {
     if (ev instanceof MouseEvent && ev.clientX === 0) return;
 
     const value = getSliderValueFromEvent(ev);
