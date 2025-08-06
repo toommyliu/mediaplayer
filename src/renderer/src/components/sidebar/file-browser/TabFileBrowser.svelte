@@ -1,17 +1,9 @@
 <script lang="ts">
   import { queue } from "$/lib/state/queue.svelte";
-  import { client } from "$/tipc";
-  import {
-    loadFileSystemStructure,
-    navigateToDirectory,
-    navigateToParent,
-    transformDirectoryContents
-  } from "$lib/file-browser.svelte";
-  import { fileBrowserState, type FileSystemItem } from "$lib/state/file-browser.svelte";
-  import { platformState } from "$lib/state/platform.svelte";
+  import { loadFileSystemStructure, navigateToParent } from "$lib/file-browser.svelte";
+  import { fileBrowserState } from "$lib/state/file-browser.svelte";
   import { playerState } from "$lib/state/player.svelte";
   import { cn } from "$lib/utils";
-  import { playVideo } from "$lib/video-playback";
   import Button from "$ui/button/button.svelte";
   import AlertCircle from "lucide-svelte/icons/alert-circle";
   import ArrowDown01 from "lucide-svelte/icons/arrow-down-01";
@@ -24,6 +16,7 @@
   import { fade } from "svelte/transition";
   import { sortFileTree, type SortOptions } from "../../../../../shared";
   import FileBrowserItem from "./FileBrowserItem.svelte";
+
   const hasNoFiles = $derived(fileBrowserState.fileSystem.length === 0);
 
   const sortedFileSystem = $derived(() => {

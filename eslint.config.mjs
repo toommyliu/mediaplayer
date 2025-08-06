@@ -1,69 +1,38 @@
-import common from "eslint-config-neon/common";
-import browser from "eslint-config-neon/browser";
-import node from "eslint-config-neon/node";
-import typescript from "eslint-config-neon/typescript";
-import prettier from "eslint-config-neon/prettier";
+import prettier from "eslint-config-prettier";
+import { includeIgnoreFile } from "@eslint/compat";
+import js from "@eslint/js";
 import svelte from "eslint-plugin-svelte";
-import ts from "typescript-eslint";
-import svelteConfig from "./svelte.config.mjs";
 import globals from "globals";
-import { defineConfig, globalIgnores } from "eslint/config";
+import { fileURLToPath } from "node:url";
+import ts from "typescript-eslint";
 
-export default defineConfig([
-  globalIgnores(["**/dist/*", "./**/*.js", "./**/*.mjs", "src/renderer/src/components/ui/**/*"]),
-  ...common,
-  ...browser,
-  ...node,
-  ...typescript,
-  ...svelte.configs["flat/recommended"],
+const gitignorePath = fileURLToPath(new URL("./.gitignore", import.meta.url));
+
+export default ts.config(
+  includeIgnoreFile(gitignorePath),
+  js.configs.recommended,
+  ...ts.configs.recommended,
+  ...svelte.configs.recommended,
+  prettier,
+  ...svelte.configs.prettier,
+  {
+    languageOptions: {
+      globals: { ...globals.browser, ...globals.node }
+    },
+    rules: {
+      // typescript-eslint strongly recommend that you do not use the no-undef lint rule on TypeScript projects.
+      // see: https://typescript-eslint.io/troubleshooting/faqs/eslint/#i-get-errors-from-the-no-undef-rule-about-global-variables-not-being-defined-even-though-there-are-no-typescript-errors
+      "no-undef": "off"
+    }
+  },
   {
     files: ["**/*.svelte", "**/*.svelte.ts", "**/*.svelte.js"],
     languageOptions: {
       parserOptions: {
         projectService: true,
         extraFileExtensions: [".svelte"],
-        parser: ts.parser,
-        svelteConfig
-      },
-      globals: {
-        ...globals.browser,
-        ...globals.node
+        parser: ts.parser
       }
-    }
-  },
-  ...prettier,
-  {
-    files: [
-      "src/renderer/**/*.ts",
-      "src/renderer/**/*.svelte",
-      "src/renderer/**/*.svelte.ts",
-      "src/renderer/**/*.svelte.js"
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: "./tsconfig.web.json"
-      },
-      globals: {
-        ...globals.browser,
-        ...globals.node
-      }
-    },
-    rules: {
-      "no-restricted-globals": "off"
-    }
-  },
-  {
-    files: ["src/main/**/*.ts", "src/preload/**/*.ts", "electron.vite.config.*"],
-    languageOptions: {
-      parserOptions: {
-        project: "./tsconfig.node.json"
-      }
-    }
-  },
-  {
-    rules: {
-      "require-atomic-updates": "off",
-      "import-x/order": "off"
     }
   }
-]);
+);
