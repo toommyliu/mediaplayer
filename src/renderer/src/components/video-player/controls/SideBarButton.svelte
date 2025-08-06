@@ -15,10 +15,7 @@
         variant="ghost"
         size="icon"
         onclick={() => (sidebarState.isOpen = !sidebarState.isOpen)}
-        class={cn(
-          "h-8 w-8 rounded-full text-white transition-all duration-200 hover:bg-white/20 hover:text-blue-400 focus-visible:ring-blue-400",
-          sidebarState.isOpen && "bg-blue-500/20 text-blue-400"
-        )}
+        class={cn(sidebarState.isOpen && "bg-blue-500/20 text-blue-400")}
       >
         <Menu class="size-4" />
       </Button>

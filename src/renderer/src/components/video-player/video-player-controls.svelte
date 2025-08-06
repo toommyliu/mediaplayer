@@ -382,7 +382,7 @@
         </div>
       </div>
 
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2 rounded-md bg-black/50 backdrop-blur-md">
         <SettingsButton />
         <FullScreenButton />
         <SideBarButton />

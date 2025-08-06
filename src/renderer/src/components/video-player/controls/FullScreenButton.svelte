@@ -20,13 +20,7 @@
 <Tooltip.Provider>
   <Tooltip.Root>
     <Tooltip.Trigger>
-      <Button
-        variant="ghost"
-        size="icon"
-        onclick={toggleFullscreen}
-        class="h-8 w-8 rounded-full text-white transition-all duration-200 hover:bg-white/20 hover:text-blue-400 focus-visible:ring-blue-400"
-        aria-label={playerState.isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
-      >
+      <Button variant="ghost" size="icon" onclick={toggleFullscreen}>
         {#if playerState.isFullscreen}
           <Minimize class="size-4" />
         {:else}

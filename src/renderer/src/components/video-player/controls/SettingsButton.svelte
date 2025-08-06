@@ -10,12 +10,7 @@
 <Tooltip.Provider>
   <Tooltip.Root>
     <Tooltip.Trigger>
-      <Button
-        variant="ghost"
-        size="icon"
-        onclick={() => (settings.showDialog = true)}
-        class="h-8 w-8 rounded-full text-white transition-all duration-200 hover:bg-white/20 hover:text-blue-400 focus-visible:ring-blue-400"
-      >
+      <Button variant="ghost" size="icon" onclick={() => (settings.showDialog = true)}>
         <TablerSettings class="size-4" />
       </Button>
     </Tooltip.Trigger>
