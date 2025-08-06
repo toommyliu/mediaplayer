@@ -38,7 +38,7 @@
     isHovering = false;
   }
 
-  function getSliderValueFromEvent(ev: MouseEvent | TouchEvent) {
+  function getSliderValueFromEvent(ev: MouseEvent) {
     if (!sliderRef) return volume.value;
 
     const rect = sliderRef.getBoundingClientRect();
@@ -139,7 +139,6 @@
         role="slider"
         tabindex={0}
         onmousedown={handleSliderPointerDown}
-        ontouchstart={handleSliderPointerDown}
         onclick={handleSliderClick}
         onkeydown={(ev) => {
           if (ev.key === "ArrowLeft" || ev.key === "ArrowDown") {
