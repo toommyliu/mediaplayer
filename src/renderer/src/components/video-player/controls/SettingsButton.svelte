@@ -2,7 +2,7 @@
   import * as Tooltip from "$ui/tooltip/";
   import { Button } from "$ui/button/";
 
-  import TablerSettings from "~icons/tabler/settings";
+  import LucideSettings from "~icons/lucide/settings";
 
   import { settings } from "$lib/state/settings.svelte";
 </script>
@@ -11,7 +11,7 @@
   <Tooltip.Root>
     <Tooltip.Trigger>
       <Button variant="ghost" size="icon" onclick={() => (settings.showDialog = true)}>
-        <TablerSettings class="size-4" />
+        <LucideSettings class="size-4" />
       </Button>
     </Tooltip.Trigger>
     <Tooltip.Content>
