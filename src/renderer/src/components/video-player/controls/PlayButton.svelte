@@ -12,11 +12,13 @@
   <Tooltip.Root>
     <Tooltip.Trigger>
       <Button variant="ghost" size="icon" onclick={async () => playerState.togglePlayPause()}>
-        {#if playerState.isPlaying}
-          <TablerPause class="h-4 w-4" />
-        {:else}
-          <TablerPlay class="h-4 w-4" />
-        {/if}
+        {#key playerState.isPlaying}
+          {#if playerState.isPlaying}
+            <TablerPause class="h-4 w-4" />
+          {:else}
+            <TablerPlay class="h-4 w-4" />
+          {/if}
+        {/key}
       </Button>
     </Tooltip.Trigger>
     <Tooltip.Content>{playerState.isPlaying ? "Pause" : "Play"}</Tooltip.Content>
