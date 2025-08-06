@@ -16,6 +16,8 @@
   import { playVideo } from "$lib/video-playback";
   import { client, handlers } from "./tipc";
 
+  import Settings from "$components/Settings.svelte";
+
   QueueManager.initialize();
 
   async function getAllVideoFilesRecursive(
@@ -147,6 +149,7 @@
 </script>
 
 <ModeWatcher />
+
 <div class="flex h-screen flex-col">
   <div class="flex w-full flex-1 overflow-hidden">
     <PaneGroup direction="horizontal">
@@ -185,3 +188,5 @@
     </PaneGroup>
   </div>
 </div>
+
+<Settings />

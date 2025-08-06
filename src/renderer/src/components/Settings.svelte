@@ -1,9 +1,10 @@
 <script lang="ts">
   import SettingsTabGeneral from "$/components/settings/SettingsTabGeneral.svelte";
   import SettingsKeyboardShortcuts from "$/components/settings/SettingsTabKeyboardShortcuts.svelte";
+
   import * as Dialog from "$ui/dialog";
 
-  let { open: isOpen = $bindable() }: { open: boolean } = $props();
+  import { settings } from "$lib/state/settings.svelte";
 
   const SettingsCategory = {
     General: "general",
@@ -24,7 +25,7 @@
   let selectedTab: string = $state(SettingsCategory.General);
 </script>
 
-<Dialog.Root bind:open={isOpen}>
+<Dialog.Root bind:open={settings.showDialog}>
   <Dialog.Content
     class="flex h-[85vh] w-[90vw] max-w-6xl flex-col overflow-hidden p-0 sm:max-w-none"
     showCloseButton={false}

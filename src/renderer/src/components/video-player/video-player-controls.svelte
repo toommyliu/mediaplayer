@@ -10,7 +10,6 @@
   import Volume1 from "lucide-svelte/icons/volume-1";
   import Volume2 from "lucide-svelte/icons/volume-2";
   import VolumeX from "lucide-svelte/icons/volume-x";
-  import Settings from "$/components/Settings.svelte";
   import { client } from "$/tipc";
   import { ICON_SIZE } from "$lib/constants";
   import { makeTimeString } from "$lib/makeTimeString";
@@ -27,6 +26,7 @@
   import PreviousButton from "./controls/PreviousButton.svelte";
   import ForwardButton from "./controls/ForwardButton.svelte";
   import VolumeControl from "./controls/VolumeControl.svelte";
+  import SettingsButton from "./controls/SettingsButton.svelte";
 
   let isDragging = $state(false);
   let hoverTime = $state(0);
@@ -382,24 +382,7 @@
 
       <!-- Right Controls -->
       <div class="flex items-center gap-2">
-        <Tooltip.Provider>
-          <Tooltip.Root>
-            <Tooltip.Trigger>
-              <Button
-                variant="ghost"
-                size="icon"
-                onclick={() => (showSettingsDialog = true)}
-                class="h-8 w-8 rounded-full text-white transition-all duration-200 hover:bg-white/20 hover:text-blue-400 focus-visible:ring-blue-400"
-                aria-label="Open settings"
-              >
-                <IconSettings size={ICON_SIZE} />
-              </Button>
-            </Tooltip.Trigger>
-            <Tooltip.Content>
-              <p>Settings</p>
-            </Tooltip.Content>
-          </Tooltip.Root>
-        </Tooltip.Provider>
+        <SettingsButton />
 
         <!-- Fullscreen -->
         <Tooltip.Provider>
