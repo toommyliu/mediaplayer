@@ -28,6 +28,7 @@
   import VolumeControl from "./controls/VolumeControl.svelte";
   import SettingsButton from "./controls/SettingsButton.svelte";
   import FullScreenButton from "./controls/FullScreenButton.svelte";
+  import SideBarButton from "./controls/SideBarButton.svelte";
 
   let isDragging = $state(false);
   let hoverTime = $state(0);
@@ -381,34 +382,10 @@
         </div>
       </div>
 
-      <!-- Right Controls -->
       <div class="flex items-center gap-2">
         <SettingsButton />
         <FullScreenButton />
-
-        <!-- Sidebar Toggle -->
-        <Tooltip.Provider>
-          <Tooltip.Root>
-            <Tooltip.Trigger>
-              <Button
-                variant="ghost"
-                size="icon"
-                onclick={() => (sidebarState.isOpen = !sidebarState.isOpen)}
-                class={cn(
-                  "h-8 w-8 rounded-full text-white transition-all duration-200 hover:bg-white/20 hover:text-blue-400 focus-visible:ring-blue-400",
-                  sidebarState.isOpen && "bg-blue-500/20 text-blue-400"
-                )}
-                aria-label={sidebarState.isOpen ? "Hide sidebar" : "Show sidebar"}
-                aria-pressed={sidebarState.isOpen}
-              >
-                <Menu size={ICON_SIZE} />
-              </Button>
-            </Tooltip.Trigger>
-            <Tooltip.Content>
-              <p>{sidebarState.isOpen ? "Hide sidebar" : "Show sidebar"}</p>
-            </Tooltip.Content>
-          </Tooltip.Root>
-        </Tooltip.Provider>
+        <SideBarButton />
       </div>
     </div>
   </div>
