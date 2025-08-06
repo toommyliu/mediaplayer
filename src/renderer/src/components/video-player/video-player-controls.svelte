@@ -27,6 +27,7 @@
   import ForwardButton from "./controls/ForwardButton.svelte";
   import VolumeControl from "./controls/VolumeControl.svelte";
   import SettingsButton from "./controls/SettingsButton.svelte";
+  import FullScreenButton from "./controls/FullScreenButton.svelte";
 
   let isDragging = $state(false);
   let hoverTime = $state(0);
@@ -383,30 +384,7 @@
       <!-- Right Controls -->
       <div class="flex items-center gap-2">
         <SettingsButton />
-
-        <!-- Fullscreen -->
-        <Tooltip.Provider>
-          <Tooltip.Root>
-            <Tooltip.Trigger>
-              <Button
-                variant="ghost"
-                size="icon"
-                onclick={toggleFullscreen}
-                class="h-8 w-8 rounded-full text-white transition-all duration-200 hover:bg-white/20 hover:text-blue-400 focus-visible:ring-blue-400"
-                aria-label={playerState.isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
-              >
-                {#if playerState.isFullscreen}
-                  <Minimize size={ICON_SIZE} />
-                {:else}
-                  <Maximize size={ICON_SIZE} />
-                {/if}
-              </Button>
-            </Tooltip.Trigger>
-            <Tooltip.Content>
-              <p>Fullscreen</p>
-            </Tooltip.Content>
-          </Tooltip.Root>
-        </Tooltip.Provider>
+        <FullScreenButton />
 
         <!-- Sidebar Toggle -->
         <Tooltip.Provider>
