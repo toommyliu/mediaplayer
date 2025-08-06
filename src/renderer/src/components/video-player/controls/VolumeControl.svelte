@@ -165,7 +165,7 @@
             "absolute -top-1/2 h-3 w-3 -translate-x-1/2 transform rounded-full bg-white shadow",
             !isDragging && "transition-all duration-200"
           )}
-          style="left: {(volume.isMuted ? 0 : volume.value) * 100}%;"
+          style="left: calc({(volume.isMuted ? 0 : volume.value) * 87.5 + 6.25}%);"
         ></div>
       </div>
     {/if}
