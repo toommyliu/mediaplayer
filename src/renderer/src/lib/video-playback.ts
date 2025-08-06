@@ -32,6 +32,7 @@ export function playVideo(src: string): void {
 
   queue.index = queueIndex;
   playerState.currentTime = 0;
+  playerState.isPlaying = true;
 
   if (playerState.videoElement) {
     playerState.videoElement.currentTime = 0;

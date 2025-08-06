@@ -10,7 +10,6 @@
   import Volume1 from "lucide-svelte/icons/volume-1";
   import Volume2 from "lucide-svelte/icons/volume-2";
   import VolumeX from "lucide-svelte/icons/volume-x";
-  import Settings from "$/components/Settings.svelte";
   import { client } from "$/tipc";
   import { ICON_SIZE } from "$lib/constants";
   import { makeTimeString } from "$lib/makeTimeString";
@@ -22,6 +21,14 @@
   import { playNextVideo, playPreviousVideo, playVideoElement } from "$lib/video-playback";
   import Button from "$ui/button/button.svelte";
   import * as Tooltip from "$ui/tooltip/";
+  import { fade } from "svelte/transition";
+  import PlayButton from "./controls/PlayButton.svelte";
+  import PreviousButton from "./controls/PreviousButton.svelte";
+  import ForwardButton from "./controls/ForwardButton.svelte";
+  import VolumeControl from "./controls/VolumeControl.svelte";
+  import SettingsButton from "./controls/SettingsButton.svelte";
+  import FullScreenButton from "./controls/FullScreenButton.svelte";
+  import SideBarButton from "./controls/SideBarButton.svelte";
 
   let isDragging = $state(false);
   let hoverTime = $state(0);
@@ -215,18 +222,6 @@
     }
   };
 
-  const togglePlay = async (): Promise<void> => {
-    if (!playerState.videoElement || !queue.currentItem) return;
-
-    if (playerState.isPlaying) {
-      playerState.videoElement.pause();
-      playerState.isPlaying = false;
-    } else {
-      await playVideoElement();
-      playerState.isPlaying = true;
-    }
-  };
-
   const toggleMute = (): void => {
     volume.isMuted = !volume.isMuted;
 
@@ -325,291 +320,73 @@
 </script>
 
 {#if showOverlay}
-  <div class="absolute right-0 bottom-20 left-0 z-40 mx-8">
-    <div
-      class={cn(
-        "group relative h-2 rounded-full bg-black/50 backdrop-blur-sm",
-        !isDragging && "transition-colors duration-200",
-        isDragging && "bg-black/70 shadow-inner shadow-blue-500/30"
-      )}
-      onclick={handleProgressClick}
-      onmousedown={handleProgressMouseDown}
-      onmousemove={handleProgressMouseMove}
-      onmouseenter={() => (isHovering = true)}
-      onmouseleave={() => (isHovering = false)}
-      role="slider"
-      aria-label="Video progress"
-      aria-valuemin={0}
-      aria-valuemax={playerState.duration}
-      aria-valuenow={playerState.currentTime}
-      aria-valuetext={`${makeTimeString(playerState.currentTime)} of ${makeTimeString(playerState.duration)}`}
-      tabindex={0}
-    >
-      <!-- Buffered progress -->
+  <div
+    class="absolute inset-x-0 bottom-0 z-30 bg-gradient-to-t from-black/80 to-transparent pt-16 pb-6"
+    transition:fade={{ duration: 300 }}
+  >
+    <div class="mx-8 mb-4">
       <div
-        class="absolute inset-0 h-full rounded-full bg-white/30 will-change-auto"
-        style="width: {bufferedPercentage}%"
-        aria-hidden="true"
-      ></div>
-
-      <!-- Current progress -->
-      <div
-        class="absolute inset-0 h-full rounded-full bg-blue-500 will-change-auto"
-        class:transition-all={!isDragging}
-        class:duration-75={!isDragging}
-        class:ease-linear={!isDragging}
-        style="width: {progressPercentage > 0 ? Math.max(progressPercentage, 0.5) : 0}%"
-        aria-hidden="true"
-      ></div>
-
-      <!-- Progress thumb -->
-      {#if playerState.duration > 0}
-        <div
-          class={cn(
-            "absolute top-1/2 h-4 w-4 rounded-full shadow-lg will-change-transform",
-            "border-2 border-white/50 bg-blue-500 shadow-blue-300/50",
-            !isDragging && "transition-all duration-150 ease-out",
-            isDragging
-              ? "scale-150 border-white opacity-100 shadow-lg shadow-blue-500/50"
-              : isHovering
-                ? "scale-125 opacity-100"
-                : "scale-100 opacity-0"
-          )}
-          style="left: {progressPercentage}%; transform: translateX(-50%) translateY(-50%)"
-          aria-hidden="true"
-        ></div>
-      {/if}
-
-      <!-- Hover time tooltip -->
-      {#if isHovering && !isDragging && playerState.duration > 0}
-        <div
-          class="absolute bottom-8 z-10 rounded-md bg-black/90 px-2 py-1 text-xs text-white shadow-lg backdrop-blur-xs will-change-transform"
-          style="left: {hoverPercentage}%; transform: translateX(-50%)"
-          aria-hidden="true"
-        >
-          {makeTimeString(hoverTime)}
-          <div
-            class="absolute top-full left-1/2 h-0 w-0 -translate-x-1/2 border-t-2 border-r-2 border-l-2 border-transparent border-t-black/90"
-          ></div>
-        </div>
-      {/if}
-    </div>
-  </div>
-
-  <!-- Bottom Left Controls - Playback controls and time display -->
-  <div class="absolute bottom-6 left-6 z-40 flex items-center gap-2">
-    <!-- Playback Controls Group -->
-    <div class="flex items-center gap-2 rounded-md bg-black/50 px-3 py-1 backdrop-blur-md">
-      <!-- Previous Track -->
-      <Tooltip.Provider>
-        <Tooltip.Root>
-          <Tooltip.Trigger>
-            <Button
-              variant="ghost"
-              size="icon"
-              onclick={playPreviousVideo}
-              class="h-8 w-8 text-white transition-all duration-200 hover:bg-white/20 hover:text-blue-400 focus-visible:ring-blue-400"
-              disabled={!queue.currentItem || playerState.isLoading}
-            >
-              <Rewind size={ICON_SIZE} />
-            </Button>
-          </Tooltip.Trigger>
-          <Tooltip.Content>
-            <p>Previous track</p>
-          </Tooltip.Content>
-        </Tooltip.Root>
-      </Tooltip.Provider>
-
-      <!-- Play/Pause -->
-      <Tooltip.Provider>
-        <Tooltip.Root>
-          <Tooltip.Trigger>
-            <Button
-              variant="ghost"
-              size="icon"
-              onclick={togglePlay}
-              class="h-8 w-8 text-white transition-all duration-200 hover:bg-white/20 hover:text-blue-400 focus-visible:ring-blue-400"
-              disabled={!queue.currentItem || playerState.isLoading}
-            >
-              {#if playerState.isPlaying}
-                <Pause size={ICON_SIZE} />
-              {:else}
-                <Play size={ICON_SIZE} />
-              {/if}
-            </Button>
-          </Tooltip.Trigger>
-          <Tooltip.Content>
-            <p>{playerState.isPlaying ? "Pause (Space)" : "Play (Space)"}</p>
-          </Tooltip.Content>
-        </Tooltip.Root>
-      </Tooltip.Provider>
-
-      <!-- Next Track -->
-      <Tooltip.Provider>
-        <Tooltip.Root>
-          <Tooltip.Trigger>
-            <Button
-              variant="ghost"
-              size="icon"
-              onclick={playNextVideo}
-              class="h-8 w-8 text-white transition-all duration-200 hover:bg-white/20 hover:text-blue-400 focus-visible:ring-blue-400"
-              disabled={!queue.currentItem || playerState.isLoading}
-            >
-              <FastForward size={ICON_SIZE} />
-            </Button>
-          </Tooltip.Trigger>
-          <Tooltip.Content>
-            <p>Next track</p>
-          </Tooltip.Content>
-        </Tooltip.Root>
-      </Tooltip.Provider>
-    </div>
-
-    <!-- Volume Controls -->
-    <div
-      class="volume-controls group flex items-center gap-2 rounded-md bg-black/50 px-3 py-1 backdrop-blur-md"
-      onmouseenter={() => (isVolumeHovering = true)}
-      onmouseleave={() => {
-        if (!isVolumeDragging) {
-          isVolumeHovering = false;
-        }
-      }}
-    >
-      <Tooltip.Provider>
-        <Tooltip.Root>
-          <Tooltip.Trigger>
-            <Button
-              variant="ghost"
-              size="icon"
-              onclick={toggleMute}
-              class="h-8 w-8 text-white transition-all duration-200 hover:bg-white/20 hover:text-blue-400 focus-visible:ring-blue-400"
-            >
-              {#if volume.isMuted ?? volume.value === 0}
-                <VolumeX size={ICON_SIZE} />
-              {:else if volume.value <= 0.33}
-                <Volume1 size={ICON_SIZE} />
-              {:else}
-                <Volume2 size={ICON_SIZE} />
-              {/if}
-            </Button>
-          </Tooltip.Trigger>
-          <Tooltip.Content>
-            <p>{volume.isMuted ? "Unmute" : "Mute"}</p>
-          </Tooltip.Content>
-        </Tooltip.Root>
-      </Tooltip.Provider>
-
+        class="relative z-10 flex items-center justify-between px-1 pb-2 font-mono text-xs text-white select-none"
+      >
+        <span>{makeTimeString(playerState.currentTime)}</span>
+        <span>
+          {#if playerState.duration}
+            -{makeTimeString(Math.max(0, playerState.duration - playerState.currentTime))}
+          {:else}
+            -0:00
+          {/if}
+        </span>
+      </div>
       <div
         class={cn(
-          "relative w-20 transition-opacity duration-150",
-          isVolumeHovering || isVolumeDragging ? "opacity-100" : "opacity-70"
+          "group relative h-2 rounded-full bg-white/20 lg:h-3",
+          isDragging
+            ? "bg-black/70 shadow-inner shadow-blue-500/30"
+            : "transition-colors duration-200"
         )}
+        onclick={handleProgressClick}
+        onmousedown={handleProgressMouseDown}
+        onmousemove={handleProgressMouseMove}
+        onmouseenter={() => (isHovering = true)}
+        onmouseleave={() => (isHovering = false)}
+        role="slider"
+        tabindex={0}
       >
         <div
-          class={cn(
-            "group relative h-2 rounded-full bg-white/20",
-            !isVolumeDragging && "transition-colors duration-200",
-            isVolumeDragging && "bg-white/30"
-          )}
-          onclick={handleVolumeClick}
-          onmousedown={handleVolumeMouseDown}
-          role="slider"
-          tabindex={0}
-        >
+          class={cn("absolute h-2 grow rounded-full bg-white lg:h-3", {
+            "transition-all duration-75 ease-linear": !isDragging
+          })}
+          style="width: {progressPercentage > 0 ? Math.max(progressPercentage, 0.5) : 0}%"
+        ></div>
+        {#if isHovering && !isDragging && playerState.duration > 0}
           <div
-            class={cn(
-              "absolute inset-0 h-full rounded-full bg-blue-500",
-              !isVolumeDragging && "transition-all duration-200"
-            )}
-            style="width: {(volume.isMuted ? 0 : volume.value) * 100}%"
-            aria-hidden="true"
-          ></div>
+            class="absolute bottom-8 z-10 rounded-md bg-black/90 px-2 py-1 text-xs text-white shadow-lg"
+            style="left: {hoverPercentage}%; transform: translateX(-50%)"
+          >
+            {makeTimeString(hoverTime)}
+            <div
+              class="absolute top-full left-1/2 h-0 w-0 -translate-x-1/2 border-t-2 border-r-2 border-l-2 border-transparent border-t-black/90"
+            ></div>
+          </div>
+        {/if}
+      </div>
+    </div>
 
-          <div
-            class={cn(
-              "pointer-events-none absolute top-1/2 h-3 w-3 rounded-full shadow-lg",
-              "border-2 border-white/50 bg-blue-500 shadow-blue-300/50",
-              !isVolumeDragging && "transition-all duration-100",
-              isVolumeDragging || isVolumeHovering ? "opacity-100" : "opacity-0"
-            )}
-            style="left: {(volume.isMuted ? 0 : volume.value) *
-              100}%; transform: translateX(-50%) translateY(-50%); z-index: 10;"
-            aria-hidden="true"
-          ></div>
+    <div class="flex items-center justify-between px-8">
+      <div class="flex items-center gap-4">
+        <div class="flex grow items-center gap-2 rounded-md bg-black/50 backdrop-blur-md">
+          <PreviousButton />
+          <PlayButton />
+          <ForwardButton />
+          <VolumeControl />
         </div>
+      </div>
+
+      <div class="flex items-center gap-2 rounded-md bg-black/50 backdrop-blur-md">
+        <SettingsButton />
+        <FullScreenButton />
+        <SideBarButton />
       </div>
     </div>
   </div>
-
-  <!-- Bottom Right Controls - Floating group -->
-  <div class="absolute right-6 bottom-6 z-40 flex items-center gap-2">
-    <Tooltip.Provider>
-      <Tooltip.Root>
-        <Tooltip.Trigger>
-          <Button
-            variant="ghost"
-            size="icon"
-            onclick={() => (showSettingsDialog = true)}
-            class="h-8 w-8 rounded-full bg-black/50 text-white backdrop-blur-md transition-all duration-200 hover:bg-black/70 hover:text-blue-400 focus-visible:ring-blue-400"
-            aria-label="Open settings"
-          >
-            <IconSettings size={ICON_SIZE} />
-          </Button>
-        </Tooltip.Trigger>
-        <Tooltip.Content>
-          <p>Settings</p>
-        </Tooltip.Content>
-      </Tooltip.Root>
-    </Tooltip.Provider>
-
-    <!-- Fullscreen -->
-    <Tooltip.Provider>
-      <Tooltip.Root>
-        <Tooltip.Trigger>
-          <Button
-            variant="ghost"
-            size="icon"
-            onclick={toggleFullscreen}
-            class="h-8 w-8 rounded-full bg-black/50 text-white backdrop-blur-md transition-all duration-200 hover:bg-black/70 hover:text-blue-400 focus-visible:ring-blue-400"
-            aria-label={playerState.isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
-          >
-            {#if playerState.isFullscreen}
-              <Minimize size={ICON_SIZE} />
-            {:else}
-              <Maximize size={ICON_SIZE} />
-            {/if}
-          </Button>
-        </Tooltip.Trigger>
-        <Tooltip.Content>
-          <p>Fullscreen</p>
-        </Tooltip.Content>
-      </Tooltip.Root>
-    </Tooltip.Provider>
-
-    <!-- Sidebar Toggle -->
-    <Tooltip.Provider>
-      <Tooltip.Root>
-        <Tooltip.Trigger>
-          <Button
-            variant="ghost"
-            size="icon"
-            onclick={() => (sidebarState.isOpen = !sidebarState.isOpen)}
-            class={cn(
-              "h-8 w-8 rounded-full bg-black/50 text-white backdrop-blur-md transition-all duration-200 hover:bg-black/70 hover:text-blue-400 focus-visible:ring-blue-400",
-              sidebarState.isOpen && "bg-black/70 text-blue-400"
-            )}
-            aria-label={sidebarState.isOpen ? "Hide sidebar" : "Show sidebar"}
-            aria-pressed={sidebarState.isOpen}
-          >
-            <Menu size={ICON_SIZE} />
-          </Button>
-        </Tooltip.Trigger>
-        <Tooltip.Content>
-          <p>{sidebarState.isOpen ? "Hide sidebar" : "Show sidebar"}</p>
-        </Tooltip.Content>
-      </Tooltip.Root>
-    </Tooltip.Provider>
-  </div>
 {/if}
-
-<Settings bind:open={showSettingsDialog} />

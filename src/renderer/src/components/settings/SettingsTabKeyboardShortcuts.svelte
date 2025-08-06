@@ -1,11 +1,10 @@
 <script lang="ts">
   import { formatHotkeyDisplay, hotkeyRecorder } from "$lib/hotkeys/hotkey-recorder";
   import { hotkeyConfig } from "$lib/hotkeys.svelte";
-  import Button from "$ui/button/button.svelte";
   import { Kbd } from "$ui/kbd";
 
-  import TablerCancel from "~icons/tabler/cancel";
-  import TablerCirclePlus from "~icons/tabler/circle-plus";
+  import LucideX from "~icons/lucide/x";
+  import LucideCirclePlus from "~icons/lucide/circle-plus";
 
   let editingAction = $state<string | null>(null);
   let isRecording = $state(false);
@@ -84,20 +83,21 @@
                 {/if}
               </Kbd>
               {#if isRecording && editingAction === shortcut.id}
-                <Button variant="destructive" size="icon" class="ml-1" onclick={cancelEdit}>
+                <button
+                  class="ring-offset-background focus-visible:ring-ring bg-destructive text-destructive-foreground hover:bg-destructive/90 ml-1 inline-flex h-8 w-8 items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
+                  onclick={cancelEdit}
+                >
                   <span class="sr-only">Cancel Recording</span>
-                  <TablerCancel class="h-5! w-5!" />
-                </Button>
+                  <LucideX class="size-3" />
+                </button>
               {:else}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  class="ml-1"
+                <button
+                  class="ring-offset-background focus-visible:ring-ring border-input bg-background hover:bg-accent hover:text-accent-foreground ml-1 inline-flex h-8 w-8 items-center justify-center rounded-md border text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
                   onclick={() => startEditingHotkey(shortcut.id)}
                 >
                   <span class="sr-only">Edit</span>
-                  <TablerCirclePlus class="h-5! w-5!" />
-                </Button>
+                  <LucideCirclePlus class="size-3" />
+                </button>
               {/if}
             </div>
           </div>

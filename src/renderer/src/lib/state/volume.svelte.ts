@@ -34,6 +34,16 @@ class VolumeState {
       playerState.videoElement.volume = this._isMuted ? 0 : this._value.current;
     }
   }
+
+  public decreaseTick() {
+    if (this.value > 0) this.value = Math.max(0, this.value - 0.05);
+    if (this.value === 0) this.isMuted = true;
+  }
+
+  public increaseTick() {
+    if (this.value < 1) this.value = Math.min(1, this.value + 0.05);
+    if (this.value > 0) this.isMuted = false;
+  }
 }
 
 export const volume = new VolumeState();

@@ -16,6 +16,8 @@
   import { playVideo } from "$lib/video-playback";
   import { client, handlers } from "./tipc";
 
+  import Settings from "$components/Settings.svelte";
+
   QueueManager.initialize();
 
   async function getAllVideoFilesRecursive(
@@ -147,6 +149,7 @@
 </script>
 
 <ModeWatcher />
+
 <div class="flex h-screen flex-col">
   <div class="flex w-full flex-1 overflow-hidden">
     <PaneGroup direction="horizontal">
@@ -173,9 +176,10 @@
         </main>
       </Pane>
 
-      <PaneResizer class="w-1 cursor-col-resize bg-gray-600 transition-colors hover:bg-gray-500" />
-
       {#if sidebarState.isOpen}
+        <PaneResizer
+          class="w-1 cursor-col-resize bg-gray-600 transition-colors hover:bg-gray-500"
+        />
         <Pane defaultSize={20}>
           <aside class="h-full border-l border-gray-700">
             <Sidebar />
@@ -185,3 +189,5 @@
     </PaneGroup>
   </div>
 </div>
+
+<Settings />

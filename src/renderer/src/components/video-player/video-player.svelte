@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { sidebarState } from "$/lib/state/sidebar.svelte";
   import { loadFileSystemStructure } from "$lib/file-browser.svelte";
   import { playerState } from "$lib/state/player.svelte";
   import { queue } from "$lib/state/queue.svelte";
@@ -229,7 +230,10 @@
     <video
       bind:this={playerState.videoElement}
       src={`file://${queue.currentItem.path}`}
-      class="video-no-controls h-full w-full object-contain"
+      class={cn(
+        "pointer-events-none h-full w-full object-cover",
+        sidebarState.isOpen ? "h-[90%] object-contain" : ""
+      )}
       onloadstart={handleLoadStart}
       onloadeddata={handleLoadedData}
       onloadedmetadata={handleLoadedMetadata}
@@ -247,7 +251,7 @@
     >
     </video>
 
-    <VideoPlayerTitle {showOverlay} />
+    <!-- <VideoPlayerTitle {showOverlay} /> -->
     <VideoPlayerControls {showOverlay} />
   {/if}
 </div>
