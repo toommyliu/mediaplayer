@@ -25,10 +25,17 @@
   import { playVideo } from "$lib/video-playback";
   import Button from "$ui/button/button.svelte";
   import * as ContextMenu from "$ui/context-menu/";
+  import { sortFileTree, type SortOptions } from "../../../../shared/";
 
   const hasNoFiles = $derived(fileBrowserState.fileSystem.length === 0);
 
-  const sortedFileSystem = $derived(() => [...fileBrowserState.fileSystem].sort(compareItems));
+  const sortedFileSystem = $derived(() => {
+    const sortOptions: SortOptions = {
+      sortBy: fileBrowserState.sortBy,
+      sortDirection: fileBrowserState.sortDirection
+    };
+    return sortFileTree(fileBrowserState.fileSystem, sortOptions);
+  });
 
   function handleItemClick(ev: MouseEvent, item: FileSystemItem) {
     if (!item.path || fileBrowserState.isLoading) return;
@@ -74,77 +81,6 @@
     }
   }
 
-  function naturalSort(a: string, b: string): number {
-    // Split strings into parts, separating numeric and non-numeric segments
-    const aParts = a.match(/\d+|\D+/g) ?? [];
-    const bParts = b.match(/\d+|\D+/g) ?? [];
-
-    const maxLength = Math.max(aParts.length, bParts.length);
-
-    for (let idx = 0; idx < maxLength; idx++) {
-      const aPart = aParts[idx] ?? "";
-      const bPart = bParts[idx] ?? "";
-
-      // If both parts are numeric, compare as numbers
-      const aNum = Number.parseInt(aPart, 10);
-      const bNum = Number.parseInt(bPart, 10);
-
-      if (!Number.isNaN(aNum) && !Number.isNaN(bNum)) {
-        if (aNum !== bNum) return aNum - bNum;
-      } else {
-        // Compare as strings with locale awareness
-        const comparison = aPart.localeCompare(bPart, undefined, {
-          numeric: true,
-          sensitivity: "base"
-        });
-        if (comparison !== 0) {
-          return comparison;
-        }
-      }
-    }
-
-    return 0;
-  }
-
-  function compareItems(a: FileSystemItem, b: FileSystemItem): number {
-    const aIsFolder = Boolean(a.files);
-    const bIsFolder = Boolean(b.files);
-
-    // Folders first
-    if (aIsFolder && !bIsFolder) return -1;
-    if (!aIsFolder && bIsFolder) return 1;
-
-    // Apply filter given params
-    let comparison = 0;
-    if (fileBrowserState.sortBy === "name") {
-      const aName = a.name ?? "";
-      const bName = b.name ?? "";
-      comparison = naturalSort(aName, bName);
-    } else if (fileBrowserState.sortBy === "duration") {
-      if (aIsFolder && bIsFolder) {
-        const aName = a.name ?? "";
-        const bName = b.name ?? "";
-        comparison = naturalSort(aName, bName);
-      } else {
-        const aDuration = a.duration ?? 0;
-        const bDuration = b.duration ?? 0;
-
-        if (aDuration === bDuration) {
-          const aName = a.name ?? "";
-          const bName = b.name ?? "";
-          comparison = naturalSort(aName, bName);
-        } else {
-          if (aDuration === 0 && bDuration > 0) return 1;
-          if (bDuration === 0 && aDuration > 0) return -1;
-          comparison = aDuration - bDuration;
-        }
-      }
-    }
-
-    // Apply sort direction
-    return fileBrowserState.sortDirection === "desc" ? -comparison : comparison;
-  }
-
   function setSortBy(sortBy: "duration" | "name") {
     if (fileBrowserState.sortBy === sortBy) {
       fileBrowserState.sortDirection = fileBrowserState.sortDirection === "asc" ? "desc" : "asc";
@@ -162,7 +98,11 @@
       isVideo && item.path && playerState.currentVideo === `file://${item.path}`;
     const isLoading = item.path ? fileBrowserState.loadingFolders.has(item.path) : false;
 
-    const sortedChildren = item.files ? [...item.files].sort(compareItems) : undefined;
+    const sortOptions: SortOptions = {
+      sortBy: fileBrowserState.sortBy,
+      sortDirection: fileBrowserState.sortDirection
+    };
+    const sortedChildren = item.files ? sortFileTree(item.files, sortOptions) : undefined;
 
     return {
       item: { ...item, files: sortedChildren },
@@ -234,14 +174,14 @@
     targetPath: string,
     newContents: FileSystemItem[]
   ): boolean {
-    for (let i = 0; i < items.length; i++) {
-      if (items[i].path === targetPath && items[i].files !== undefined) {
-        items[i] = { ...items[i], files: newContents };
+    for (let idx = 0; idx < items.length; idx++) {
+      if (items[idx].path === targetPath && items[idx].files !== undefined) {
+        items[idx] = { ...items[idx], files: newContents };
         fileBrowserState.fileTree = { ...fileBrowserState.fileTree! };
         return true;
       }
 
-      if (items[i].files && updateFolderContents(items[i].files!, targetPath, newContents)) {
+      if (items[idx].files && updateFolderContents(items[idx].files!, targetPath, newContents)) {
         return true;
       }
     }

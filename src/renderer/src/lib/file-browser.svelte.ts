@@ -1,9 +1,18 @@
 import { client } from "$/tipc";
-import { fileBrowserState, type FileSystemItem } from "$lib/state/file-browser.svelte";
+import {
+  flattenVideoFiles,
+  sortFileTree,
+  type FileTreeItem,
+  type SortOptions
+} from "../../../shared";
+import { fileBrowserState } from "$lib/state/file-browser.svelte";
 import { playerState } from "$lib/state/player.svelte";
 import { queue } from "$lib/state/queue.svelte";
 import { QueueManager } from "./queue-manager";
 import { playVideo } from "./video-playback";
+
+// Type alias for backward compatibility
+export type FileSystemItem = FileTreeItem;
 
 export function transformDirectoryContents(directoryContents): FileSystemItem[] {
   if (!directoryContents?.files) return [];
@@ -11,7 +20,7 @@ export function transformDirectoryContents(directoryContents): FileSystemItem[] 
   const items = directoryContents.files.map((item) => ({
     name: item.name,
     path: item.path,
-    duration: item.duration || 0,
+    duration: item.duration ?? 0,
     files: item.type === "folder" ? [] : undefined,
     type: item.type
   }));
@@ -69,24 +78,18 @@ export async function navigateToParent() {
 export function updatePlayerQueueForced(preserveCurrentVideo: boolean = false) {
   const currentVideo = preserveCurrentVideo ? queue.currentItem : null;
 
-  queue.items = fileBrowserState.fileSystem.flatMap(function flatten(entry) {
-    if (entry.files) {
-      return entry.files?.flatMap(flatten) ?? [];
-    }
+  // Use shared utility to flatten video files
+  const videoFiles = flattenVideoFiles(fileBrowserState.fileSystem);
 
-    if (entry.path && entry.duration !== undefined) {
-      return {
-        name: entry.name ?? entry.path.split("/").pop() ?? "Unknown Video",
-        path: entry.path,
-        duration: entry.duration
-      };
-    }
-
-    return [];
-  });
+  queue.items = videoFiles.map((video) => ({
+    id: `${video.path}-${Date.now()}`, // Generate a simple ID
+    name: video.name,
+    path: video.path,
+    duration: video.duration ?? 0
+  }));
 
   if (currentVideo) {
-    const newIndex = queue.items.indexOf(currentVideo);
+    const newIndex = queue.items.findIndex((item) => item.path === currentVideo.path);
     queue.index = newIndex === -1 ? 0 : newIndex;
   } else {
     queue.index = 0;
@@ -197,117 +200,11 @@ export async function getAllVideoFilesRecursive(
   return videoFiles;
 }
 
-function extractDatePrefix(name: string): Date | null {
-  // Match YYYY/MM/DD, YYYY-MM-DD, or YYYY.MM.DD patterns at the start of the filename
-  const dateMatch = /^(\d{4})[./\-](\d{1,2})[./\-](\d{1,2})/.exec(name);
-  if (dateMatch) {
-    const [, year, month, day] = dateMatch;
-    const date = new Date(
-      Number.parseInt(year, 10),
-      Number.parseInt(month, 10) - 1,
-      Number.parseInt(day, 10)
-    );
-
-    if (!Number.isNaN(date.getTime())) {
-      return date;
-    }
-  }
-
-  return null;
-}
-
-function naturalCompare(a: string, b: string): number {
-  // Split strings into chunks of letters and numbers
-  const chunksA = a.match(/(\d+|\D+)/g) ?? [];
-  const chunksB = b.match(/(\d+|\D+)/g) ?? [];
-
-  const maxLength = Math.max(chunksA.length, chunksB.length);
-
-  for (let idx = 0; idx < maxLength; idx++) {
-    const chunkA = chunksA[idx] || "";
-    const chunkB = chunksB[idx] || "";
-
-    // Compare both chunks as numbers
-    if (/^\d+$/.test(chunkA) && /^\d+$/.test(chunkB)) {
-      const numA = Number.parseInt(chunkA, 10);
-      const numB = Number.parseInt(chunkB, 10);
-      if (numA !== numB) {
-        return numA - numB;
-      }
-    } else {
-      // Compare as strings
-      const result = chunkA.localeCompare(chunkB, undefined, {
-        numeric: true,
-        sensitivity: "base"
-      });
-      if (result !== 0) {
-        return result;
-      }
-    }
-  }
-
-  return 0;
-}
-
-function smartNameCompare(a: string, b: string): number {
-  const dateA = extractDatePrefix(a);
-  const dateB = extractDatePrefix(b);
-
-  // Both have dates?
-  if (dateA && dateB) {
-    const dateCompare = dateA.getTime() - dateB.getTime();
-    if (dateCompare !== 0) {
-      return dateCompare;
-    }
-
-    // Fallback: compare by the remaining filename
-    const restA = a.replace(/^(\d{4})[./\-](\d{1,2})[./\-](\d{1,2})\s*/, "");
-    const restB = b.replace(/^(\d{4})[./\-](\d{1,2})[./\-](\d{1,2})\s*/, "");
-    return naturalCompare(restA, restB);
-  }
-
-  // If only one has a date prefix, prioritize it
-  if (dateA && !dateB) return -1;
-  if (!dateA && dateB) return 1;
-
-  // If neither has a date prefix, use natural comparison
-  return naturalCompare(a, b);
-}
-
 function sortFileSystem(files: FileSystemItem[]): FileSystemItem[] {
-  return [...files].sort((a, b) => {
-    const aIsFolder = Boolean(a.files);
-    const bIsFolder = Boolean(b.files);
+  const sortOptions: SortOptions = {
+    sortBy: fileBrowserState.sortBy,
+    sortDirection: fileBrowserState.sortDirection
+  };
 
-    // Folders first
-    if (aIsFolder && !bIsFolder) return -1;
-    if (!aIsFolder && bIsFolder) return 1;
-
-    // Apply sorting based on the selected criteria
-    switch (fileBrowserState.sortBy) {
-      case "name": {
-        const aName = a.name ?? "";
-        const bName = b.name ?? "";
-        const nameCompare = smartNameCompare(aName, bName);
-        return fileBrowserState.sortDirection === "asc" ? nameCompare : -nameCompare;
-      }
-
-      case "duration": {
-        if (aIsFolder || bIsFolder) {
-          const aName = a.name ?? "";
-          const bName = b.name ?? "";
-          const nameCompare = smartNameCompare(aName, bName);
-          return fileBrowserState.sortDirection === "asc" ? nameCompare : -nameCompare;
-        }
-
-        const aDuration = a.duration ?? 0;
-        const bDuration = b.duration ?? 0;
-        const durationCompare = aDuration - bDuration;
-        return fileBrowserState.sortDirection === "asc" ? durationCompare : -durationCompare;
-      }
-
-      default:
-        return 0;
-    }
-  });
+  return sortFileTree(files, sortOptions);
 }

@@ -1,12 +1,21 @@
 import { chmod, readdir, stat } from "node:fs/promises";
-import { dirname, extname, join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { promisify } from "node:util";
 import ffmpegInstaller from "@ffmpeg-installer/ffmpeg";
 import ffprobeInstaller from "@ffprobe-installer/ffprobe";
 import { app, BrowserWindow, dialog, type OpenDialogOptions } from "electron";
 import ffmpeg from "fluent-ffmpeg";
-import { VIDEO_EXTENSIONS } from "./constants";
 import { logger } from "./logger";
+import {
+  VIDEO_EXTENSIONS,
+  buildSortedFileTree,
+  isVideoFile,
+  createFileTreeItem,
+  DEFAULT_SORT_OPTIONS,
+  sortFileTreeRecursive,
+  type FileTreeItem,
+  type SortOptions
+} from "../shared";
 
 const makeFilePath = (path: string): string => path;
 
@@ -145,7 +154,10 @@ export async function showFilePicker(
   }
 }
 
-async function buildFileTree(dirPath: string): Promise<PickerResult> {
+async function buildFileTree(
+  dirPath: string,
+  sortOptions: SortOptions = DEFAULT_SORT_OPTIONS
+): Promise<PickerResult> {
   await doFfmpegInit();
 
   const rootPath = dirPath;
@@ -155,42 +167,64 @@ async function buildFileTree(dirPath: string): Promise<PickerResult> {
     tree: []
   };
 
+  const entries: {
+    duration?: number;
+    files?: FileTreeItem[];
+    name: string;
+    path: string;
+    type: "folder" | "video";
+  }[] = [];
+
   for (const entry of await readdir(dirPath, { withFileTypes: true })) {
     if (entry.name.startsWith(".")) continue;
 
     if (entry.isDirectory()) {
       const subDirPath = join(dirPath, entry.name);
-      const subTree = await buildFileTree(subDirPath);
-      ret.tree.push({
+      const subTree = await buildFileTree(subDirPath, sortOptions);
+      entries.push({
         path: subDirPath,
         name: entry.name,
-        files: subTree.type === "folder" ? subTree.tree : [],
-        type: "folder"
+        type: "folder",
+        files: subTree.type === "folder" ? subTree.tree : []
       });
     } else {
       const filePath = join(dirPath, entry.name);
-      if (VIDEO_EXTENSIONS.some((ext) => extname(filePath).toLowerCase() === `.${ext}`)) {
-        ret.tree.push({
+      if (isVideoFile(entry.name)) {
+        const duration = await getVideoDuration(filePath);
+        entries.push({
           path: makeFilePath(filePath),
           name: entry.name,
           type: "video",
-          duration: await getVideoDuration(filePath)
+          duration
         });
       }
     }
   }
 
+  // Use shared sorting utilities to sort the entries
+  ret.tree = buildSortedFileTree(entries, sortOptions);
+
   return ret;
 }
 
-export async function loadDirectoryContents(dirPath: string): Promise<DirectoryContents> {
+export async function loadDirectoryContents(
+  dirPath: string,
+  sortOptions: SortOptions = DEFAULT_SORT_OPTIONS
+): Promise<DirectoryContents> {
   try {
     const resolvedPath = resolve(dirPath);
     const entries = await readdir(resolvedPath, { withFileTypes: true });
-    const files: FileItem[] = [];
 
     const parentPath = dirname(resolvedPath);
     const isAtRoot = resolvedPath === parentPath;
+
+    const rawEntries: {
+      duration?: number;
+      files?: FileTreeItem[];
+      name: string;
+      path: string;
+      type: "folder" | "video";
+    }[] = [];
 
     for (const entry of entries) {
       if (entry.name.startsWith(".")) continue;
@@ -198,15 +232,15 @@ export async function loadDirectoryContents(dirPath: string): Promise<DirectoryC
       const fullPath = join(resolvedPath, entry.name);
 
       if (entry.isDirectory()) {
-        files.push({
+        rawEntries.push({
           name: entry.name,
           path: fullPath,
           type: "folder",
-          files: await loadDirectoryContents(fullPath).then((contents) => contents.files)
+          files: []
         });
-      } else if (VIDEO_EXTENSIONS.some((ext) => extname(fullPath).toLowerCase() === `.${ext}`)) {
+      } else if (isVideoFile(entry.name)) {
         const duration = await getVideoDuration(fullPath);
-        files.push({
+        rawEntries.push({
           name: entry.name,
           path: fullPath,
           type: "video",
@@ -215,18 +249,14 @@ export async function loadDirectoryContents(dirPath: string): Promise<DirectoryC
       }
     }
 
-    // Folders first
-    files.sort((a, b) => {
-      if (a.type === "folder" && b.type === "video") return -1;
-      if (a.type === "video" && b.type === "folder") return 1;
-      return a.name.localeCompare(b.name);
-    });
+    // Use shared sorting utilities
+    const sortedFiles = buildSortedFileTree(rawEntries, sortOptions);
 
     return {
       currentPath: resolvedPath,
       parentPath: isAtRoot ? null : parentPath,
       isAtRoot,
-      files
+      files: sortedFiles
     };
   } catch (error) {
     logger.error(error, "Error loading directory contents");
@@ -245,40 +275,16 @@ export type PickerResult =
       type: "folder";
     };
 
-export type PickerNode = {
-  name?: string;
-  path?: string;
-} & (
-  | {
-      duration: number;
-      type: "video";
-    }
-  | {
-      files: PickerNode[];
-      type: "folder";
-    }
-);
-
-export type FileItem = {
-  name: string;
-  path: string;
-} & (
-  | {
-      duration: number;
-      type: "video";
-    }
-  | {
-      files: FileItem[];
-      type: "folder";
-    }
-);
+export type PickerNode = FileTreeItem;
 
 export type DirectoryContents = {
   currentPath: string;
-  files: FileItem[];
+  files: FileTreeItem[];
   isAtRoot: boolean;
   parentPath: string | null;
 };
+
+export type FileItem = FileTreeItem;
 
 type FfmpegProbeMetadata = {
   format: {

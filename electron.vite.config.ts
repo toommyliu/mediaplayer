@@ -24,7 +24,8 @@ export default defineConfig({
         $main: resolve("src/main/"),
         $lib: resolve("src/renderer/src/lib/"),
         $: resolve("src/renderer/src/"),
-        $hooks: resolve("src/renderer/src/hooks/")
+        $hooks: resolve("src/renderer/src/hooks/"),
+        $shared: resolve("src/shared/")
       }
     }
   }

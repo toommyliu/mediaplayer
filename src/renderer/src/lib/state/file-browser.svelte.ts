@@ -1,3 +1,5 @@
+import type { FileTreeItem } from "../../../../shared";
+
 class FileBrowserState {
   public fileTree = $state<FileTree | null>(null);
 
@@ -37,13 +39,8 @@ class FileBrowserState {
 
 export const fileBrowserState = new FileBrowserState();
 
-export type FileSystemItem = {
-  duration?: number;
-  files?: FileSystemItem[];
-  name?: string;
-  path?: string;
-  type?: "folder" | "video";
-};
+// Use shared type
+export type FileSystemItem = FileTreeItem;
 
 export type FileTree = {
   files: FileSystemItem[];
