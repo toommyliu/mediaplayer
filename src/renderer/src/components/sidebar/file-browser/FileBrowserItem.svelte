@@ -1,5 +1,6 @@
 <script lang="ts">
   import * as ContextMenu from "$ui/context-menu/";
+  // eslint-disable-next-line import-x/no-self-import
   import FileBrowserItem from "./FileBrowserItem.svelte";
 
   import { fileBrowserState } from "$lib/state/file-browser.svelte";
@@ -148,7 +149,7 @@
     item: FileSystemItem;
   };
 
-  const fileItemView = renderFileSystemItem(item, depth);
+  const fileItemView = $derived(renderFileSystemItem(item, depth));
   const displayDuration = item.duration ?? 0;
 </script>
 
