@@ -1,6 +1,5 @@
 <script lang="ts">
   import * as ContextMenu from "$ui/context-menu/";
-  // eslint-disable-next-line import-x/no-self-import
   import FileBrowserItem from "./FileBrowserItem.svelte";
 
   import { fileBrowserState } from "$lib/state/file-browser.svelte";

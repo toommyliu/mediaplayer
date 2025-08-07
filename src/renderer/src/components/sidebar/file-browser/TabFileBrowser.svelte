@@ -1,22 +1,26 @@
 <script lang="ts">
-  import { queue } from "$/lib/state/queue.svelte";
+  import { Button } from "$ui/button";
+  import FileBrowserItem from "./FileBrowserItem.svelte";
+
+  import AlertCircle from "~icons/lucide/alert-circle";
+  import ArrowDown01 from "~icons/lucide/arrow-down-01";
+  import ArrowDownAZ from "~icons/lucide/arrow-down-a-z";
+  import ArrowUp10 from "~icons/lucide/arrow-up-10";
+  import ArrowUpAZ from "~icons/lucide/arrow-up-a-z";
+  import FolderPlus from "~icons/lucide/folder-plus";
+  import ListRestart from "~icons/lucide/list-restart";
+  import Loader2 from "~icons/lucide/loader-2";
+
   import { loadFileSystemStructure, navigateToParent } from "$lib/file-browser.svelte";
   import { fileBrowserState } from "$lib/state/file-browser.svelte";
   import { playerState } from "$lib/state/player.svelte";
-  import { cn } from "$lib/utils";
-  import Button from "$ui/button/button.svelte";
-  import AlertCircle from "lucide-svelte/icons/alert-circle";
-  import ArrowDown01 from "lucide-svelte/icons/arrow-down-01";
-  import ArrowDownAZ from "lucide-svelte/icons/arrow-down-a-z";
-  import ArrowUp10 from "lucide-svelte/icons/arrow-up-10";
-  import ArrowUpAZ from "lucide-svelte/icons/arrow-up-a-z";
-  import FolderPlus from "lucide-svelte/icons/folder-plus";
-  import ListRestart from "lucide-svelte/icons/list-restart";
-  import Loader2 from "lucide-svelte/icons/loader-2";
-  import { fade } from "svelte/transition";
-  import { sortFileTree, type SortOptions } from "../../../../../shared";
-  import FileBrowserItem from "./FileBrowserItem.svelte";
 
+  import { queue } from "$/lib/state/queue.svelte";
+  import { cn } from "$lib/utils";
+
+  import { sortFileTree, type SortOptions } from "$shared/file-tree-utils";
+
+  import { fade } from "svelte/transition";
   const hasNoFiles = $derived(fileBrowserState.fileSystem.length === 0);
 
   const sortedFileSystem = $derived(() => {
@@ -24,15 +28,16 @@
       sortBy: fileBrowserState.sortBy,
       sortDirection: fileBrowserState.sortDirection
     };
+
     return sortFileTree(fileBrowserState.fileSystem, sortOptions);
   });
 
   async function handleDblClick(ev: MouseEvent) {
     if (fileBrowserState.isLoading) return;
 
-    if (hasNoFiles && ev.detail === 2) {
-      await resetAndBrowse();
-    }
+    const isDblClick = ev.detail === 2;
+
+    if (isDblClick && hasNoFiles) await resetAndBrowse();
   }
 
   async function navigateToParentDirectory() {
@@ -107,20 +112,18 @@
     >
       <div class="text-center text-zinc-500">
         {#if fileBrowserState.isLoading}
-          <Loader2 size={32} class="mx-auto mb-2 animate-spin opacity-50" />
+          <Loader2 class="mx-auto mb-2 size-8 animate-spin opacity-50" />
           <p class="text-sm font-medium">Loading...</p>
         {:else}
-          <FolderPlus size={32} class="mx-auto mb-2 opacity-50" />
+          <FolderPlus class="mx-auto mb-2 size-8 opacity-50" />
           <p class="text-sm font-medium">No media files loaded</p>
           <p class="text-xs opacity-75">Double-click to browse</p>
         {/if}
       </div>
     </div>
   {:else}
-    <!-- File system list -->
     <div class="no-scrollbar flex-1 overflow-y-auto">
       {#if hasNoFiles}
-        <!-- No media files found message -->
         <div class="flex h-full flex-col items-center justify-center p-4 text-center">
           <div class="mb-4 rounded-full bg-zinc-800/50 p-3">
             <AlertCircle class="h-6 w-6 text-zinc-400" />
@@ -143,7 +146,6 @@
                 if (fileBrowserState.isLoading) return;
                 await navigateToParentDirectory();
               }}
-              title="Go back"
             >
               <div class="flex min-h-[28px] w-full items-center rounded-md hover:bg-zinc-800/40">
                 <div class="flex min-h-[28px] min-w-0 flex-1 items-center">
@@ -156,6 +158,7 @@
               </div>
             </div>
           {/if}
+
           {#each sortedFileSystem() as item (item.path)}
             <FileBrowserItem {item} depth={0} />
           {/each}
@@ -168,10 +171,7 @@
         <div class="flex flex-row items-center gap-2">
           <button
             class="flex h-8 items-center gap-1 rounded px-2 text-sm text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-300"
-            class:selected={fileBrowserState.sortBy === "name"}
-            aria-pressed={fileBrowserState.sortBy === "name"}
             onclick={() => setSortBy("name")}
-            title="Sort by name"
           >
             {#if fileBrowserState.sortBy === "name"}
               {#if fileBrowserState.sortDirection === "asc"}
@@ -184,10 +184,7 @@
           </button>
           <button
             class="flex h-8 items-center gap-1 rounded px-2 text-sm text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-300"
-            class:selected={fileBrowserState.sortBy === "duration"}
-            aria-pressed={fileBrowserState.sortBy === "duration"}
             onclick={() => setSortBy("duration")}
-            title="Sort by duration"
           >
             {#if fileBrowserState.sortBy === "duration"}
               {#if fileBrowserState.sortDirection === "asc"}
@@ -200,7 +197,7 @@
           </button>
         </div>
         <div class="flex items-center gap-2">
-          <Button size="icon" variant="ghost" onclick={resetAndBrowse} title="Browse files">
+          <Button size="icon" variant="ghost" onclick={resetAndBrowse}>
             <ListRestart class="h-4 w-4" />
           </Button>
         </div>
