@@ -147,10 +147,15 @@
                 await navigateToParentDirectory();
               }}
             >
-              <div class="flex min-h-[28px] w-full items-center rounded-md hover:bg-zinc-800/40">
+              <div
+                class="flex min-h-[28px] w-full items-center rounded-md hover:bg-zinc-800/40"
+                style="padding-left: 8px;"
+              >
+                <div class="mr-2 w-4 flex-shrink-0"></div>
+
                 <div class="flex min-h-[28px] min-w-0 flex-1 items-center">
                   <span
-                    class="ml-4 flex-1 text-sm font-medium text-zinc-300 group-hover:text-zinc-100"
+                    class="flex-1 truncate text-sm font-medium text-zinc-300 group-hover:text-zinc-100"
                   >
                     ..
                   </span>
