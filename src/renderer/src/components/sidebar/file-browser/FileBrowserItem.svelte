@@ -206,10 +206,10 @@
     >
       <div
         class={cn(
-          "flex min-h-[28px] w-full items-center rounded-md",
+          "flex min-h-[28px] w-full items-center rounded-md border transition-all duration-200",
           fileItemView.isCurrentlyPlaying
-            ? "border-blue-500/30 bg-blue-500/20 hover:bg-blue-500/25"
-            : "hover:bg-zinc-800/40"
+            ? "border-blue-500/30 bg-blue-500/15 hover:border-blue-500/40 hover:bg-blue-500/20"
+            : "border-transparent hover:border-zinc-700/30 hover:bg-zinc-800/40"
         )}
         style={`padding-left: ${depth * 8 + 8}px;`}
       >
@@ -218,7 +218,7 @@
         <div class="flex min-h-[28px] min-w-0 flex-1 items-center">
           <span
             class={cn(
-              "flex-1 truncate text-sm font-medium",
+              "flex-1 truncate text-sm font-medium transition-colors duration-200",
               fileItemView.isCurrentlyPlaying &&
                 "font-semibold text-blue-200 group-hover:text-blue-100",
               fileItemView.isVideo &&
@@ -236,9 +236,9 @@
           {#if fileItemView.isVideo}
             <span
               class={cn(
-                "mt-1 mr-1 mb-1 ml-1 flex-shrink-0 rounded px-1.5 py-0.5 align-middle font-mono text-xs ring-1",
+                "mt-1 mr-1 mb-1 ml-1 flex-shrink-0 rounded px-1.5 py-0.5 align-middle font-mono text-xs ring-1 transition-all duration-200",
                 fileItemView.isCurrentlyPlaying
-                  ? "bg-blue-900/30 text-blue-200 ring-blue-700/30"
+                  ? "bg-blue-900/25 text-blue-200 ring-blue-600/40"
                   : "bg-emerald-900/20 text-emerald-200 ring-emerald-700/20"
               )}
             >
