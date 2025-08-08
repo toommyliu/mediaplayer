@@ -149,7 +149,6 @@
             >
               <button
                 class="flex h-6 w-6 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-700 hover:text-zinc-300"
-                title="Move up"
                 onclick={(ev) => {
                   ev.stopPropagation();
                   moveItemUp(index);
@@ -160,7 +159,6 @@
               </button>
               <button
                 class="flex h-6 w-6 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-700 hover:text-zinc-300"
-                title="Move down"
                 onclick={(ev) => {
                   ev.stopPropagation();
                   moveItemDown(index);
@@ -171,7 +169,6 @@
               </button>
               <button
                 class="flex h-6 w-6 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-700 hover:text-red-400"
-                title="Remove from queue"
                 onclick={(ev) => {
                   ev.stopPropagation();
                   removeFromQueue(item.id);
@@ -191,7 +188,6 @@
     <div class="flex items-center justify-center gap-2">
       <button
         class="flex h-8 w-8 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-300"
-        title="Shuffle queue"
         onclick={shuffleQueue}
       >
         <IconShuffle size={ICON_SIZE - 4} />
@@ -204,7 +200,6 @@
             ? "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-300"
             : "bg-blue-500/20 text-blue-400 hover:bg-blue-500/30"
         )}
-        title={getRepeatTitle()}
         onclick={toggleRepeat}
       >
         <svelte:component this={getRepeatIcon()} size={ICON_SIZE - 4} />

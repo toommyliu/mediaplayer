@@ -1,16 +1,80 @@
 <script lang="ts">
-  import { sidebarState } from "$/lib/state/sidebar.svelte";
   import { loadFileSystemStructure } from "$lib/file-browser.svelte";
   import { playerState } from "$lib/state/player.svelte";
   import { queue } from "$lib/state/queue.svelte";
   import { cn } from "$lib/utils";
   import { playNextVideo } from "$lib/video-playback";
   import VideoPlayerControls from "./video-player-controls.svelte";
-  import VideoPlayerTitle from "./video-player-title.svelte";
 
-  let controlsTimeout: number | null = null;
-  let overlayTimeout: number | null = null;
-  let showOverlay = $state(false);
+  // Floating controls state
+  let showControls = $state(true);
+  let hideTimeout: ReturnType<typeof setTimeout> | null = null;
+  let isControlsHovered = $state(false);
+
+  // Auto-hide controls after inactivity
+  function resetHideTimer(): void {
+    if (hideTimeout) {
+      clearTimeout(hideTimeout);
+    }
+
+    showControls = true;
+
+    // Don't hide controls if they're being hovered or if video is paused
+    if (!isControlsHovered && playerState.isPlaying) {
+      hideTimeout = setTimeout(() => {
+        if (!isControlsHovered) {
+          showControls = false;
+        }
+      }, 3000); // Hide after 3 seconds of inactivity
+    }
+  }
+
+  function handleMouseMove(): void {
+    resetHideTimer();
+  }
+
+  function handleMouseLeave(): void {
+    if (hideTimeout) {
+      clearTimeout(hideTimeout);
+    }
+    if (playerState.isPlaying && !isControlsHovered) {
+      showControls = false;
+    }
+  }
+
+  function handleControlsMouseEnter(): void {
+    isControlsHovered = true;
+    showControls = true;
+    if (hideTimeout) {
+      clearTimeout(hideTimeout);
+    }
+  }
+
+  function handleControlsMouseLeave(): void {
+    isControlsHovered = false;
+    resetHideTimer();
+  }
+
+  // Show controls when video is paused
+  $effect(() => {
+    if (!playerState.isPlaying) {
+      showControls = true;
+      if (hideTimeout) {
+        clearTimeout(hideTimeout);
+      }
+    } else {
+      resetHideTimer();
+    }
+  });
+
+  // Cleanup timeout on component unmount
+  $effect(() => {
+    return () => {
+      if (hideTimeout) {
+        clearTimeout(hideTimeout);
+      }
+    };
+  });
 
   function onLoading(loading: boolean): void {
     playerState.isLoading = loading;
@@ -141,37 +205,8 @@
     playNextVideo();
   }
 
-  function showControlsTemporarily(): void {
-    playerState.showControls = true;
-    if (controlsTimeout) {
-      clearTimeout(controlsTimeout);
-    }
-
-    controlsTimeout = setTimeout(() => {
-      if (playerState.isPlaying) {
-        playerState.showControls = false;
-      }
-    }, 3_000) as unknown as number;
-  }
-
-  function showOverlayTemporarily(): void {
-    showOverlay = true;
-    if (overlayTimeout) {
-      clearTimeout(overlayTimeout);
-    }
-
-    overlayTimeout = setTimeout(() => {
-      showOverlay = false;
-    }, 2_000) as unknown as number;
-  }
-
-  function handleMouseMove(): void {
-    showControlsTemporarily();
-    showOverlayTemporarily();
-  }
-
   function handleClick(): void {
-    const videoContainer = document.querySelector("#video-player");
+    const videoContainer = document.querySelector("#video-player") as HTMLElement | null;
     if (videoContainer) {
       videoContainer.focus();
     }
@@ -183,10 +218,11 @@
     const target = ev.target as HTMLElement;
     const controlsElement = target.closest("#media-controls");
     if (controlsElement) {
+      console.warn("no controls element");
       return;
     }
 
-    if (target.tagName === "VIDEO" || target.id === "video-player") {
+    if (target.tagName === "VIDEO" || target.closest("#video-player")) {
       if (!queue.currentItem) {
         await loadFileSystemStructure();
       } else if (playerState.videoElement!.paused) {
@@ -196,54 +232,69 @@
       }
     }
   }
-
-  $effect(() => {
-    if (!playerState.isPlaying) {
-      playerState.showControls = true;
-      if (controlsTimeout) {
-        clearTimeout(controlsTimeout);
-      }
-    }
-  });
 </script>
 
 <div
   class={cn(
-    "group relative flex h-[90%] w-full flex-1 items-center justify-center",
+    "group relative flex h-full w-full flex-1 flex-col",
     !queue.currentItem &&
       "transition-all duration-300 ease-out hover:bg-slate-100/15 hover:shadow-inner hover:backdrop-blur-md"
   )}
-  onmousemove={handleMouseMove}
-  onclick={handleClick}
-  ondblclick={handleDblClick}
   id="video-player"
 >
   {#if queue.currentItem}
-    <video
-      bind:this={playerState.videoElement}
-      src={`file://${queue.currentItem.path}`}
+    <div
       class={cn(
-        "pointer-events-none h-full w-full object-cover",
-        sidebarState.isOpen ? "h-[90%] object-contain" : ""
+        "relative flex min-h-0 flex-1 items-center justify-center bg-black transition-all duration-300",
+        !showControls && "cursor-none"
       )}
-      onloadstart={handleLoadStart}
-      onloadeddata={handleLoadedData}
-      onloadedmetadata={handleLoadedMetadata}
-      ontimeupdate={handleTimeUpdate}
-      onseeked={handleSeeked}
-      onerror={handleError}
-      oncanplay={handleCanPlay}
-      onplay={handlePlay}
-      onpause={handlePause}
-      onended={handleEnded}
-      preload="metadata"
-      controls={false}
-      controlslist="nodownload nofullscreen noremoteplayback"
-      disablepictureinpicture
+      onclick={handleClick}
+      ondblclick={handleDblClick}
+      onmousemove={handleMouseMove}
+      onmouseleave={handleMouseLeave}
     >
-    </video>
+      <video
+        bind:this={playerState.videoElement}
+        src={`file://${queue.currentItem.path}`}
+        class="h-full w-full object-contain"
+        onloadstart={handleLoadStart}
+        onloadeddata={handleLoadedData}
+        onloadedmetadata={handleLoadedMetadata}
+        ontimeupdate={handleTimeUpdate}
+        onseeked={handleSeeked}
+        onerror={handleError}
+        oncanplay={handleCanPlay}
+        onplay={handlePlay}
+        onpause={handlePause}
+        onended={handleEnded}
+        preload="metadata"
+        controls={false}
+        controlslist="nodownload nofullscreen noremoteplaybook"
+        disablepictureinpicture
+      >
+      </video>
 
-    <!-- <VideoPlayerTitle {showOverlay} /> -->
-    <VideoPlayerControls {showOverlay} />
+      <!-- Floating controls overlay -->
+      <div
+        class={cn(
+          "absolute right-0 bottom-0 left-0 z-10 transition-all duration-300 ease-in-out",
+          showControls ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-2 opacity-0"
+        )}
+        onmouseenter={handleControlsMouseEnter}
+        onmouseleave={handleControlsMouseLeave}
+      >
+        <VideoPlayerControls />
+      </div>
+    </div>
+  {:else}
+    <div
+      class="flex flex-1 items-center justify-center"
+      onclick={handleClick}
+      ondblclick={handleDblClick}
+    ></div>
+
+    <div class="pointer-events-none flex-shrink-0 opacity-0">
+      <VideoPlayerControls />
+    </div>
   {/if}
 </div>

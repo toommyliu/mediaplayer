@@ -181,7 +181,7 @@
       >
         <div class="mr-2 w-4 flex-shrink-0"></div>
 
-        <div class="flex min-h-[28px] min-w-0 flex-1 items-center" title={item.name!}>
+        <div class="flex min-h-[28px] min-w-0 flex-1 items-center">
           <span
             class={cn(
               "flex-1 truncate text-sm font-medium",
