@@ -1,13 +1,13 @@
 <script lang="ts">
-  /* eslint-disable import-x/no-duplicates */
+  import * as Tabs from "$ui/tabs/";
+  import TabFileBrowser from "$components/sidebar/file-browser/TabFileBrowser.svelte";
+  import TabQueue from "$components/sidebar/tab-playlist-queue.svelte";
+
   import { cubicOut } from "svelte/easing";
   import { fly } from "svelte/transition";
-  /* eslint-enable import-x/no-duplicates */
+
   import { SidebarTab } from "$/types";
   import { sidebarState } from "$lib/state/sidebar.svelte";
-  import * as Tabs from "$ui/tabs/";
-  import TabFileBrowser from "./sidebar/file-browser/TabFileBrowser.svelte";
-  import TabQueue from "./sidebar/tab-playlist-queue.svelte";
 </script>
 
 <div class="border-sidebar-border bg-sidebar flex h-full flex-col border-r p-4 backdrop-blur-xl">

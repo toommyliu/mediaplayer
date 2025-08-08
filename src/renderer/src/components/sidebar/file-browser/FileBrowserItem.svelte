@@ -1,6 +1,7 @@
 <script lang="ts">
   import * as ContextMenu from "$ui/context-menu/";
   import FileBrowserItem from "./FileBrowserItem.svelte";
+  import LucideCircle from "~icons/lucide/circle";
 
   import { fileBrowserState } from "$lib/state/file-browser.svelte";
   import { platformState } from "$lib/state/platform.svelte";
@@ -10,8 +11,6 @@
   import { showItemInFolder } from "$/lib/showItemInFolder";
   import { playVideo } from "$/lib/video-playback";
   import { cn } from "$lib/utils";
-
-  import Circle from "~icons/lucide/circle";
 
   import { client } from "$/tipc";
 
@@ -254,7 +253,7 @@
           {/if}
 
           {#if fileItemView.hasCurrentVideoInCollapsedFolder}
-            <Circle class="mr-2 h-2 w-2 fill-blue-400 text-blue-400" />
+            <LucideCircle class="mr-2 h-2 w-2 fill-blue-400 text-blue-400" />
           {/if}
         </div>
       </div>
