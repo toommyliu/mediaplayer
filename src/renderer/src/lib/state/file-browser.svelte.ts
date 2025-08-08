@@ -1,4 +1,4 @@
-import type { FileTreeItem } from "../../../../shared";
+import type { FileTreeItem } from "$shared/file-tree-utils";
 
 class FileBrowserState {
   public fileTree = $state<FileTree | null>(null);
@@ -45,11 +45,4 @@ export type FileSystemItem = FileTreeItem;
 export type FileTree = {
   files: FileSystemItem[];
   rootPath: string;
-};
-
-export type DirectoryContents = {
-  currentPath: string;
-  files: FileSystemItem[];
-  isAtRoot: boolean;
-  parentPath: string | null;
 };

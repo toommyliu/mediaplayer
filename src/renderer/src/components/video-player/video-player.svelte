@@ -205,14 +205,6 @@
       }
     }
   });
-
-  // $effect(() => {
-  //   if (playerState.videoElement) {
-  //     playerState.videoElement.volume = playerState.isMuted ? 0 : playerState.volume;
-  //     playerState.videoElement.muted = playerState.isMuted;
-  //     playerState.videoElement = playerState.videoElement;
-  //   }
-  // });
 </script>
 
 <div

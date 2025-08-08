@@ -31,31 +31,33 @@ class PlayerState {
     if (!this.videoElement || !queue.currentItem) return;
 
     if (this.isPlaying) {
-      this.videoElement.pause();
+      this.videoElement?.pause();
       this.isPlaying = false;
     } else {
       try {
         await this.videoElement?.play();
         this.isPlaying = true;
-      } catch {}
+      } catch {
+        console.warn("play() failed");
+      }
     }
   }
 
-  public async playPrevious() {
+  public async playPreviousVideo() {
     if (!this.videoElement || !queue.currentItem) return;
     if (queue.items.length === 0) return;
 
     let newIndex = queue.index - 1;
 
     if (newIndex < 0) {
+      // Repeat Mode All: go to last item
       if (queue.repeatMode === "all") {
         newIndex = queue.items.length - 1;
       } else {
+        // Repeat Mode Off/One: stop playback of video
+        //
         this.isPlaying = false;
-        if (this.videoElement) {
-          this.videoElement.pause();
-        }
-
+        this.videoElement?.pause();
         return;
       }
     }
@@ -76,7 +78,7 @@ class PlayerState {
     }
   }
 
-  public async playNext() {
+  public async playNextVideo() {
     if (!this.videoElement || !queue.currentItem) return;
     if (queue.items.length === 0) return;
 
@@ -87,10 +89,7 @@ class PlayerState {
         newIndex = 0;
       } else {
         this.isPlaying = false;
-        if (this.videoElement) {
-          this.videoElement.pause();
-        }
-
+        this.videoElement?.pause();
         return;
       }
     }

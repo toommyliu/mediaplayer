@@ -11,6 +11,7 @@ class VolumeState {
   }
 
   public set value(newValue: number) {
+    // Volume can be a double between 0 and 1
     this._value.current = Math.max(0, Math.min(1, newValue));
 
     if (this.value === 0) {
@@ -29,8 +30,11 @@ class VolumeState {
 
   public set isMuted(newValue: boolean) {
     this._isMuted = newValue;
+
     if (playerState.videoElement) {
       playerState.videoElement.muted = this._isMuted;
+
+      // If muted, set volume to 0, otherwise set to current volume
       playerState.videoElement.volume = this._isMuted ? 0 : this._value.current;
     }
   }
