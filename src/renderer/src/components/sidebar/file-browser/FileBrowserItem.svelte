@@ -11,6 +11,8 @@
   import { playVideo } from "$/lib/video-playback";
   import { cn } from "$lib/utils";
 
+  import Circle from "~icons/lucide/circle";
+
   import { client } from "$/tipc";
 
   import {
@@ -20,12 +22,44 @@
   } from "$/lib/file-browser.svelte";
   import { sortFileTree, type SortOptions } from "$shared/file-tree-utils";
 
+  function isCurrentVideo(itemPath: string | undefined): boolean {
+    if (!itemPath || !playerState.currentVideo) return false;
+
+    const currentVideoPath = playerState.currentVideo.startsWith("file://")
+      ? playerState.currentVideo.slice(7)
+      : playerState.currentVideo;
+
+    return itemPath === currentVideoPath;
+  }
+
+  /**
+   * Check if a collapsed folder contains the currently playing video
+   */
+  function hasCurrentVideoInFolder(folderItem: FileSystemItem): boolean {
+    if (!folderItem.files || !playerState.currentVideo) return false;
+
+    const currentVideoPath = playerState.currentVideo.startsWith("file://")
+      ? playerState.currentVideo.slice(7)
+      : playerState.currentVideo;
+
+    return searchForCurrentVideoInFiles(folderItem.files, currentVideoPath);
+  }
+
+  function searchForCurrentVideoInFiles(files: FileSystemItem[], targetPath: string): boolean {
+    for (const file of files) {
+      if (file.path === targetPath) return true;
+      if (file.files && searchForCurrentVideoInFiles(file.files, targetPath)) return true;
+    }
+    return false;
+  }
+
   function renderFileSystemItem(item: FileSystemItem, depth = 0) {
     const isFolder = Boolean(item.files);
     const isVideo = !isFolder && item.duration !== undefined;
     const isExpanded = item.path ? fileBrowserState.expandedFolders.has(item.path) : false;
-    const isCurrentlyPlaying =
-      isVideo && item.path && playerState.currentVideo === `file://${item.path}`;
+    const isCurrentlyPlaying = isVideo && isCurrentVideo(item.path);
+    const hasCurrentVideoInCollapsedFolder =
+      isFolder && !isExpanded && hasCurrentVideoInFolder(item);
     const isLoading = item.path ? fileBrowserState.loadingFolders.has(item.path) : false;
 
     const sortOptions: SortOptions = {
@@ -40,6 +74,7 @@
       isVideo,
       isExpanded,
       isCurrentlyPlaying,
+      hasCurrentVideoInCollapsedFolder,
       isLoading,
       depth
     };
@@ -216,6 +251,10 @@
                 --:--
               {/if}
             </span>
+          {/if}
+
+          {#if fileItemView.hasCurrentVideoInCollapsedFolder}
+            <Circle class="mr-2 h-2 w-2 fill-blue-400 text-blue-400" />
           {/if}
         </div>
       </div>
