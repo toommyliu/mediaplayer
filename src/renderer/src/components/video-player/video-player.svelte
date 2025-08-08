@@ -225,10 +225,8 @@
     if (target.tagName === "VIDEO" || target.closest("#video-player")) {
       if (!queue.currentItem) {
         await loadFileSystemStructure();
-      } else if (playerState.videoElement!.paused) {
-        await playerState.videoElement!.play();
       } else {
-        playerState.videoElement!.pause();
+        await playerState.togglePlayPause();
       }
     }
   }

@@ -166,7 +166,7 @@
       {/if}
     </div>
 
-    <div class="mt-4 border-t border-zinc-800/60 bg-zinc-900/60 backdrop-blur-sm">
+    <div class="mt-4 border-t border-zinc-800/60 backdrop-blur-sm">
       <div class="flex items-center justify-between gap-3 p-3">
         <div class="flex items-center gap-1">
           <div class="ml-2 flex items-center gap-1">
