@@ -13,7 +13,6 @@
   import { platformState } from "$lib/state/platform.svelte";
   import { playerState } from "$lib/state/player.svelte";
   import { sidebarState } from "$lib/state/sidebar.svelte";
-  import { playVideo } from "$lib/video-playback";
   import { client, handlers } from "./tipc";
 
   QueueManager.initialize();
@@ -61,7 +60,7 @@
       });
 
       playerState.currentIndex = 0;
-      playVideo(`file://${res.path}`);
+      playerState.playVideo(`file://${res.path}`);
     }
   });
 

@@ -10,7 +10,6 @@ import { volume } from "$lib/state/volume.svelte";
 import { SEEK_TIME_STEP, VOLUME_STEP } from "./constants";
 import { navigateToParent } from "./file-browser.svelte";
 import { logger } from "./logger";
-import { playNextVideo, playPreviousVideo } from "./video-playback";
 
 type HotkeyAction = {
   description: string;
@@ -182,14 +181,14 @@ class HotkeyConfig {
   private readonly previousVideo = (ev: KeyboardEvent): void => {
     ev.preventDefault();
     if (queue.currentItem) {
-      playPreviousVideo();
+      playerState.playPreviousVideo();
     }
   };
 
   private readonly nextVideo = (ev: KeyboardEvent): void => {
     ev.preventDefault();
     if (queue.currentItem) {
-      playNextVideo();
+      playerState.playNextVideo();
     }
   };
 
@@ -376,10 +375,10 @@ export const hotkeyConfig = new HotkeyConfig();
 
 export function setupMediaKeyHandlers(): void {
   handlers.mediaPreviousTrack.listen(() => {
-    playPreviousVideo();
+    playerState.playPreviousVideo();
   });
   handlers.mediaNextTrack.listen(() => {
-    playNextVideo();
+    playerState.playNextVideo();
   });
   handlers.mediaPlayPause.listen(async () => {
     if (queue.currentItem) {

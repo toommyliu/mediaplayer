@@ -13,14 +13,13 @@
   import { playerState } from "$lib/state/player.svelte";
   import { queue } from "$lib/state/queue.svelte";
   import { cn } from "$lib/utils";
-  import { playVideo } from "$lib/video-playback";
 
   function isCurrentlyPlaying(item: FileSystemItem): boolean {
     return queue?.currentItem?.path === item.path;
   }
 
   function handleItemClick(item: FileSystemItem) {
-    playVideo(item!.path!);
+    playerState.playVideo(item!.path!);
   }
 
   function removeFromQueue(itemId: string) {
@@ -45,7 +44,7 @@
       QueueManager.removeFromQueue(itemId);
 
       if (nextVideoToPlay) {
-        playVideo(nextVideoToPlay);
+        playerState.playVideo(nextVideoToPlay);
       } else if (playerState.videoElement) {
         playerState.videoElement.pause();
         playerState.isPlaying = false;

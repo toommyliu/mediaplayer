@@ -9,7 +9,6 @@ import { fileBrowserState } from "$lib/state/file-browser.svelte";
 import { playerState } from "$lib/state/player.svelte";
 import { queue } from "$lib/state/queue.svelte";
 import { QueueManager } from "./queue-manager";
-import { playVideo } from "./video-playback";
 
 // Type alias for backward compatibility
 export type FileSystemItem = FileTreeItem;
@@ -115,7 +114,7 @@ export async function loadFileSystemStructure() {
         duration: 0
       });
 
-      playVideo(`file://${result.path}`);
+      playerState.playVideo(`file://${result.path}`);
 
       return;
     }

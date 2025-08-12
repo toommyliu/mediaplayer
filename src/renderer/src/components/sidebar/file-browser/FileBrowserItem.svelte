@@ -9,7 +9,6 @@
 
   import { QueueManager } from "$lib/queue-manager";
   import { showItemInFolder } from "$/lib/showItemInFolder";
-  import { playVideo } from "$/lib/video-playback";
   import { cn } from "$lib/utils";
 
   import { client } from "$/tipc";
@@ -96,7 +95,7 @@
       toggleFolder(item.path);
       fileBrowserState.fileTree = { ...fileBrowserState.fileTree! };
     } else if (item.duration !== undefined) {
-      playVideo(item.path);
+      playerState.playVideo(item.path);
     }
   }
 

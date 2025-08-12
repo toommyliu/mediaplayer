@@ -1,4 +1,5 @@
 import { queue } from "./queue.svelte";
+import { logger } from "../logger";
 
 class PlayerState {
   public isPlaying = $state(false);
@@ -25,6 +26,38 @@ class PlayerState {
     this.isPlaying = false;
     this.currentTime = 0;
     this.duration = 0;
+  }
+
+  /**
+   * Plays a video from the source URL.
+   *
+   * @param src - The source URL of the video to play.
+   */
+  public playVideo(src: string): void {
+    logger.debug(`playVideo: ${src}`);
+
+    this.isLoading = true;
+    this.error = null;
+
+    const videoUrl = src.startsWith("file://") ? src : `file://${src}`;
+    this.currentVideo = videoUrl;
+
+    const queueIndex = queue.items.findIndex((item) => item.path === src);
+
+    if (queueIndex === -1) {
+      console.warn("Video not found in queue:", src);
+      console.warn("Current queue items:", queue.items);
+      return;
+    }
+
+    queue.index = queueIndex;
+    this.currentTime = 0;
+    this.isPlaying = true;
+
+    if (this.videoElement) {
+      this.videoElement.currentTime = 0;
+      this.videoElement.load();
+    }
   }
 
   public async togglePlayPause() {

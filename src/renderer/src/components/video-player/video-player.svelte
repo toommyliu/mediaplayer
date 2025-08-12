@@ -3,7 +3,6 @@
   import { playerState } from "$lib/state/player.svelte";
   import { queue } from "$lib/state/queue.svelte";
   import { cn } from "$lib/utils";
-  import { playNextVideo } from "$lib/video-playback";
   import VideoPlayerControls from "./video-player-controls.svelte";
 
   // Floating controls state
@@ -202,7 +201,7 @@
     }
 
     // Always attempt to play next video for repeatMode 'all' and 'off'.
-    playNextVideo();
+    playerState.playNextVideo();
   }
 
   function handleClick(): void {
