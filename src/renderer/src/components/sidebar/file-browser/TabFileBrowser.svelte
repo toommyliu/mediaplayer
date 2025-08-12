@@ -21,6 +21,7 @@
   import { sortFileTree, type SortOptions } from "$shared/file-tree-utils";
 
   import { fade } from "svelte/transition";
+
   const hasNoFiles = $derived(fileBrowserState.fileSystem.length === 0);
 
   const sortedFileSystem = $derived(() => {
@@ -195,7 +196,7 @@
               {:else}
                 <ArrowUpAZ class="h-4 w-4 opacity-60" />
               {/if}
-              <span>Name</span>
+              <span class="hidden sm:inline">Name</span>
             </Button>
             <Button
               variant={fileBrowserState.sortBy === "duration" ? "secondary" : "ghost"}
@@ -217,7 +218,7 @@
               {:else}
                 <ArrowUp10 class="h-4 w-4 opacity-60" />
               {/if}
-              <span>Duration</span>
+              <span class="hidden sm:inline">Duration</span>
             </Button>
           </div>
         </div>
