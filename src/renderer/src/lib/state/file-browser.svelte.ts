@@ -178,6 +178,7 @@ class FileBrowserState {
 
           if (allVideoFiles.length > 0) {
             QueueManager.addMultipleToQueue(allVideoFiles);
+            playerState.playVideo(allVideoFiles[0].path);
           }
         } else if (result === null) {
           console.warn("No video files found in the selected folder (1)");

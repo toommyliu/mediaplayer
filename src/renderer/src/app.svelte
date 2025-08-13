@@ -26,7 +26,6 @@
         path: res.path
       });
 
-      playerState.currentIndex = 0;
       playerState.playVideo(`file://${res.path}`);
     }
   });
@@ -77,6 +76,8 @@
 
             if (success) {
               console.log(`Successfully added ${allVideoFiles.length} videos to queue`);
+              // Start playing the first video
+              playerState.playVideo(allVideoFiles[0].path);
             } else {
               console.error("Failed to add folder contents to queue");
             }
