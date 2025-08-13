@@ -12,8 +12,6 @@ process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = "true";
 
 registerIpcMain(router);
 
-let once = false;
-
 export let mainWindow: BrowserWindow | null = null;
 
 function createWindow(): void {
@@ -32,16 +30,28 @@ function createWindow(): void {
     }
   });
 
-  // Show the window on initial load then don't bother again
   mainWindow.on("ready-to-show", () => {
-    if (once) return;
-    once = true;
-
     mainWindow!.show();
     mainWindow!.maximize();
-    mainWindow!.webContents.openDevTools({
-      mode: "right"
-    });
+
+    if (is.dev) {
+      mainWindow!.webContents.openDevTools({
+        mode: "right"
+      });
+    }
+  });
+
+  mainWindow.on("close", (event) => {
+    if (process.platform === "darwin") {
+      event.preventDefault();
+      mainWindow!.hide();
+    } else {
+      mainWindow = null;
+    }
+  });
+
+  mainWindow.on("closed", () => {
+    mainWindow = null;
   });
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -81,7 +91,15 @@ app.whenReady().then(() => {
   app.on("activate", () => {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    if (process.platform === "darwin") {
+      if (mainWindow === null) {
+        createWindow();
+      } else if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.show();
+      }
+    } else if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow();
+    }
   });
 });
 
@@ -91,6 +109,14 @@ app.whenReady().then(() => {
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
     app.quit();
+  }
+});
+
+// Handle app quit - properly destroy window on macOS
+app.on("before-quit", () => {
+  if (process.platform === "darwin" && mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.removeAllListeners("close");
+    mainWindow.destroy();
   }
 });
 
