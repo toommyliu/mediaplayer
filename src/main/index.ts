@@ -1,7 +1,6 @@
 import { join } from "node:path";
-import process from "node:process";
 import { registerIpcMain } from "@egoist/tipc/main";
-import { electronApp, is, optimizer } from "@electron-toolkit/utils";
+import { electronApp, is, platform, optimizer } from "@electron-toolkit/utils";
 import { app, BrowserWindow, shell } from "electron";
 import icon from "../../resources/icon.png?asset";
 import "./input";
@@ -21,7 +20,7 @@ function createWindow(): void {
     height: 670,
     show: false,
     autoHideMenuBar: true,
-    ...(process.platform === "linux" ? { icon } : {}),
+    ...(platform.isLinux ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, "../preload/index.js"),
       sandbox: false,
@@ -42,7 +41,7 @@ function createWindow(): void {
   });
 
   mainWindow.on("close", (event) => {
-    if (process.platform === "darwin") {
+    if (platform.isMacOS) {
       event.preventDefault();
       mainWindow!.hide();
     } else {
@@ -91,7 +90,7 @@ app.whenReady().then(() => {
   app.on("activate", () => {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
-    if (process.platform === "darwin") {
+    if (platform.isMacOS) {
       if (mainWindow === null) {
         createWindow();
       } else if (mainWindow && !mainWindow.isDestroyed()) {
@@ -114,7 +113,7 @@ app.on("window-all-closed", () => {
 
 // Handle app quit - properly destroy window on macOS
 app.on("before-quit", () => {
-  if (process.platform === "darwin" && mainWindow && !mainWindow.isDestroyed()) {
+  if (platform.isMacOS && mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.removeAllListeners("close");
     mainWindow.destroy();
   }
