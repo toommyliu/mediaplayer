@@ -173,9 +173,10 @@
         </main>
       </Pane>
 
-      <PaneResizer class="w-1 cursor-col-resize bg-gray-600 transition-colors hover:bg-gray-500" />
-
       {#if sidebarState.isOpen}
+        <PaneResizer
+          class="w-1 cursor-col-resize bg-gray-600 transition-colors hover:bg-gray-500"
+        />
         <Pane defaultSize={20}>
           <aside class="h-full border-l border-gray-700">
             <Sidebar />
