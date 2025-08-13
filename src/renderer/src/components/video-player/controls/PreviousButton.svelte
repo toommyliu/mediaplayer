@@ -14,7 +14,7 @@
       <Button
         variant="ghost"
         size="icon"
-        onclick={async () => playerState.playPrevious()}
+        onclick={async () => playerState.playPreviousVideo()}
         disabled={!queue.currentItem || playerState.isLoading}
       >
         <LucideRewind class="size-4" />

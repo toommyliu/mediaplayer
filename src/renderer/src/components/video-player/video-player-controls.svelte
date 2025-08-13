@@ -1,27 +1,7 @@
 <script lang="ts">
-  import FastForward from "lucide-svelte/icons/fast-forward";
-  import Maximize from "lucide-svelte/icons/maximize";
-  import Menu from "lucide-svelte/icons/menu";
-  import Minimize from "lucide-svelte/icons/minimize";
-  import Pause from "lucide-svelte/icons/pause";
-  import Play from "lucide-svelte/icons/play";
-  import Rewind from "lucide-svelte/icons/rewind";
-  import IconSettings from "lucide-svelte/icons/settings";
-  import Volume1 from "lucide-svelte/icons/volume-1";
-  import Volume2 from "lucide-svelte/icons/volume-2";
-  import VolumeX from "lucide-svelte/icons/volume-x";
-  import { client } from "$/tipc";
-  import { ICON_SIZE } from "$lib/constants";
   import { makeTimeString } from "$lib/makeTimeString";
   import { playerState } from "$lib/state/player.svelte";
-  import { queue } from "$lib/state/queue.svelte";
-  import { sidebarState } from "$lib/state/sidebar.svelte";
-  import { volume } from "$lib/state/volume.svelte";
   import { cn } from "$lib/utils";
-  import { playNextVideo, playPreviousVideo, playVideoElement } from "$lib/video-playback";
-  import Button from "$ui/button/button.svelte";
-  import * as Tooltip from "$ui/tooltip/";
-  import { fade } from "svelte/transition";
   import PlayButton from "./controls/PlayButton.svelte";
   import PreviousButton from "./controls/PreviousButton.svelte";
   import ForwardButton from "./controls/ForwardButton.svelte";
@@ -33,43 +13,13 @@
   let isDragging = $state(false);
   let hoverTime = $state(0);
   let isHovering = $state(false);
-  let bufferedPercentage = $state(0);
-  let isVolumeHovering = $state(false);
-  let isVolumeDragging = $state(false);
-  let showSettingsDialog = $state(false);
+
   let smoothProgressPercentage = $state(0);
   let animationFrameId: number | null = null;
-
-  const { showOverlay }: { showOverlay: boolean } = $props();
 
   const lerp = (start: number, end: number, factor: number): number =>
     start + (end - start) * factor;
 
-  $effect(() => {
-    if (!playerState.videoElement || !playerState.duration) return undefined;
-
-    const updateBuffered = (): void => {
-      if (playerState.videoElement && playerState.videoElement.buffered.length > 0) {
-        const bufferedEnd = playerState.videoElement.buffered.end(
-          playerState.videoElement.buffered.length - 1
-        );
-        bufferedPercentage = Math.min(100, (bufferedEnd / playerState.duration) * 100);
-      }
-    };
-
-    const handleProgress = (): void => updateBuffered();
-
-    playerState.videoElement.addEventListener("progress", handleProgress);
-    updateBuffered();
-
-    return () => {
-      if (playerState.videoElement) {
-        playerState.videoElement.removeEventListener("progress", handleProgress);
-      }
-    };
-  });
-
-  // Smooth progress animation effect with lerp
   $effect(() => {
     if (!playerState.duration) {
       smoothProgressPercentage = 0;
@@ -190,13 +140,12 @@
 
       if (wasPlaying && playerState.videoElement) {
         if (playerState.videoElement.readyState >= 2) {
-          await playVideoElement();
+          await playerState.videoElement.play();
         } else {
           const onCanPlay = async (): Promise<void> => {
-            await playVideoElement();
+            await playerState.videoElement?.play();
             playerState.videoElement?.removeEventListener("canplay", onCanPlay);
           };
-
           playerState.videoElement.addEventListener("canplay", onCanPlay);
         }
       }
@@ -222,92 +171,6 @@
     }
   };
 
-  const toggleMute = (): void => {
-    volume.isMuted = !volume.isMuted;
-
-    if (playerState.videoElement) {
-      playerState.videoElement.muted = volume.isMuted;
-      playerState.videoElement.volume = volume.isMuted ? 0 : volume.value;
-    }
-  };
-
-  const handleVolumeSeek = (ev: MouseEvent, volumeBar?: HTMLElement): void => {
-    const target = volumeBar ?? (ev.currentTarget as HTMLElement);
-    if (!target) return;
-
-    const rect = target.getBoundingClientRect();
-    const percent = Math.max(0, Math.min(1, (ev.clientX - rect.left) / rect.width));
-
-    const newVolume = percent;
-    const newMuted = percent === 0;
-
-    if (volume.value !== newVolume || volume.isMuted !== newMuted) {
-      volume.value = newVolume;
-      volume.isMuted = newMuted;
-    }
-  };
-
-  const handleVolumeMouseDown = (ev: MouseEvent): void => {
-    ev.preventDefault();
-    isVolumeDragging = true;
-    const volumeBar = ev.currentTarget as HTMLElement;
-
-    handleVolumeSeek(ev, volumeBar);
-
-    let rafId: number | null = null;
-
-    const performVolumeUpdate = (clientX: number): void => {
-      const rect = volumeBar.getBoundingClientRect();
-      const percent = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-
-      if (volume.value !== percent) {
-        volume.value = percent;
-        volume.isMuted = percent === 0;
-      }
-
-      rafId = null;
-    };
-
-    const handleMouseMove = (ev: MouseEvent): void => {
-      if (isVolumeDragging) {
-        ev.preventDefault();
-        rafId ??= requestAnimationFrame(() => performVolumeUpdate(ev.clientX));
-      }
-    };
-
-    const handleMouseUp = (): void => {
-      isVolumeDragging = false;
-
-      // Reset hover state when drag ends
-      if (!volumeBar.matches(":hover")) {
-        isVolumeHovering = false;
-      }
-
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-
-      // Cancel any pending animation frame
-      if (rafId !== null) {
-        cancelAnimationFrame(rafId);
-      }
-    };
-
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
-  };
-
-  const handleVolumeClick = (ev: MouseEvent): void => {
-    if (isVolumeDragging) return;
-    handleVolumeSeek(ev);
-  };
-
-  const toggleFullscreen = (): void => {
-    if (playerState.isFullscreen) void client.exitFullscreen();
-    else void client.enterFullscreen();
-
-    playerState.isFullscreen = !playerState.isFullscreen;
-  };
-
   const progressPercentage = $derived(
     isDragging || !playerState.duration
       ? (playerState.currentTime / playerState.duration) * 100 || 0
@@ -319,74 +182,69 @@
   );
 </script>
 
-{#if showOverlay}
-  <div
-    class="absolute inset-x-0 bottom-0 z-30 bg-gradient-to-t from-black/80 to-transparent pt-16 pb-6"
-    transition:fade={{ duration: 300 }}
-  >
-    <div class="mx-8 mb-4">
-      <div
-        class="relative z-10 flex items-center justify-between px-1 pb-2 font-mono text-xs text-white select-none"
-      >
-        <span>{makeTimeString(playerState.currentTime)}</span>
-        <span>
-          {#if playerState.duration}
-            -{makeTimeString(Math.max(0, playerState.duration - playerState.currentTime))}
-          {:else}
-            -0:00
-          {/if}
-        </span>
-      </div>
-      <div
-        class={cn(
-          "group relative h-2 rounded-full bg-white/20 lg:h-3",
-          isDragging
-            ? "bg-black/70 shadow-inner shadow-blue-500/30"
-            : "transition-colors duration-200"
-        )}
-        onclick={handleProgressClick}
-        onmousedown={handleProgressMouseDown}
-        onmousemove={handleProgressMouseMove}
-        onmouseenter={() => (isHovering = true)}
-        onmouseleave={() => (isHovering = false)}
-        role="slider"
-        tabindex={0}
-      >
-        <div
-          class={cn("absolute h-2 grow rounded-full bg-white lg:h-3", {
-            "transition-all duration-75 ease-linear": !isDragging
-          })}
-          style="width: {progressPercentage > 0 ? Math.max(progressPercentage, 0.5) : 0}%"
-        ></div>
-        {#if isHovering && !isDragging && playerState.duration > 0}
-          <div
-            class="absolute bottom-8 z-10 rounded-md bg-black/90 px-2 py-1 text-xs text-white shadow-lg"
-            style="left: {hoverPercentage}%; transform: translateX(-50%)"
-          >
-            {makeTimeString(hoverTime)}
-            <div
-              class="absolute top-full left-1/2 h-0 w-0 -translate-x-1/2 border-t-2 border-r-2 border-l-2 border-transparent border-t-black/90"
-            ></div>
-          </div>
+<div class="bg-gradient-to-t from-black/80 via-black/40 to-transparent pt-16 pb-2">
+  <div class="mx-4 mb-2">
+    <div
+      class="relative z-10 flex items-center justify-between px-1 pb-1.5 font-mono text-xs text-neutral-300 select-none"
+    >
+      <span>{makeTimeString(playerState.currentTime)}</span>
+      <span>
+        {#if playerState.duration}
+          -{makeTimeString(Math.max(0, playerState.duration - playerState.currentTime))}
+        {:else}
+          -0:00
         {/if}
-      </div>
+      </span>
     </div>
-
-    <div class="flex items-center justify-between px-8">
-      <div class="flex items-center gap-4">
-        <div class="flex grow items-center gap-2 rounded-md bg-black/50 backdrop-blur-md">
-          <PreviousButton />
-          <PlayButton />
-          <ForwardButton />
-          <VolumeControl />
+    <div
+      class={cn(
+        "group relative h-1.5 rounded-full bg-neutral-700/30 lg:h-2",
+        isDragging
+          ? "bg-neutral-900/80 shadow-inner shadow-neutral-500/20"
+          : "transition-colors duration-200"
+      )}
+      onclick={handleProgressClick}
+      onmousedown={handleProgressMouseDown}
+      onmousemove={handleProgressMouseMove}
+      onmouseenter={() => (isHovering = true)}
+      onmouseleave={() => (isHovering = false)}
+      role="slider"
+      tabindex={0}
+    >
+      <div
+        class={cn("absolute h-1.5 grow rounded-full bg-neutral-100 lg:h-2", {
+          "transition-all duration-75 ease-linear": !isDragging
+        })}
+        style="width: {progressPercentage > 0 ? Math.max(progressPercentage, 0.5) : 0}%"
+      ></div>
+      {#if isHovering && !isDragging && playerState.duration > 0}
+        <div
+          class="absolute bottom-6 z-10 rounded border border-neutral-700/50 bg-neutral-900/95 px-2 py-1 text-xs text-neutral-100 shadow-xl backdrop-blur-sm"
+          style="left: {hoverPercentage}%; transform: translateX(-50%)"
+        >
+          {makeTimeString(hoverTime)}
+          <div
+            class="absolute top-full left-1/2 h-0 w-0 -translate-x-1/2 border-t-2 border-r-2 border-l-2 border-transparent border-t-neutral-900/95"
+          ></div>
         </div>
-      </div>
-
-      <div class="flex items-center gap-2 rounded-md bg-black/50 backdrop-blur-md">
-        <SettingsButton />
-        <FullScreenButton />
-        <SideBarButton />
-      </div>
+      {/if}
     </div>
   </div>
-{/if}
+
+  <div class="flex items-center justify-between px-4">
+    <div class="flex items-center gap-2">
+      <div class="flex items-center gap-1 rounded px-1 py-0.5 backdrop-blur-sm">
+        <PreviousButton />
+        <PlayButton />
+        <ForwardButton />
+        <VolumeControl />
+      </div>
+    </div>
+
+    <div class="flex items-center gap-1 rounded px-1 py-0.5 backdrop-blur-sm">
+      <SettingsButton />
+      <FullScreenButton />
+      <SideBarButton />
+    </div>
+  </div>
+</div>

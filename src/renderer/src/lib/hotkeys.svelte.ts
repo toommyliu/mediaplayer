@@ -8,9 +8,7 @@ import { queue } from "$lib/state/queue.svelte";
 import { sidebarState } from "$lib/state/sidebar.svelte";
 import { volume } from "$lib/state/volume.svelte";
 import { SEEK_TIME_STEP, VOLUME_STEP } from "./constants";
-import { navigateToParent } from "./file-browser.svelte";
 import { logger } from "./logger";
-import { playNextVideo, playPreviousVideo } from "./video-playback";
 
 type HotkeyAction = {
   description: string;
@@ -182,14 +180,14 @@ class HotkeyConfig {
   private readonly previousVideo = (ev: KeyboardEvent): void => {
     ev.preventDefault();
     if (queue.currentItem) {
-      playPreviousVideo();
+      playerState.playPreviousVideo();
     }
   };
 
   private readonly nextVideo = (ev: KeyboardEvent): void => {
     ev.preventDefault();
     if (queue.currentItem) {
-      playNextVideo();
+      playerState.playNextVideo();
     }
   };
 
@@ -266,7 +264,7 @@ class HotkeyConfig {
     ev.preventDefault();
     if (!fileBrowserState.currentPath || fileBrowserState.isAtRoot) return;
     try {
-      await navigateToParent();
+      await fileBrowserState.navigateToParent();
     } catch (error) {
       logger.error("Failed to navigate to parent directory:", error);
     }
@@ -376,10 +374,10 @@ export const hotkeyConfig = new HotkeyConfig();
 
 export function setupMediaKeyHandlers(): void {
   handlers.mediaPreviousTrack.listen(() => {
-    playPreviousVideo();
+    playerState.playPreviousVideo();
   });
   handlers.mediaNextTrack.listen(() => {
-    playNextVideo();
+    playerState.playNextVideo();
   });
   handlers.mediaPlayPause.listen(async () => {
     if (queue.currentItem) {

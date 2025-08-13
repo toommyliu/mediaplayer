@@ -14,7 +14,7 @@
       <Button
         variant="ghost"
         size="icon"
-        onclick={async () => playerState.playNext()}
+        onclick={async () => playerState.playNextVideo()}
         disabled={!queue.currentItem || playerState.isLoading}
       >
         <LucideFastForward class="size-4" />

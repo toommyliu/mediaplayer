@@ -6,51 +6,15 @@
   import { onMount } from "svelte";
   import Sidebar from "$components/sidebar.svelte";
   import VideoPlayer from "$components/video-player/video-player.svelte";
-  import { transformDirectoryContents } from "$lib/file-browser.svelte";
   import { logger } from "$lib/logger";
   import { QueueManager } from "$lib/queue-manager";
   import { fileBrowserState } from "$lib/state/file-browser.svelte";
   import { platformState } from "$lib/state/platform.svelte";
   import { playerState } from "$lib/state/player.svelte";
   import { sidebarState } from "$lib/state/sidebar.svelte";
-  import { playVideo } from "$lib/video-playback";
   import { client, handlers } from "./tipc";
 
-  import Settings from "$components/Settings.svelte";
-
   QueueManager.initialize();
-
-  async function getAllVideoFilesRecursive(
-    folderPath: string,
-    depth: number = 0
-  ): Promise<{ duration?: number; name: string; path: string }[]> {
-    let videoFiles: { duration?: number; name: string; path: string }[] = [];
-    const indent = "  ".repeat(depth);
-    logger.debug(`${indent}Scanning folder: ${folderPath}`);
-
-    try {
-      const contents = await client.readDirectory(folderPath);
-      if (contents && contents.files) {
-        console.log(`${indent}Found ${contents.files.length} items in folder`);
-
-        for (const item of contents.files) {
-          if (item.type === "video" && item.path && item.name) {
-            videoFiles.push({ name: item.name, path: item.path, duration: item.duration });
-            console.log(`${indent}- Found video: ${item.name}`);
-          } else if (item.type === "folder" && item.path) {
-            console.log(`${indent}> Entering subfolder: ${item.name}`);
-            const nestedVideos = await getAllVideoFilesRecursive(item.path, depth + 1);
-            console.log(`${indent}< Subfolder ${item.name} returned ${nestedVideos.length} videos`);
-            videoFiles = videoFiles.concat(nestedVideos);
-          }
-        }
-      }
-    } catch (error) {
-      console.error(`${indent}Error reading directory ${folderPath} recursively:`, error);
-    }
-
-    return videoFiles;
-  }
 
   handlers.addFile.listen(async (res) => {
     logger.debug("addFile:", res);
@@ -61,8 +25,8 @@
         name: res.path.split("/").pop() ?? "Video",
         path: res.path
       });
-      playerState.currentIndex = 0;
-      playVideo(`file://${res.path}`);
+
+      playerState.playVideo(`file://${res.path}`);
     }
   });
 
@@ -99,12 +63,12 @@
         if (dirResult) {
           fileBrowserState.fileTree = {
             rootPath: dirResult.currentPath,
-            files: transformDirectoryContents(dirResult)
+            files: fileBrowserState.transformDirectoryContents(dirResult)
           };
           fileBrowserState.currentPath = dirResult.currentPath;
           fileBrowserState.isAtRoot = dirResult.isAtRoot;
 
-          const allVideoFiles = await getAllVideoFilesRecursive(result.rootPath);
+          const allVideoFiles = await fileBrowserState.getAllVideoFilesRecursive(result.rootPath);
           if (allVideoFiles.length > 0) {
             // Clear existing queue and add new videos
             QueueManager.clearQueue();
@@ -112,6 +76,8 @@
 
             if (success) {
               console.log(`Successfully added ${allVideoFiles.length} videos to queue`);
+              // Start playing the first video
+              playerState.playVideo(allVideoFiles[0].path);
             } else {
               console.error("Failed to add folder contents to queue");
             }
@@ -149,7 +115,6 @@
 </script>
 
 <ModeWatcher />
-
 <div class="flex h-screen flex-col">
   <div class="flex w-full flex-1 overflow-hidden">
     <PaneGroup direction="horizontal">
@@ -189,5 +154,3 @@
     </PaneGroup>
   </div>
 </div>
-
-<Settings />
