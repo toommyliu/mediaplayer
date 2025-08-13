@@ -3,7 +3,7 @@
   import FileBrowserItem from "./FileBrowserItem.svelte";
   import LucideCircle from "~icons/lucide/circle";
 
-  import { fileBrowserState } from "$lib/state/file-browser.svelte";
+  import { fileBrowserState, type FileSystemItem } from "$lib/state/file-browser.svelte";
   import { platformState } from "$lib/state/platform.svelte";
   import { playerState } from "$lib/state/player.svelte";
 
@@ -13,11 +13,6 @@
 
   import { client } from "$/tipc";
 
-  import {
-    navigateToDirectory,
-    transformDirectoryContents,
-    type FileSystemItem
-  } from "$/lib/file-browser.svelte";
   import { sortFileTree, type SortOptions } from "$shared/file-tree-utils";
 
   function isCurrentVideo(itemPath: string | undefined): boolean {
@@ -87,7 +82,7 @@
       if (isModKeyPressed) {
         ev.preventDefault();
         console.log("Cmd/Ctrl + click detected, navigating to:", item.path);
-        void navigateToDirectory(item.path);
+        void fileBrowserState.navigateToDirectory(item.path);
         return;
       }
 
@@ -124,7 +119,7 @@
 
       const result = await client.readDirectory(folderPath);
       if (result?.files) {
-        const folderContents = transformDirectoryContents(result);
+        const folderContents = fileBrowserState.transformDirectoryContents(result);
         updateFolderContents(fileBrowserState.fileSystem, folderPath, folderContents);
       }
     } catch (error) {

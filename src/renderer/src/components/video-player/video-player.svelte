@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { loadFileSystemStructure } from "$lib/file-browser.svelte";
+  import { fileBrowserState } from "$lib/state/file-browser.svelte";
   import { playerState } from "$lib/state/player.svelte";
   import { queue } from "$lib/state/queue.svelte";
   import { cn } from "$lib/utils";
@@ -223,7 +223,7 @@
 
     if (target.tagName === "VIDEO" || target.closest("#video-player")) {
       if (!queue.currentItem) {
-        await loadFileSystemStructure();
+        await fileBrowserState.loadFileSystemStructure();
       } else {
         await playerState.togglePlayPause();
       }

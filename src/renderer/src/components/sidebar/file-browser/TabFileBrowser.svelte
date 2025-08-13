@@ -11,7 +11,6 @@
   import ListRestart from "~icons/lucide/list-restart";
   import Loader2 from "~icons/lucide/loader-2";
 
-  import { loadFileSystemStructure, navigateToParent } from "$lib/file-browser.svelte";
   import { fileBrowserState } from "$lib/state/file-browser.svelte";
   import { playerState } from "$lib/state/player.svelte";
 
@@ -51,7 +50,7 @@
     const parentName = pathParts[pathParts.length - 2] ?? "Parent";
 
     try {
-      await navigateToParent();
+      await fileBrowserState.navigateToParent();
     } catch (error) {
       console.error("Failed to navigate to parent directory:", error);
       fileBrowserState.error = `Failed to navigate to ${parentName} directory.`;
@@ -76,7 +75,7 @@
 
     try {
       fileBrowserState.isLoading = true;
-      await loadFileSystemStructure();
+      await fileBrowserState.loadFileSystemStructure();
     } catch (error) {
       console.error("Failed to browse and load directory:", error);
       fileBrowserState.error = "Failed to load directory. Please try again.";

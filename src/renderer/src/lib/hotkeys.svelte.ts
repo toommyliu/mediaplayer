@@ -8,7 +8,6 @@ import { queue } from "$lib/state/queue.svelte";
 import { sidebarState } from "$lib/state/sidebar.svelte";
 import { volume } from "$lib/state/volume.svelte";
 import { SEEK_TIME_STEP, VOLUME_STEP } from "./constants";
-import { navigateToParent } from "./file-browser.svelte";
 import { logger } from "./logger";
 
 type HotkeyAction = {
@@ -265,7 +264,7 @@ class HotkeyConfig {
     ev.preventDefault();
     if (!fileBrowserState.currentPath || fileBrowserState.isAtRoot) return;
     try {
-      await navigateToParent();
+      await fileBrowserState.navigateToParent();
     } catch (error) {
       logger.error("Failed to navigate to parent directory:", error);
     }
