@@ -172,59 +172,61 @@
     </div>
 
     <div class="mt-4 border-t border-zinc-800/60 backdrop-blur-sm">
-      <div class="flex items-center justify-between gap-3 p-3">
-        <div class="flex items-center gap-1">
-          <div class="ml-2 flex items-center gap-1">
-            <Button
-              variant={fileBrowserState.sortBy === "name" ? "secondary" : "ghost"}
-              size="sm"
-              class={cn(
-                "h-8 gap-2 text-sm font-medium",
-                fileBrowserState.sortBy === "name"
-                  ? "border-blue-500/30 bg-blue-500/20 text-blue-300 hover:bg-blue-500/30"
-                  : "text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-300"
-              )}
-              onclick={() => setSortBy("name")}
-            >
-              {#if fileBrowserState.sortBy === "name"}
-                {#if fileBrowserState.sortDirection === "asc"}
-                  <ArrowUpAZ class="h-4 w-4" />
-                {:else}
-                  <ArrowDownAZ class="h-4 w-4" />
-                {/if}
+      <div
+        class="flex flex-col items-center gap-2 p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3"
+      >
+        <div
+          class="flex w-full flex-wrap items-center justify-center gap-x-2 gap-y-2 sm:w-auto sm:justify-start"
+        >
+          <Button
+            variant={fileBrowserState.sortBy === "name" ? "secondary" : "ghost"}
+            size="sm"
+            class={cn(
+              "h-8 gap-2 text-sm font-medium",
+              fileBrowserState.sortBy === "name"
+                ? "border-blue-500/30 bg-blue-500/20 text-blue-300 hover:bg-blue-500/30"
+                : "text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-300"
+            )}
+            onclick={() => setSortBy("name")}
+          >
+            {#if fileBrowserState.sortBy === "name"}
+              {#if fileBrowserState.sortDirection === "asc"}
+                <ArrowUpAZ class="h-4 w-4" />
               {:else}
-                <ArrowUpAZ class="h-4 w-4 opacity-60" />
+                <ArrowDownAZ class="h-4 w-4" />
               {/if}
-              <span class="hidden sm:inline">Name</span>
-            </Button>
-            <Button
-              variant={fileBrowserState.sortBy === "duration" ? "secondary" : "ghost"}
-              size="sm"
-              class={cn(
-                "h-8 gap-2 text-sm font-medium",
-                fileBrowserState.sortBy === "duration"
-                  ? "border-blue-500/30 bg-blue-500/20 text-blue-300 hover:bg-blue-500/30"
-                  : "text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-300"
-              )}
-              onclick={() => setSortBy("duration")}
-            >
-              {#if fileBrowserState.sortBy === "duration"}
-                {#if fileBrowserState.sortDirection === "asc"}
-                  <ArrowUp10 class="h-4 w-4" />
-                {:else}
-                  <ArrowDown01 class="h-4 w-4" />
-                {/if}
+            {:else}
+              <ArrowUpAZ class="h-4 w-4 opacity-60" />
+            {/if}
+            <span class="hidden sm:inline">Name</span>
+          </Button>
+          <Button
+            variant={fileBrowserState.sortBy === "duration" ? "secondary" : "ghost"}
+            size="sm"
+            class={cn(
+              "h-8 gap-2 text-sm font-medium",
+              fileBrowserState.sortBy === "duration"
+                ? "border-blue-500/30 bg-blue-500/20 text-blue-300 hover:bg-blue-500/30"
+                : "text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-300"
+            )}
+            onclick={() => setSortBy("duration")}
+          >
+            {#if fileBrowserState.sortBy === "duration"}
+              {#if fileBrowserState.sortDirection === "asc"}
+                <ArrowUp10 class="h-4 w-4" />
               {:else}
-                <ArrowUp10 class="h-4 w-4 opacity-60" />
+                <ArrowDown01 class="h-4 w-4" />
               {/if}
-              <span class="hidden sm:inline">Duration</span>
-            </Button>
-          </div>
+            {:else}
+              <ArrowUp10 class="h-4 w-4 opacity-60" />
+            {/if}
+            <span class="hidden sm:inline">Duration</span>
+          </Button>
         </div>
         <Button
           size="icon"
           variant="ghost"
-          class="h-8 w-8 text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-300"
+          class="mt-2 h-8 w-full text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-300 sm:mt-0 sm:ml-auto sm:w-8"
           onclick={resetAndBrowse}
         >
           <ListRestart class="h-4 w-4" />
