@@ -212,21 +212,20 @@
   }
 
   async function handleDblClick(ev: MouseEvent): Promise<void> {
-    console.log("Double click detected on video player");
+    const target = ev.target as HTMLElement | null;
 
-    const target = ev.target as HTMLElement;
-    const controlsElement = target.closest("#media-controls");
-    if (controlsElement) {
-      console.warn("no controls element");
-      return;
+    // If there's already a video element mounted, don't treat dblclicks that
+    // originate inside the controls as a toggle action.
+    if (playerState.videoElement && target && typeof target.closest === "function") {
+      const controlsElement = target.closest("#media-controls");
+      if (controlsElement) return;
     }
 
-    if (target.tagName === "VIDEO" || target.closest("#video-player")) {
-      if (!queue.currentItem) {
-        await fileBrowserState.loadFileSystemStructure();
-      } else {
-        await playerState.togglePlayPause();
-      }
+    // If the double-click happened on the video element or its container, toggle play/pause
+    // or loading the file system structure.
+    if (target && (target.tagName === "VIDEO" || target.closest("#video-player"))) {
+      if (!queue.currentItem) await fileBrowserState.loadFileSystemStructure();
+      else await playerState.togglePlayPause();
     }
   }
 </script>

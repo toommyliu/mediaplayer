@@ -182,7 +182,10 @@
   );
 </script>
 
-<div class="bg-gradient-to-t from-black/80 via-black/40 to-transparent pt-16 pb-2">
+<div
+  id="media-controls"
+  class="bg-gradient-to-t from-black/80 via-black/40 to-transparent pt-16 pb-2"
+>
   <div class="mx-4 mb-2">
     <div
       class="relative z-10 flex items-center justify-between px-1 pb-1.5 font-mono text-xs text-neutral-300 select-none"
