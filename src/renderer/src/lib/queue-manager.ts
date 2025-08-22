@@ -33,14 +33,20 @@ export class QueueManager {
   /**
    * Add multiple items to the queue
    */
-  public static addMultipleToQueue(items: { duration?: number; name: string; path: string }[]) {
+  public static addMultipleToQueue(
+    items: { duration?: number; name: string; path: string }[]
+  ): boolean {
+    let added = false;
     for (const item of items) {
       if (!item.name || !item.path) {
         continue;
       }
 
-      this.addToQueue(item);
+      const success = this.addToQueue(item);
+      if (success) added = true;
     }
+
+    return added;
   }
 
   /**
