@@ -1,7 +1,4 @@
 <script lang="ts">
-  import { makeTimeString } from "$lib/makeTimeString";
-  import { playerState } from "$lib/state/player.svelte";
-  import { cn } from "$lib/utils";
   import PlayButton from "./controls/PlayButton.svelte";
   import PreviousButton from "./controls/PreviousButton.svelte";
   import ForwardButton from "./controls/ForwardButton.svelte";
@@ -9,6 +6,26 @@
   import SettingsButton from "./controls/SettingsButton.svelte";
   import FullScreenButton from "./controls/FullScreenButton.svelte";
   import SideBarButton from "./controls/SideBarButton.svelte";
+  import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuItem,
+    DropdownMenuTrigger
+  } from "$components/ui/dropdown-menu";
+  import TablerAspectRatio from "~icons/tabler/aspect-ratio";
+
+  import { playerState } from "$lib/state/player.svelte";
+
+  import { makeTimeString } from "$lib/makeTimeString";
+  import { cn } from "$lib/utils";
+
+  let { aspectRatio, onAspectRatioChange }: Props = $props();
+
+  type Props = {
+    aspectRatio: "contain" | "cover" | "fill";
+    onAspectRatioChange: (mode: "contain" | "cover" | "fill") => void;
+  };
 
   let isDragging = $state(false);
   let hoverTime = $state(0);
@@ -368,6 +385,46 @@
 
       <!-- Right Controls -->
       <div class="flex items-center gap-1 rounded-xl bg-black/40 p-1 backdrop-blur-md">
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            class="flex h-full items-center rounded-lg p-2 text-white/80 transition-colors hover:bg-white/10 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+          >
+            <TablerAspectRatio class="size-5" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            class="mr-4 w-40 border-none bg-black/70 text-white backdrop-blur-md"
+          >
+            <DropdownMenuGroup>
+              <DropdownMenuItem
+                class="flex cursor-pointer items-center justify-between focus:bg-white/10 focus:text-white"
+                onclick={() => onAspectRatioChange("contain")}
+              >
+                <span>Contain</span>
+                {#if aspectRatio === "contain"}
+                  <div class="h-2 w-2 rounded-full bg-white"></div>
+                {/if}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                class="flex cursor-pointer items-center justify-between focus:bg-white/10 focus:text-white"
+                onclick={() => onAspectRatioChange("cover")}
+              >
+                <span>Cover</span>
+                {#if aspectRatio === "cover"}
+                  <div class="h-2 w-2 rounded-full bg-white"></div>
+                {/if}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                class="flex cursor-pointer items-center justify-between focus:bg-white/10 focus:text-white"
+                on:click={() => onAspectRatioChange("fill")}
+              >
+                <span>Fill</span>
+                {#if aspectRatio === "fill"}
+                  <div class="h-2 w-2 rounded-full bg-white"></div>
+                {/if}
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
         <SettingsButton />
         <FullScreenButton />
         <SideBarButton />
@@ -401,13 +458,10 @@
     background-color: rgba(255, 255, 255, 0.5);
   }
 
-  /* Ensure smooth transitions for all interactive elements */
-  #media-controls button,
   #media-controls [role="slider"] {
     transition: all 0.2s ease-out;
   }
 
-  /* Keyboard focus improvements */
   #media-controls [role="slider"]:focus-visible {
     outline: 2px solid rgba(59, 130, 246, 0.6);
     outline-offset: 2px;

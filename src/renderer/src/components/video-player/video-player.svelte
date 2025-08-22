@@ -5,6 +5,21 @@
   import { cn } from "$lib/utils";
   import VideoPlayerControls from "./video-player-controls.svelte";
 
+  type AspectRatioMode = "contain" | "cover" | "fill";
+  let aspectRatio: AspectRatioMode = $state("contain");
+  let videoAspectRatio = $state<number | null>(null);
+
+  const aspectRatioClass = $derived(() => {
+    switch (aspectRatio) {
+      case "cover":
+        return "object-cover";
+      case "fill":
+        return "object-fill";
+      default:
+        return "";
+    }
+  });
+
   // Floating controls state
   let showControls = $state(true);
   let hideTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -104,6 +119,10 @@
     // console.log("Video metadata loaded");
     if (playerState.videoElement) {
       playerState.duration = playerState.videoElement.duration;
+      const { videoWidth, videoHeight } = playerState.videoElement;
+      if (videoWidth && videoHeight) {
+        videoAspectRatio = videoWidth / videoHeight;
+      }
     }
   }
 
@@ -201,6 +220,7 @@
     }
 
     // Always attempt to play next video for repeatMode 'all' and 'off'.
+    videoAspectRatio = null;
     playerState.playNextVideo();
   }
 
@@ -249,26 +269,56 @@
       onmousemove={handleMouseMove}
       onmouseleave={handleMouseLeave}
     >
-      <video
-        bind:this={playerState.videoElement}
-        src={`file://${queue.currentItem.path}`}
-        class="h-full w-full object-contain"
-        onloadstart={handleLoadStart}
-        onloadeddata={handleLoadedData}
-        onloadedmetadata={handleLoadedMetadata}
-        ontimeupdate={handleTimeUpdate}
-        onseeked={handleSeeked}
-        onerror={handleError}
-        oncanplay={handleCanPlay}
-        onplay={handlePlay}
-        onpause={handlePause}
-        onended={handleEnded}
-        preload="metadata"
-        controls={false}
-        controlslist="nodownload nofullscreen noremoteplaybook"
-        disablepictureinpicture
-      >
-      </video>
+      {#if aspectRatio === "contain"}
+        <div
+          class="relative"
+          style:max-width="100%"
+          style:max-height="100%"
+          style:aspect-ratio={videoAspectRatio ? `${videoAspectRatio}` : "16 / 9"}
+        >
+          <video
+            bind:this={playerState.videoElement}
+            src={`file://${queue.currentItem.path}`}
+            class="h-full w-full bg-black"
+            onloadstart={handleLoadStart}
+            onloadeddata={handleLoadedData}
+            onloadedmetadata={handleLoadedMetadata}
+            ontimeupdate={handleTimeUpdate}
+            onseeked={handleSeeked}
+            onerror={handleError}
+            oncanplay={handleCanPlay}
+            onplay={handlePlay}
+            onpause={handlePause}
+            onended={handleEnded}
+            preload="metadata"
+            controls={false}
+            controlslist="nodownload nofullscreen noremoteplaybook"
+            disablepictureinpicture
+          >
+          </video>
+        </div>
+      {:else}
+        <video
+          bind:this={playerState.videoElement}
+          src={`file://${queue.currentItem.path}`}
+          class={cn("h-full w-full", aspectRatioClass)}
+          onloadstart={handleLoadStart}
+          onloadeddata={handleLoadedData}
+          onloadedmetadata={handleLoadedMetadata}
+          ontimeupdate={handleTimeUpdate}
+          onseeked={handleSeeked}
+          onerror={handleError}
+          oncanplay={handleCanPlay}
+          onplay={handlePlay}
+          onpause={handlePause}
+          onended={handleEnded}
+          preload="metadata"
+          controls={false}
+          controlslist="nodownload nofullscreen noremoteplaybook"
+          disablepictureinpicture
+        >
+        </video>
+      {/if}
 
       <!-- Floating controls overlay -->
       <div
@@ -279,7 +329,7 @@
         onmouseenter={handleControlsMouseEnter}
         onmouseleave={handleControlsMouseLeave}
       >
-        <VideoPlayerControls />
+        <VideoPlayerControls {aspectRatio} onAspectRatioChange={(mode) => (aspectRatio = mode)} />
       </div>
     </div>
   {:else}
@@ -290,7 +340,7 @@
     ></div>
 
     <div class="pointer-events-none flex-shrink-0 opacity-0">
-      <VideoPlayerControls />
+      <VideoPlayerControls aspectRatio="contain" onAspectRatioChange={() => {}} />
     </div>
   {/if}
 </div>
