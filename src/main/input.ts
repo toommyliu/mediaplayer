@@ -6,40 +6,84 @@ import type { RendererHandlers } from "./tipc";
 
 const isTrustedAccessibilityClient = systemPreferences.isTrustedAccessibilityClient(true);
 
-// TODO: memory leak somewhere?
+let eventListenersRegistered = false;
 
 function registerGlobalShortcuts(): void {
   if (!isTrustedAccessibilityClient) return;
 
-  globalShortcut.register("MediaPreviousTrack", async () => {
-    try {
-      const window = getOrCreateMainWindow();
-      const handlers = getRendererHandlers<RendererHandlers>(window.webContents);
-      await handlers?.mediaPreviousTrack?.invoke();
-    } catch (error) {
-      logger.error("Failed to handle MediaPreviousTrack:", error);
-    }
-  });
+  globalShortcut.unregisterAll();
 
-  globalShortcut.register("MediaNextTrack", async () => {
-    try {
-      const window = getOrCreateMainWindow();
-      const handlers = getRendererHandlers<RendererHandlers>(window.webContents);
-      await handlers?.mediaNextTrack?.invoke();
-    } catch (error) {
-      logger.error("Failed to handle MediaNextTrack:", error);
-    }
-  });
+  try {
+    globalShortcut.register("MediaPreviousTrack", async () => {
+      try {
+        const window = getOrCreateMainWindow();
+        const handlers = getRendererHandlers<RendererHandlers>(window.webContents);
+        await handlers?.mediaPreviousTrack?.invoke();
+      } catch (error) {
+        logger.error("Failed to handle MediaPreviousTrack:", error);
+      }
+    });
 
-  globalShortcut.register("MediaPlayPause", async () => {
-    try {
-      const window = getOrCreateMainWindow();
-      const handlers = getRendererHandlers<RendererHandlers>(window.webContents);
-      await handlers?.mediaPlayPause?.invoke();
-    } catch (error) {
-      logger.error("Failed to handle MediaPlayPause:", error);
-    }
-  });
+    globalShortcut.register("MediaNextTrack", async () => {
+      try {
+        const window = getOrCreateMainWindow();
+        const handlers = getRendererHandlers<RendererHandlers>(window.webContents);
+        await handlers?.mediaNextTrack?.invoke();
+      } catch (error) {
+        logger.error("Failed to handle MediaNextTrack:", error);
+      }
+    });
+
+    globalShortcut.register("MediaPlayPause", async () => {
+      try {
+        const window = getOrCreateMainWindow();
+        const handlers = getRendererHandlers<RendererHandlers>(window.webContents);
+        await handlers?.mediaPlayPause?.invoke();
+      } catch (error) {
+        logger.error("Failed to handle MediaPlayPause:", error);
+      }
+    });
+  } catch (error) {
+    logger.error("Failed to register global shortcuts:", error);
+  }
+}
+
+function unregisterGlobalShortcuts(): void {
+  try {
+    globalShortcut.unregisterAll();
+  } catch (error) {
+    logger.error("Failed to unregister global shortcuts:", error);
+  }
+}
+
+const handleWindowFocus = (): void => {
+  logger.debug("mainWindow focused, registering global shortcuts");
+  registerGlobalShortcuts();
+};
+
+const handleWindowBlur = (): void => {
+  logger.debug("mainWindow blurred, unregistering global shortcuts");
+  unregisterGlobalShortcuts();
+};
+
+function setupWindowEventListeners(): void {
+  if (!mainWindow || eventListenersRegistered) return;
+
+  mainWindow.removeListener("focus", handleWindowFocus);
+  mainWindow.removeListener("blur", handleWindowBlur);
+
+  mainWindow.on("focus", handleWindowFocus);
+  mainWindow.on("blur", handleWindowBlur);
+
+  eventListenersRegistered = true;
+}
+
+function cleanupEventListeners(): void {
+  if (!mainWindow) return;
+
+  mainWindow.removeListener("focus", handleWindowFocus);
+  mainWindow.removeListener("blur", handleWindowBlur);
+  eventListenersRegistered = false;
 }
 
 app.on("ready", async () => {
@@ -48,15 +92,17 @@ app.on("ready", async () => {
   }
 
   mainWindow?.once("show", () => {
-    mainWindow?.on("focus", () => {
-      logger.debug("mainWindow focused, registering global shortcuts");
-      globalShortcut.unregisterAll();
-      registerGlobalShortcuts();
-    });
-
-    mainWindow?.on("blur", () => {
-      logger.debug("mainWindow blurred, unregistering global shortcuts");
-      globalShortcut.unregisterAll();
-    });
+    setupWindowEventListeners();
   });
+});
+
+app.on("before-quit", () => {
+  logger.debug("App quitting, cleaning up input handlers");
+  cleanupEventListeners();
+  unregisterGlobalShortcuts();
+});
+
+app.on("window-all-closed", () => {
+  cleanupEventListeners();
+  unregisterGlobalShortcuts();
 });
