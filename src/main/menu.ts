@@ -24,10 +24,7 @@ const fileMenu: Electron.MenuItemConstructorOptions = {
 
         console.log("ret", ret);
         const handlers = getRendererHandlers<RendererHandlers>(browserWindow.webContents);
-        handlers.addFile.send({
-          path: ret as string,
-          type: "file"
-        });
+        handlers.addFile.send(ret);
       }
     },
     {
