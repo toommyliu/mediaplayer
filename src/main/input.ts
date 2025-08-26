@@ -1,9 +1,8 @@
-import { setTimeout } from "node:timers/promises";
 import { getRendererHandlers } from "@egoist/tipc/main";
-import { app, BrowserWindow, globalShortcut, systemPreferences } from "electron";
+import { app, globalShortcut, systemPreferences } from "electron";
+import { getOrCreateMainWindow, mainWindow } from "./index";
 import { logger } from "./logger";
 import type { RendererHandlers } from "./tipc";
-import { mainWindow } from "./index";
 
 const isTrustedAccessibilityClient = systemPreferences.isTrustedAccessibilityClient(true);
 
@@ -13,27 +12,33 @@ function registerGlobalShortcuts(): void {
   if (!isTrustedAccessibilityClient) return;
 
   globalShortcut.register("MediaPreviousTrack", async () => {
-    const handlers = getRendererHandlers<RendererHandlers>(
-      BrowserWindow.getFocusedWindow()!.webContents
-    );
-
-    await handlers?.mediaPreviousTrack?.invoke();
+    try {
+      const window = getOrCreateMainWindow();
+      const handlers = getRendererHandlers<RendererHandlers>(window.webContents);
+      await handlers?.mediaPreviousTrack?.invoke();
+    } catch (error) {
+      logger.error("Failed to handle MediaPreviousTrack:", error);
+    }
   });
 
   globalShortcut.register("MediaNextTrack", async () => {
-    const handlers = getRendererHandlers<RendererHandlers>(
-      BrowserWindow.getFocusedWindow()!.webContents
-    );
-
-    await handlers?.mediaNextTrack?.invoke();
+    try {
+      const window = getOrCreateMainWindow();
+      const handlers = getRendererHandlers<RendererHandlers>(window.webContents);
+      await handlers?.mediaNextTrack?.invoke();
+    } catch (error) {
+      logger.error("Failed to handle MediaNextTrack:", error);
+    }
   });
 
   globalShortcut.register("MediaPlayPause", async () => {
-    const handlers = getRendererHandlers<RendererHandlers>(
-      BrowserWindow.getFocusedWindow()!.webContents
-    );
-
-    await handlers?.mediaPlayPause?.invoke();
+    try {
+      const window = getOrCreateMainWindow();
+      const handlers = getRendererHandlers<RendererHandlers>(window.webContents);
+      await handlers?.mediaPlayPause?.invoke();
+    } catch (error) {
+      logger.error("Failed to handle MediaPlayPause:", error);
+    }
   });
 }
 
@@ -42,17 +47,16 @@ app.on("ready", async () => {
     logger.warn("accessibility permissions not granted, global shortcuts will not work");
   }
 
-  // Ensure that global shortcuts only work when the main window is focused
-  while (!mainWindow) await setTimeout(100);
+  mainWindow?.once("show", () => {
+    mainWindow?.on("focus", () => {
+      logger.debug("mainWindow focused, registering global shortcuts");
+      globalShortcut.unregisterAll();
+      registerGlobalShortcuts();
+    });
 
-  mainWindow?.on("focus", () => {
-    logger.debug("mainWindow focused, registering global shortcuts");
-    globalShortcut.unregisterAll();
-    registerGlobalShortcuts();
-  });
-
-  mainWindow?.on("blur", () => {
-    logger.debug("mainWindow blurred, unregistering global shortcuts");
-    globalShortcut.unregisterAll();
+    mainWindow?.on("blur", () => {
+      logger.debug("mainWindow blurred, unregistering global shortcuts");
+      globalShortcut.unregisterAll();
+    });
   });
 });

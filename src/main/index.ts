@@ -13,9 +13,9 @@ registerIpcMain(router);
 
 export let mainWindow: BrowserWindow | null = null;
 
-function createWindow(): void {
+function createWindow(): BrowserWindow {
   // Create the browser window.
-  mainWindow = new BrowserWindow({
+  const window = new BrowserWindow({
     width: 900,
     height: 670,
     show: false,
@@ -29,31 +29,33 @@ function createWindow(): void {
     }
   });
 
-  mainWindow.on("ready-to-show", () => {
-    mainWindow!.show();
-    mainWindow!.maximize();
+  mainWindow = window;
+
+  window.on("ready-to-show", () => {
+    window.show();
+    window.maximize();
 
     if (is.dev) {
-      mainWindow!.webContents.openDevTools({
+      window.webContents.openDevTools({
         mode: "right"
       });
     }
   });
 
-  mainWindow.on("close", (event) => {
+  window.on("close", (event) => {
     if (platform.isMacOS) {
       event.preventDefault();
-      mainWindow!.hide();
+      window.hide();
     } else {
       mainWindow = null;
     }
   });
 
-  mainWindow.on("closed", () => {
+  window.on("closed", () => {
     mainWindow = null;
   });
 
-  mainWindow.webContents.setWindowOpenHandler((details) => {
+  window.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url);
     return { action: "deny" };
   });
@@ -61,10 +63,25 @@ function createWindow(): void {
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
   if (is.dev && process.env.ELECTRON_RENDERER_URL) {
-    mainWindow.loadURL(process.env.ELECTRON_RENDERER_URL);
+    window.loadURL(process.env.ELECTRON_RENDERER_URL);
   } else {
-    mainWindow.loadFile(join(__dirname, "../renderer/index.html"));
+    window.loadFile(join(__dirname, "../renderer/index.html"));
   }
+
+  return window;
+}
+
+/**
+ * Gets the main window, creating it if it doesn't exist or is destroyed
+ */
+export function getOrCreateMainWindow(): BrowserWindow {
+  if (mainWindow && !mainWindow?.isDestroyed()) {
+    if (platform.isMacOS && !mainWindow.isVisible()) mainWindow.show();
+
+    return mainWindow;
+  }
+
+  return createWindow();
 }
 
 // This method will be called when Electron has finished

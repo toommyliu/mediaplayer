@@ -1,6 +1,7 @@
 import { getRendererHandlers } from "@egoist/tipc/main";
 import { platform } from "@electron-toolkit/utils";
-import { BrowserWindow, Menu } from "electron";
+import { Menu } from "electron";
+import { getOrCreateMainWindow } from "./index";
 import { logger } from "./logger";
 import { type RendererHandlers } from "./tipc";
 import { showFilePicker } from "./utils";
@@ -13,34 +14,34 @@ const fileMenu: Electron.MenuItemConstructorOptions = {
     {
       label: "Open File",
       accelerator: "CmdOrCtrl+O",
-      click: async (_menuItem, browserWindow) => {
+      click: async () => {
         const ret = await showFilePicker("file");
-        if (!ret || browserWindow?.isDestroyed()) return;
+        if (!ret) return;
 
-        if (!(browserWindow instanceof BrowserWindow)) {
-          logger.error("browserWindow is not an instance of BrowserWindow");
-          return;
+        try {
+          const browserWindow = getOrCreateMainWindow();
+          console.log("ret", ret);
+          const handlers = getRendererHandlers<RendererHandlers>(browserWindow.webContents);
+          handlers.addFile.send(ret);
+        } catch (error) {
+          logger.error("Failed to handle file open:", error);
         }
-
-        console.log("ret", ret);
-        const handlers = getRendererHandlers<RendererHandlers>(browserWindow.webContents);
-        handlers.addFile.send(ret);
       }
     },
     {
       label: "Open Folder",
       accelerator: "CmdOrCtrl+Shift+O",
-      click: async (_menuItem, browserWindow) => {
+      click: async () => {
         const ret = await showFilePicker("folder");
-        if (!ret || browserWindow?.isDestroyed()) return;
+        if (!ret) return;
 
-        if (!(browserWindow instanceof BrowserWindow)) {
-          logger.error("browserWindow is not an instance of BrowserWindow");
-          return;
+        try {
+          const browserWindow = getOrCreateMainWindow();
+          const handlers = getRendererHandlers<RendererHandlers>(browserWindow.webContents);
+          handlers.addFolder.send(ret);
+        } catch (error) {
+          logger.error("Failed to handle folder open:", error);
         }
-
-        const handlers = getRendererHandlers<RendererHandlers>(browserWindow.webContents);
-        handlers.addFolder.send(ret);
       }
     },
     { type: "separator" },
