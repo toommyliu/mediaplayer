@@ -1,17 +1,15 @@
-import { chmod, readdir, stat } from "node:fs/promises";
-import { dirname, join, resolve } from "node:path";
-import { promisify } from "node:util";
 import ffmpegInstaller from "@ffmpeg-installer/ffmpeg";
 import ffprobeInstaller from "@ffprobe-installer/ffprobe";
 import { app, BrowserWindow, dialog, type OpenDialogOptions } from "electron";
-import ffmpeg from "fluent-ffmpeg";
-import { logger } from "./logger";
+import { execFile } from "node:child_process";
+import { chmod, readdir, stat } from "node:fs/promises";
+import { dirname, extname, join, resolve } from "node:path";
+import { promisify } from "node:util";
 import { sortFileTree, type FileTreeItem, type SortOptions } from "../shared";
 import { DEFAULT_SORT_OPTIONS, VIDEO_EXTENSIONS } from "../shared/constants";
+import { logger } from "./logger";
 
-const makeFilePath = (path: string): string => path;
-
-const ffprobeAsync = promisify(ffmpeg.ffprobe);
+const execFileAsync = promisify(execFile);
 let isFfmpegInitialized = false;
 
 // Directory contents cache
@@ -20,11 +18,13 @@ const directoryCache = new Map<string, DirectoryContents>();
 // The previous dialog path
 let previousPath: string | null = null;
 
+const isHidden = (name: string) => name.startsWith(".");
+
 /**
  * Checks if a file has a supported video extension
  */
 export function isVideoFile(filename: string): boolean {
-  const ext = filename.split(".").pop()?.toLowerCase();
+  const ext = extname(filename).replace(".", "").toLowerCase();
   return ext ? VIDEO_EXTENSIONS.includes(ext) : false;
 }
 
@@ -86,15 +86,6 @@ export function buildSortedFileTree(
   return sortFileTree(items, sortOptions);
 }
 
-/**
- * Creates a minimal file tree structure for single file selections
- */
-export function createSingleFileTree(filePath: string, duration: number = 0): FileTreeItem[] {
-  const name = filePath.split("/").pop() || filePath.split("\\").pop() || "Unknown";
-
-  return [createFileTreeItem(name, filePath, "video", duration)];
-}
-
 async function doFfmpegInit(): Promise<void> {
   if (isFfmpegInitialized) return;
 
@@ -132,9 +123,6 @@ async function doFfmpegInit(): Promise<void> {
     logger.error(error, "Could not check/fix ffprobe permissions");
   }
 
-  ffmpeg.setFfmpegPath(ffmpegInstaller.path);
-  ffmpeg.setFfprobePath(ffprobeInstaller.path);
-
   isFfmpegInitialized = true;
 }
 
@@ -145,14 +133,30 @@ async function doFfmpegInit(): Promise<void> {
  * @returns The video duration in seconds.
  */
 export async function getVideoDuration(filePath: string): Promise<number> {
+  const metadata = await getFfprobeMetadata(filePath);
+  const rawDuration = metadata?.format?.duration;
+  if (typeof rawDuration === "number") return rawDuration;
+
+  const parsed = parseFloat(String(rawDuration ?? "0"));
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+/**
+ * Execute ffprobe and return JSON metadata.
+ */
+async function getFfprobeMetadata(filePath: string): Promise<FfmpegProbeMetadata> {
   await doFfmpegInit();
 
   try {
-    const metadata = (await ffprobeAsync(filePath)) as FfmpegProbeMetadata;
-    return metadata.format?.duration || 0;
+    const args = ["-v", "error", "-show_format", "-print_format", "json", filePath];
+    const { stdout } = (await execFileAsync(ffprobeInstaller.path, args)) as { stdout: string; stderr: string };
+    if (!stdout) return {} as FfmpegProbeMetadata;
+
+    // Return parsed JSON; duration might be a string or number depending on ffprobe version
+    return JSON.parse(stdout) as FfmpegProbeMetadata;
   } catch (error) {
-    logger.error(error, `Error getting video duration for ${filePath}`);
-    return 0;
+    logger.error(error, `Error getting ffprobe metadata for ${filePath}`);
+    return {} as FfmpegProbeMetadata;
   }
 }
 
@@ -208,7 +212,7 @@ export async function showFilePicker(
         logger.debug(`previousPath set to: ${previousPath}`);
         return {
           type: "file",
-          path: makeFilePath(selectedPath)
+          path: selectedPath
         };
       } else if (stats.isDirectory()) {
         previousPath = selectedPath;
@@ -246,7 +250,7 @@ async function buildFileTree(
   }[] = [];
 
   for (const entry of await readdir(dirPath, { withFileTypes: true })) {
-    if (entry.name.startsWith(".")) continue;
+    if (isHidden(entry.name)) continue;
 
     if (entry.isDirectory()) {
       const subDirPath = join(dirPath, entry.name);
@@ -262,7 +266,7 @@ async function buildFileTree(
       if (isVideoFile(entry.name)) {
         const duration = await getVideoDuration(filePath);
         entries.push({
-          path: makeFilePath(filePath),
+          path: filePath,
           name: entry.name,
           type: "video",
           duration
@@ -302,8 +306,8 @@ export async function loadDirectoryContents(
       type: "folder" | "video";
     }[] = [];
 
-    for (const entry of entries) {
-      if (entry.name.startsWith(".")) continue;
+      for (const entry of entries) {
+        if (isHidden(entry.name)) continue;
 
       const fullPath = join(resolvedPath, entry.name);
 
@@ -325,7 +329,6 @@ export async function loadDirectoryContents(
       }
     }
 
-    // Use shared sorting utilities
     const sortedFiles = buildSortedFileTree(rawEntries, sortOptions);
 
     const contents: DirectoryContents = {
@@ -335,7 +338,6 @@ export async function loadDirectoryContents(
       files: sortedFiles
     };
 
-    // Cache the result
     directoryCache.set(resolvedPath, contents);
 
     return contents;
@@ -391,8 +393,11 @@ export type DirectoryContents = {
 };
 
 type FfmpegProbeMetadata = {
-  format: {
-    duration: number;
-    filename: string;
+  format?: {
+    duration?: string | number;
+    filename?: string;
+    [key: string]: unknown;
   };
+  streams?: unknown[];
+  [key: string]: unknown;
 };

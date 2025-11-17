@@ -132,7 +132,7 @@ export function destroy(): void {
 
 export const on = (event: string | symbol, fn: (...args: any[]) => void) => emitter.on(event, fn);
 export const once = (event: string | symbol, fn: (...args: any[]) => void) => emitter.once(event, fn);
-export const off = (event: string | symbol, fn?: (...args: any[]) => void) => emitter.off(event, fn);
+export const off = (event: string | symbol, fn?: (...args: any[]) => void) => emitter.off(event, fn || (() => {}));
 
 export const isCreated = () => !!mainWindow && !mainWindow.isDestroyed();
 
