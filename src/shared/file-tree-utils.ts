@@ -100,6 +100,10 @@ function smartNameCompare(a: string, b: string): number {
  */
 export function sortFileTree(items: FileTreeItem[], sortOptions: SortOptions): FileTreeItem[] {
   const sorted = [...items].sort((a, b) => {
+    // Folders first
+    if (a.type === 'folder' && b.type !== 'folder') return -1;
+    if (a.type !== 'folder' && b.type === 'folder') return 1;
+
     let comparison = 0;
 
     if (sortOptions.sortBy === "duration") {

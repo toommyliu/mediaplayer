@@ -1,6 +1,7 @@
 <script lang="ts">
   import * as ContextMenu from "$ui/context-menu/";
   import FileBrowserItem from "./FileBrowserItem.svelte";
+  import Loader2 from "~icons/lucide/loader-2";
   import LucideCircle from "~icons/lucide/circle";
 
   import { fileBrowserState, type FileSystemItem } from "$lib/state/file-browser.svelte";
@@ -91,7 +92,6 @@
 
       // Regular click to toggle folder expansion
       toggleFolder(item.path);
-      fileBrowserState.fileTree = { ...fileBrowserState.fileTree! };
     } else if (item.duration !== undefined) {
       playerState.playVideo(item.path);
     }
@@ -123,7 +123,10 @@
       const result = await client.readDirectory(folderPath);
       if (result?.files) {
         const folderContents = fileBrowserState.transformDirectoryContents(result);
-        updateFolderContents(fileBrowserState.fileSystem, folderPath, folderContents);
+        const updated = updateFolderContents(fileBrowserState.fileSystem, folderPath, folderContents);
+        if (updated !== null) {
+          fileBrowserState.fileTree = { ...fileBrowserState.fileTree!, files: updated };
+        }
       }
     } catch (error) {
       console.error("Failed to load folder contents:", error);
@@ -156,20 +159,25 @@
     items: FileSystemItem[],
     targetPath: string,
     newContents: FileSystemItem[]
-  ): boolean {
+  ): FileSystemItem[] | null {
     for (let idx = 0; idx < items.length; idx++) {
       if (items[idx].path === targetPath && items[idx].files !== undefined) {
-        items[idx] = { ...items[idx], files: newContents };
-        fileBrowserState.fileTree = { ...fileBrowserState.fileTree! };
-        return true;
+        const newItems = [...items];
+        newItems[idx] = { ...items[idx], files: newContents };
+        return newItems;
       }
 
-      if (items[idx].files && updateFolderContents(items[idx].files!, targetPath, newContents)) {
-        return true;
+      if (items[idx].files) {
+        const updatedSub = updateFolderContents(items[idx].files!, targetPath, newContents);
+        if (updatedSub !== null) {
+          const newItems = [...items];
+          newItems[idx] = { ...items[idx], files: updatedSub };
+          return newItems;
+        }
       }
     }
 
-    return false;
+    return null;
   }
 
   let { depth, item }: Props = $props();
@@ -199,7 +207,6 @@
           "group relative z-10 flex min-h-[28px] items-center transition-all duration-200",
           fileBrowserState.isLoading && "cursor-not-allowed opacity-50"
         )}
-        onclick={(ev) => handleItemClick(ev, item)}
     >
       <div
         class={cn(
@@ -208,13 +215,14 @@
             ? "border-blue-500/30 bg-blue-500/15 hover:border-blue-500/40 hover:bg-blue-500/20"
             : "border-transparent hover:border-zinc-700/30 hover:bg-zinc-800/40"
         )}
-        style={`padding-left: ${depth * 8 + 8}px;`}
+        style={`padding-left: ${depth * 12 + 8}px;`}
         data-item-trigger="true"
         data-path={item.path}
         tabindex={0}
         role="option"
         aria-selected={fileBrowserState.focusedItemPath === item.path}
         onfocus={() => (fileBrowserState.focusedItemPath = item.path)}
+        onclick={(ev) => handleItemClick(ev, item)}
         onkeydown={(ev) => {
           const e = ev as KeyboardEvent;
           // Navigation support: up/down arrows move between file items, Enter/Space activates
@@ -251,7 +259,7 @@
         <div class="flex min-h-[28px] min-w-0 flex-1 items-center">
           <span
             class={cn(
-              "flex-1 truncate text-sm font-medium transition-colors duration-200",
+              "flex items-center flex-1 truncate text-sm font-medium transition-colors duration-200",
               fileItemView.isCurrentlyPlaying &&
                 "font-semibold text-blue-200 group-hover:text-blue-100",
               fileItemView.isVideo &&
@@ -265,6 +273,10 @@
               /
             {/if}
           </span>
+
+          {#if fileItemView.isLoading}
+            <Loader2 class="h-4 w-4 animate-spin ml-2 text-blue-400" />
+          {/if}
 
           {#if fileItemView.isVideo}
             <span
@@ -296,7 +308,10 @@
       {#if fileItemView.isFolder}
         <ContextMenu.Item
           class="text-zinc-200 hover:bg-zinc-700 focus:bg-zinc-700"
-          onclick={(ev: MouseEvent) => handleItemClick(ev, item)}
+          onclick={(ev: MouseEvent) => {
+            console.log("click folder");
+            handleItemClick(ev, item);
+          }}
         >
           Open Folder
         </ContextMenu.Item>
