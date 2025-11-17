@@ -73,12 +73,15 @@
     };
   }
 
-  function handleItemClick(ev: MouseEvent, item: FileSystemItem) {
+  function handleItemClick(ev: MouseEvent | KeyboardEvent | Event, item: FileSystemItem) {
     if (!item.path || fileBrowserState.isLoading) return;
 
     if (item.type === "folder") {
       // mod + click to navigate to folder
-      const isModKeyPressed = platformState.isMac ? ev.metaKey : ev.ctrlKey;
+      let isModKeyPressed = false;
+      if (ev instanceof MouseEvent) {
+        isModKeyPressed = platformState.isMac ? ev.metaKey : ev.ctrlKey;
+      }
       if (isModKeyPressed) {
         ev.preventDefault();
         console.log("Cmd/Ctrl + click detected, navigating to:", item.path);
@@ -192,11 +195,11 @@
     }}
   >
     <ContextMenu.Trigger
-      class={cn(
-        "group relative z-10 flex min-h-[28px] items-center transition-all duration-200",
-        fileBrowserState.isLoading && "cursor-not-allowed opacity-50"
-      )}
-      onclick={(ev) => handleItemClick(ev, item)}
+        class={cn(
+          "group relative z-10 flex min-h-[28px] items-center transition-all duration-200",
+          fileBrowserState.isLoading && "cursor-not-allowed opacity-50"
+        )}
+        onclick={(ev) => handleItemClick(ev, item)}
     >
       <div
         class={cn(
@@ -206,6 +209,42 @@
             : "border-transparent hover:border-zinc-700/30 hover:bg-zinc-800/40"
         )}
         style={`padding-left: ${depth * 8 + 8}px;`}
+        data-item-trigger="true"
+        data-path={item.path}
+        tabindex={0}
+        role="option"
+        aria-selected={fileBrowserState.focusedItemPath === item.path}
+        onfocus={() => (fileBrowserState.focusedItemPath = item.path)}
+        onkeydown={(ev) => {
+          const e = ev as KeyboardEvent;
+          // Navigation support: up/down arrows move between file items, Enter/Space activates
+          const triggers = Array.from(document.querySelectorAll('[data-item-trigger="true"]')) as HTMLElement[];
+          const currentIndex = triggers.findIndex((t) => t.dataset.path === item.path);
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            const next = triggers[currentIndex + 1];
+            if (next) next.focus();
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            const prev = triggers[currentIndex - 1];
+            if (prev) prev.focus();
+          } else if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleItemClick(ev, item);
+          } else if (e.key === 'ArrowRight') {
+            // Expand folder if present
+            if (item.type === 'folder' && !fileBrowserState.expandedFolders.has(item.path!)) {
+              e.preventDefault();
+              toggleFolder(item.path);
+            }
+          } else if (e.key === 'ArrowLeft') {
+            // Collapse folder
+            if (item.type === 'folder' && fileBrowserState.expandedFolders.has(item.path!)) {
+              e.preventDefault();
+              toggleFolder(item.path);
+            }
+          }
+        }}
       >
         <div class="mr-2 w-4 flex-shrink-0"></div>
 
@@ -292,6 +331,21 @@
           }}
         >
           Add to Queue
+        </ContextMenu.Item>
+        <ContextMenu.Item
+          class="text-zinc-200 hover:bg-zinc-700 focus:bg-zinc-700"
+          onclick={() => {
+            // Insert this file to play next after the current item
+            if (item.path && item.name) {
+              QueueManager.addNextToQueue({
+                name: item.name,
+                path: item.path,
+                duration: item.duration
+              });
+            }
+          }}
+        >
+          Play Next
         </ContextMenu.Item>
         <ContextMenu.Separator class="bg-zinc-700" />
         <ContextMenu.Item

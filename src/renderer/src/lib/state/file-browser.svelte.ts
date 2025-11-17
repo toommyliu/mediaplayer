@@ -32,6 +32,8 @@ class FileBrowserState {
 
   public loadingFolders = $state(new Set<string>());
 
+  public focusedItemPath = $state<string | null>(null);
+
   public get fileSystem() {
     return this.fileTree?.files ?? [];
   }

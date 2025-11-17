@@ -122,7 +122,37 @@
       </div>
     </div>
   {:else}
-    <div class="no-scrollbar flex-1 overflow-y-auto">
+    <div
+      class="no-scrollbar flex-1 overflow-y-auto"
+      role="listbox"
+      aria-activedescendant={fileBrowserState.focusedItemPath ?? undefined}
+      tabindex={0}
+      onkeydown={(ev: KeyboardEvent) => {
+        const triggers = Array.from(
+          document.querySelectorAll('[data-item-trigger="true"]')
+        ) as HTMLElement[];
+        if (triggers.length === 0) return;
+
+        const activeIndex = triggers.findIndex(
+          (t) => t.dataset.path === fileBrowserState.focusedItemPath
+        );
+        if (ev.key === "ArrowDown") {
+          ev.preventDefault();
+          const next = triggers[Math.max(0, (activeIndex === -1 ? 0 : activeIndex) + 1)];
+          next?.focus();
+        } else if (ev.key === "ArrowUp") {
+          ev.preventDefault();
+          const prev = triggers[Math.max(0, (activeIndex === -1 ? 0 : activeIndex) - 1)];
+          prev?.focus();
+        } else if (ev.key === "Home") {
+          ev.preventDefault();
+          triggers[0]?.focus();
+        } else if (ev.key === "End") {
+          ev.preventDefault();
+          triggers[triggers.length - 1]?.focus();
+        }
+      }}
+    >
       {#if hasNoFiles}
         <div class="flex h-full flex-col items-center justify-center p-4 text-center">
           <div class="mb-4 rounded-full bg-zinc-800/50 p-3">

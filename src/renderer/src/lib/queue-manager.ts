@@ -31,6 +31,49 @@ export class QueueManager {
   }
 
   /**
+   * Add an item to the queue at a specific index (inserts before the given index).
+   */
+  public static addToQueueAtIndex(item: Omit<QueueItem, "id">, index: number): boolean {
+    if (!item.path || !item.name) return false;
+
+    const existingIndex = queue.items.findIndex((existing) => existing.path === item.path);
+    // If the item already exists, move it to the target index instead of creating a duplicate
+    if (existingIndex !== -1) {
+      // Adjust target index if the existing item is removed prior to insert
+      let targetIndex = index;
+      if (existingIndex < index) {
+        targetIndex = Math.max(0, index - 1);
+      }
+      return this.moveItem(existingIndex, targetIndex);
+    }
+
+    const newItem: QueueItem = {
+      ...item,
+      id: crypto.randomUUID()
+    };
+
+    const items = [...queue.items];
+    if (index < 0) index = 0;
+    if (index > items.length) index = items.length;
+    items.splice(index, 0, newItem);
+    queue.items = items;
+
+    if (index <= queue.index) {
+      queue.index++;
+    }
+
+    return true;
+  }
+
+  /**
+   * Add item to play next (inserts after current index)
+   */
+  public static addNextToQueue(item: Omit<QueueItem, "id">): boolean {
+    const position = queue.index + 1;
+    return this.addToQueueAtIndex(item, position);
+  }
+
+  /**
    * Add multiple items to the queue
    */
   public static addMultipleToQueue(

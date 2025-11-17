@@ -18,6 +18,7 @@
   import { playerState } from "$lib/state/player.svelte";
 
   import { makeTimeString } from "$lib/makeTimeString";
+  import { SEEK_TIME_STEP } from "$lib/constants";
   import { cn } from "$lib/utils";
 
   let { aspectRatio, onAspectRatioChange }: Props = $props();
@@ -327,6 +328,33 @@
           onmousemove={handleProgressMouseMove}
           onmouseenter={() => (isHovering = true)}
           onmouseleave={() => (isHovering = false)}
+          aria-valuemin={0}
+          aria-valuemax={playerState.duration}
+          aria-valuenow={playerState.currentTime}
+          aria-valuetext={`${makeTimeString(playerState.currentTime)} / ${makeTimeString(playerState.duration)}`}
+            onkeydown={(ev) => {
+            const e = ev as KeyboardEvent;
+            if (!playerState.duration) return;
+            if (e.key === 'ArrowLeft') {
+              e.preventDefault();
+              const newTime = Math.max(0, playerState.currentTime - SEEK_TIME_STEP);
+              playerState.currentTime = newTime;
+              if (playerState.videoElement) playerState.videoElement.currentTime = newTime;
+            } else if (e.key === 'ArrowRight') {
+              e.preventDefault();
+              const newTime = Math.min(playerState.duration, playerState.currentTime + SEEK_TIME_STEP);
+              playerState.currentTime = newTime;
+              if (playerState.videoElement) playerState.videoElement.currentTime = newTime;
+            } else if (e.key === 'Home') {
+              e.preventDefault();
+              playerState.currentTime = 0;
+              if (playerState.videoElement) playerState.videoElement.currentTime = 0;
+            } else if (e.key === 'End') {
+              e.preventDefault();
+              playerState.currentTime = playerState.duration;
+              if (playerState.videoElement) playerState.videoElement.currentTime = playerState.duration;
+            }
+          }}
           role="slider"
           tabindex={0}
         >
@@ -415,7 +443,7 @@
               </DropdownMenuItem>
               <DropdownMenuItem
                 class="flex cursor-pointer items-center justify-between focus:bg-white/10 focus:text-white"
-                on:click={() => onAspectRatioChange("fill")}
+                onclick={() => onAspectRatioChange("fill")}
               >
                 <span>Fill</span>
                 {#if aspectRatio === "fill"}
