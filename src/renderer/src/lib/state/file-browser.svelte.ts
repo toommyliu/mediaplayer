@@ -215,7 +215,6 @@ class FileBrowserState {
 
 export const fileBrowserState = new FileBrowserState();
 
-// Use shared type
 export type FileSystemItem = FileTreeItem;
 
 export type FileTree = {

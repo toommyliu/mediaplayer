@@ -68,7 +68,7 @@
           fileBrowserState.currentPath = dirResult.currentPath;
           fileBrowserState.isAtRoot = dirResult.isAtRoot;
 
-          const allVideoFiles = await fileBrowserState.getAllVideoFilesRecursive(result.rootPath);
+          const allVideoFiles = await client.getAllVideoFiles(result.rootPath);
           if (allVideoFiles.length > 0) {
             // Clear existing queue and add new videos
             QueueManager.clearQueue();

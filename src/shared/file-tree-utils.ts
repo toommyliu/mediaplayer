@@ -113,14 +113,13 @@ export function sortFileTree(items: FileTreeItem[], sortOptions: SortOptions): F
     return sortOptions.sortDirection === "desc" ? -comparison : comparison;
   });
 
-  // Recursively sort children
-  for (const item of sorted) {
+  // Recursively sort children and create new objects to avoid mutating the original
+  return sorted.map(item => {
     if (item.files) {
-      item.files = sortFileTree(item.files, sortOptions);
+      return { ...item, files: sortFileTree(item.files, sortOptions) };
     }
-  }
-
-  return sorted;
+    return item;
+  });
 }
 
 /**
