@@ -10,9 +10,7 @@ import {
   VIDEO_EXTENSIONS,
   buildSortedFileTree,
   isVideoFile,
-  createFileTreeItem,
   DEFAULT_SORT_OPTIONS,
-  sortFileTreeRecursive,
   type FileTreeItem,
   type SortOptions
 } from "../shared";

@@ -1,12 +1,12 @@
 <script lang="ts">
-  import IconArrowDown from "lucide-svelte/icons/arrow-down";
-  import IconArrowUp from "lucide-svelte/icons/arrow-up";
   import IconMusic from "lucide-svelte/icons/music";
   import IconRepeat from "lucide-svelte/icons/repeat";
   import IconRepeat1 from "lucide-svelte/icons/repeat-1";
   import IconShuffle from "lucide-svelte/icons/shuffle";
   import IconX from "lucide-svelte/icons/x";
-  import type { FileSystemItem } from "$lib/state/file-browser.svelte";
+  import { draggable, droppable, type DragDropState } from '@thisux/sveltednd';
+  import { flip } from 'svelte/animate';
+  import type { QueueItem } from "$lib/state/queue.svelte";
   import { ICON_SIZE } from "$lib/constants";
   import { makeTimeString } from "$lib/makeTimeString";
   import { QueueManager } from "$lib/queue-manager";
@@ -14,11 +14,11 @@
   import { queue } from "$lib/state/queue.svelte";
   import { cn } from "$lib/utils";
 
-  function isCurrentlyPlaying(item: FileSystemItem): boolean {
+  function isCurrentlyPlaying(item: QueueItem): boolean {
     return queue?.currentItem?.path === item.path;
   }
 
-  function handleItemClick(item: FileSystemItem) {
+  function handleItemClick(item: QueueItem) {
     playerState.playVideo(item!.path!);
   }
 
@@ -55,14 +55,14 @@
     }
   }
 
-  function moveItemUp(index: number) {
-    if (index > 0) {
-      QueueManager.moveItem(index, index - 1);
-    }
-  }
+  function handleDrop(state: DragDropState<QueueItem>) {
+    const { draggedItem, targetContainer } = state;
+    const dragIndex = queue.items.findIndex((item) => item.id === draggedItem.id);
+    const dropIndex = parseInt(targetContainer ?? '0');
 
-  function moveItemDown(index: number) {
-    if (index < queue.items.length - 1) QueueManager.moveItem(index, index + 1);
+    if (dragIndex !== -1 && !isNaN(dropIndex) && dragIndex !== dropIndex) {
+      QueueManager.moveItem(dragIndex, dropIndex);
+    }
   }
 
   function shuffleQueue() {
@@ -115,8 +115,11 @@
       <div class="space-y-1">
         {#each queue.items as item, index (item.id)}
           <div
+            use:draggable={{ container: index.toString(), dragData: item, interactive: ['button'] }}
+            use:droppable={{ container: index.toString(), callbacks: { onDrop: handleDrop } }}
+            animate:flip={{ duration: 200 }}
             class={cn(
-              "group flex items-center gap-2 rounded-md p-2 text-sm transition-colors",
+              "group flex items-center gap-2 rounded-md p-2 text-sm transition-colors cursor-move",
               isCurrentlyPlaying(item)
                 ? "bg-blue-500/20 text-blue-400"
                 : "text-zinc-200 hover:bg-zinc-800/50"
@@ -146,26 +149,6 @@
             <div
               class="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100"
             >
-              <button
-                class="flex h-6 w-6 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-700 hover:text-zinc-300"
-                onclick={(ev) => {
-                  ev.stopPropagation();
-                  moveItemUp(index);
-                }}
-                disabled={index === 0}
-              >
-                <IconArrowUp size={ICON_SIZE - 6} />
-              </button>
-              <button
-                class="flex h-6 w-6 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-700 hover:text-zinc-300"
-                onclick={(ev) => {
-                  ev.stopPropagation();
-                  moveItemDown(index);
-                }}
-                disabled={index === queue.items.length - 1}
-              >
-                <IconArrowDown size={ICON_SIZE - 6} />
-              </button>
               <button
                 class="flex h-6 w-6 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-700 hover:text-red-400"
                 onclick={(ev) => {
@@ -206,3 +189,13 @@
     </div>
   </div>
 </div>
+
+<style>
+  :global(.dragging) {
+    opacity: 0.5;
+    transform: rotate(2deg);
+  }
+  :global(.drag-over) {
+    background-color: rgba(59, 130, 246, 0.1);
+  }
+</style>
