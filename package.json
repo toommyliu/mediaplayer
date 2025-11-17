@@ -25,6 +25,7 @@
     "@electron-toolkit/utils": "^4.0.0",
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@ffprobe-installer/ffprobe": "^2.1.2",
+    "@fontsource/inter": "^5.2.8",
     "@iconify-json/lucide": "^1.2.58",
     "@tailwindcss/postcss": "^4.1.10",
     "@thisux/sveltednd": "^0.0.20",

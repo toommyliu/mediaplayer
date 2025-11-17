@@ -1,3 +1,5 @@
+@import "@fontsource/inter";
+
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -127,4 +129,8 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+}
+
+body {
+  font-family: "Inter", sans-serif;
 }
