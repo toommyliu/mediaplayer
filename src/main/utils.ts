@@ -6,22 +6,94 @@ import ffprobeInstaller from "@ffprobe-installer/ffprobe";
 import { app, BrowserWindow, dialog, type OpenDialogOptions } from "electron";
 import ffmpeg from "fluent-ffmpeg";
 import { logger } from "./logger";
-import {
-  VIDEO_EXTENSIONS,
-  buildSortedFileTree,
-  isVideoFile,
-  DEFAULT_SORT_OPTIONS,
-  type FileTreeItem,
-  type SortOptions
-} from "../shared";
+import { sortFileTree, type FileTreeItem, type SortOptions } from "../shared";
+import { DEFAULT_SORT_OPTIONS, VIDEO_EXTENSIONS } from "../shared/constants";
 
 const makeFilePath = (path: string): string => path;
 
 const ffprobeAsync = promisify(ffmpeg.ffprobe);
 let isFfmpegInitialized = false;
 
+// Directory contents cache
+const directoryCache = new Map<string, DirectoryContents>();
+
 // The previous dialog path
 let previousPath: string | null = null;
+
+/**
+ * Checks if a file has a supported video extension
+ */
+export function isVideoFile(filename: string): boolean {
+  const ext = filename.split(".").pop()?.toLowerCase();
+  return ext ? VIDEO_EXTENSIONS.includes(ext) : false;
+}
+
+/**
+ * Transforms a raw directory entry into a FileTreeItem
+ */
+export function createFileTreeItem(
+  name: string,
+  path: string,
+  type: "folder" | "video",
+  duration?: number,
+  files?: FileTreeItem[]
+): FileTreeItem {
+  const item: FileTreeItem = {
+    name,
+    path,
+    type
+  };
+
+  if (type === "video" && duration !== undefined) {
+    item.duration = duration;
+  }
+
+  if (type === "folder") {
+    item.files = files || [];
+  }
+
+  return item;
+}
+
+/**
+ * Builds a sorted file tree from directory contents
+ */
+export function buildSortedFileTree(
+  entries: Array<{
+    name: string;
+    path: string;
+    type: "folder" | "video";
+    duration?: number;
+    files?: Array<{
+      name: string;
+      path: string;
+      type: "folder" | "video";
+      duration?: number;
+    }>;
+  }>,
+  sortOptions: SortOptions
+): FileTreeItem[] {
+  const items: FileTreeItem[] = entries.map((entry) =>
+    createFileTreeItem(
+      entry.name,
+      entry.path,
+      entry.type,
+      entry.duration,
+      entry.files ? buildSortedFileTree(entry.files, sortOptions) : undefined
+    )
+  );
+
+  return sortFileTree(items, sortOptions);
+}
+
+/**
+ * Creates a minimal file tree structure for single file selections
+ */
+export function createSingleFileTree(filePath: string, duration: number = 0): FileTreeItem[] {
+  const name = filePath.split("/").pop() || filePath.split("\\").pop() || "Unknown";
+
+  return [createFileTreeItem(name, filePath, "video", duration)];
+}
 
 async function doFfmpegInit(): Promise<void> {
   if (isFfmpegInitialized) return;
@@ -209,8 +281,14 @@ export async function loadDirectoryContents(
   dirPath: string,
   sortOptions: SortOptions = DEFAULT_SORT_OPTIONS
 ): Promise<DirectoryContents> {
+  const resolvedPath = resolve(dirPath);
+
+  // Check cache first
+  if (directoryCache.has(resolvedPath)) {
+    return directoryCache.get(resolvedPath)!;
+  }
+
   try {
-    const resolvedPath = resolve(dirPath);
     const entries = await readdir(resolvedPath, { withFileTypes: true });
 
     const parentPath = dirname(resolvedPath);
@@ -250,16 +328,46 @@ export async function loadDirectoryContents(
     // Use shared sorting utilities
     const sortedFiles = buildSortedFileTree(rawEntries, sortOptions);
 
-    return {
+    const contents: DirectoryContents = {
       currentPath: resolvedPath,
       parentPath: isAtRoot ? null : parentPath,
       isAtRoot,
       files: sortedFiles
     };
+
+    // Cache the result
+    directoryCache.set(resolvedPath, contents);
+
+    return contents;
   } catch (error) {
     logger.error(error, "Error loading directory contents");
     throw error;
   }
+}
+
+export async function getAllVideoFilesRecursive(
+  folderPath: string
+): Promise<{ duration?: number; name: string; path: string }[]> {
+  const videoFiles: { duration?: number; name: string; path: string }[] = [];
+
+  async function scan(dirPath: string) {
+    const contents = await loadDirectoryContents(dirPath);
+
+    for (const item of contents.files) {
+      if (item.type === "video") {
+        videoFiles.push({
+          name: item.name,
+          path: item.path,
+          duration: item.duration
+        });
+      } else if (item.type === "folder") {
+        await scan(item.path);
+      }
+    }
+  }
+
+  await scan(folderPath);
+  return videoFiles;
 }
 
 export type PickerResult =

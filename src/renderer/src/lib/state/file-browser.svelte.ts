@@ -4,7 +4,7 @@ import {
   sortFileTree,
   type FileTreeItem,
   type SortOptions
-} from "$shared/file-tree-utils";
+} from "$shared/index";
 import { playerState } from "$lib/state/player.svelte";
 import { queue } from "$lib/state/queue.svelte";
 import { QueueManager } from "$lib/queue-manager";
@@ -78,7 +78,7 @@ class FileBrowserState {
 
         this.updatePlayerQueueForced(true);
 
-        const allVideoFiles = await this.getAllVideoFilesRecursive(dirPath);
+        const allVideoFiles = await client.getAllVideoFiles(dirPath);
 
         if (allVideoFiles.length > 0) {
           QueueManager.addMultipleToQueue(allVideoFiles);
@@ -173,7 +173,7 @@ class FileBrowserState {
           this.currentPath = dirResult.currentPath;
           this.isAtRoot = dirResult.isAtRoot;
 
-          const allVideoFiles = await this.getAllVideoFilesRecursive(result.rootPath);
+          const allVideoFiles = await client.getAllVideoFiles(result.rootPath);
           console.log(
             `Found ${allVideoFiles.length} video files recursively in ${result.rootPath}`
           );
@@ -201,39 +201,6 @@ class FileBrowserState {
     } finally {
       this.isLoading = false;
     }
-  }
-
-  public async getAllVideoFilesRecursive(
-    folderPath: string,
-    depth: number = 0
-  ): Promise<{ duration?: number; name: string; path: string }[]> {
-    let videoFiles: { duration?: number; name: string; path: string }[] = [];
-    const indent = "  ".repeat(depth);
-
-    console.log(`${indent}[getAllVideoFilesRecursive] Scanning folder: ${folderPath}`);
-
-    try {
-      const contents = await client.readDirectory(folderPath);
-
-      if (contents?.files) {
-        for (const item of contents.files) {
-          if (item.type === "video" && item.path && item.name) {
-            const videoFile = { name: item.name, path: item.path, duration: item.duration };
-            videoFiles.push(videoFile);
-          } else if (item.type === "folder" && item.path) {
-            const nestedVideos = await this.getAllVideoFilesRecursive(item.path, depth + 1);
-            videoFiles = videoFiles.concat(nestedVideos);
-          }
-        }
-      }
-    } catch (error) {
-      console.error(
-        `${indent}[getAllVideoFilesRecursive] Error reading directory ${folderPath}:`,
-        error
-      );
-    }
-
-    return videoFiles;
   }
 
   private sortFileSystem(files: FileSystemItem[]): FileSystemItem[] {

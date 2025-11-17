@@ -13,7 +13,7 @@
 
   import { client } from "$/tipc";
 
-  import { sortFileTree, type SortOptions } from "$shared/file-tree-utils";
+  import { sortFileTree, type SortOptions } from "$shared/index";
 
   function isCurrentVideo(itemPath: string | undefined): boolean {
     if (!itemPath || !playerState.currentVideo) return false;

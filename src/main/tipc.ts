@@ -3,7 +3,7 @@ import { tipc } from "@egoist/tipc/main";
 import { platform } from "@electron-toolkit/utils";
 import { shell } from "electron";
 import { logger } from "./logger";
-import { showFilePicker, loadDirectoryContents, type PickerResult } from "./utils";
+import { showFilePicker, loadDirectoryContents, getAllVideoFilesRecursive, type PickerResult } from "./utils";
 import { mainWindow } from ".";
 
 export const tipcInstance = tipc.create();
@@ -23,6 +23,10 @@ export const router = {
   readDirectory: tipcInstance.procedure
     .input<string>()
     .action(async ({ input }) => loadDirectoryContents(input)),
+
+  getAllVideoFiles: tipcInstance.procedure
+    .input<string>()
+    .action(async ({ input }) => getAllVideoFilesRecursive(input)),
 
   showItemInFolder: tipcInstance.procedure.input<string>().action(async ({ input }) => {
     try {

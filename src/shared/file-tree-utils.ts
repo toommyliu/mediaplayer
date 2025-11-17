@@ -98,129 +98,50 @@ function smartNameCompare(a: string, b: string): number {
 /**
  * Sorts an array of FileTreeItem objects according to the specified options
  */
-export function sortFileTree(items: FileTreeItem[], options: SortOptions): FileTreeItem[] {
-  return [...items].sort((a, b) => {
-    const aIsFolder = a.type === "folder";
-    const bIsFolder = b.type === "folder";
-
-    // Folders first
-    if (aIsFolder && !bIsFolder) return -1;
-    if (!aIsFolder && bIsFolder) return 1;
-
-    // Apply sorting based on the selected criteria
+export function sortFileTree(items: FileTreeItem[], sortOptions: SortOptions): FileTreeItem[] {
+  const sorted = [...items].sort((a, b) => {
     let comparison = 0;
 
-    switch (options.sortBy) {
-      case "name": {
-        comparison = smartNameCompare(a.name, b.name);
-        break;
-      }
-
-      case "duration": {
-        if (aIsFolder || bIsFolder) {
-          // For folders, fall back to name comparison
-          comparison = smartNameCompare(a.name, b.name);
-        } else {
-          const aDuration = a.duration ?? 0;
-          const bDuration = b.duration ?? 0;
-          comparison = aDuration - bDuration;
-        }
-        break;
-      }
-
-      default:
-        comparison = 0;
+    if (sortOptions.sortBy === "duration") {
+      const aDuration = a.duration ?? 0;
+      const bDuration = b.duration ?? 0;
+      comparison = aDuration - bDuration;
+    } else {
+      comparison = smartNameCompare(a.name, b.name);
     }
 
-    // Apply sort direction
-    return options.sortDirection === "asc" ? comparison : -comparison;
+    return sortOptions.sortDirection === "desc" ? -comparison : comparison;
   });
+
+  // Recursively sort children
+  for (const item of sorted) {
+    if (item.files) {
+      item.files = sortFileTree(item.files, sortOptions);
+    }
+  }
+
+  return sorted;
 }
 
 /**
- * Recursively sorts all items in a file tree
+ * Flattens a file tree into a list of video files
  */
-export function sortFileTreeRecursive(items: FileTreeItem[], options: SortOptions): FileTreeItem[] {
-  const sorted = sortFileTree(items, options);
+export function flattenVideoFiles(items: FileTreeItem[]): { name: string; path: string; duration?: number }[] {
+  const videos: { name: string; path: string; duration?: number }[] = [];
 
-  return sorted.map((item) => {
-    if (item.type === "folder" && item.files) {
-      return {
-        ...item,
-        files: sortFileTreeRecursive(item.files, options)
-      };
-    }
-    return item;
-  });
-}
-
-/**
- * Flattens a file tree to get all video files recursively
- */
-export function flattenVideoFiles(
-  items: FileTreeItem[]
-): Array<{ name: string; path: string; duration?: number }> {
-  const videoFiles: Array<{ name: string; path: string; duration?: number }> = [];
-
-  function flatten(entries: FileTreeItem[]) {
-    for (const entry of entries) {
-      if (entry.type === "folder" && entry.files) {
-        flatten(entry.files);
-      } else if (entry.type === "video") {
-        videoFiles.push({
-          name: entry.name,
-          path: entry.path,
-          duration: entry.duration
-        });
+  function traverse(item: FileTreeItem) {
+    if (item.type === "video") {
+      videos.push({ name: item.name, path: item.path, duration: item.duration });
+    } else if (item.files) {
+      for (const child of item.files) {
+        traverse(child);
       }
     }
   }
 
-  flatten(items);
-  return videoFiles;
-}
-
-/**
- * Finds a specific folder in the file tree by path
- */
-export function findFolderInTree(items: FileTreeItem[], targetPath: string): FileTreeItem | null {
   for (const item of items) {
-    if (item.path === targetPath && item.type === "folder") {
-      return item;
-    }
-
-    if (item.type === "folder" && item.files) {
-      const found = findFolderInTree(item.files, targetPath);
-      if (found) return found;
-    }
+    traverse(item);
   }
 
-  return null;
-}
-
-/**
- * Updates the contents of a specific folder in the file tree
- */
-export function updateFolderInTree(
-  items: FileTreeItem[],
-  targetPath: string,
-  newContents: FileTreeItem[]
-): FileTreeItem[] {
-  return items.map((item) => {
-    if (item.path === targetPath && item.type === "folder") {
-      return {
-        ...item,
-        files: newContents
-      };
-    }
-
-    if (item.type === "folder" && item.files) {
-      return {
-        ...item,
-        files: updateFolderInTree(item.files, targetPath, newContents)
-      };
-    }
-
-    return item;
-  });
+  return videos;
 }

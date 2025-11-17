@@ -17,7 +17,7 @@
   import { queue } from "$/lib/state/queue.svelte";
   import { cn } from "$lib/utils";
 
-  import { sortFileTree, type SortOptions } from "$shared/file-tree-utils";
+  import { sortFileTree, type SortOptions } from "$shared/index";
 
   import { fade } from "svelte/transition";
 
