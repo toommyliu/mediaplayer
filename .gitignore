@@ -7,3 +7,4 @@ out
 
 *.env*
 .github/copilot-instructions.md
+.github/*/*.instructions.md
