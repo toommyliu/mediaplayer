@@ -1,6 +1,6 @@
 import { getRendererHandlers } from "@egoist/tipc/main";
 import { app, globalShortcut, systemPreferences } from "electron";
-import { getOrCreateMainWindow, mainWindow } from "./index";
+import { getOrCreateMainWindow, getMainWindow, on as onWindowEvent, off as offWindowEvent, once as onceWindowEvent } from "./windowManager";
 import { logger } from "./logger";
 import type { RendererHandlers } from "./tipc";
 
@@ -67,22 +67,22 @@ const handleWindowBlur = (): void => {
 };
 
 function setupWindowEventListeners(): void {
-  if (!mainWindow || eventListenersRegistered) return;
+  if (!getMainWindow() || eventListenersRegistered) return;
 
-  mainWindow.removeListener("focus", handleWindowFocus);
-  mainWindow.removeListener("blur", handleWindowBlur);
+  offWindowEvent("focus", handleWindowFocus);
+  offWindowEvent("blur", handleWindowBlur);
 
-  mainWindow.on("focus", handleWindowFocus);
-  mainWindow.on("blur", handleWindowBlur);
+  onWindowEvent("focus", handleWindowFocus);
+  onWindowEvent("blur", handleWindowBlur);
 
   eventListenersRegistered = true;
 }
 
 function cleanupEventListeners(): void {
-  if (!mainWindow) return;
+  if (!getMainWindow()) return;
 
-  mainWindow.removeListener("focus", handleWindowFocus);
-  mainWindow.removeListener("blur", handleWindowBlur);
+  offWindowEvent("focus", handleWindowFocus);
+  offWindowEvent("blur", handleWindowBlur);
   eventListenersRegistered = false;
 }
 
@@ -90,10 +90,10 @@ app.on("ready", async () => {
   if (!isTrustedAccessibilityClient) {
     logger.warn("accessibility permissions not granted, global shortcuts will not work");
   }
-
-  mainWindow?.once("show", () => {
-    setupWindowEventListeners();
-  });
+  // If the main window exists, attach listeners immediately
+  if (getMainWindow()) setupWindowEventListeners();
+  // Otherwise, attach once to the next show
+  else onceWindowEvent("show", setupWindowEventListeners);
 });
 
 app.on("before-quit", () => {

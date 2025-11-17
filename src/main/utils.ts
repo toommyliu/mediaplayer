@@ -390,8 +390,6 @@ export type DirectoryContents = {
   parentPath: string | null;
 };
 
-export type FileItem = FileTreeItem;
-
 type FfmpegProbeMetadata = {
   format: {
     duration: number;

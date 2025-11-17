@@ -4,16 +4,16 @@ import { platform } from "@electron-toolkit/utils";
 import { shell } from "electron";
 import { logger } from "./logger";
 import { showFilePicker, loadDirectoryContents, getAllVideoFilesRecursive, type PickerResult } from "./utils";
-import { mainWindow } from ".";
+import { setFullScreen } from "./windowManager";
 
 export const tipcInstance = tipc.create();
 
 export const router = {
   enterFullscreen: tipcInstance.procedure.action(async () => {
-    mainWindow?.setFullScreen(true);
+    setFullScreen(true);
   }),
   exitFullscreen: tipcInstance.procedure.action(async () => {
-    mainWindow?.setFullScreen(false);
+    setFullScreen(false);
   }),
 
   selectFile: tipcInstance.procedure.action(async () => showFilePicker("file")),

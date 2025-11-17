@@ -1,7 +1,7 @@
 import { getRendererHandlers } from "@egoist/tipc/main";
 import { platform } from "@electron-toolkit/utils";
 import { Menu } from "electron";
-import { getOrCreateMainWindow } from "./index";
+import { getOrCreateMainWindow } from "./windowManager";
 import { logger } from "./logger";
 import { type RendererHandlers } from "./tipc";
 import { showFilePicker } from "./utils";
