@@ -13,6 +13,7 @@
   import { playerState } from "$lib/state/player.svelte";
   import { queue } from "$lib/state/queue.svelte";
   import { cn } from "$lib/utils";
+  import { onDestroy } from "svelte";
 
   function isCurrentlyPlaying(item: QueueItem): boolean {
     return queue?.currentItem?.path === item.path;
@@ -98,6 +99,10 @@
         return "Repeat: Off";
     }
   }
+
+  onDestroy(() => {
+    // QueueManager.clear();
+  });
 </script>
 
 <div class="flex h-full flex-col">

@@ -15,13 +15,14 @@
   import { playerState } from "$lib/state/player.svelte";
 
   import { queue } from "$/lib/state/queue.svelte";
+  import { onDestroy } from "svelte";
   import { cn } from "$lib/utils";
 
   import { sortFileTree, type SortOptions } from "$shared/index";
 
   import { fade } from "svelte/transition";
 
-  const hasNoFiles = $derived(fileBrowserState.fileSystem.length === 0);
+  const hasNoFiles = $derived(() => fileBrowserState.fileSystem.length === 0);
 
   const sortedFileSystem = $derived(() => {
     const sortOptions: SortOptions = {
@@ -37,7 +38,7 @@
 
     const isDblClick = ev.detail === 2;
 
-    if (isDblClick && hasNoFiles) await resetAndBrowse();
+    if (isDblClick && hasNoFiles()) await resetAndBrowse();
   }
 
   async function navigateToParentDirectory() {
@@ -83,6 +84,10 @@
       fileBrowserState.isLoading = false;
     }
   }
+
+  onDestroy(() => {
+    fileBrowserState.reset();
+  });
 </script>
 
 <div
@@ -100,7 +105,7 @@
     </div>
   {/if}
 
-  {#if hasNoFiles}
+  {#if hasNoFiles()}
     <div
       class={cn(
         "flex h-full items-center justify-center",
@@ -153,7 +158,7 @@
         }
       }}
     >
-      {#if hasNoFiles}
+      {#if hasNoFiles()}
         <div class="flex h-full flex-col items-center justify-center p-4 text-center">
           <div class="mb-4 rounded-full bg-zinc-800/50 p-3">
             <AlertCircle class="h-6 w-6 text-zinc-400" />

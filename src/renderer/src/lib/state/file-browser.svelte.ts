@@ -44,7 +44,8 @@ class FileBrowserState {
     this.isAtRoot = false;
     this.originalPath = null;
     this.isLoading = false;
-    this.expandedFolders.clear();
+    // Reassign to a new Set so Svelte's $state detects the change
+    this.expandedFolders = new Set<string>();
   }
 
   public transformDirectoryContents(directoryContents): FileSystemItem[] {

@@ -6,6 +6,7 @@
   import { onMount } from "svelte";
   import Sidebar from "$components/sidebar.svelte";
   import VideoPlayer from "$components/video-player/video-player.svelte";
+  import Settings from "$components/Settings.svelte";
   import { logger } from "$lib/logger";
   import { QueueManager } from "$lib/queue-manager";
   import { fileBrowserState } from "$lib/state/file-browser.svelte";
@@ -154,3 +155,5 @@
     </PaneGroup>
   </div>
 </div>
+
+<Settings />

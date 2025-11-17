@@ -2,18 +2,29 @@
   import { formatHotkeyDisplay, hotkeyRecorder } from "$lib/hotkeys/hotkey-recorder";
   import { hotkeyConfig } from "$lib/hotkeys.svelte";
   import { Kbd } from "$ui/kbd";
+  import { Input } from "$ui/input";
 
   import LucideX from "~icons/lucide/x";
   import LucideCirclePlus from "~icons/lucide/circle-plus";
+  import LucideRotateCcw from "~icons/lucide/rotate-ccw";
 
   let editingAction = $state<string | null>(null);
   let isRecording = $state(false);
+  let searchTerm = $state('');
 
   const shortcuts = $derived(hotkeyConfig.getAllShortcuts());
 
+  const filteredShortcuts = $derived(() => {
+    if (!searchTerm) return shortcuts;
+    return shortcuts.filter(s =>
+      s.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      formatHotkeyDisplay(s.keys).toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
+
   const shortcutsByCategory = $derived(() => {
-    const grouped = new Map<string, typeof shortcuts>();
-    for (const shortcut of shortcuts) {
+    const grouped = new Map<string, any[]>();
+    for (const shortcut of filteredShortcuts()) {
       if (!grouped.has(shortcut.category)) {
         grouped.set(shortcut.category, []);
       }
@@ -58,9 +69,23 @@
     isRecording = false;
     hotkeyRecorder.cancelRecording();
   }
+
+  function resetToDefaults(): void {
+    hotkeyConfig.resetToDefaults();
+  }
 </script>
 
 <div class="no-scrollbar flex h-full flex-1 flex-col space-y-1 overflow-y-auto">
+  <div class="flex justify-between items-center mb-4">
+    <Input bind:value={searchTerm} placeholder="Search shortcuts..." class="flex-1 mr-4" />
+    <button
+      class="ring-offset-background focus-visible:ring-ring border-input bg-background hover:bg-accent hover:text-accent-foreground inline-flex h-9 items-center justify-center rounded-md border px-3 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
+      onclick={resetToDefaults}
+    >
+      <LucideRotateCcw class="size-4 mr-2" />
+      Reset to Defaults
+    </button>
+  </div>
   {#each categories() as category (category)}
     <div class="mt-4 mb-1 first:mt-0">
       <h2 class="text-lg font-bold">{category}</h2>

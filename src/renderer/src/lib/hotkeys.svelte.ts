@@ -7,7 +7,7 @@ import { playerState } from "$lib/state/player.svelte";
 import { queue } from "$lib/state/queue.svelte";
 import { sidebarState } from "$lib/state/sidebar.svelte";
 import { volume } from "$lib/state/volume.svelte";
-import { SEEK_TIME_STEP, VOLUME_STEP } from "./constants";
+import { SEEK_TIME_STEP, VOLUME_STEP, FRAME_TIME_STEP } from "./constants";
 import { logger } from "./logger";
 
 type HotkeyAction = {
@@ -41,6 +41,7 @@ class HotkeyConfig {
 
     this.modKey = platformState.isMac ? "command" : "ctrl";
     this.initializeDefaultConfig();
+    this.saveHotkeys();
     this.initialized = true;
   }
 
@@ -82,6 +83,20 @@ class HotkeyConfig {
             description: "Seek forward",
             keys: ["right"],
             handler: this.seekForward,
+            enabled: true
+          },
+          {
+            id: "frameBackward",
+            description: "Frame backward",
+            keys: [","],
+            handler: this.frameBackward,
+            enabled: true
+          },
+          {
+            id: "frameForward",
+            description: "Frame forward",
+            keys: ["."],
+            handler: this.frameForward,
             enabled: true
           },
           {
@@ -153,6 +168,18 @@ class HotkeyConfig {
       }
     ];
 
+    // Load saved hotkeys and apply them
+    const saved = this.loadHotkeys();
+    if (saved) {
+      for (const category of this.categories) {
+        for (const action of category.actions) {
+          if (saved[action.id]) {
+            action.keys = saved[action.id];
+          }
+        }
+      }
+    }
+
     // Jump to percentage hotkeys
     for (let idx = 0; idx <= 9; idx++) {
       Mousetrap.bind(String(idx), (ev) => {
@@ -160,6 +187,28 @@ class HotkeyConfig {
         this.jumpToPercent(ev, idx / 10);
       });
     }
+  }
+
+  private saveHotkeys(): void {
+    const hotkeys: Record<string, string[]> = {};
+    for (const category of this.categories) {
+      for (const action of category.actions) {
+        hotkeys[action.id] = action.keys;
+      }
+    }
+    localStorage.setItem('mediaplayer-hotkeys', JSON.stringify(hotkeys));
+  }
+
+  private loadHotkeys(): Record<string, string[]> | null {
+    const stored = localStorage.getItem('mediaplayer-hotkeys');
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch {
+        return null;
+      }
+    }
+    return null;
   }
 
   // Action handlers
@@ -206,6 +255,28 @@ class HotkeyConfig {
     ev.preventDefault();
     if (queue.currentItem) {
       const newTime = Math.min(playerState.duration, playerState.currentTime + SEEK_TIME_STEP);
+      playerState.currentTime = newTime;
+      if (playerState.videoElement) {
+        playerState.videoElement.currentTime = newTime;
+      }
+    }
+  };
+
+  private readonly frameBackward = (ev: KeyboardEvent): void => {
+    ev.preventDefault();
+    if (queue.currentItem) {
+      const newTime = Math.max(0, playerState.currentTime - FRAME_TIME_STEP);
+      playerState.currentTime = newTime;
+      if (playerState.videoElement) {
+        playerState.videoElement.currentTime = newTime;
+      }
+    }
+  };
+
+  private readonly frameForward = (ev: KeyboardEvent): void => {
+    ev.preventDefault();
+    if (queue.currentItem) {
+      const newTime = Math.min(playerState.duration, playerState.currentTime + FRAME_TIME_STEP);
       playerState.currentTime = newTime;
       if (playerState.videoElement) {
         playerState.videoElement.currentTime = newTime;
@@ -285,14 +356,34 @@ class HotkeyConfig {
     for (const category of this.categories) {
       const action = category.actions.find((a) => a.id === actionId);
       if (action) {
-        Mousetrap.unbind(action.keys);
+        if (Array.isArray(action.keys)) {
+          for (const key of action.keys) {
+            Mousetrap.unbind(key);
+          }
+        }
         action.keys = newKeys;
         this.bindAction(action);
+        this.saveHotkeys();
         return true;
       }
     }
 
     return false;
+  }
+
+  public resetToDefaults(): void {
+    // Clear out existing bindings and saved hotkey configuration so we truly
+    // restore to the app defaults when reinitializing.
+    this.unbindAll();
+    this.categories = [];
+    // Remove any saved overrides from localStorage so initializeDefaultConfig
+    // won't re-apply saved hotkeys over the defaults.
+    try {
+      localStorage.removeItem('mediaplayer-hotkeys');
+    } catch {}
+    this.initializeDefaultConfig();
+    this.bindAllActions();
+    this.saveHotkeys();
   }
 
   private bindAction(action: HotkeyAction): void {
@@ -329,8 +420,17 @@ class HotkeyConfig {
   }
 
   public unbindAll(): void {
-    for (const action of this.getAllShortcuts()) {
-      Mousetrap.unbind(action.keys);
+    // Unbind all keys bound for the actions in the categories, including
+    // numeric percentage keys (0-9) which are bound separately.
+    for (const category of this.categories) {
+      for (const action of category.actions) {
+        for (const key of action.keys) {
+          Mousetrap.unbind(key);
+        }
+      }
+    }
+    for (let idx = 0; idx <= 9; idx++) {
+      Mousetrap.unbind(String(idx));
     }
   }
 
