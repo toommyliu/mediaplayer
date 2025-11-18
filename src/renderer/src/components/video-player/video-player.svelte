@@ -11,6 +11,8 @@
 
   const aspectRatioClass = $derived(() => {
     switch (aspectRatio) {
+      case "contain":
+        return "object-contain";
       case "cover":
         return "object-cover";
       case "fill":
@@ -269,39 +271,18 @@
       onmousemove={handleMouseMove}
       onmouseleave={handleMouseLeave}
     >
-      {#if aspectRatio === "contain"}
-        <div
-          class="relative"
-          style:max-width="100%"
-          style:max-height="100%"
-          style:aspect-ratio={videoAspectRatio ? `${videoAspectRatio}` : "16 / 9"}
-        >
-          <video
-            bind:this={playerState.videoElement}
-            src={`file://${queue.currentItem.path}`}
-            class="h-full w-full bg-black"
-            onloadstart={handleLoadStart}
-            onloadeddata={handleLoadedData}
-            onloadedmetadata={handleLoadedMetadata}
-            ontimeupdate={handleTimeUpdate}
-            onseeked={handleSeeked}
-            onerror={handleError}
-            oncanplay={handleCanPlay}
-            onplay={handlePlay}
-            onpause={handlePause}
-            onended={handleEnded}
-            preload="metadata"
-            controls={false}
-            controlslist="nodownload nofullscreen noremoteplaybook"
-            disablepictureinpicture
-          >
-          </video>
-        </div>
-      {:else}
+      <div
+        class="relative"
+        style:max-width={aspectRatio === "contain" ? "100%" : undefined}
+        style:max-height={aspectRatio === "contain" ? "100%" : undefined}
+        style:aspect-ratio={
+          aspectRatio === "contain" ? (videoAspectRatio ? `${videoAspectRatio}` : "16 / 9") : undefined
+        }
+      >
         <video
           bind:this={playerState.videoElement}
           src={`file://${queue.currentItem.path}`}
-          class={cn("h-full w-full", aspectRatioClass)}
+          class={cn("h-full w-full bg-black", aspectRatioClass)}
           onloadstart={handleLoadStart}
           onloadeddata={handleLoadedData}
           onloadedmetadata={handleLoadedMetadata}
@@ -318,7 +299,7 @@
           disablepictureinpicture
         >
         </video>
-      {/if}
+      </div>
 
       <!-- Floating controls overlay -->
       <div
