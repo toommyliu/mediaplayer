@@ -23,25 +23,20 @@
       ? playerState.currentVideo.slice(7)
       : playerState.currentVideo;
 
-    return itemPath === currentVideoPath;
+    return itemPath === currentVideoPath.replace(/\\/g, '/');
   }
 
   /**
    * Check if a collapsed folder contains the currently playing video
    */
-  function hasCurrentVideoInFolder(folderItem: FileSystemItem): boolean {
+    function hasCurrentVideoInFolder(folderItem: FileSystemItem): boolean {
     if (!folderItem.path || !playerState.currentVideo) return false;
 
     const currentVideoPath = playerState.currentVideo.startsWith("file://")
       ? playerState.currentVideo.slice(7)
       : playerState.currentVideo;
 
-    const folderPath = folderItem.path;
-
-    const normalizedCurrent = currentVideoPath.replace(/\\/g, "/");
-    const normalizedFolder = folderPath.replace(/\\/g, "/") + "/";
-
-    return normalizedCurrent.startsWith(normalizedFolder);
+    return currentVideoPath.startsWith(folderItem.path + '/');
   }
 
   function renderFileSystemItem(item: FileSystemItem, depth = 0) {

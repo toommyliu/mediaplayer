@@ -21,6 +21,13 @@ let previousPath: string | null = null;
 const isHidden = (name: string) => name.startsWith(".");
 
 /**
+ * Normalizes paths to use forward slashes for cross-platform consistency
+ */
+function normalizePath(path: string): string {
+  return path.replace(/\\/g, '/');
+}
+
+/**
  * Checks if a file has a supported video extension
  */
 export function isVideoFile(filename: string): boolean {
@@ -40,7 +47,7 @@ export function createFileTreeItem(
 ): FileTreeItem {
   const item: FileTreeItem = {
     name,
-    path,
+    path: normalizePath(path),
     type
   };
 
@@ -202,7 +209,7 @@ export async function showFilePicker(
       logger.debug(`previousPath set to: ${previousPath}`);
       return {
         type: "file",
-        path: filePaths[0]
+        path: normalizePath(filePaths[0])
       };
     } else if (mode === "folder" || mode === "both") {
       const selectedPath = filePaths[0];
@@ -212,7 +219,7 @@ export async function showFilePicker(
         logger.debug(`previousPath set to: ${previousPath}`);
         return {
           type: "file",
-          path: selectedPath
+          path: normalizePath(selectedPath)
         };
       } else if (stats.isDirectory()) {
         previousPath = selectedPath;
@@ -234,7 +241,7 @@ async function buildFileTree(
 ): Promise<PickerResult> {
   await doFfmpegInit();
 
-  const rootPath = dirPath;
+  const rootPath = normalizePath(dirPath);
   const ret: PickerResult = {
     type: "folder",
     rootPath,
@@ -253,7 +260,7 @@ async function buildFileTree(
     if (isHidden(entry.name)) continue;
 
     if (entry.isDirectory()) {
-      const subDirPath = join(dirPath, entry.name);
+      const subDirPath = normalizePath(join(dirPath, entry.name));
       const subTree = await buildFileTree(subDirPath, sortOptions);
       entries.push({
         path: subDirPath,
@@ -262,7 +269,7 @@ async function buildFileTree(
         files: subTree.type === "folder" ? subTree.tree : []
       });
     } else {
-      const filePath = join(dirPath, entry.name);
+      const filePath = normalizePath(join(dirPath, entry.name));
       if (isVideoFile(entry.name)) {
         const duration = await getVideoDuration(filePath);
         entries.push({
@@ -285,7 +292,7 @@ export async function loadDirectoryContents(
   dirPath: string,
   sortOptions: SortOptions = DEFAULT_SORT_OPTIONS
 ): Promise<DirectoryContents> {
-  const resolvedPath = resolve(dirPath);
+  const resolvedPath = normalizePath(resolve(dirPath));
 
   // Check cache first
   if (directoryCache.has(resolvedPath)) {
@@ -295,7 +302,7 @@ export async function loadDirectoryContents(
   try {
     const entries = await readdir(resolvedPath, { withFileTypes: true });
 
-    const parentPath = dirname(resolvedPath);
+    const parentPath = normalizePath(dirname(resolvedPath));
     const isAtRoot = resolvedPath === parentPath;
 
     const rawEntries: {
@@ -309,7 +316,7 @@ export async function loadDirectoryContents(
       for (const entry of entries) {
         if (isHidden(entry.name)) continue;
 
-      const fullPath = join(resolvedPath, entry.name);
+      const fullPath = normalizePath(join(resolvedPath, entry.name));
 
       if (entry.isDirectory()) {
         rawEntries.push({
