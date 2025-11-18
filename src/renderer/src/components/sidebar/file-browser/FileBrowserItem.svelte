@@ -89,7 +89,18 @@
 
       // Regular click to toggle folder expansion
       toggleFolder(item.path);
-    } else if (item.duration !== undefined) {
+    } else if (item.type === "video" && item.duration !== undefined) {
+      if (playerState.currentVideo) {
+        const currentVideoPath = playerState.currentVideo.startsWith("file://")
+          ? playerState.currentVideo.slice(7)
+          : playerState.currentVideo;
+
+        if (currentVideoPath === item.path) {
+          // If the clicked video is already playing, do nothing
+          return;
+        }
+      }
+
       playerState.playVideo(item.path);
     }
   }
