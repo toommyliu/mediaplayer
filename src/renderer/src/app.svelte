@@ -136,7 +136,7 @@
             </div>
           {/if}
 
-          <div class="flex h-full w-full flex-col bg-zinc-950">
+          <div class="flex h-full w-full flex-col bg-background">
             <VideoPlayer />
           </div>
         </main>

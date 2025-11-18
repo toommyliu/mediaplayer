@@ -91,16 +91,16 @@
 </script>
 
 <div
-  class="relative flex h-full flex-col overflow-hidden rounded-xl rounded-b-none bg-zinc-900/50 backdrop-blur-sm"
+  class="relative flex h-full flex-col overflow-hidden rounded-xl rounded-b-none bg-card/50 backdrop-blur-sm"
 >
   {#if fileBrowserState.isLoading}
     <div
-      class="absolute inset-0 z-50 flex items-center justify-center bg-zinc-900/80 backdrop-blur-sm"
+      class="absolute inset-0 z-50 flex items-center justify-center bg-card/80 backdrop-blur-sm"
       transition:fade={{ duration: 200 }}
     >
       <div class="flex flex-col items-center gap-3">
         <Loader2 class="h-8 w-8 animate-spin text-blue-400" />
-        <span class="text-sm font-medium text-zinc-300">Loading...</span>
+        <span class="text-sm font-medium text-muted-foreground">Loading...</span>
       </div>
     </div>
   {/if}
@@ -115,7 +115,7 @@
       role="button"
       tabindex="0"
     >
-      <div class="text-center text-zinc-500">
+      <div class="text-center text-muted-foreground">
         {#if fileBrowserState.isLoading}
           <Loader2 class="mx-auto mb-2 size-8 animate-spin opacity-50" />
           <p class="text-sm font-medium">Loading...</p>
@@ -160,11 +160,11 @@
     >
       {#if hasNoFiles()}
         <div class="flex h-full flex-col items-center justify-center p-4 text-center">
-          <div class="mb-4 rounded-full bg-zinc-800/50 p-3">
-            <AlertCircle class="h-6 w-6 text-zinc-400" />
+          <div class="mb-4 rounded-full bg-muted/50 p-3">
+            <AlertCircle class="h-6 w-6 text-muted-foreground" />
           </div>
-          <h3 class="mb-2 text-base font-medium text-zinc-300">No media files found</h3>
-          <p class="mb-4 max-w-xs text-sm text-zinc-500">
+          <h3 class="mb-2 text-base font-medium text-muted-foreground">No media files found</h3>
+          <p class="mb-4 max-w-xs text-sm text-muted-foreground">
             Please upload some media files to get started
           </p>
           <Button />
@@ -183,14 +183,14 @@
               }}
             >
               <div
-                class="flex min-h-[28px] w-full items-center rounded-md hover:bg-zinc-800/40"
+                class="flex min-h-[28px] w-full items-center rounded-md hover:bg-muted/40"
                 style="padding-left: 8px;"
               >
                 <div class="mr-2 w-4 flex-shrink-0"></div>
 
                 <div class="flex min-h-[28px] min-w-0 flex-1 items-center">
                   <span
-                    class="flex-1 truncate text-sm font-medium text-zinc-300 group-hover:text-zinc-100"
+                    class="flex-1 truncate text-sm font-medium text-muted-foreground group-hover:text-foreground"
                   >
                     ..
                   </span>
@@ -206,7 +206,7 @@
       {/if}
     </div>
 
-    <div class="mt-4 border-t border-zinc-800/60 backdrop-blur-sm">
+    <div class="mt-4 border-t border-sidebar-border/60 backdrop-blur-sm">
       <div
         class="flex flex-col items-center gap-2 p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3"
       >
@@ -220,7 +220,7 @@
               "h-8 gap-2 text-sm font-medium",
               fileBrowserState.sortBy === "name"
                 ? "border-blue-500/30 bg-blue-500/20 text-blue-300 hover:bg-blue-500/30"
-                : "text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-300"
+                : "text-muted-foreground hover:bg-muted/60 hover:text-muted-foreground"
             )}
             onclick={() => setSortBy("name")}
           >
@@ -242,7 +242,7 @@
               "h-8 gap-2 text-sm font-medium",
               fileBrowserState.sortBy === "duration"
                 ? "border-blue-500/30 bg-blue-500/20 text-blue-300 hover:bg-blue-500/30"
-                : "text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-300"
+                : "text-muted-foreground hover:bg-muted/60 hover:text-muted-foreground"
             )}
             onclick={() => setSortBy("duration")}
           >
@@ -261,7 +261,7 @@
         <Button
           size="icon"
           variant="ghost"
-          class="mt-2 h-8 w-full text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-300 sm:mt-0 sm:ml-auto sm:w-8"
+          class="mt-2 h-8 w-full text-muted-foreground hover:bg-muted/60 hover:text-muted-foreground sm:mt-0 sm:ml-auto sm:w-8"
           onclick={resetAndBrowse}
         >
           <ListRestart class="h-4 w-4" />

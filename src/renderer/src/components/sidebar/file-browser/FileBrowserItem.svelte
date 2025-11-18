@@ -213,7 +213,7 @@
           "flex min-h-[28px] w-full items-center rounded-md border transition-all duration-200",
           fileItemView.isCurrentlyPlaying
             ? "border-blue-500/30 bg-blue-500/15 hover:border-blue-500/40 hover:bg-blue-500/20"
-            : "border-transparent hover:border-zinc-700/30 hover:bg-zinc-800/40"
+            : "border-transparent hover:border-input/30 hover:bg-muted/40"
         )}
         style={`padding-left: ${depth * 12 + 8}px;`}
         data-item-trigger="true"
@@ -265,7 +265,7 @@
               fileItemView.isVideo &&
                 !fileItemView.isCurrentlyPlaying &&
                 "text-emerald-200 group-hover:text-emerald-100",
-              !fileItemView.isVideo && "text-zinc-300 group-hover:text-zinc-100"
+                !fileItemView.isVideo && "text-muted-foreground group-hover:text-foreground"
             )}
           >
             {item!.name}
@@ -304,10 +304,10 @@
       </div>
     </ContextMenu.Trigger>
 
-    <ContextMenu.Content class="w-48 border-zinc-700 bg-zinc-800">
+    <ContextMenu.Content class="w-48 border-input bg-popover">
       {#if fileItemView.isFolder}
         <ContextMenu.Item
-          class="text-zinc-200 hover:bg-zinc-700 focus:bg-zinc-700"
+          class="text-muted-foreground hover:bg-popover/70 focus:bg-popover/70"
           onclick={(ev: MouseEvent) => {
             console.log("click folder");
             handleItemClick(ev, item);
@@ -316,7 +316,7 @@
           Open Folder
         </ContextMenu.Item>
         <ContextMenu.Item
-          class="text-zinc-200 hover:bg-zinc-700 focus:bg-zinc-700"
+          class="text-muted-foreground hover:bg-popover/70 focus:bg-popover/70"
           onclick={() => {
             if (item.path) {
               showItemInFolder(item.path);
@@ -327,13 +327,13 @@
         </ContextMenu.Item>
       {:else}
         <ContextMenu.Item
-          class="text-zinc-200 hover:bg-zinc-700 focus:bg-zinc-700"
+          class="text-muted-foreground hover:bg-popover/70 focus:bg-popover/70"
           onclick={(ev: MouseEvent) => handleItemClick(ev, item)}
         >
           Play
         </ContextMenu.Item>
         <ContextMenu.Item
-          class="text-zinc-200 hover:bg-zinc-700 focus:bg-zinc-700"
+          class="text-muted-foreground hover:bg-popover/70 focus:bg-popover/70"
           onclick={() => {
             console.log("Adding to queue:", item);
             if (item.path && item.name) {
@@ -348,7 +348,7 @@
           Add to Queue
         </ContextMenu.Item>
         <ContextMenu.Item
-          class="text-zinc-200 hover:bg-zinc-700 focus:bg-zinc-700"
+          class="text-muted-foreground hover:bg-popover/70 focus:bg-popover/70"
           onclick={() => {
             // Insert this file to play next after the current item
             if (item.path && item.name) {
@@ -362,9 +362,9 @@
         >
           Play Next
         </ContextMenu.Item>
-        <ContextMenu.Separator class="bg-zinc-700" />
+        <ContextMenu.Separator class="bg-border" />
         <ContextMenu.Item
-          class="text-zinc-200 hover:bg-zinc-700 focus:bg-zinc-700"
+          class="text-muted-foreground hover:bg-popover/70 focus:bg-popover/70"
           onclick={() => {
             if (item.path) {
               showItemInFolder(item.path);

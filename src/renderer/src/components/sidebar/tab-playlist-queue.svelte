@@ -110,7 +110,7 @@
   <div class="no-scrollbar flex-1 overflow-y-auto">
     {#if queue.items.length === 0}
       <div class="flex h-full items-center justify-center">
-        <div class="text-center text-zinc-500">
+        <div class="text-center text-muted-foreground">
           <IconMusic size={32} class="mx-auto mb-2 opacity-50" />
           <p class="text-sm font-medium">No videos in queue</p>
           <p class="text-xs opacity-75">Open a folder to add videos</p>
@@ -127,24 +127,24 @@
               "group flex items-center gap-2 rounded-md p-2 text-sm transition-colors cursor-move",
               isCurrentlyPlaying(item)
                 ? "bg-blue-500/20 text-blue-400"
-                : "text-zinc-200 hover:bg-zinc-800/50"
+                : "text-muted-foreground hover:bg-muted/50"
             )}
             role="button"
             tabindex="0"
             onclick={() => handleItemClick(item)}
             onkeydown={(ev) => ev.key === "Enter" && handleItemClick(item)}
           >
-            <div class="flex h-5 w-5 shrink-0 items-center justify-center">
-              <span class="text-xs text-zinc-500">{index + 1}</span>
+              <div class="flex h-5 w-5 shrink-0 items-center justify-center">
+              <span class="text-xs text-muted-foreground">{index + 1}</span>
             </div>
 
             <!-- Video Info -->
             <div class="min-w-0 flex-1">
-              <div class="font-medium text-zinc-200">
+              <div class="font-medium text-muted-foreground">
                 {item.name ?? "Unknown Video"}
               </div>
               {#if item.duration}
-                <div class="text-xs text-zinc-500">
+                <div class="text-xs text-muted-foreground">
                   {makeTimeString(item.duration)}
                 </div>
               {/if}
@@ -155,7 +155,7 @@
               class="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100"
             >
               <button
-                class="flex h-6 w-6 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-700 hover:text-red-400"
+                class="flex h-6 w-6 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted/70 hover:text-destructive"
                 onclick={(ev) => {
                   ev.stopPropagation();
                   removeFromQueue(item.id);
@@ -171,10 +171,10 @@
   </div>
 
   <!-- Footer with shuffle and repeat controls -->
-  <div class="mt-4 border-t border-zinc-800 p-1 pb-0">
+  <div class="mt-4 border-t border-sidebar-border p-1 pb-0">
     <div class="flex items-center justify-center gap-2">
       <button
-        class="flex h-8 w-8 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-300"
+        class="flex h-8 w-8 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted/60 hover:text-muted-foreground"
         onclick={shuffleQueue}
       >
         <IconShuffle size={ICON_SIZE - 4} />
@@ -184,7 +184,7 @@
         class={cn(
           "flex h-8 w-8 items-center justify-center rounded transition-colors",
           playerState.repeatMode === "off"
-            ? "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-300"
+            ? "text-muted-foreground hover:bg-muted/60 hover:text-muted-foreground"
             : "bg-blue-500/20 text-blue-400 hover:bg-blue-500/30"
         )}
         onclick={toggleRepeat}
