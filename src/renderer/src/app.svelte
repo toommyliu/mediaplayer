@@ -89,7 +89,7 @@
           }
         } else {
           fileBrowserState.error = "Failed to read the selected folder.";
-          fileBrowserState.fileTree = clear
+          fileBrowserState.fileTree = null;
           fileBrowserState.currentPath = null;
           fileBrowserState.isAtRoot = false;
         }
