@@ -16,7 +16,6 @@ class PlayerState {
 
   public isFullscreen = $state(false);
 
-  public repeatMode = $state<"all" | "off" | "one">("off");
 
   public videoElement = $state<HTMLVideoElement | null>(null);
 

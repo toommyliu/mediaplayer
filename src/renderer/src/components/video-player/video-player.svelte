@@ -209,7 +209,7 @@
     const currentVideo = playerState.currentVideo;
     if (!currentVideo) return;
 
-    if (playerState.repeatMode === "one") {
+    if (queue.repeatMode === "one") {
       // Repeat the current video
       console.log("Repeating current video");
       if (playerState.videoElement) {

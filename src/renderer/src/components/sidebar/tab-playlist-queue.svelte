@@ -75,7 +75,7 @@
   }
 
   function getRepeatIcon() {
-    switch (playerState.repeatMode) {
+    switch (queue.repeatMode) {
       case "one":
         return IconRepeat1;
       case "all":
@@ -166,7 +166,7 @@
       <button
         class={cn(
           "flex h-8 w-8 items-center justify-center rounded transition-colors",
-          playerState.repeatMode === "off"
+          queue.repeatMode === "off"
             ? "text-muted-foreground hover:bg-muted/60 hover:text-muted-foreground"
             : "bg-blue-500/20 text-blue-400 hover:bg-blue-500/30"
         )}

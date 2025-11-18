@@ -1,4 +1,3 @@
-import { playerState } from "./state/player.svelte";
 import { queue, type QueueItem } from "./state/queue.svelte";
 import { RepeatMode } from "$/types";
 
@@ -176,17 +175,14 @@ export class QueueManager {
    * Toggle repeat mode (off \> all \> one \> off)
    */
   public static toggleRepeatMode(): void {
-    switch (playerState.repeatMode) {
-      case "off":
-        playerState.repeatMode = "all";
+    switch (queue.repeatMode) {
+      case RepeatMode.Off:
         queue.repeatMode = RepeatMode.All;
         break;
-      case "all":
-        playerState.repeatMode = "one";
+      case RepeatMode.All:
         queue.repeatMode = RepeatMode.One;
         break;
-      case "one":
-        playerState.repeatMode = "off";
+      case RepeatMode.One:
         queue.repeatMode = RepeatMode.Off;
         break;
     }
