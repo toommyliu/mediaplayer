@@ -9,10 +9,15 @@
 
   import { client } from "$/tipc";
 
-  function toggleFullscreen() {
-    if (playerState.isFullscreen) void client.exitFullscreen();
-    else void client.enterFullscreen();
+  $effect(() => {
+    if (playerState.isFullscreen) {
+      void client.enterFullscreen();
+    } else {
+      void client.exitFullscreen();
+    }
+  });
 
+  function toggleFullscreen() {
     playerState.isFullscreen = !playerState.isFullscreen;
   }
 </script>
