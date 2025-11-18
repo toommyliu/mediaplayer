@@ -118,13 +118,20 @@
     fileBrowserState.reset();
     QueueManager.clear();
   })
+
+  function handlePaneGroupLayoutChange(sizes: number[]) {
+    if (sizes.length > 1 && sidebarState.isOpen) {
+      const sidebarSize = sizes[sizes.length - 1];
+      sidebarState.width = sidebarSize;
+    }
+  }
 </script>
 
 <ModeWatcher />
 <div class="flex h-screen flex-col">
   <div class="flex w-full flex-1 overflow-hidden">
-    <PaneGroup direction="horizontal">
-      <Pane defaultSize={80}>
+    <PaneGroup direction="horizontal" onLayoutChange={handlePaneGroupLayoutChange}>
+      <Pane defaultSize={100 - sidebarState.width} minSize={40}>
         <main class="relative h-full">
           {#if playerState.error}
             <div
@@ -133,7 +140,7 @@
               <AlertTriangle size={16} />
               <span>{playerState.error}</span>
               <button
-       clearnclick={() => (playerState.error = null)}
+                onclick={() => (playerState.error = null)}
                 class="ml-2 rounded px-2 py-1 hover:bg-red-600"
               >
                 <IconX size={16} />
@@ -151,7 +158,7 @@
         <PaneResizer
           class="w-1 cursor-col-resize bg-gray-600 transition-colors hover:bg-gray-500"
         />
-        <Pane defaultSize={20}>
+        <Pane defaultSize={sidebarState.width} minSize={10} maxSize={80}>
           <aside class="h-full border-l border-gray-700">
             <Sidebar />
           </aside>
