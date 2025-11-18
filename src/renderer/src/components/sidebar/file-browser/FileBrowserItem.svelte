@@ -30,21 +30,18 @@
    * Check if a collapsed folder contains the currently playing video
    */
   function hasCurrentVideoInFolder(folderItem: FileSystemItem): boolean {
-    if (!folderItem.files || !playerState.currentVideo) return false;
+    if (!folderItem.path || !playerState.currentVideo) return false;
 
     const currentVideoPath = playerState.currentVideo.startsWith("file://")
       ? playerState.currentVideo.slice(7)
       : playerState.currentVideo;
 
-    return searchForCurrentVideoInFiles(folderItem.files, currentVideoPath);
-  }
+    const folderPath = folderItem.path;
 
-  function searchForCurrentVideoInFiles(files: FileSystemItem[], targetPath: string): boolean {
-    for (const file of files) {
-      if (file.path === targetPath) return true;
-      if (file.files && searchForCurrentVideoInFiles(file.files, targetPath)) return true;
-    }
-    return false;
+    const normalizedCurrent = currentVideoPath.replace(/\\/g, "/");
+    const normalizedFolder = folderPath.replace(/\\/g, "/") + "/";
+
+    return normalizedCurrent.startsWith(normalizedFolder);
   }
 
   function renderFileSystemItem(item: FileSystemItem, depth = 0) {
