@@ -13,7 +13,6 @@
   import { playerState } from "$lib/state/player.svelte";
   import { queue } from "$lib/state/queue.svelte";
   import { cn } from "$lib/utils";
-  import { onDestroy } from "svelte";
 
   function isCurrentlyPlaying(item: QueueItem): boolean {
     return queue?.currentItem?.path === item.path;
@@ -107,7 +106,7 @@
             use:droppable={{ container: index.toString(), callbacks: { onDrop: handleDrop } }}
             animate:flip={{ duration: 200 }}
             class={cn(
-              "group flex cursor-move items-center gap-2 rounded-md p-2 text-sm transition-colors",
+              "group flex cursor-grab items-center gap-2 rounded-md p-2 text-sm transition-colors active:cursor-grabbing",
               isCurrentlyPlaying(item)
                 ? "bg-blue-500/20 text-blue-400"
                 : "text-muted-foreground hover:bg-muted/50"
@@ -138,7 +137,7 @@
               class="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100"
             >
               <button
-                class="text-muted-foreground hover:bg-muted/70 hover:text-destructive flex h-6 w-6 items-center justify-center rounded transition-colors"
+                class="text-muted-foreground hover:bg-muted/70 hover:text-destructive flex h-6 w-6 cursor-pointer items-center justify-center rounded transition-colors"
                 onclick={(ev) => {
                   ev.stopPropagation();
                   removeFromQueue(item.id);
@@ -182,8 +181,10 @@
   :global(.dragging) {
     opacity: 0.5;
     transform: rotate(2deg);
+    cursor: grabbing;
   }
   :global(.drag-over) {
     background-color: rgba(59, 130, 246, 0.1);
+    cursor: grabbing;
   }
 </style>
