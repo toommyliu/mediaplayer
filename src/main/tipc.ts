@@ -53,4 +53,5 @@ export type RendererHandlers = {
   mediaNextTrack(): void;
   mediaPlayPause(): void;
   mediaPreviousTrack(): void;
+  openSettings(): void;
 };

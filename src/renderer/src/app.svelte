@@ -14,6 +14,7 @@
   import { playerState } from "$lib/state/player.svelte";
   import { sidebarState } from "$lib/state/sidebar.svelte";
   import { client, handlers } from "./tipc";
+  import { settings } from "$lib/state/settings.svelte";
 
   QueueManager.initialize();
 
@@ -112,6 +113,10 @@
     platformState.isLinux = res.isLinux;
 
     await import("./lib/input.svelte");
+  });
+
+  handlers.openSettings.listen(() => {
+    settings.showDialog = true;
   });
 
   onDestroy(() => {

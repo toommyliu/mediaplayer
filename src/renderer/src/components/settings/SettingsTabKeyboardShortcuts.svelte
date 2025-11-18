@@ -10,15 +10,17 @@
 
   let editingAction = $state<string | null>(null);
   let isRecording = $state(false);
-  let searchTerm = $state('');
+  let searchTerm = $state("");
 
   const shortcuts = $derived(hotkeyConfig.getAllShortcuts());
 
   const filteredShortcuts = $derived(() => {
-    if (!searchTerm) return shortcuts;
-    return shortcuts.filter(s =>
-      s.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      formatHotkeyDisplay(s.keys).toLowerCase().includes(searchTerm.toLowerCase())
+    const filtered = shortcuts;
+    if (!searchTerm) return filtered;
+    return filtered.filter(
+      (s) =>
+        s.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        formatHotkeyDisplay(s.keys).toLowerCase().includes(searchTerm.toLowerCase())
     );
   });
 
@@ -76,13 +78,13 @@
 </script>
 
 <div class="no-scrollbar flex h-full flex-1 flex-col space-y-1 overflow-y-auto">
-  <div class="flex justify-between items-center mb-4">
-    <Input bind:value={searchTerm} placeholder="Search shortcuts..." class="flex-1 mr-4" />
+  <div class="mb-4 flex items-center justify-between">
+    <Input bind:value={searchTerm} placeholder="Search shortcuts..." class="mr-4 flex-1" />
     <button
       class="ring-offset-background focus-visible:ring-ring border-input bg-background hover:bg-accent hover:text-accent-foreground inline-flex h-9 items-center justify-center rounded-md border px-3 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
       onclick={resetToDefaults}
     >
-      <LucideRotateCcw class="size-4 mr-2" />
+      <LucideRotateCcw class="mr-2 size-4" />
       Reset to Defaults
     </button>
   </div>
@@ -119,6 +121,7 @@
                 <button
                   class="ring-offset-background focus-visible:ring-ring border-input bg-background hover:bg-accent hover:text-accent-foreground ml-1 inline-flex h-8 w-8 items-center justify-center rounded-md border text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
                   onclick={() => startEditingHotkey(shortcut.id)}
+                  disabled={shortcut.configurable === false}
                 >
                   <span class="sr-only">Edit</span>
                   <LucideCirclePlus class="size-3" />

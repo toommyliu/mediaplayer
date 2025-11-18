@@ -6,6 +6,7 @@ import { platformState } from "$lib/state/platform.svelte";
 import { playerState } from "$lib/state/player.svelte";
 import { queue } from "$lib/state/queue.svelte";
 import { sidebarState } from "$lib/state/sidebar.svelte";
+import { settings } from "$lib/state/settings.svelte";
 import { volume } from "$lib/state/volume.svelte";
 import { SEEK_TIME_STEP, VOLUME_STEP, FRAME_TIME_STEP } from "./constants";
 import { logger } from "./logger";
@@ -16,6 +17,7 @@ type HotkeyAction = {
   handler(event: KeyboardEvent): void;
   id: string;
   keys: string[];
+  configurable?: boolean; // whether a user can change this hotkey via the UI
 };
 
 type HotkeyCategory = {
@@ -165,6 +167,19 @@ class HotkeyConfig {
       {
         name: "Time Navigation",
         actions: []
+      }
+      ,{
+        name: "Application",
+        actions: [
+          {
+            id: "openSettings",
+            description: "Open settings",
+            keys: [`${this.modKey}+,`],
+            handler: this.openSettings,
+            enabled: true,
+            configurable: false
+          }
+        ]
       }
     ];
 
@@ -341,6 +356,12 @@ class HotkeyConfig {
     }
   };
 
+  private readonly openSettings = (ev: KeyboardEvent): void => {
+    ev.preventDefault();
+    // Open the settings dialog
+    settings.showDialog = true;
+  };
+
   private readonly jumpToPercent = (ev: KeyboardEvent, percent: number): void => {
     ev.preventDefault();
     if (queue.currentItem) {
@@ -356,6 +377,8 @@ class HotkeyConfig {
     for (const category of this.categories) {
       const action = category.actions.find((a) => a.id === actionId);
       if (action) {
+        // Do not allow changes to non-configurable actions
+        if (action.configurable === false) return false;
         if (Array.isArray(action.keys)) {
           for (const key of action.keys) {
             Mousetrap.unbind(key);
@@ -441,6 +464,7 @@ class HotkeyConfig {
     enabled: boolean;
     id: string;
     keys: string;
+    configurable?: boolean;
   }[] {
     if (!this.initialized) {
       return [];
@@ -452,6 +476,7 @@ class HotkeyConfig {
       enabled: boolean;
       id: string;
       keys: string;
+      configurable?: boolean;
     }[] = [];
 
     for (const category of this.categories) {
@@ -462,6 +487,8 @@ class HotkeyConfig {
           description: action.description,
           keys: action.keys.join(", "),
           enabled: action.enabled !== false
+          ,
+          configurable: action.configurable
         });
       }
     }

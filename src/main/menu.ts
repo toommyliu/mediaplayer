@@ -1,16 +1,51 @@
 import { getRendererHandlers } from "@egoist/tipc/main";
 import { platform } from "@electron-toolkit/utils";
-import { Menu } from "electron";
+import { Menu, app } from "electron";
 import { getOrCreateMainWindow } from "./windowManager";
 import { logger } from "./logger";
 import { type RendererHandlers } from "./tipc";
 import { showFilePicker } from "./utils";
 
-const macAppMenu: Electron.MenuItemConstructorOptions = { role: "appMenu" };
+const macAppMenu: Electron.MenuItemConstructorOptions = {
+  label: app.name,
+  submenu: [
+    { role: "about" },
+    { type: "separator" },
+    {
+      label: "Preferences",
+      accelerator: "CmdOrCtrl+,",
+      click: async () => {
+        try {
+          const browserWindow = getOrCreateMainWindow();
+          const handlers = getRendererHandlers<RendererHandlers>(browserWindow.webContents);
+          handlers.openSettings.send();
+        } catch (error) {
+          logger.error("Failed to open settings via app menu:", error);
+        }
+      }
+    },
+    { type: "separator" },
+    { type: "normal", label: "Quit", role: "quit" }
+  ]
+};
 
 const fileMenu: Electron.MenuItemConstructorOptions = {
   label: "File",
   submenu: [
+    {
+      label: "Open Settings",
+      accelerator: "CmdOrCtrl+,",
+      click: async () => {
+        try {
+          const browserWindow = getOrCreateMainWindow();
+          const handlers = getRendererHandlers<RendererHandlers>(browserWindow.webContents);
+          handlers.openSettings.send();
+        } catch (error) {
+          logger.error("Failed to open settings:", error);
+        }
+      }
+    },
+    { type: "separator" as const },
     {
       label: "Open File",
       accelerator: "CmdOrCtrl+O",
@@ -44,8 +79,7 @@ const fileMenu: Electron.MenuItemConstructorOptions = {
         }
       }
     },
-    { type: "separator" },
-    { role: "close" }
+    { type: "separator" as const }
   ]
 };
 
