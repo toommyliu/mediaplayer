@@ -123,7 +123,11 @@
       const result = await client.readDirectory(folderPath);
       if (result?.files) {
         const folderContents = fileBrowserState.transformDirectoryContents(result);
-        const updated = updateFolderContents(fileBrowserState.fileSystem, folderPath, folderContents);
+        const updated = updateFolderContents(
+          fileBrowserState.fileSystem,
+          folderPath,
+          folderContents
+        );
         if (updated !== null) {
           fileBrowserState.fileTree = { ...fileBrowserState.fileTree!, files: updated };
         }
@@ -203,17 +207,17 @@
     }}
   >
     <ContextMenu.Trigger
-        class={cn(
-          "group relative z-10 flex min-h-[28px] items-center transition-all duration-200",
-          fileBrowserState.isLoading && "cursor-not-allowed opacity-50"
-        )}
+      class={cn(
+        "group relative z-10 flex min-h-[28px] items-center transition-all duration-200",
+        fileBrowserState.isLoading && "cursor-not-allowed opacity-50"
+      )}
     >
       <div
         class={cn(
           "flex min-h-[28px] w-full items-center rounded-md border transition-all duration-200",
           fileItemView.isCurrentlyPlaying
             ? "border-blue-500/30 bg-blue-500/15 hover:border-blue-500/40 hover:bg-blue-500/20"
-            : "border-transparent hover:border-input/30 hover:bg-muted/40"
+            : "hover:border-input/30 hover:bg-muted/40 border-transparent"
         )}
         style={`padding-left: ${depth * 12 + 8}px;`}
         data-item-trigger="true"
@@ -223,32 +227,35 @@
         aria-selected={fileBrowserState.focusedItemPath === item.path}
         onfocus={() => (fileBrowserState.focusedItemPath = item.path)}
         onclick={(ev) => handleItemClick(ev, item)}
-        onkeydown={(ev) => {
-          const e = ev as KeyboardEvent;
-          // Navigation support: up/down arrows move between file items, Enter/Space activates
-          const triggers = Array.from(document.querySelectorAll('[data-item-trigger="true"]')) as HTMLElement[];
+        onkeydown={(ev: KeyboardEvent) => {
+          const triggers = Array.from(
+            document.querySelectorAll('[data-item-trigger="true"]')
+          ) as HTMLElement[];
           const currentIndex = triggers.findIndex((t) => t.dataset.path === item.path);
-          if (e.key === 'ArrowDown') {
-            e.preventDefault();
+
+          if (document.activeElement !== ev.currentTarget) return;
+
+          if (ev.key === "ArrowDown") {
+            ev.preventDefault();
             const next = triggers[currentIndex + 1];
             if (next) next.focus();
-          } else if (e.key === 'ArrowUp') {
-            e.preventDefault();
+          } else if (ev.key === "ArrowUp") {
+            ev.preventDefault();
             const prev = triggers[currentIndex - 1];
             if (prev) prev.focus();
-          } else if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
+          } else if (ev.key === "Enter" || ev.key === " ") {
+            ev.preventDefault();
             handleItemClick(ev, item);
-          } else if (e.key === 'ArrowRight') {
+          } else if (ev.key === "ArrowRight") {
             // Expand folder if present
-            if (item.type === 'folder' && !fileBrowserState.expandedFolders.has(item.path!)) {
-              e.preventDefault();
+            if (item.type === "folder" && !fileBrowserState.expandedFolders.has(item.path!)) {
+              ev.preventDefault();
               toggleFolder(item.path);
             }
-          } else if (e.key === 'ArrowLeft') {
+          } else if (ev.key === "ArrowLeft") {
             // Collapse folder
-            if (item.type === 'folder' && fileBrowserState.expandedFolders.has(item.path!)) {
-              e.preventDefault();
+            if (item.type === "folder" && fileBrowserState.expandedFolders.has(item.path!)) {
+              ev.preventDefault();
               toggleFolder(item.path);
             }
           }
@@ -259,13 +266,13 @@
         <div class="flex min-h-[28px] min-w-0 flex-1 items-center">
           <span
             class={cn(
-              "flex items-center flex-1 truncate text-sm font-medium transition-colors duration-200",
+              "flex flex-1 items-center truncate text-sm font-medium transition-colors duration-200",
               fileItemView.isCurrentlyPlaying &&
                 "font-semibold text-blue-200 group-hover:text-blue-100",
               fileItemView.isVideo &&
                 !fileItemView.isCurrentlyPlaying &&
                 "text-emerald-200 group-hover:text-emerald-100",
-                !fileItemView.isVideo && "text-muted-foreground group-hover:text-foreground"
+              !fileItemView.isVideo && "text-muted-foreground group-hover:text-foreground"
             )}
           >
             {item!.name}
@@ -275,7 +282,7 @@
           </span>
 
           {#if fileItemView.isLoading}
-            <Loader2 class="h-4 w-4 animate-spin ml-2 text-blue-400" />
+            <Loader2 class="ml-2 h-4 w-4 animate-spin text-blue-400" />
           {/if}
 
           {#if fileItemView.isVideo}
@@ -304,7 +311,7 @@
       </div>
     </ContextMenu.Trigger>
 
-    <ContextMenu.Content class="w-48 border-input bg-popover">
+    <ContextMenu.Content class="border-input bg-popover w-48">
       {#if fileItemView.isFolder}
         <ContextMenu.Item
           class="text-muted-foreground hover:bg-popover/70 focus:bg-popover/70"
