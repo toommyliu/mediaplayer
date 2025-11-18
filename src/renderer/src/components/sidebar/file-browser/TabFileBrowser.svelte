@@ -84,10 +84,6 @@
       fileBrowserState.isLoading = false;
     }
   }
-
-  onDestroy(() => {
-    fileBrowserState.reset();
-  });
 </script>
 
 <div

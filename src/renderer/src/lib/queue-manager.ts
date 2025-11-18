@@ -115,7 +115,7 @@ export class QueueManager {
   /**
    * Clear the entire queue
    */
-  public static clearQueue(): void {
+  public static clear(): void {
     queue.items = [];
     queue.index = 0;
   }

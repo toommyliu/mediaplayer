@@ -4,8 +4,8 @@
   import IconRepeat1 from "lucide-svelte/icons/repeat-1";
   import IconShuffle from "lucide-svelte/icons/shuffle";
   import IconX from "lucide-svelte/icons/x";
-  import { draggable, droppable, type DragDropState } from '@thisux/sveltednd';
-  import { flip } from 'svelte/animate';
+  import { draggable, droppable, type DragDropState } from "@thisux/sveltednd";
+  import { flip } from "svelte/animate";
   import type { QueueItem } from "$lib/state/queue.svelte";
   import { ICON_SIZE } from "$lib/constants";
   import { makeTimeString } from "$lib/makeTimeString";
@@ -59,7 +59,7 @@
   function handleDrop(state: DragDropState<QueueItem>) {
     const { draggedItem, targetContainer } = state;
     const dragIndex = queue.items.findIndex((item) => item.id === draggedItem.id);
-    const dropIndex = parseInt(targetContainer ?? '0');
+    const dropIndex = parseInt(targetContainer ?? "0");
 
     if (dragIndex !== -1 && !isNaN(dropIndex) && dragIndex !== dropIndex) {
       QueueManager.moveItem(dragIndex, dropIndex);
@@ -86,23 +86,6 @@
         return IconRepeat;
     }
   }
-
-  function getRepeatTitle() {
-    switch (playerState.repeatMode) {
-      case "off":
-        return "Repeat: Off";
-      case "all":
-        return "Repeat: All";
-      case "one":
-        return "Repeat: One";
-      default:
-        return "Repeat: Off";
-    }
-  }
-
-  onDestroy(() => {
-    // QueueManager.clear();
-  });
 </script>
 
 <div class="flex h-full flex-col">
@@ -110,7 +93,7 @@
   <div class="no-scrollbar flex-1 overflow-y-auto">
     {#if queue.items.length === 0}
       <div class="flex h-full items-center justify-center">
-        <div class="text-center text-muted-foreground">
+        <div class="text-muted-foreground text-center">
           <IconMusic size={32} class="mx-auto mb-2 opacity-50" />
           <p class="text-sm font-medium">No videos in queue</p>
           <p class="text-xs opacity-75">Open a folder to add videos</p>
@@ -120,11 +103,11 @@
       <div class="space-y-1">
         {#each queue.items as item, index (item.id)}
           <div
-            use:draggable={{ container: index.toString(), dragData: item, interactive: ['button'] }}
+            use:draggable={{ container: index.toString(), dragData: item, interactive: ["button"] }}
             use:droppable={{ container: index.toString(), callbacks: { onDrop: handleDrop } }}
             animate:flip={{ duration: 200 }}
             class={cn(
-              "group flex items-center gap-2 rounded-md p-2 text-sm transition-colors cursor-move",
+              "group flex cursor-move items-center gap-2 rounded-md p-2 text-sm transition-colors",
               isCurrentlyPlaying(item)
                 ? "bg-blue-500/20 text-blue-400"
                 : "text-muted-foreground hover:bg-muted/50"
@@ -134,17 +117,17 @@
             onclick={() => handleItemClick(item)}
             onkeydown={(ev) => ev.key === "Enter" && handleItemClick(item)}
           >
-              <div class="flex h-5 w-5 shrink-0 items-center justify-center">
-              <span class="text-xs text-muted-foreground">{index + 1}</span>
+            <div class="flex h-5 w-5 shrink-0 items-center justify-center">
+              <span class="text-muted-foreground text-xs">{index + 1}</span>
             </div>
 
             <!-- Video Info -->
             <div class="min-w-0 flex-1">
-              <div class="font-medium text-muted-foreground">
+              <div class="text-muted-foreground font-medium">
                 {item.name ?? "Unknown Video"}
               </div>
               {#if item.duration}
-                <div class="text-xs text-muted-foreground">
+                <div class="text-muted-foreground text-xs">
                   {makeTimeString(item.duration)}
                 </div>
               {/if}
@@ -155,7 +138,7 @@
               class="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100"
             >
               <button
-                class="flex h-6 w-6 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted/70 hover:text-destructive"
+                class="text-muted-foreground hover:bg-muted/70 hover:text-destructive flex h-6 w-6 items-center justify-center rounded transition-colors"
                 onclick={(ev) => {
                   ev.stopPropagation();
                   removeFromQueue(item.id);
@@ -171,10 +154,10 @@
   </div>
 
   <!-- Footer with shuffle and repeat controls -->
-  <div class="mt-4 border-t border-sidebar-border p-1 pb-0">
+  <div class="border-sidebar-border mt-4 border-t p-1 pb-0">
     <div class="flex items-center justify-center gap-2">
       <button
-        class="flex h-8 w-8 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted/60 hover:text-muted-foreground"
+        class="text-muted-foreground hover:bg-muted/60 hover:text-muted-foreground flex h-8 w-8 items-center justify-center rounded transition-colors"
         onclick={shuffleQueue}
       >
         <IconShuffle size={ICON_SIZE - 4} />

@@ -3,7 +3,7 @@
   import IconX from "lucide-svelte/icons/x";
   import { ModeWatcher } from "mode-watcher";
   import { Pane, PaneGroup, PaneResizer } from "paneforge";
-  import { onMount } from "svelte";
+  import { onDestroy, onMount } from "svelte";
   import Sidebar from "$components/sidebar.svelte";
   import VideoPlayer from "$components/video-player/video-player.svelte";
   import Settings from "$components/Settings.svelte";
@@ -21,7 +21,7 @@
     logger.debug("addFile:", res);
     if (res.type === "file") {
       // Clear the queue and add the selected file
-      QueueManager.clearQueue();
+      QueueManager.clear();
       QueueManager.addToQueue({
         name: res.path.split("/").pop() ?? "Video",
         path: res.path
@@ -38,14 +38,14 @@
       console.log("loadFileBrowser result:", result);
 
       if (!result) {
-        console.log("No result received from loadFileBrowser");
+        console.log("No resucleard from loadFileBrowser");
         return;
       }
 
       if (result.type === "file") {
         console.log("Adding single file to queue:", result.path);
 
-        QueueManager.clearQueue();
+        QueueManager.clear();
         QueueManager.addToQueue({
           name: result.path || (result.path.split("/").pop() ?? "Video"),
           path: result.path
@@ -61,7 +61,7 @@
         }
 
         const dirResult = await client.readDirectory(result.rootPath);
-        if (dirResult) {
+        if (dirResult) {clear
           fileBrowserState.fileTree = {
             rootPath: dirResult.currentPath,
             files: fileBrowserState.transformDirectoryContents(dirResult)
@@ -72,7 +72,7 @@
           const allVideoFiles = await client.getAllVideoFiles(result.rootPath);
           if (allVideoFiles.length > 0) {
             // Clear existing queue and add new videos
-            QueueManager.clearQueue();
+            QueueManager.clear();
             const success = QueueManager.addMultipleToQueue(allVideoFiles);
 
             if (success) {
@@ -89,7 +89,7 @@
           }
         } else {
           fileBrowserState.error = "Failed to read the selected folder.";
-          fileBrowserState.fileTree = null;
+          fileBrowserState.fileTree = clear
           fileBrowserState.currentPath = null;
           fileBrowserState.isAtRoot = false;
         }
@@ -113,6 +113,11 @@
 
     await import("./lib/input.svelte");
   });
+
+  onDestroy(() => {
+    fileBrowserState.reset();
+    QueueManager.clear();
+  })
 </script>
 
 <ModeWatcher />
@@ -128,7 +133,7 @@
               <AlertTriangle size={16} />
               <span>{playerState.error}</span>
               <button
-                onclick={() => (playerState.error = null)}
+       clearnclick={() => (playerState.error = null)}
                 class="ml-2 rounded px-2 py-1 hover:bg-red-600"
               >
                 <IconX size={16} />

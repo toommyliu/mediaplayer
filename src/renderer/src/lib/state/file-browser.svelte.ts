@@ -142,7 +142,7 @@ class FileBrowserState {
       if (result?.type === "file") {
         console.log("result.path", result.path);
 
-        QueueManager.clearQueue();
+        QueueManager.clear();
         QueueManager.addToQueue({
           name: result.path.split("/").pop() ?? "Unknown Video",
           path: result.path,
@@ -160,7 +160,7 @@ class FileBrowserState {
         playerState.currentTime = 0;
         playerState.duration = 0;
         playerState.isPlaying = false;
-        QueueManager.clearQueue();
+        QueueManager.clear();
         if (playerState.videoElement) {
           playerState.videoElement.pause();
         }
