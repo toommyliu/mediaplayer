@@ -61,7 +61,7 @@
         }
 
         const dirResult = await client.readDirectory(result.rootPath);
-        if (dirResult) {clear
+        if (dirResult) {
           fileBrowserState.fileTree = {
             rootPath: dirResult.currentPath,
             files: fileBrowserState.transformDirectoryContents(dirResult)
