@@ -2,6 +2,7 @@
   import * as DropdownMenu from "$ui/dropdown-menu";
   import { Label } from "$ui/label";
   import { Checkbox } from "$ui/checkbox";
+  import { settings, type FileBrowserCompactness } from "$lib/state/settings.svelte";
 </script>
 
 <div class="space-y-6">
@@ -19,6 +20,26 @@
       <DropdownMenu.Content>
         <DropdownMenu.Item>Open</DropdownMenu.Item>
         <DropdownMenu.Item>Closed</DropdownMenu.Item>
+      </DropdownMenu.Content>
+    </DropdownMenu.Root>
+  </div>
+
+  <div class="space-y-2">
+    <Label for="file-browser-compactness">File Browser Density</Label>
+    <DropdownMenu.Root>
+      <DropdownMenu.Trigger>
+        <button class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+          {settings.fileBrowserCompactness}
+          <svg class="h-4 w-4 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="m6 9 6 6 6-6"/>
+          </svg>
+        </button>
+      </DropdownMenu.Trigger>
+      <DropdownMenu.Content class="w-48">
+        <DropdownMenu.Item onclick={() => (settings.fileBrowserCompactness = "auto" as FileBrowserCompactness)}>Auto</DropdownMenu.Item>
+        <DropdownMenu.Item onclick={() => (settings.fileBrowserCompactness = "comfortable" as FileBrowserCompactness)}>Comfortable</DropdownMenu.Item>
+        <DropdownMenu.Item onclick={() => (settings.fileBrowserCompactness = "compact" as FileBrowserCompactness)}>Compact</DropdownMenu.Item>
+        <DropdownMenu.Item onclick={() => (settings.fileBrowserCompactness = "mini" as FileBrowserCompactness)}>Mini</DropdownMenu.Item>
       </DropdownMenu.Content>
     </DropdownMenu.Root>
   </div>

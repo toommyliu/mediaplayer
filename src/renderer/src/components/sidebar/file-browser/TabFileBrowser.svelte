@@ -12,10 +12,11 @@
   import Loader2 from "~icons/lucide/loader-2";
 
   import { fileBrowserState } from "$lib/state/file-browser.svelte";
+  import { sidebarState } from "$lib/state/sidebar.svelte";
+  import { settings } from "$lib/state/settings.svelte";
   import { playerState } from "$lib/state/player.svelte";
 
   import { queue } from "$/lib/state/queue.svelte";
-  import { onDestroy } from "svelte";
   import { cn } from "$lib/utils";
 
   import { sortFileTree, type SortOptions } from "$shared/index";
@@ -31,6 +32,13 @@
     };
 
     return sortFileTree(fileBrowserState.fileSystem, sortOptions);
+  });
+
+  const isCompact = $derived(() => {
+    const mode = settings.fileBrowserCompactness;
+    if (mode === "compact" || mode === "mini") return true;
+    if (mode === "comfortable") return false;
+    return sidebarState.width <= 16;
   });
 
   async function handleDblClick(ev: MouseEvent) {
@@ -251,7 +259,7 @@
             {:else}
               <ArrowUp10 class="h-4 w-4 opacity-60" />
             {/if}
-            <span class="hidden sm:inline">Duration</span>
+            <span class={cn("hidden sm:inline", isCompact() && "hidden")}>Duration</span>
           </Button>
         </div>
         <Button

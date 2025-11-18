@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { fade } from 'svelte/transition';
   import { Settings, Play, Palette, Keyboard } from "lucide-svelte";
   import SettingsTabGeneral from "$/components/settings/SettingsTabGeneral.svelte";
   import SettingsTabKeyboardShortcuts from "$/components/settings/SettingsTabKeyboardShortcuts.svelte";
@@ -39,6 +38,15 @@
   let selectedTab: string = $state(SettingsCategory.General);
   let navElement: HTMLElement | null = null;
 
+  function selectTab(id: string) {
+    const newIndex = categoryItems.findIndex(cat => cat.id === id);
+    selectedTab = id;
+    if (navElement) {
+      const buttons = navElement.querySelectorAll('button');
+      (buttons[newIndex] as HTMLElement)?.focus();
+    }
+  }
+
   function handleKeydown(event: KeyboardEvent) {
     if (!navElement) return;
     const currentIndex = categoryItems.findIndex(cat => cat.id === selectedTab);
@@ -62,10 +70,8 @@
     }
 
     event.preventDefault();
-    selectedTab = categoryItems[newIndex].id;
-    // Focus the new tab
-    const buttons = navElement.querySelectorAll('button');
-    (buttons[newIndex] as HTMLElement).focus();
+    // Use selectTab to update prev index, selected tab and focus
+    selectTab(categoryItems[newIndex].id);
   }
 
   $effect(() => {
@@ -82,18 +88,18 @@
     class="flex h-full w-full flex-col overflow-hidden p-0 md:h-[85vh] md:w-[90vw] md:max-w-6xl md:flex-row"
     showCloseButton={false}
   >
-    <div class="flex flex-1 flex-col overflow-hidden md:flex-row">
+    <div class="flex flex-1 flex-col overflow-hidden md:flex-row min-h-0">
       <aside class="border-sidebar-border bg-sidebar flex-shrink-0 border-b md:border-b-0 md:border-r md:w-72">
         <div class="flex h-full flex-col">
           <div class="p-4">
             <nav class="space-y-1" role="tablist" bind:this={navElement} onkeydown={handleKeydown}>
               {#each categoryItems as category (category.id)}
                 <button
-                  class="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-all duration-200 {selectedTab ===
+                  class="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left {selectedTab ===
                   category.id
                     ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-lg'
                     : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'}"
-                  onclick={() => (selectedTab = category.id)}
+                  onclick={() => selectTab(category.id)}
                   role="tab"
                   aria-selected={selectedTab === category.id}
                   tabindex={selectedTab === category.id ? 0 : -1}
@@ -115,24 +121,20 @@
         </div>
       </aside>
 
-      <main class="flex-1 p-6">
-        {#if selectedTab === SettingsCategory.General}
-          <div transition:fade={{ duration: 200 }}>
-            <SettingsTabGeneral />
+      <main class="flex-1 p-6 min-h-0 overflow-y-auto">
+        {#key selectedTab}
+          <div class="h-full min-h-0">
+              {#if selectedTab === SettingsCategory.General}
+                <SettingsTabGeneral />
+              {:else if selectedTab === SettingsCategory.Playback}
+                <SettingsTabPlayback />
+              {:else if selectedTab === SettingsCategory.UI}
+                <SettingsTabUI />
+              {:else if selectedTab === SettingsCategory.Shortcuts}
+                <SettingsTabKeyboardShortcuts />
+              {/if}
           </div>
-        {:else if selectedTab === SettingsCategory.Playback}
-          <div transition:fade={{ duration: 200 }}>
-            <SettingsTabPlayback />
-          </div>
-        {:else if selectedTab === SettingsCategory.UI}
-          <div transition:fade={{ duration: 200 }}>
-            <SettingsTabUI />
-          </div>
-        {:else if selectedTab === SettingsCategory.Shortcuts}
-          <div transition:fade={{ duration: 200 }}>
-            <SettingsTabKeyboardShortcuts />
-          </div>
-        {/if}
+        {/key}
       </main>
     </div>
   </Dialog.Content>

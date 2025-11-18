@@ -69,7 +69,7 @@ class PlayerState {
       try {
         await this.videoElement?.play();
         this.isPlaying = true;
-      } catch {
+      } catch (e) {
         console.warn("play() failed");
       }
     }

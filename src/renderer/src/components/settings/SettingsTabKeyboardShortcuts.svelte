@@ -37,7 +37,16 @@
     return grouped;
   });
 
-  const categories = $derived(() => Array.from(shortcutsByCategory().keys()));
+  const categories = $derived(() => {
+    const keys = Array.from(shortcutsByCategory().keys());
+    const appIndex = keys.findIndex((k) => k.toLowerCase() === "application" || k.toLowerCase() === "app");
+    if (appIndex > -1) {
+      // Move 'Application' category to the front so it shows at the top
+      const [appKey] = keys.splice(appIndex, 1);
+      keys.unshift(appKey);
+    }
+    return keys;
+  });
 
   function startEditingHotkey(actionId: string): void {
     if (editingAction) {
@@ -75,9 +84,41 @@
   function resetToDefaults(): void {
     hotkeyConfig.resetToDefaults();
   }
+
+  function onContainerKeydown(ev: KeyboardEvent) {
+    const el = ev.currentTarget as HTMLElement | null;
+    if (!el) return;
+
+    switch (ev.key) {
+      case 'ArrowDown':
+        el.scrollBy({ top: 40, behavior: 'smooth' });
+        ev.preventDefault();
+        break;
+      case 'ArrowUp':
+        el.scrollBy({ top: -40, behavior: 'smooth' });
+        ev.preventDefault();
+        break;
+      case 'PageDown':
+        el.scrollBy({ top: el.clientHeight * 0.9, behavior: 'smooth' });
+        ev.preventDefault();
+        break;
+      case 'PageUp':
+        el.scrollBy({ top: -el.clientHeight * 0.9, behavior: 'smooth' });
+        ev.preventDefault();
+        break;
+      case 'Home':
+        el.scrollTo({ top: 0, behavior: 'smooth' });
+        ev.preventDefault();
+        break;
+      case 'End':
+        el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+        ev.preventDefault();
+        break;
+    }
+  }
 </script>
 
-<div class="no-scrollbar flex h-full flex-1 flex-col space-y-1 overflow-y-auto">
+<div tabindex="0" onkeydown={onContainerKeydown} class="no-scrollbar flex flex-1 min-h-0 flex-col space-y-1 overflow-y-auto">
   <div class="mb-4 flex items-center justify-between">
     <Input bind:value={searchTerm} placeholder="Search shortcuts..." class="mr-4 flex-1" />
     <button
@@ -89,14 +130,14 @@
     </button>
   </div>
   {#each categories() as category (category)}
-    <div class="mt-4 mb-1 first:mt-0">
+    <div class="mt-4 mb-1">
       <h2 class="text-lg font-bold">{category}</h2>
     </div>
-    <div class="bg-card flex flex-col rounded-md border shadow-sm">
+    <div class="bg-card flex flex-col rounded-md border shadow-sm last:mb-2">
       <div>
         {#each shortcutsByCategory().get(category)! as shortcut (shortcut.id)}
           <div
-            class="border-border flex h-12 flex-row items-center justify-between border-b p-2 last:border-0"
+            class="border-border flex h-12 flex-row items-center justify-between border-b p-2"
           >
             <div class="text-muted-foreground flex-1 p-2 text-sm">
               {shortcut.description}

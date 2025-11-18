@@ -167,8 +167,8 @@ class HotkeyConfig {
       {
         name: "Time Navigation",
         actions: []
-      }
-      ,{
+      },
+      {
         name: "Application",
         actions: [
           {
@@ -211,11 +211,11 @@ class HotkeyConfig {
         hotkeys[action.id] = action.keys;
       }
     }
-    localStorage.setItem('mediaplayer-hotkeys', JSON.stringify(hotkeys));
+    localStorage.setItem("mediaplayer-hotkeys", JSON.stringify(hotkeys));
   }
 
   private loadHotkeys(): Record<string, string[]> | null {
-    const stored = localStorage.getItem('mediaplayer-hotkeys');
+    const stored = localStorage.getItem("mediaplayer-hotkeys");
     if (stored) {
       try {
         return JSON.parse(stored);
@@ -234,7 +234,9 @@ class HotkeyConfig {
       if (playerState.isPlaying) {
         try {
           await playerState.videoElement?.play();
-        } catch {}
+        } catch (e) {
+          /* ignore */
+        }
       } else {
         playerState.videoElement?.pause();
       }
@@ -402,8 +404,8 @@ class HotkeyConfig {
     // Remove any saved overrides from localStorage so initializeDefaultConfig
     // won't re-apply saved hotkeys over the defaults.
     try {
-      localStorage.removeItem('mediaplayer-hotkeys');
-    } catch {}
+      localStorage.removeItem("mediaplayer-hotkeys");
+    } catch (e) {}
     this.initializeDefaultConfig();
     this.bindAllActions();
     this.saveHotkeys();
@@ -416,6 +418,37 @@ class HotkeyConfig {
     for (const key of action.keys) {
       Mousetrap.unbind(key);
       Mousetrap.bind(key, (ev) => {
+        // If any settings dialog is open, let the dialog handle key events rather than global hotkeys
+        if (settings.showDialog) return;
+
+        // If focus is inside a dialog or a form control, skip global hotkeys so the dialog/input
+        // can handle keyboard events (e.g., arrow keys to scroll a list).
+        try {
+          const target =
+            (ev.target as HTMLElement | null) || (document.activeElement as HTMLElement | null);
+          const active = document.activeElement as HTMLElement | null;
+          // prefer checking the activeElement if present
+          const elToCheck = active || target;
+          if (elToCheck) {
+            // Skip if inside dialog content
+            if (elToCheck.closest('[data-slot="dialog-content"]')) {
+              return;
+            }
+
+            // Skip if focus is a form control or contenteditable
+            const tagName = elToCheck.tagName;
+            if (
+              tagName === "INPUT" ||
+              tagName === "TEXTAREA" ||
+              tagName === "SELECT" ||
+              (elToCheck as HTMLElement).isContentEditable
+            ) {
+              return;
+            }
+          }
+        } catch (e) {
+          /* ignore */
+        }
         ev.preventDefault();
         action.handler(ev);
       });
@@ -486,8 +519,7 @@ class HotkeyConfig {
           id: action.id,
           description: action.description,
           keys: action.keys.join(", "),
-          enabled: action.enabled !== false
-          ,
+          enabled: action.enabled !== false,
           configurable: action.configurable
         });
       }
@@ -512,7 +544,7 @@ export function setupMediaKeyHandlers(): void {
       if (playerState.isPlaying) {
         try {
           await playerState.videoElement?.play();
-        } catch {}
+        } catch (e) {}
       } else {
         playerState.videoElement?.pause();
       }

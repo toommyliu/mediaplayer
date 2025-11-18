@@ -3,9 +3,13 @@
   import FileBrowserItem from "./FileBrowserItem.svelte";
   import Loader2 from "~icons/lucide/loader-2";
   import LucideCircle from "~icons/lucide/circle";
+  import FileIcon from "~icons/lucide/file";
+  import FolderIcon from "~icons/lucide/folder";
 
   import { fileBrowserState, type FileSystemItem } from "$lib/state/file-browser.svelte";
   import { platformState } from "$lib/state/platform.svelte";
+  import { sidebarState } from "$lib/state/sidebar.svelte";
+  import { settings, type FileBrowserCompactness } from "$lib/state/settings.svelte";
   import { playerState } from "$lib/state/player.svelte";
 
   import { QueueManager } from "$lib/queue-manager";
@@ -13,6 +17,7 @@
   import { cn } from "$lib/utils";
 
   import { client } from "$/tipc";
+  import { makeTimeString } from "$lib/makeTimeString";
 
   import { sortFileTree, type SortOptions } from "$shared/index";
 
@@ -23,20 +28,20 @@
       ? playerState.currentVideo.slice(7)
       : playerState.currentVideo;
 
-    return itemPath === currentVideoPath.replace(/\\/g, '/');
+    return itemPath === currentVideoPath.replace(/\\/g, "/");
   }
 
   /**
    * Check if a collapsed folder contains the currently playing video
    */
-    function hasCurrentVideoInFolder(folderItem: FileSystemItem): boolean {
+  function hasCurrentVideoInFolder(folderItem: FileSystemItem): boolean {
     if (!folderItem.path || !playerState.currentVideo) return false;
 
     const currentVideoPath = playerState.currentVideo.startsWith("file://")
       ? playerState.currentVideo.slice(7)
       : playerState.currentVideo;
 
-    return currentVideoPath.startsWith(folderItem.path + '/');
+    return currentVideoPath.startsWith(folderItem.path + "/");
   }
 
   function renderFileSystemItem(item: FileSystemItem, depth = 0) {
@@ -185,6 +190,20 @@
 
   const fileItemView = $derived(renderFileSystemItem(item, depth));
   const displayDuration = item.duration ?? 0;
+
+  const isCompact = $derived(() => {
+    const mode: FileBrowserCompactness = settings.fileBrowserCompactness;
+    if (mode === "compact" || mode === "mini") return true;
+    if (mode === "comfortable") return false;
+    return sidebarState.width <= 16; // auto
+  });
+  const isMini = $derived(() => {
+    const mode: FileBrowserCompactness = settings.fileBrowserCompactness;
+    if (mode === "mini") return true;
+    if (mode === "compact") return false;
+    if (mode === "comfortable") return false;
+    return sidebarState.width <= 11; // auto
+  });
 </script>
 
 {#key fileItemView.item.path}
@@ -203,6 +222,12 @@
         "group relative z-10 flex min-h-[28px] items-center transition-all duration-200",
         fileBrowserState.isLoading && "cursor-not-allowed opacity-50"
       )}
+      title={isMini()
+        ? `${item.name} ${displayDuration > 0 ? "— " + makeTimeString(displayDuration) : ""}`
+        : undefined}
+      aria-label={isMini()
+        ? `${item.name} ${displayDuration > 0 ? "— " + makeTimeString(displayDuration) : ""}`
+        : undefined}
     >
       <div
         class={cn(
@@ -211,7 +236,7 @@
             ? "border-blue-500/30 bg-blue-500/15 hover:border-blue-500/40 hover:bg-blue-500/20"
             : "hover:border-input/30 hover:bg-muted/40 border-transparent"
         )}
-        style={`padding-left: ${depth * 12 + 8}px;`}
+        style={`padding-left: ${isMini() ? 8 : depth * 12 + 8}px;`}
         data-item-trigger="true"
         data-path={item.path}
         tabindex={0}
@@ -256,28 +281,42 @@
         <div class="mr-2 w-4 flex-shrink-0"></div>
 
         <div class="flex min-h-[28px] min-w-0 flex-1 items-center">
-          <span
-            class={cn(
-              "flex flex-1 items-center truncate text-sm font-medium transition-colors duration-200",
-              fileItemView.isCurrentlyPlaying &&
-                "font-semibold text-blue-200 group-hover:text-blue-100",
-              fileItemView.isVideo &&
-                !fileItemView.isCurrentlyPlaying &&
-                "text-emerald-200 group-hover:text-emerald-100",
-              !fileItemView.isVideo && "text-muted-foreground group-hover:text-foreground"
-            )}
-          >
-            {item!.name}
-            {#if item!.type === "folder"}
-              /
-            {/if}
-          </span>
-
-          {#if fileItemView.isLoading}
-            <Loader2 class="ml-2 h-4 w-4 animate-spin text-blue-400" />
+          {#if isMini()}
+            <div class="flex items-center gap-2">
+              {#if fileItemView.isFolder}
+                <FolderIcon class="h-4 w-4 opacity-80" />
+              {:else}
+                <FileIcon class="h-4 w-4 opacity-80" />
+              {/if}
+              <span class="sr-only">{item!.name}</span>
+            </div>
+          {:else}
+            <span
+              class={cn(
+                "flex flex-1 items-center truncate font-medium transition-colors duration-200",
+                isCompact() ? "text-xs" : "text-sm",
+                fileItemView.isCurrentlyPlaying &&
+                  "font-semibold text-blue-200 group-hover:text-blue-100",
+                fileItemView.isVideo &&
+                  !fileItemView.isCurrentlyPlaying &&
+                  "text-emerald-200 group-hover:text-emerald-100",
+                !fileItemView.isVideo && "text-muted-foreground group-hover:text-foreground"
+              )}
+            >
+              {item!.name}
+              {#if item!.type === "folder"}
+                /
+              {/if}
+            </span>
           {/if}
 
-          {#if fileItemView.isVideo}
+          {#if fileItemView.isLoading}
+            <Loader2
+              class={cn("h-4 w-4 animate-spin text-blue-400", isCompact() ? "ml-1" : "ml-2")}
+            />
+          {/if}
+
+          {#if fileItemView.isVideo && !isCompact() && !isMini()}
             <span
               class={cn(
                 "mt-1 mr-1 mb-1 ml-1 flex-shrink-0 rounded px-1.5 py-0.5 align-middle font-mono text-xs ring-1 transition-all duration-200",
@@ -297,7 +336,9 @@
           {/if}
 
           {#if fileItemView.hasCurrentVideoInCollapsedFolder}
-            <LucideCircle class="mr-2 h-2 w-2 fill-blue-400 text-blue-400" />
+            <LucideCircle
+              class={cn("h-2 w-2 fill-blue-400 text-blue-400", isCompact() ? "mr-1" : "mr-2")}
+            />
           {/if}
         </div>
       </div>
