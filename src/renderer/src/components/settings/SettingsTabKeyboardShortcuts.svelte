@@ -23,7 +23,7 @@
   });
 
   const shortcutsByCategory = $derived(() => {
-    const grouped = new Map<string, any[]>();
+    const grouped = new Map<string, ReturnType<typeof filteredShortcuts>>();
     for (const shortcut of filteredShortcuts()) {
       if (!grouped.has(shortcut.category)) {
         grouped.set(shortcut.category, []);
