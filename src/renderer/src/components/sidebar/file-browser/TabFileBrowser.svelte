@@ -210,7 +210,7 @@
       {/if}
     </div>
 
-    <div class="mt-4 border-t border-sidebar-border/60 backdrop-blur-sm">
+    <div class="mt-4 border-t border-sidebar-border/60 rounded-b-md">
       <div
         class="flex flex-col items-center gap-2 p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3"
       >
