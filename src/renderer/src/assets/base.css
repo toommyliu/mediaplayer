@@ -1,4 +1,5 @@
 @import "@fontsource/inter";
+@import "@fontsource/ibm-plex-mono";
 
 @import "tailwindcss";
 @import "tw-animate-css";
@@ -187,5 +188,5 @@
 }
 
 body {
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: "Inter", sans-serif, "IBM Plex Mono", monospace;
 }
