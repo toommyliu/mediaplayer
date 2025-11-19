@@ -9,6 +9,10 @@
   let aspectRatio: AspectRatioMode = $state("contain");
   let videoAspectRatio = $state<number | null>(null);
 
+  let restoring = playerState.currentVideo !== null;
+  let resumeTime = playerState.currentTime;
+  let resumePlaying = playerState.isPlaying;
+
   const aspectRatioClass = $derived(() => {
     switch (aspectRatio) {
       case "contain":
@@ -102,23 +106,39 @@
   }
 
   function handleLoadStart(): void {
-    // console.log("Video load started");
     onLoading(true);
   }
 
   function handleLoadedData(): void {
-    // console.log("Video data loaded");
     onLoading(false);
     if (playerState.videoElement) {
       playerState.duration = playerState.videoElement.duration;
-      playerState.videoElement.play().catch((error) => {
-        console.error("Auto-play failed:", error);
-      });
+
+      if (restoring) {
+        console.log("Restoring playback state:", { resumeTime, resumePlaying });
+        if (resumeTime > 0) {
+          playerState.videoElement.currentTime = resumeTime;
+        }
+
+        if (resumePlaying) {
+          playerState.videoElement.play().catch((error) => {
+            console.error("Auto-play failed:", error);
+          });
+        } else {
+          playerState.videoElement.pause();
+          playerState.isPlaying = false;
+        }
+
+        restoring = false;
+      } else {
+        playerState.videoElement.play().catch((error) => {
+          console.error("Auto-play failed:", error);
+        });
+      }
     }
   }
 
   function handleLoadedMetadata(): void {
-    // console.log("Video metadata loaded");
     if (playerState.videoElement) {
       playerState.duration = playerState.videoElement.duration;
       const { videoWidth, videoHeight } = playerState.videoElement;
@@ -275,9 +295,11 @@
         class="relative"
         style:max-width={aspectRatio === "contain" ? "100%" : undefined}
         style:max-height={aspectRatio === "contain" ? "100%" : undefined}
-        style:aspect-ratio={
-          aspectRatio === "contain" ? (videoAspectRatio ? `${videoAspectRatio}` : "16 / 9") : undefined
-        }
+        style:aspect-ratio={aspectRatio === "contain"
+          ? videoAspectRatio
+            ? `${videoAspectRatio}`
+            : "16 / 9"
+          : undefined}
       >
         <video
           bind:this={playerState.videoElement}

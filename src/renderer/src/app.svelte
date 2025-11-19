@@ -208,103 +208,105 @@
 <ModeWatcher />
 <div class="bg-background flex h-screen flex-col overflow-hidden">
   <div class="flex w-full flex-1 overflow-hidden">
-    <PaneGroup direction="horizontal" onLayoutChange={handlePaneGroupLayoutChange}>
-      {#if sidebarState.isOpen && sidebarState.position === "left" && !isDraggingSidebar}
-        {@render SidebarImpl()}
+    {#key sidebarState.position}
+      <PaneGroup direction="horizontal" onLayoutChange={handlePaneGroupLayoutChange}>
+        {#if sidebarState.isOpen && sidebarState.position === "left" && !isDraggingSidebar}
+          {@render SidebarImpl()}
 
-        <PaneResizer
-          class="bg-sidebar-border hover:bg-primary/50 z-30 -ml-[1px] w-px transition-colors"
-        />
-      {/if}
-
-      <Pane defaultSize={100 - sidebarState.width} minSize={22} class="relative">
-        {#if isDraggingSidebar}
-          <div
-            class="bg-background/50 pointer-events-none fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm"
-          >
-            <div class="drop-overlay pointer-events-auto flex flex-col gap-4">
-              <div class="bg-card/95 ring-border flex gap-4 rounded-xl p-4 shadow-2xl ring-1">
-                <!-- Left drop zone -->
-                <div
-                  class="drop-zone border-border bg-muted/50 hover:border-primary/50 hover:bg-primary/10 flex h-32 w-32 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed transition-all"
-                  class:active={dropZoneActive === "left"}
-                  use:droppable={{
-                    container: "drop-left",
-                    callbacks: {
-                      onDrop: handleDrop,
-                      onDragEnter: handleDragEnter("left"),
-                      onDragLeave: handleDragLeave
-                    }
-                  }}
-                >
-                  <div class="flex flex-col items-center gap-2">
-                    <div class="text-4xl">←</div>
-                    <span class="text-muted-foreground text-xs font-medium">Left</span>
-                    <span class="text-muted-foreground/60 text-[10px]">← or L</span>
-                  </div>
-                </div>
-
-                <!-- Right drop zone -->
-                <div
-                  class="drop-zone border-border bg-muted/50 hover:border-primary/50 hover:bg-primary/10 flex h-32 w-32 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed transition-all"
-                  class:active={dropZoneActive === "right"}
-                  use:droppable={{
-                    container: "drop-right",
-                    callbacks: {
-                      onDrop: handleDrop,
-                      onDragEnter: handleDragEnter("right"),
-                      onDragLeave: handleDragLeave
-                    }
-                  }}
-                >
-                  <div class="flex flex-col items-center gap-2">
-                    <div class="text-4xl">→</div>
-                    <span class="text-muted-foreground text-xs font-medium">Right</span>
-                    <span class="text-muted-foreground/60 text-[10px]">→ or R</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Escape hint -->
-              <div class="text-muted-foreground/60 mx-auto text-center text-xs">
-                Press <kbd class="bg-muted rounded border px-1.5 py-0.5 text-[10px] font-medium"
-                  >Esc</kbd
-                > to cancel
-              </div>
-            </div>
-          </div>
+          <PaneResizer
+            class="bg-sidebar-border hover:bg-primary/50 z-30 -ml-[1px] w-px transition-colors"
+          />
         {/if}
 
-        <main class="bg-background relative h-full w-full">
-          {#if playerState.error}
+        <Pane defaultSize={100 - sidebarState.width} minSize={22} class="relative">
+          {#if isDraggingSidebar}
             <div
-              class="bg-destructive text-destructive-foreground absolute top-4 left-1/2 z-50 flex -translate-x-1/2 transform items-center space-x-2 rounded-lg px-4 py-2 shadow-lg"
+              class="bg-background/50 pointer-events-none fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm"
             >
-              <AlertTriangle size={16} />
-              <span>{playerState.error}</span>
-              <button
-                onclick={() => (playerState.error = null)}
-                class="ml-2 rounded px-2 py-1 transition-colors hover:bg-black/20"
-              >
-                <IconX size={16} />
-              </button>
+              <div class="drop-overlay pointer-events-auto flex flex-col gap-4">
+                <div class="bg-card/95 ring-border flex gap-4 rounded-xl p-4 shadow-2xl ring-1">
+                  <!-- Left drop zone -->
+                  <div
+                    class="drop-zone border-border bg-muted/50 hover:border-primary/50 hover:bg-primary/10 flex h-32 w-32 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed transition-all"
+                    class:active={dropZoneActive === "left"}
+                    use:droppable={{
+                      container: "drop-left",
+                      callbacks: {
+                        onDrop: handleDrop,
+                        onDragEnter: handleDragEnter("left"),
+                        onDragLeave: handleDragLeave
+                      }
+                    }}
+                  >
+                    <div class="flex flex-col items-center gap-2">
+                      <div class="text-4xl">←</div>
+                      <span class="text-muted-foreground text-xs font-medium">Left</span>
+                      <span class="text-muted-foreground/60 text-[10px]">← or L</span>
+                    </div>
+                  </div>
+
+                  <!-- Right drop zone -->
+                  <div
+                    class="drop-zone border-border bg-muted/50 hover:border-primary/50 hover:bg-primary/10 flex h-32 w-32 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed transition-all"
+                    class:active={dropZoneActive === "right"}
+                    use:droppable={{
+                      container: "drop-right",
+                      callbacks: {
+                        onDrop: handleDrop,
+                        onDragEnter: handleDragEnter("right"),
+                        onDragLeave: handleDragLeave
+                      }
+                    }}
+                  >
+                    <div class="flex flex-col items-center gap-2">
+                      <div class="text-4xl">→</div>
+                      <span class="text-muted-foreground text-xs font-medium">Right</span>
+                      <span class="text-muted-foreground/60 text-[10px]">→ or R</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Escape hint -->
+                <div class="text-muted-foreground/60 mx-auto text-center text-xs">
+                  Press <kbd class="bg-muted rounded border px-1.5 py-0.5 text-[10px] font-medium"
+                    >Esc</kbd
+                  > to cancel
+                </div>
+              </div>
             </div>
           {/if}
 
-          <div class="flex h-full w-full flex-col">
-            <VideoPlayer />
-          </div>
-        </main>
-      </Pane>
+          <main class="bg-background relative h-full w-full">
+            {#if playerState.error}
+              <div
+                class="bg-destructive text-destructive-foreground absolute top-4 left-1/2 z-50 flex -translate-x-1/2 transform items-center space-x-2 rounded-lg px-4 py-2 shadow-lg"
+              >
+                <AlertTriangle size={16} />
+                <span>{playerState.error}</span>
+                <button
+                  onclick={() => (playerState.error = null)}
+                  class="ml-2 rounded px-2 py-1 transition-colors hover:bg-black/20"
+                >
+                  <IconX size={16} />
+                </button>
+              </div>
+            {/if}
 
-      {#if sidebarState.isOpen && sidebarState.position === "right" && !isDraggingSidebar}
-        <PaneResizer
-          class="bg-sidebar-border hover:bg-primary/50 z-30 -mr-[1px] w-px transition-colors"
-        />
+            <div class="flex h-full w-full flex-col">
+              <VideoPlayer />
+            </div>
+          </main>
+        </Pane>
 
-        {@render SidebarImpl()}
-      {/if}
-    </PaneGroup>
+        {#if sidebarState.isOpen && sidebarState.position === "right" && !isDraggingSidebar}
+          <PaneResizer
+            class="bg-sidebar-border hover:bg-primary/50 z-30 -mr-[1px] w-px transition-colors"
+          />
+
+          {@render SidebarImpl()}
+        {/if}
+      </PaneGroup>
+    {/key}
   </div>
 </div>
 
