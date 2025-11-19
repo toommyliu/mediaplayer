@@ -5,12 +5,27 @@
 
   import { cubicOut } from "svelte/easing";
   import { fly } from "svelte/transition";
+  import { draggable } from "@thisux/sveltednd";
 
   import { SidebarTab } from "$/types";
   import { sidebarState } from "$lib/state/sidebar.svelte";
+
+  interface Props {
+    onDragStart?: () => void;
+    onDragEnd?: () => void;
+  }
+
+  let { onDragStart, onDragEnd }: Props = $props();
 </script>
 
-<div class="flex h-full flex-col p-4">
+<div class="flex h-full flex-col p-4 cursor-move" use:draggable={{
+        container: "sidebar-drag",
+        dragData: { type: "sidebar" },
+        callbacks: {
+          onDragStart,
+          onDragEnd
+        }
+      }}>
   <Tabs.Root
     value={sidebarState.currentTab}
     class="flex h-full w-full flex-col"

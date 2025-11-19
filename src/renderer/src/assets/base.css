@@ -159,6 +159,31 @@
   .glass {
     @apply backdrop-blur-xl bg-sidebar/80 border-r border-sidebar-border;
   }
+
+  /* Drag and drop styles */
+  .drop-zone {
+    transition: all 0.2s ease-in-out;
+  }
+
+  .drop-zone.active {
+    @apply border-primary bg-primary/20 scale-105;
+  }
+
+  .drop-overlay {
+    animation: fadeInScale 0.2s ease-out;
+  }
+
+  @keyframes fadeInScale {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
 }
 
 body {
