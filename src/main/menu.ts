@@ -33,20 +33,6 @@ const fileMenu: Electron.MenuItemConstructorOptions = {
   label: "File",
   submenu: [
     {
-      label: "Open Settings",
-      accelerator: "CmdOrCtrl+,",
-      click: async () => {
-        try {
-          const browserWindow = getOrCreateMainWindow();
-          const handlers = getRendererHandlers<RendererHandlers>(browserWindow.webContents);
-          handlers.openSettings.send();
-        } catch (error) {
-          logger.error("Failed to open settings:", error);
-        }
-      }
-    },
-    { type: "separator" as const },
-    {
       label: "Open File",
       accelerator: "CmdOrCtrl+O",
       click: async () => {
