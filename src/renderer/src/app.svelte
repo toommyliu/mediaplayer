@@ -4,7 +4,7 @@
   import { ModeWatcher } from "mode-watcher";
   import { Pane, PaneGroup, PaneResizer } from "paneforge";
   import { onDestroy, onMount } from "svelte";
-  import { draggable, droppable, type DragDropState } from "@thisux/sveltednd";
+  import { droppable, type DragDropState } from "@thisux/sveltednd";
   import Sidebar from "$components/sidebar.svelte";
   import VideoPlayer from "$components/video-player/video-player.svelte";
   import Settings from "$components/Settings.svelte";
@@ -128,7 +128,15 @@
   function handlePaneGroupLayoutChange(sizes: number[]) {
     if (sizes.length > 1 && sidebarState.isOpen) {
       const sidebarSize = sidebarState.position === "left" ? sizes[0] : sizes[sizes.length - 1];
-      sidebarState.width = sidebarSize;
+
+      const widthDiff = Math.abs(sidebarSize - sidebarState.width);
+      if (
+        widthDiff > 0.5 &&
+        sidebarSize >= sidebarState.MIN_WIDTH &&
+        sidebarSize <= sidebarState.MAX_WIDTH
+      ) {
+        sidebarState.width = sidebarSize;
+      }
     }
   }
 
@@ -202,14 +210,7 @@
   <div class="flex w-full flex-1 overflow-hidden">
     <PaneGroup direction="horizontal" onLayoutChange={handlePaneGroupLayoutChange}>
       {#if sidebarState.isOpen && sidebarState.position === "left" && !isDraggingSidebar}
-        <Pane defaultSize={sidebarState.width} minSize={10} maxSize={40} class="z-20">
-          <aside class="glass relative h-full w-full">
-            <Sidebar
-              onDragStart={handleDragStart}
-              onDragEnd={handleDragEnd}
-            />
-          </aside>
-        </Pane>
+        {@render SidebarImpl()}
 
         <PaneResizer
           class="bg-sidebar-border hover:bg-primary/50 z-30 -ml-[1px] w-px transition-colors"
@@ -218,12 +219,14 @@
 
       <Pane defaultSize={100 - sidebarState.width} minSize={22} class="relative">
         {#if isDraggingSidebar}
-          <div class="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-background/50 backdrop-blur-sm">
+          <div
+            class="bg-background/50 pointer-events-none fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm"
+          >
             <div class="drop-overlay pointer-events-auto flex flex-col gap-4">
-              <div class="flex gap-4 rounded-xl bg-card/95 p-4 shadow-2xl ring-1 ring-border">
+              <div class="bg-card/95 ring-border flex gap-4 rounded-xl p-4 shadow-2xl ring-1">
                 <!-- Left drop zone -->
                 <div
-                  class="drop-zone flex h-32 w-32 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-border bg-muted/50 transition-all hover:border-primary/50 hover:bg-primary/10"
+                  class="drop-zone border-border bg-muted/50 hover:border-primary/50 hover:bg-primary/10 flex h-32 w-32 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed transition-all"
                   class:active={dropZoneActive === "left"}
                   use:droppable={{
                     container: "drop-left",
@@ -243,7 +246,7 @@
 
                 <!-- Right drop zone -->
                 <div
-                  class="drop-zone flex h-32 w-32 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-border bg-muted/50 transition-all hover:border-primary/50 hover:bg-primary/10"
+                  class="drop-zone border-border bg-muted/50 hover:border-primary/50 hover:bg-primary/10 flex h-32 w-32 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed transition-all"
                   class:active={dropZoneActive === "right"}
                   use:droppable={{
                     container: "drop-right",
@@ -261,10 +264,12 @@
                   </div>
                 </div>
               </div>
-              
+
               <!-- Escape hint -->
               <div class="text-muted-foreground/60 mx-auto text-center text-xs">
-                Press <kbd class="bg-muted rounded border px-1.5 py-0.5 text-[10px] font-medium">Esc</kbd> to cancel
+                Press <kbd class="bg-muted rounded border px-1.5 py-0.5 text-[10px] font-medium"
+                  >Esc</kbd
+                > to cancel
               </div>
             </div>
           </div>
@@ -297,14 +302,7 @@
           class="bg-sidebar-border hover:bg-primary/50 z-30 -mr-[1px] w-px transition-colors"
         />
 
-        <Pane defaultSize={sidebarState.width} minSize={10} maxSize={40} class="z-20">
-          <aside class="glass relative h-full w-full">
-            <Sidebar
-              onDragStart={handleDragStart}
-              onDragEnd={handleDragEnd}
-            />
-          </aside>
-        </Pane>
+        {@render SidebarImpl()}
       {/if}
     </PaneGroup>
   </div>
@@ -312,3 +310,15 @@
 
 <Settings />
 
+{#snippet SidebarImpl()}
+  <Pane
+    defaultSize={sidebarState.width}
+    minSize={sidebarState.MIN_WIDTH}
+    maxSize={sidebarState.MAX_WIDTH}
+    class="z-20"
+  >
+    <aside class="glass relative h-full w-full">
+      <Sidebar onDragStart={handleDragStart} onDragEnd={handleDragEnd} />
+    </aside>
+  </Pane>
+{/snippet}

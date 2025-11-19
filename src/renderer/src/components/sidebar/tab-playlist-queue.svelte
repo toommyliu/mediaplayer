@@ -95,7 +95,7 @@
         <div class="text-muted-foreground text-center">
           <IconMusic size={32} class="mx-auto mb-2 opacity-50" />
           <p class="text-sm font-medium">No videos in queue</p>
-          <p class="text-xs opacity-75">Open a folder to add videos</p>
+          <p class="text-xs opacity-75">Add videos to start queueing</p>
         </div>
       </div>
     {:else}

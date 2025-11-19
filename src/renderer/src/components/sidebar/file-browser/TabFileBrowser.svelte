@@ -94,17 +94,15 @@
   }
 </script>
 
-<div
-  class="relative flex h-full flex-col overflow-hidden rounded-xl rounded-b-none"
->
+<div class="relative flex h-full flex-col overflow-hidden rounded-xl rounded-b-none">
   {#if fileBrowserState.isLoading}
     <div
-      class="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm"
+      class="bg-background/80 absolute inset-0 z-50 flex items-center justify-center backdrop-blur-sm"
       transition:fade={{ duration: 200 }}
     >
       <div class="flex flex-col items-center gap-3">
         <Loader2 class="text-primary h-8 w-8 animate-spin" />
-        <span class="text-sm font-medium text-muted-foreground">Loading...</span>
+        <span class="text-muted-foreground text-sm font-medium">Loading...</span>
       </div>
     </div>
   {/if}
@@ -119,7 +117,7 @@
       role="button"
       tabindex="0"
     >
-      <div class="text-center text-muted-foreground">
+      <div class="text-muted-foreground text-center">
         {#if fileBrowserState.isLoading}
           <Loader2 class="mx-auto mb-2 size-8 animate-spin opacity-50" />
           <p class="text-sm font-medium">Loading...</p>
@@ -164,11 +162,11 @@
     >
       {#if hasNoFiles()}
         <div class="flex h-full flex-col items-center justify-center p-4 text-center">
-          <div class="mb-4 rounded-full bg-muted/50 p-3">
-            <AlertCircle class="h-6 w-6 text-muted-foreground" />
+          <div class="bg-muted/50 mb-4 rounded-full p-3">
+            <AlertCircle class="text-muted-foreground h-6 w-6" />
           </div>
-          <h3 class="mb-2 text-base font-medium text-muted-foreground">No media files found</h3>
-          <p class="mb-4 max-w-xs text-sm text-muted-foreground">
+          <h3 class="text-muted-foreground mb-2 text-base font-medium">No media files found</h3>
+          <p class="text-muted-foreground mb-4 max-w-xs text-sm">
             Please upload some media files to get started
           </p>
           <Button />
@@ -187,14 +185,14 @@
               }}
             >
               <div
-                class="flex min-h-[28px] w-full items-center rounded-md hover:bg-muted/40"
+                class="hover:bg-muted/40 flex min-h-[28px] w-full items-center rounded-md"
                 style="padding-left: 8px;"
               >
                 <div class="mr-2 w-4 flex-shrink-0"></div>
 
                 <div class="flex min-h-[28px] min-w-0 flex-1 items-center">
                   <span
-                    class="flex-1 truncate text-sm font-medium text-muted-foreground group-hover:text-foreground"
+                    class="text-muted-foreground group-hover:text-foreground flex-1 truncate text-sm font-medium"
                   >
                     ..
                   </span>
@@ -210,7 +208,7 @@
       {/if}
     </div>
 
-    <div class="mt-4 border-t border-sidebar-border/60 rounded-b-md">
+    <div class="border-sidebar-border/60 mt-4 rounded-b-md border-t">
       <div
         class="flex flex-col items-center gap-2 p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3"
       >
@@ -265,7 +263,7 @@
         <Button
           size="icon"
           variant="ghost"
-          class="mt-2 h-8 w-full text-muted-foreground hover:bg-muted/60 hover:text-muted-foreground sm:mt-0 sm:ml-auto sm:w-8"
+          class="text-muted-foreground hover:bg-muted/60 hover:text-muted-foreground mt-2 h-8 w-full sm:mt-0 sm:ml-auto sm:w-8"
           onclick={resetAndBrowse}
         >
           <ListRestart class="h-4 w-4" />

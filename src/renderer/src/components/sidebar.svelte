@@ -18,56 +18,65 @@
   let { onDragStart, onDragEnd }: Props = $props();
 </script>
 
-<div class="flex h-full flex-col p-4 cursor-move" use:draggable={{
-        container: "sidebar-drag",
-        dragData: { type: "sidebar" },
-        callbacks: {
-          onDragStart,
-          onDragEnd
-        }
-      }}>
-  <Tabs.Root
-    value={sidebarState.currentTab}
-    class="flex h-full w-full flex-col"
-    onValueChange={(value) => (sidebarState.currentTab = value as SidebarTab)}
-  >
-    <Tabs.List
-      class="border-sidebar-border bg-sidebar-accent grid w-full grid-cols-2 gap-1 rounded-lg border p-0"
+<div class="flex h-full flex-col">
+  <div class="flex flex-1 flex-col overflow-hidden px-4 pt-4">
+    <Tabs.Root
+      value={sidebarState.currentTab}
+      class="flex h-full w-full flex-col"
+      onValueChange={(value) => (sidebarState.currentTab = value as SidebarTab)}
     >
-      <Tabs.Trigger value={SidebarTab.FileBrowser} class="text-sidebar-foreground h-full flex-1"
-        >Files</Tabs.Trigger
+      <Tabs.List
+        class="border-sidebar-border bg-sidebar-accent grid w-full grid-cols-2 gap-1 rounded-lg border p-0"
       >
-      <Tabs.Trigger value={SidebarTab.Queue} class="text-sidebar-foreground h-full flex-1"
-        >Queue</Tabs.Trigger
-      >
-    </Tabs.List>
-
-    <div class="relative flex-1 overflow-hidden rounded-b-md">
-      {#key sidebarState.currentTab}
-        <div
-          class="absolute inset-0 flex h-full w-full"
-          in:fly={{
-            x: sidebarState.currentTab === SidebarTab.FileBrowser ? -300 : 300,
-            duration: 300,
-            easing: cubicOut
-          }}
-          out:fly={{
-            x: sidebarState.currentTab === SidebarTab.FileBrowser ? 300 : -300,
-            duration: 300,
-            easing: cubicOut
-          }}
+        <Tabs.Trigger value={SidebarTab.FileBrowser} class="text-sidebar-foreground h-full flex-1"
+          >Files</Tabs.Trigger
         >
-          {#if sidebarState.currentTab === SidebarTab.FileBrowser}
+        <Tabs.Trigger value={SidebarTab.Queue} class="text-sidebar-foreground h-full flex-1"
+          >Queue</Tabs.Trigger
+        >
+      </Tabs.List>
+
+      <div class="relative flex-1 overflow-hidden rounded-b-md">
+        {#key sidebarState.currentTab}
+          <div
+            class="absolute inset-0 flex h-full w-full"
+            in:fly={{
+              x: sidebarState.currentTab === SidebarTab.FileBrowser ? -300 : 300,
+              duration: 300,
+              easing: cubicOut
+            }}
+            out:fly={{
+              x: sidebarState.currentTab === SidebarTab.FileBrowser ? 300 : -300,
+              duration: 300,
+              easing: cubicOut
+            }}
+          >
             <div class="h-full w-full overflow-hidden">
-              <TabFileBrowser />
+              {#if sidebarState.currentTab === SidebarTab.FileBrowser}
+                <TabFileBrowser />
+              {:else if sidebarState.currentTab === SidebarTab.Queue}
+                <TabQueue />
+              {/if}
             </div>
-          {:else if sidebarState.currentTab === SidebarTab.Queue}
-            <div class="h-full w-full overflow-hidden">
-              <TabQueue />
-            </div>
-          {/if}
-        </div>
-      {/key}
-    </div>
-  </Tabs.Root>
+          </div>
+        {/key}
+      </div>
+    </Tabs.Root>
+  </div>
+
+  <div
+    class="group flex w-full cursor-grab items-center justify-center px-4 pt-2 pb-4 active:cursor-grabbing"
+    use:draggable={{
+      container: "sidebar-drag",
+      dragData: { type: "sidebar" },
+      callbacks: {
+        onDragStart,
+        onDragEnd
+      }
+    }}
+  >
+    <div
+      class="bg-border active:bg-primary h-1 w-16 rounded-full opacity-50 transition-all duration-200 group-hover:w-24 group-hover:opacity-100 active:opacity-100"
+    ></div>
+  </div>
 </div>
