@@ -244,7 +244,7 @@
         class={cn(
           "flex min-h-[28px] w-full items-center rounded-md border transition-all duration-200",
           fileItemView.isCurrentlyPlaying
-            ? "border-blue-500/30 bg-blue-500/15 hover:border-blue-500/40 hover:bg-blue-500/20"
+            ? "border-primary/30 bg-primary/10 hover:border-primary/40 hover:bg-primary/20"
             : "hover:border-input/30 hover:bg-muted/40 border-transparent"
         )}
         style={`padding-left: ${isMini() ? 8 : depth * 12 + 8}px;`}
@@ -307,10 +307,10 @@
                 "flex flex-1 items-center truncate font-medium transition-colors duration-200",
                 isCompact() ? "text-xs" : "text-sm",
                 fileItemView.isCurrentlyPlaying &&
-                  "font-semibold text-blue-200 group-hover:text-blue-100",
+                  "font-semibold text-primary group-hover:text-primary/80",
                 fileItemView.isVideo &&
                   !fileItemView.isCurrentlyPlaying &&
-                  "text-emerald-200 group-hover:text-emerald-100",
+                  "text-emerald-600 dark:text-emerald-400 group-hover:text-emerald-700 dark:group-hover:text-emerald-300",
                 !fileItemView.isVideo && "text-muted-foreground group-hover:text-foreground"
               )}
             >
@@ -332,8 +332,8 @@
               class={cn(
                 "mt-1 mr-1 mb-1 ml-1 flex-shrink-0 rounded px-1.5 py-0.5 align-middle font-mono text-xs ring-1 transition-all duration-200",
                 fileItemView.isCurrentlyPlaying
-                  ? "bg-blue-900/25 text-blue-200 ring-blue-600/40"
-                  : "bg-emerald-900/20 text-emerald-200 ring-emerald-700/20"
+                  ? "bg-primary/10 text-primary ring-primary/30"
+                  : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 ring-emerald-500/30"
               )}
             >
               {#if displayDuration > 0}
@@ -348,7 +348,7 @@
 
           {#if fileItemView.hasCurrentVideoInCollapsedFolder}
             <LucideCircle
-              class={cn("h-2 w-2 fill-blue-400 text-blue-400", isCompact() ? "mr-1" : "mr-2")}
+              class={cn("h-2 w-2 fill-primary text-primary", isCompact() ? "mr-1" : "mr-2")}
             />
           {/if}
         </div>

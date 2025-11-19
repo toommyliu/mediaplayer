@@ -10,7 +10,7 @@
   import { sidebarState } from "$lib/state/sidebar.svelte";
 </script>
 
-<div class="border-sidebar-border bg-sidebar flex h-full flex-col border-r p-4 backdrop-blur-xl">
+<div class="flex h-full flex-col p-4">
   <Tabs.Root
     value={sidebarState.currentTab}
     class="flex h-full w-full flex-col"

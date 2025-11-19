@@ -95,15 +95,15 @@
 </script>
 
 <div
-  class="relative flex h-full flex-col overflow-hidden rounded-xl rounded-b-none bg-card/50 backdrop-blur-sm"
+  class="relative flex h-full flex-col overflow-hidden rounded-xl rounded-b-none"
 >
   {#if fileBrowserState.isLoading}
     <div
-      class="absolute inset-0 z-50 flex items-center justify-center bg-card/80 backdrop-blur-sm"
+      class="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm"
       transition:fade={{ duration: 200 }}
     >
       <div class="flex flex-col items-center gap-3">
-        <Loader2 class="h-8 w-8 animate-spin text-blue-400" />
+        <Loader2 class="text-primary h-8 w-8 animate-spin" />
         <span class="text-sm font-medium text-muted-foreground">Loading...</span>
       </div>
     </div>
@@ -223,7 +223,7 @@
             class={cn(
               "h-8 gap-2 text-sm font-medium",
               fileBrowserState.sortBy === "name"
-                ? "border-blue-500/30 bg-blue-500/20 text-blue-300 hover:bg-blue-500/30"
+                ? "border-primary/30 bg-primary/10 text-primary hover:bg-primary/20"
                 : "text-muted-foreground hover:bg-muted/60 hover:text-muted-foreground"
             )}
             onclick={() => setSortBy("name")}
@@ -245,7 +245,7 @@
             class={cn(
               "h-8 gap-2 text-sm font-medium",
               fileBrowserState.sortBy === "duration"
-                ? "border-blue-500/30 bg-blue-500/20 text-blue-300 hover:bg-blue-500/30"
+                ? "border-primary/30 bg-primary/10 text-primary hover:bg-primary/20"
                 : "text-muted-foreground hover:bg-muted/60 hover:text-muted-foreground"
             )}
             onclick={() => setSortBy("duration")}

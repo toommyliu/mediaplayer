@@ -85,20 +85,21 @@
 
 <Dialog.Root bind:open={settings.showDialog}>
   <Dialog.Content
-    class="flex h-full w-full flex-col overflow-hidden p-0 md:h-[85vh] md:w-[90vw] md:max-w-6xl md:flex-row"
+    class="flex h-full w-full flex-col overflow-hidden p-0 md:h-[85vh] md:w-[90vw] md:max-w-5xl md:flex-row bg-background/95 backdrop-blur-xl border-border/50 shadow-2xl"
     showCloseButton={false}
   >
     <div class="flex flex-1 flex-col overflow-hidden md:flex-row min-h-0">
-      <aside class="border-sidebar-border bg-sidebar flex-shrink-0 border-b md:border-b-0 md:border-r md:w-72">
+      <aside class="bg-sidebar/50 backdrop-blur-xl flex-shrink-0 border-b border-sidebar-border md:border-b-0 md:border-r md:w-64">
         <div class="flex h-full flex-col">
-          <div class="p-4">
+          <div class="p-4 pt-6">
+            <h2 class="mb-4 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Settings</h2>
             <nav class="space-y-1" role="tablist" bind:this={navElement} onkeydown={handleKeydown}>
               {#each categoryItems as category (category.id)}
                 <button
-                  class="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left {selectedTab ===
+                  class="group flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm transition-all duration-200 {selectedTab ===
                   category.id
-                    ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-lg'
-                    : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'}"
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}"
                   onclick={() => selectTab(category.id)}
                   role="tab"
                   aria-selected={selectedTab === category.id}
@@ -113,7 +114,7 @@
                   {:else if category.id === SettingsCategory.Shortcuts}
                     <Keyboard class="h-4 w-4" />
                   {/if}
-                  <div class="text-sm font-medium">{category.label}</div>
+                  <div class="font-medium">{category.label}</div>
                 </button>
               {/each}
             </nav>
@@ -121,20 +122,22 @@
         </div>
       </aside>
 
-      <main class="flex-1 p-6 min-h-0 overflow-y-auto">
-        {#key selectedTab}
-          <div class="h-full min-h-0">
-              {#if selectedTab === SettingsCategory.General}
-                <SettingsTabGeneral />
-              {:else if selectedTab === SettingsCategory.Playback}
-                <SettingsTabPlayback />
-              {:else if selectedTab === SettingsCategory.UI}
-                <SettingsTabUI />
-              {:else if selectedTab === SettingsCategory.Shortcuts}
-                <SettingsTabKeyboardShortcuts />
-              {/if}
-          </div>
-        {/key}
+      <main class="flex-1 min-h-0 overflow-y-auto bg-background">
+        <div class="h-full w-full p-6 md:p-8">
+          {#key selectedTab}
+            <div class="space-y-6">
+                {#if selectedTab === SettingsCategory.General}
+                  <SettingsTabGeneral />
+                {:else if selectedTab === SettingsCategory.Playback}
+                  <SettingsTabPlayback />
+                {:else if selectedTab === SettingsCategory.UI}
+                  <SettingsTabUI />
+                {:else if selectedTab === SettingsCategory.Shortcuts}
+                  <SettingsTabKeyboardShortcuts />
+                {/if}
+            </div>
+          {/key}
+        </div>
       </main>
     </div>
   </Dialog.Content>

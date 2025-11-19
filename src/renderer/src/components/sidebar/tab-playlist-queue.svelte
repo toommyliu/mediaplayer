@@ -108,7 +108,7 @@
             class={cn(
               "group flex cursor-grab items-center gap-2 rounded-md p-2 text-sm transition-colors active:cursor-grabbing",
               isCurrentlyPlaying(item)
-                ? "bg-blue-500/20 text-blue-400"
+                ? "bg-primary/10 text-primary"
                 : "text-muted-foreground hover:bg-muted/50"
             )}
             role="button"
@@ -167,7 +167,7 @@
           "flex h-8 w-8 items-center justify-center rounded transition-colors",
           queue.repeatMode === "off"
             ? "text-muted-foreground hover:bg-muted/60 hover:text-muted-foreground"
-            : "bg-blue-500/20 text-blue-400 hover:bg-blue-500/30"
+            : "bg-primary/10 text-primary hover:bg-primary/20"
         )}
         onclick={toggleRepeat}
       >
@@ -184,7 +184,7 @@
     cursor: grabbing;
   }
   :global(.drag-over) {
-    background-color: rgba(59, 130, 246, 0.1);
+    background-color: color-mix(in srgb, var(--primary), transparent 90%);
     cursor: grabbing;
   }
 </style>

@@ -23,9 +23,9 @@
           <DropdownMenu.Trigger>
             <Button variant="outline">
               {#if mode.current === "dark"}
-                <MoonIcon class="h-4 w-4 text-blue-400" />
+                <MoonIcon class="h-4 w-4 text-primary" />
               {:else if mode.current === "light"}
-                <SunIcon class="h-4 w-4 text-yellow-500" />
+                <SunIcon class="h-4 w-4 text-orange-500" />
               {/if}
 
               <div class="flex items-center gap-2">
@@ -36,11 +36,11 @@
           </DropdownMenu.Trigger>
           <DropdownMenu.Content align="start">
             <DropdownMenu.Item onclick={() => setMode("light")} class="flex items-center gap-2">
-              <SunIcon class="h-4 w-4 text-yellow-500" />
+              <SunIcon class="h-4 w-4 text-orange-500" />
               Light
             </DropdownMenu.Item>
             <DropdownMenu.Item onclick={() => setMode("dark")} class="flex items-center gap-2">
-              <MoonIcon class="h-4 w-4 text-blue-400" />
+              <MoonIcon class="h-4 w-4 text-primary" />
               Dark
             </DropdownMenu.Item>
             <DropdownMenu.Item onclick={() => resetMode()} class="flex items-center gap-2">

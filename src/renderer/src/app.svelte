@@ -122,7 +122,7 @@
   onDestroy(() => {
     fileBrowserState.reset();
     QueueManager.clear();
-  })
+  });
 
   function handlePaneGroupLayoutChange(sizes: number[]) {
     if (sizes.length > 1 && sidebarState.isOpen) {
@@ -133,42 +133,43 @@
 </script>
 
 <ModeWatcher />
-<div class="flex h-screen flex-col">
+<div class="bg-background flex h-screen flex-col overflow-hidden">
   <div class="flex w-full flex-1 overflow-hidden">
     <PaneGroup direction="horizontal" onLayoutChange={handlePaneGroupLayoutChange}>
-      <Pane defaultSize={100 - sidebarState.width} minSize={40}>
-        <main class="relative h-full">
+      {#if sidebarState.isOpen}
+        <Pane defaultSize={sidebarState.width} minSize={10} maxSize={40} class="z-20">
+          <aside class="glass h-full w-full">
+            <Sidebar />
+          </aside>
+        </Pane>
+
+        <PaneResizer
+          class="bg-sidebar-border hover:bg-primary/50 z-30 -ml-[1px] w-px transition-colors"
+        />
+      {/if}
+
+      <Pane defaultSize={100 - sidebarState.width} minSize={22}>
+        <main class="bg-background relative h-full w-full">
           {#if playerState.error}
             <div
-              class="absolute top-4 left-1/2 z-50 flex -translate-x-1/2 transform items-center space-x-2 rounded-lg px-4 py-2 text-white shadow-lg"
+              class="bg-destructive text-destructive-foreground absolute top-4 left-1/2 z-50 flex -translate-x-1/2 transform items-center space-x-2 rounded-lg px-4 py-2 shadow-lg"
             >
               <AlertTriangle size={16} />
               <span>{playerState.error}</span>
               <button
                 onclick={() => (playerState.error = null)}
-                class="ml-2 rounded px-2 py-1 hover:bg-red-600"
+                class="ml-2 rounded px-2 py-1 transition-colors hover:bg-black/20"
               >
                 <IconX size={16} />
               </button>
             </div>
           {/if}
 
-          <div class="flex h-full w-full flex-col bg-background">
+          <div class="flex h-full w-full flex-col">
             <VideoPlayer />
           </div>
         </main>
       </Pane>
-
-      {#if sidebarState.isOpen}
-        <PaneResizer
-          class="w-1 cursor-col-resize bg-gray-600 transition-colors hover:bg-gray-500"
-        />
-        <Pane defaultSize={sidebarState.width} minSize={10} maxSize={80}>
-          <aside class="h-full border-l border-gray-700">
-            <Sidebar />
-          </aside>
-        </Pane>
-      {/if}
     </PaneGroup>
   </div>
 </div>
