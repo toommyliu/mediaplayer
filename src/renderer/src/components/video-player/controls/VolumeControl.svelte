@@ -100,18 +100,18 @@
     <Tooltip.Root>
       <Tooltip.Trigger>
         <Button
+          class="group h-8 w-8 text-white"
           variant="ghost"
           size="icon"
-          class="flex-shrink-0"
           onclick={() => (volume.isMuted = !volume.isMuted)}
           onmouseenter={() => (isHovering = true)}
         >
           {#if volume.isMuted}
-            <LucideVolumeX class="size-4 text-white" />
+            <LucideVolumeX class="size-4" />
           {:else if volume.value <= 0.33}
-            <LucideVolume1 class="size-4 text-white" />
+            <LucideVolume1 class="size-4" />
           {:else}
-            <LucideVolume2 class="size-4 text-white" />
+            <LucideVolume2 class="size-4" />
           {/if}
         </Button>
       </Tooltip.Trigger>

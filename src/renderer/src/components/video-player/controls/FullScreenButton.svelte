@@ -25,7 +25,7 @@
 <Tooltip.Provider>
   <Tooltip.Root>
     <Tooltip.Trigger>
-      <Button variant="ghost" size="icon" onclick={toggleFullscreen}>
+      <Button class="h-8 w-8 text-white" variant="ghost" size="icon" onclick={toggleFullscreen}>
         {#if playerState.isFullscreen}
           <Minimize class="size-4" />
         {:else}
