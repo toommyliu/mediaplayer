@@ -310,8 +310,8 @@
                   "text-primary group-hover:text-primary/80 font-semibold",
                 fileItemView.isVideo &&
                   !fileItemView.isCurrentlyPlaying &&
-                  "text-emerald-600 group-hover:text-emerald-700 dark:text-emerald-400 dark:group-hover:text-emerald-300",
-                !fileItemView.isVideo && "text-muted-foreground group-hover:text-foreground"
+                  "text-sidebar-foreground group-hover:text-sidebar-foreground/80",
+                !fileItemView.isVideo && "text-muted-foreground group-hover:text-sidebar-foreground"
               )}
             >
               {item!.name}
@@ -333,7 +333,7 @@
                 "mt-1 mr-1 mb-1 ml-1 flex-shrink-0 rounded px-1.5 py-0.5 align-middle font-mono text-xs ring-1 transition-all duration-200",
                 fileItemView.isCurrentlyPlaying
                   ? "bg-primary/10 text-primary ring-primary/30"
-                  : "bg-emerald-500/10 text-emerald-600 ring-emerald-500/30 dark:text-emerald-400"
+                  : "bg-sidebar-accent text-muted-foreground ring-sidebar-border"
               )}
             >
               {#if displayDuration > 0}
