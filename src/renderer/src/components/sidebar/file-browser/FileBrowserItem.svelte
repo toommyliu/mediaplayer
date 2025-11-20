@@ -311,7 +311,8 @@
                 fileItemView.isVideo &&
                   !fileItemView.isCurrentlyPlaying &&
                   "text-sidebar-foreground group-hover:text-sidebar-foreground/80",
-                !fileItemView.isVideo && "text-muted-foreground group-hover:text-sidebar-foreground"
+                !fileItemView.isVideo &&
+                  "text-sidebar-foreground group-hover:text-sidebar-foreground/80"
               )}
             >
               {item!.name}
