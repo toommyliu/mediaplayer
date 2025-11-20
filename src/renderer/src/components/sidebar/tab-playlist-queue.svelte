@@ -109,7 +109,7 @@
               "group flex cursor-grab items-center gap-2 rounded-md p-2 text-sm transition-colors active:cursor-grabbing",
               isCurrentlyPlaying(item)
                 ? "bg-primary/10 text-primary"
-                : "text-muted-foreground hover:bg-muted/50"
+                : "text-foreground hover:bg-muted/50"
             )}
             role="button"
             tabindex="0"
@@ -122,7 +122,7 @@
 
             <!-- Video Info -->
             <div class="min-w-0 flex-1">
-              <div class="text-muted-foreground font-medium">
+              <div class="font-medium">
                 {item.name ?? "Unknown Video"}
               </div>
               {#if item.duration}
