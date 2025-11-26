@@ -3,19 +3,36 @@ import ffprobeInstaller from "@ffprobe-installer/ffprobe";
 import { app, BrowserWindow, dialog, type OpenDialogOptions } from "electron";
 import { execFile } from "node:child_process";
 import { chmod, readdir, stat } from "node:fs/promises";
+import { cpus } from "node:os";
 import { dirname, extname, join, resolve } from "node:path";
 import { promisify } from "node:util";
 import { sortFileTree, type FileTreeItem, type SortOptions } from "../shared";
 import { DEFAULT_SORT_OPTIONS, VIDEO_EXTENSIONS } from "../shared/constants";
 import { logger } from "./logger";
+import { WorkerPool } from "./worker/worker-pool";
 
 const execFileAsync = promisify(execFile);
 let isFfmpegInitialized = false;
 
-// Directory contents cache
-const directoryCache = new Map<string, DirectoryContents>();
+let workerPool: WorkerPool | null = null;
 
-// The previous dialog path
+async function getWorkerPool(): Promise<WorkerPool> {
+  if (!workerPool) {
+    const poolSize = Math.max(2, cpus().length);
+    const workerPath = join(__dirname, "worker", "fileWorker.js");
+    workerPool = new WorkerPool(poolSize, workerPath);
+    await workerPool.initialize();
+  }
+
+  return workerPool;
+}
+
+app.on("before-quit", async () => {
+  await workerPool?.terminate();
+  workerPool = null;
+});
+
+const directoryCache = new Map<string, DirectoryContents>();
 let previousPath: string | null = null;
 
 const isHidden = (name: string) => name.startsWith(".");
@@ -248,6 +265,8 @@ async function buildFileTree(
     tree: []
   };
 
+  const pool = await getWorkerPool();
+  
   const entries: {
     duration?: number;
     files?: FileTreeItem[];
@@ -256,35 +275,80 @@ async function buildFileTree(
     type: "folder" | "video";
   }[] = [];
 
-  for (const entry of await readdir(dirPath, { withFileTypes: true })) {
+  // First pass: collect all entries and kick off parallel operations
+  const videoFileTasks: { name: string; path: string; index: number }[] = [];
+  const subdirectoryTasks: { name: string; path: string; index: number; promise: Promise<PickerResult> }[] = [];
+  const dirEntries = await readdir(dirPath, { withFileTypes: true });
+
+  for (const entry of dirEntries) {
     if (isHidden(entry.name)) continue;
 
     if (entry.isDirectory()) {
       const subDirPath = normalizePath(join(dirPath, entry.name));
-      const subTree = await buildFileTree(subDirPath, sortOptions);
+      const index = entries.length;
+      
       entries.push({
         path: subDirPath,
         name: entry.name,
         type: "folder",
-        files: subTree.type === "folder" ? subTree.tree : []
+        files: []
+      });
+      
+      subdirectoryTasks.push({
+        name: entry.name,
+        path: subDirPath,
+        index,
+        promise: buildFileTree(subDirPath, sortOptions)
       });
     } else {
       const filePath = normalizePath(join(dirPath, entry.name));
       if (isVideoFile(entry.name)) {
-        const duration = await getVideoDuration(filePath);
+        const index = entries.length;
         entries.push({
           path: filePath,
           name: entry.name,
-          type: "video",
-          duration
+          type: "video"
         });
+        videoFileTasks.push({ name: entry.name, path: filePath, index });
       }
     }
   }
 
-  // Use shared sorting utilities to sort the entries
-  ret.tree = buildSortedFileTree(entries, sortOptions);
+  // Second pass: wait for all parallel operations to complete
+  const [subdirectoryResults, durations] = await Promise.all([
+    // Process all subdirectories in parallel
+    Promise.all(
+      subdirectoryTasks.map(task =>
+        task.promise.catch((error) => {
+          logger.error(error, `Error processing subdirectory ${task.path}`);
+          return { type: "folder", rootPath: task.path, tree: [] } as PickerResult;
+        })
+      )
+    ),
+    // Process all video files in parallel
+    videoFileTasks.length > 0
+      ? Promise.all(
+          videoFileTasks.map(task =>
+            pool.processFile(task.path).catch((error) => {
+              logger.error(error, `Error getting duration for ${task.path}`);
+              return 0;
+            })
+          )
+        )
+      : Promise.resolve([])
+  ]);
 
+  // Assign subdirectory results back to entries
+  for (let i = 0; i < subdirectoryTasks.length; i++) {
+    const result = subdirectoryResults[i];
+    entries[subdirectoryTasks[i].index].files = result.type === "folder" ? result.tree : [];
+  }
+
+  // Assign video durations back to entries
+  for (let i = 0; i < videoFileTasks.length; i++)
+    entries[videoFileTasks[i].index].duration = durations[i];
+
+  ret.tree = buildSortedFileTree(entries, sortOptions);
   return ret;
 }
 
@@ -300,6 +364,7 @@ export async function loadDirectoryContents(
   }
 
   try {
+    const pool = await getWorkerPool();
     const entries = await readdir(resolvedPath, { withFileTypes: true });
 
     const parentPath = normalizePath(dirname(resolvedPath));
@@ -313,8 +378,11 @@ export async function loadDirectoryContents(
       type: "folder" | "video";
     }[] = [];
 
-      for (const entry of entries) {
-        if (isHidden(entry.name)) continue;
+    // First pass: collect all entries
+    const videoFileTasks: { name: string; path: string; index: number }[] = [];
+
+    for (const entry of entries) {
+      if (isHidden(entry.name)) continue;
 
       const fullPath = normalizePath(join(resolvedPath, entry.name));
 
@@ -326,14 +394,29 @@ export async function loadDirectoryContents(
           files: []
         });
       } else if (isVideoFile(entry.name)) {
-        const duration = await getVideoDuration(fullPath);
+        const index = rawEntries.length;
         rawEntries.push({
           name: entry.name,
           path: fullPath,
-          type: "video",
-          duration
+          type: "video"
         });
+        videoFileTasks.push({ name: entry.name, path: fullPath, index });
       }
+    }
+
+    // Second pass: process all video files in parallel using worker pool
+    if (videoFileTasks.length > 0) {
+      const durationPromises = videoFileTasks.map(task =>
+        pool.processFile(task.path).catch((error) => {
+          logger.error(error, `Error getting duration for ${task.path}`);
+          return 0; // fallback to 0 if error occurs
+        })
+      );
+
+      const durations = await Promise.all(durationPromises);
+
+      for (let i = 0; i < videoFileTasks.length; i++)
+        rawEntries[videoFileTasks[i].index].duration = durations[i];
     }
 
     const sortedFiles = buildSortedFileTree(rawEntries, sortOptions);
