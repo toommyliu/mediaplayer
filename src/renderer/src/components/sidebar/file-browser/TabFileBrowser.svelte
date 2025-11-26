@@ -12,8 +12,6 @@
   import Loader2 from "~icons/lucide/loader-2";
 
   import { fileBrowserState } from "$lib/state/file-browser.svelte";
-  import { sidebarState } from "$lib/state/sidebar.svelte";
-  import { settings } from "$lib/state/settings.svelte";
   import { playerState } from "$lib/state/player.svelte";
 
   import { queue } from "$/lib/state/queue.svelte";
@@ -34,18 +32,13 @@
     return sortFileTree(fileBrowserState.fileSystem, sortOptions);
   });
 
-  const isCompact = $derived(() => {
-    const mode = settings.fileBrowserCompactness;
-    if (mode === "compact" || mode === "mini") return true;
-    if (mode === "comfortable") return false;
-    return sidebarState.width <= 16;
-  });
+  let containerWidth = $state(0);
+  const isCompact = $derived(containerWidth < 300);
 
   async function handleDblClick(ev: MouseEvent) {
     if (fileBrowserState.isLoading) return;
 
     const isDblClick = ev.detail === 2;
-
     if (isDblClick && hasNoFiles()) await resetAndBrowse();
   }
 
@@ -94,7 +87,10 @@
   }
 </script>
 
-<div class="relative flex h-full flex-col overflow-hidden rounded-xl rounded-b-none">
+<div
+  class="relative flex h-full flex-col overflow-hidden rounded-xl rounded-b-none"
+  bind:clientWidth={containerWidth}
+>
   {#if fileBrowserState.isLoading}
     <div
       class="bg-background/80 absolute inset-0 z-50 flex items-center justify-center backdrop-blur-sm"
@@ -202,19 +198,15 @@
           {/if}
 
           {#each sortedFileSystem() as item (item.path)}
-            <FileBrowserItem {item} depth={0} />
+            <FileBrowserItem {item} depth={0} {isCompact} />
           {/each}
         </div>
       {/if}
     </div>
 
     <div class="border-sidebar-border/60 mt-4 rounded-b-md border-t">
-      <div
-        class="flex flex-col items-center gap-2 p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3"
-      >
-        <div
-          class="flex w-full flex-wrap items-center justify-center gap-x-2 gap-y-2 sm:w-auto sm:justify-start"
-        >
+      <div class="flex items-center justify-between gap-2 p-3">
+        <div class="flex items-center gap-2">
           <Button
             variant={fileBrowserState.sortBy === "name" ? "secondary" : "ghost"}
             size="sm"
@@ -235,7 +227,9 @@
             {:else}
               <ArrowUpAZ class="h-4 w-4 opacity-60" />
             {/if}
-            <span class="hidden sm:inline">Name</span>
+            {#if !isCompact}
+              <span class="hidden sm:inline">Name</span>
+            {/if}
           </Button>
           <Button
             variant={fileBrowserState.sortBy === "duration" ? "secondary" : "ghost"}
@@ -257,17 +251,22 @@
             {:else}
               <ArrowUp10 class="h-4 w-4 opacity-60" />
             {/if}
-            <span class={cn("hidden sm:inline", isCompact() && "hidden")}>Duration</span>
+            {#if !isCompact}
+              <span class="hidden sm:inline">Duration</span>
+            {/if}
           </Button>
         </div>
-        <Button
-          size="icon"
-          variant="ghost"
-          class="text-muted-foreground hover:bg-muted/60 hover:text-muted-foreground mt-2 h-8 w-full sm:mt-0 sm:ml-auto sm:w-8"
-          onclick={resetAndBrowse}
-        >
-          <ListRestart class="h-4 w-4" />
-        </Button>
+        <div class="ml-auto flex items-center gap-1">
+          <Button
+            size="icon"
+            variant="ghost"
+            class="text-muted-foreground hover:bg-muted/60 hover:text-muted-foreground h-8 w-8"
+            onclick={resetAndBrowse}
+            title="Reload"
+          >
+            <ListRestart class="h-4 w-4" />
+          </Button>
+        </div>
       </div>
     </div>
   {/if}

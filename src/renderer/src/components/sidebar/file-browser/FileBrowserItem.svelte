@@ -3,13 +3,9 @@
   import FileBrowserItem from "./FileBrowserItem.svelte";
   import Loader2 from "~icons/lucide/loader-2";
   import LucideCircle from "~icons/lucide/circle";
-  import FileIcon from "~icons/lucide/file";
-  import FolderIcon from "~icons/lucide/folder";
 
   import { fileBrowserState, type FileSystemItem } from "$lib/state/file-browser.svelte";
   import { platformState } from "$lib/state/platform.svelte";
-  import { sidebarState } from "$lib/state/sidebar.svelte";
-  import { settings, type FileBrowserCompactness } from "$lib/state/settings.svelte";
   import { playerState } from "$lib/state/player.svelte";
 
   import { QueueManager } from "$lib/queue-manager";
@@ -17,7 +13,6 @@
   import { cn } from "$lib/utils";
 
   import { client } from "$/tipc";
-  import { makeTimeString } from "$lib/makeTimeString";
 
   import { sortFileTree, type SortOptions } from "$shared/index";
 
@@ -192,29 +187,16 @@
     return null;
   }
 
-  let { depth, item }: Props = $props();
-
   type Props = {
     depth: number;
     item: FileSystemItem;
+    isCompact?: boolean;
   };
+
+  let { depth, item, isCompact = false }: Props = $props();
 
   const fileItemView = $derived(renderFileSystemItem(item, depth));
   const displayDuration = item.duration ?? 0;
-
-  const isCompact = $derived(() => {
-    const mode: FileBrowserCompactness = settings.fileBrowserCompactness;
-    if (mode === "compact" || mode === "mini") return true;
-    if (mode === "comfortable") return false;
-    return sidebarState.width <= 16; // auto
-  });
-  const isMini = $derived(() => {
-    const mode: FileBrowserCompactness = settings.fileBrowserCompactness;
-    if (mode === "mini") return true;
-    if (mode === "compact") return false;
-    if (mode === "comfortable") return false;
-    return sidebarState.width <= 11; // auto
-  });
 </script>
 
 {#key fileItemView.item.path}
@@ -233,12 +215,8 @@
         "group relative z-10 flex min-h-[28px] items-center transition-all duration-200",
         fileBrowserState.isLoading && "cursor-not-allowed opacity-50"
       )}
-      title={isMini()
-        ? `${item.name} ${displayDuration > 0 ? "— " + makeTimeString(displayDuration) : ""}`
-        : undefined}
-      aria-label={isMini()
-        ? `${item.name} ${displayDuration > 0 ? "— " + makeTimeString(displayDuration) : ""}`
-        : undefined}
+      title={undefined}
+      aria-label={undefined}
     >
       <div
         class={cn(
@@ -247,7 +225,7 @@
             ? "border-primary/30 bg-primary/10 hover:border-primary/40 hover:bg-primary/20"
             : "hover:border-input/30 hover:bg-muted/40 border-transparent"
         )}
-        style={`padding-left: ${isMini() ? 8 : depth * 12 + 8}px;`}
+        style={`padding-left: ${depth * 12 + 8}px;`}
         data-item-trigger="true"
         data-path={item.path}
         tabindex={0}
@@ -291,47 +269,32 @@
       >
         <div class="mr-2 w-4 flex-shrink-0"></div>
 
-        <div class="flex min-h-[28px] min-w-0 flex-1 items-center">
-          {#if isMini()}
-            <div class="flex items-center gap-2">
-              {#if fileItemView.isFolder}
-                <FolderIcon class="h-4 w-4 opacity-80" />
-              {:else}
-                <FileIcon class="h-4 w-4 opacity-80" />
-              {/if}
-              <span class="sr-only">{item!.name}</span>
-            </div>
-          {:else}
-            <span
-              class={cn(
-                "flex flex-1 items-center truncate font-medium transition-colors duration-200",
-                isCompact() ? "text-xs" : "text-sm",
-                fileItemView.isCurrentlyPlaying &&
-                  "text-primary group-hover:text-primary/80 font-semibold",
-                fileItemView.isVideo &&
-                  !fileItemView.isCurrentlyPlaying &&
-                  "text-sidebar-foreground group-hover:text-sidebar-foreground/80",
-                !fileItemView.isVideo &&
-                  "text-sidebar-foreground group-hover:text-sidebar-foreground/80"
-              )}
-            >
-              {item!.name}
-              {#if item!.type === "folder"}
-                /
-              {/if}
-            </span>
-          {/if}
+        <div class={cn("flex min-h-[28px] min-w-0 flex-1 items-center")}>
+          <span
+            class={cn(
+              "flex flex-1 items-center truncate text-sm font-medium transition-colors duration-200",
+              fileItemView.isCurrentlyPlaying &&
+                "text-primary group-hover:text-primary/80 font-semibold",
+              fileItemView.isVideo &&
+                !fileItemView.isCurrentlyPlaying &&
+                "text-sidebar-foreground group-hover:text-sidebar-foreground/80"
+            )}
+          >
+            {item!.name}
+            {#if item!.type === "folder"}
+              /
+            {/if}
+          </span>
 
           {#if fileItemView.isLoading}
-            <Loader2
-              class={cn("h-4 w-4 animate-spin text-blue-400", isCompact() ? "ml-1" : "ml-2")}
-            />
+            <Loader2 class={cn("ml-2 h-4 w-4 animate-spin text-blue-400")} />
           {/if}
 
-          {#if fileItemView.isVideo && !isCompact() && !isMini()}
+          {#if fileItemView.isVideo}
             <span
               class={cn(
                 "mt-1 mr-1 mb-1 ml-1 flex-shrink-0 rounded px-1.5 py-0.5 align-middle font-mono text-xs ring-1 transition-all duration-200",
+                isCompact ? "hidden" : "flex sm:flex",
                 fileItemView.isCurrentlyPlaying
                   ? "bg-primary/10 text-primary ring-primary/30"
                   : "bg-sidebar-accent text-muted-foreground ring-sidebar-border"
@@ -348,9 +311,7 @@
           {/if}
 
           {#if fileItemView.hasCurrentVideoInCollapsedFolder}
-            <LucideCircle
-              class={cn("fill-primary text-primary h-2 w-2", isCompact() ? "mr-1" : "mr-2")}
-            />
+            <LucideCircle class={cn("fill-primary text-primary mr-2 h-2 w-2")} />
           {/if}
         </div>
       </div>
@@ -431,7 +392,7 @@
 
   {#if fileItemView.isFolder && fileItemView.isExpanded && fileItemView.item.files}
     {#each fileItemView.item.files as subItem (`${subItem.path}-${subItem.name}`)}
-      <FileBrowserItem item={subItem} depth={fileItemView.depth + 1} />
+      <FileBrowserItem item={subItem} depth={fileItemView.depth + 1} {isCompact} />
     {/each}
   {/if}
 {/key}
