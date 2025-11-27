@@ -4,6 +4,8 @@
   import { queue } from "$lib/state/queue.svelte";
   import { cn } from "$lib/utils";
   import VideoPlayerControls from "./video-player-controls.svelte";
+  import UpNextNotification from "./notifications/UpNextNotification.svelte";
+  import VideoInfoDisplay from "./notifications/VideoInfoDisplay.svelte";
 
   type AspectRatioMode = "contain" | "cover" | "fill";
   let aspectRatio: AspectRatioMode = $state("contain");
@@ -292,7 +294,7 @@
       onmouseleave={handleMouseLeave}
     >
       <div
-        class="relative"
+        class="shrink-0"
         style:max-width={aspectRatio === "contain" ? "100%" : undefined}
         style:max-height={aspectRatio === "contain" ? "100%" : undefined}
         style:aspect-ratio={aspectRatio === "contain"
@@ -322,6 +324,9 @@
         >
         </video>
       </div>
+
+      <VideoInfoDisplay visible={showControls} />
+      <UpNextNotification />
 
       <!-- Floating controls overlay -->
       <div
