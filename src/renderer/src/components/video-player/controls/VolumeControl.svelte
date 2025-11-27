@@ -3,8 +3,8 @@
   import { Button } from "$ui/button/";
 
   import IconVolumeMute from "~icons/tabler/volume-3";
-  import IconVolumeLoud from "~icons/tabler/volume";
-  import IconVolumeMedium from "~icons/tabler/volume-2";
+  import IconVolumeHigh from "~icons/tabler/volume";
+  import IconVolumeLow from "~icons/tabler/volume-2";
 
   import { cn } from "$lib/utils";
   import { volume } from "$/lib/state/volume.svelte";
@@ -109,9 +109,9 @@
           {#if volume.isMuted}
             <IconVolumeMute class="size-4" />
           {:else if volume.value <= 0.33}
-            <IconVolumeLoud class="size-4" />
+            <IconVolumeLow class="size-4" />
           {:else}
-            <IconVolumeMedium class="size-4" />
+            <IconVolumeHigh class="size-4" />
           {/if}
         </Button>
       </Tooltip.Trigger>
