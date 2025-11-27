@@ -220,7 +220,7 @@
     >
       <div
         class={cn(
-          "flex min-h-[28px] w-full items-center rounded-md border transition-all duration-200",
+          "relative flex min-h-[28px] w-full items-center rounded-md border transition-all duration-200",
           fileItemView.isCurrentlyPlaying
             ? "border-primary/30 bg-primary/10 hover:border-primary/40 hover:bg-primary/20"
             : "hover:border-input/30 hover:bg-muted/40 border-transparent"
@@ -267,6 +267,21 @@
           }
         }}
       >
+        {#if depth > 0}
+          {#each Array(depth).keys() as i (i)}
+            <!-- vertical -->
+            <div
+              class="bg-border/60 absolute top-0 bottom-0 w-0.5"
+              style={`left: ${i * 12 + 8}px;`}
+            ></div>
+          {/each}
+          <!-- horizontal -->
+          <div
+            class="bg-border/60 absolute top-1/2 h-0.5"
+            style={`left: ${(depth - 1) * 12 + 8}px; width: 8px;`}
+          ></div>
+        {/if}
+
         <div class="mr-2 w-4 flex-shrink-0"></div>
 
         <div class={cn("flex min-h-[28px] min-w-0 flex-1 items-center")}>
