@@ -346,7 +346,7 @@
   ></div>
 {/if}
 
-{#if !sidebarState.isOpen && isHoverOpen}
+{#if !sidebarState.isOpen && isHoverOpen && !isDraggingSidebar}
   <div
     role="presentation"
     class="bg-background/95 border-sidebar-border fixed top-4 bottom-4 z-50 w-[300px] overflow-hidden rounded-xl border shadow-2xl backdrop-blur-md"
