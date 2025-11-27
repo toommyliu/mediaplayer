@@ -1,8 +1,8 @@
 <script lang="ts">
   import * as ContextMenu from "$ui/context-menu/";
   import FileBrowserItem from "./FileBrowserItem.svelte";
-  import Loader2 from "~icons/lucide/loader-2";
-  import LucideCircle from "~icons/lucide/circle";
+  import IconLoader2 from "~icons/tabler/loader-2";
+  import IconCircle from "~icons/tabler/circle";
 
   import { fileBrowserState, type FileSystemItem } from "$lib/state/file-browser.svelte";
   import { platformState } from "$lib/state/platform.svelte";
@@ -302,7 +302,7 @@
           </span>
 
           {#if fileItemView.isLoading}
-            <Loader2 class={cn("ml-2 h-4 w-4 animate-spin text-blue-400")} />
+            <IconLoader2 class={cn("ml-2 h-4 w-4 animate-spin text-blue-400")} />
           {/if}
 
           {#if fileItemView.isVideo}
@@ -326,7 +326,7 @@
           {/if}
 
           {#if fileItemView.hasCurrentVideoInCollapsedFolder}
-            <LucideCircle class={cn("fill-primary text-primary mr-2 h-2 w-2")} />
+            <IconCircle class={cn("fill-primary text-primary mr-2 h-2 w-2")} />
           {/if}
         </div>
       </div>

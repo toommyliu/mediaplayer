@@ -2,7 +2,7 @@
   import * as Tooltip from "$ui/tooltip/";
   import { Button } from "$ui/button/";
 
-  import Menu from "~icons/lucide/menu";
+  import Menu from "~icons/tabler/menu-2";
 
   import { sidebarState } from "$lib/state/sidebar.svelte";
   import { cn } from "$lib/utils";

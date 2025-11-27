@@ -2,9 +2,9 @@
   import * as Tooltip from "$ui/tooltip/";
   import { Button } from "$ui/button/";
 
-  import LucideVolumeX from "~icons/lucide/volume-x";
-  import LucideVolume1 from "~icons/lucide/volume-1";
-  import LucideVolume2 from "~icons/lucide/volume-2";
+  import IconVolumeMute from "~icons/tabler/volume-3";
+  import IconVolumeLoud from "~icons/tabler/volume";
+  import IconVolumeMedium from "~icons/tabler/volume-2";
 
   import { cn } from "$lib/utils";
   import { volume } from "$/lib/state/volume.svelte";
@@ -107,11 +107,11 @@
           onmouseenter={() => (isHovering = true)}
         >
           {#if volume.isMuted}
-            <LucideVolumeX class="size-4" />
+            <IconVolumeMute class="size-4" />
           {:else if volume.value <= 0.33}
-            <LucideVolume1 class="size-4" />
+            <IconVolumeLoud class="size-4" />
           {:else}
-            <LucideVolume2 class="size-4" />
+            <IconVolumeMedium class="size-4" />
           {/if}
         </Button>
       </Tooltip.Trigger>

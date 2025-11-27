@@ -2,7 +2,7 @@
   import { Button } from "$ui/button/";
   import * as Tooltip from "$ui/tooltip/";
 
-  import LucideFastForward from "~icons/lucide/fast-forward";
+  import IconFastForward from "~icons/tabler/player-skip-forward";  
 
   import { playerState } from "$lib/state/player.svelte";
   import { queue } from "$lib/state/queue.svelte";
@@ -18,7 +18,7 @@
         onclick={async () => playerState.playNextVideo()}
         disabled={!queue.currentItem || playerState.isLoading}
       >
-        <LucideFastForward class="size-4" />
+        <IconFastForward class="size-4" />
       </Button>
     </Tooltip.Trigger>
     <Tooltip.Content>

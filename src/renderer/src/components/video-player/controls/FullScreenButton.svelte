@@ -2,8 +2,8 @@
   import * as Tooltip from "$ui/tooltip/";
   import { Button } from "$ui/button/";
 
-  import Maximize from "~icons/lucide/maximize";
-  import Minimize from "~icons/lucide/minimize";
+  import Maximize from "~icons/tabler/maximize";
+  import Minimize from "~icons/tabler/minimize";
 
   import { playerState } from "$lib/state/player.svelte";
 

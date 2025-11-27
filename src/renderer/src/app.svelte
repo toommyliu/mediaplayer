@@ -10,8 +10,8 @@
   import { settings } from "$lib/state/settings.svelte";
   import { sidebarState } from "$lib/state/sidebar.svelte";
   import { droppable, type DragDropState } from "@thisux/sveltednd";
-  import AlertTriangle from "lucide-svelte/icons/alert-triangle";
-  import IconX from "lucide-svelte/icons/x";
+  import AlertTriangle from "~icons/tabler/alert-triangle";
+  import IconX from "~icons/tabler/x";
   import { ModeWatcher } from "mode-watcher";
   import { Pane, PaneGroup, PaneResizer } from "paneforge";
   import { onDestroy, onMount } from "svelte";

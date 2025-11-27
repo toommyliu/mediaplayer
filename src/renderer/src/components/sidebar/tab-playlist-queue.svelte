@@ -1,9 +1,9 @@
 <script lang="ts">
-  import IconMusic from "lucide-svelte/icons/music";
-  import IconRepeat from "lucide-svelte/icons/repeat";
-  import IconRepeat1 from "lucide-svelte/icons/repeat-1";
-  import IconShuffle from "lucide-svelte/icons/shuffle";
-  import IconX from "lucide-svelte/icons/x";
+  import IconMusic from "~icons/tabler/music";
+  import IconRepeat from "~icons/tabler/repeat";
+  import IconRepeat1 from "~icons/tabler/repeat-once";
+  import IconShuffle from "~icons/tabler/arrows-shuffle";
+  import IconX from "~icons/tabler/x";
   import { draggable, droppable, type DragDropState } from "@thisux/sveltednd";
   import { flip } from "svelte/animate";
   import type { QueueItem } from "$lib/state/queue.svelte";

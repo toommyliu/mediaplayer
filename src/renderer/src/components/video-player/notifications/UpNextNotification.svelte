@@ -5,7 +5,7 @@
   import { fly } from "svelte/transition";
   import { cubicOut } from "svelte/easing";
   import { cn } from "$lib/utils";
-  import IconX from "lucide-svelte/icons/x";
+  import IconX from "~icons/tabler/x";
 
   let isDismissed = $state(false);
 

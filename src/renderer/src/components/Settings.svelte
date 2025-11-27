@@ -1,5 +1,8 @@
 <script lang="ts">
-  import { Settings, Play, Palette, Keyboard } from "lucide-svelte";
+  import Settings from "~icons/tabler/settings";
+  import Play from "~icons/tabler/play";
+  import Palette from "~icons/tabler/palette";
+  import Keyboard from "~icons/tabler/keyboard";
   import SettingsTabGeneral from "$/components/settings/SettingsTabGeneral.svelte";
   import SettingsTabKeyboardShortcuts from "$/components/settings/SettingsTabKeyboardShortcuts.svelte";
   import SettingsTabPlayback from "$/components/settings/SettingsTabPlayback.svelte";
@@ -39,30 +42,30 @@
   let navElement: HTMLElement | null = null;
 
   function selectTab(id: string) {
-    const newIndex = categoryItems.findIndex(cat => cat.id === id);
+    const newIndex = categoryItems.findIndex((cat) => cat.id === id);
     selectedTab = id;
     if (navElement) {
-      const buttons = navElement.querySelectorAll('button');
+      const buttons = navElement.querySelectorAll("button");
       (buttons[newIndex] as HTMLElement)?.focus();
     }
   }
 
   function handleKeydown(event: KeyboardEvent) {
     if (!navElement) return;
-    const currentIndex = categoryItems.findIndex(cat => cat.id === selectedTab);
+    const currentIndex = categoryItems.findIndex((cat) => cat.id === selectedTab);
     let newIndex = currentIndex;
 
     switch (event.key) {
-      case 'ArrowDown':
+      case "ArrowDown":
         newIndex = (currentIndex + 1) % categoryItems.length;
         break;
-      case 'ArrowUp':
+      case "ArrowUp":
         newIndex = currentIndex === 0 ? categoryItems.length - 1 : currentIndex - 1;
         break;
-      case 'Home':
+      case "Home":
         newIndex = 0;
         break;
-      case 'End':
+      case "End":
         newIndex = categoryItems.length - 1;
         break;
       default:
@@ -85,14 +88,20 @@
 
 <Dialog.Root bind:open={settings.showDialog}>
   <Dialog.Content
-    class="flex h-full w-full flex-col overflow-hidden p-0 md:h-[85vh] md:w-[90vw] md:max-w-5xl md:flex-row bg-background/95 backdrop-blur-xl border-border/50 shadow-2xl"
+    class="bg-background/95 border-border/50 flex h-full w-full flex-col overflow-hidden p-0 shadow-2xl backdrop-blur-xl md:h-[85vh] md:w-[90vw] md:max-w-5xl md:flex-row"
     showCloseButton={false}
   >
-    <div class="flex flex-1 flex-col overflow-hidden md:flex-row min-h-0">
-      <aside class="bg-sidebar/50 backdrop-blur-xl flex-shrink-0 border-b border-sidebar-border md:border-b-0 md:border-r md:w-64">
+    <div class="flex min-h-0 flex-1 flex-col overflow-hidden md:flex-row">
+      <aside
+        class="bg-sidebar/50 border-sidebar-border flex-shrink-0 border-b backdrop-blur-xl md:w-64 md:border-r md:border-b-0"
+      >
         <div class="flex h-full flex-col">
           <div class="p-4 pt-6">
-            <h2 class="mb-4 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Settings</h2>
+            <h2
+              class="text-muted-foreground mb-4 px-3 text-xs font-semibold tracking-wider uppercase"
+            >
+              Settings
+            </h2>
             <nav class="space-y-1" role="tablist" bind:this={navElement} onkeydown={handleKeydown}>
               {#each categoryItems as category (category.id)}
                 <button
@@ -122,19 +131,19 @@
         </div>
       </aside>
 
-      <main class="flex-1 min-h-0 overflow-y-auto bg-background">
+      <main class="bg-background min-h-0 flex-1 overflow-y-auto">
         <div class="h-full w-full p-6 md:p-8">
           {#key selectedTab}
             <div class="space-y-6">
-                {#if selectedTab === SettingsCategory.General}
-                  <SettingsTabGeneral />
-                {:else if selectedTab === SettingsCategory.Playback}
-                  <SettingsTabPlayback />
-                {:else if selectedTab === SettingsCategory.UI}
-                  <SettingsTabUI />
-                {:else if selectedTab === SettingsCategory.Shortcuts}
-                  <SettingsTabKeyboardShortcuts />
-                {/if}
+              {#if selectedTab === SettingsCategory.General}
+                <SettingsTabGeneral />
+              {:else if selectedTab === SettingsCategory.Playback}
+                <SettingsTabPlayback />
+              {:else if selectedTab === SettingsCategory.UI}
+                <SettingsTabUI />
+              {:else if selectedTab === SettingsCategory.Shortcuts}
+                <SettingsTabKeyboardShortcuts />
+              {/if}
             </div>
           {/key}
         </div>

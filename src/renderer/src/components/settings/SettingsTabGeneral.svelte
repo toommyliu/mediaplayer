@@ -1,7 +1,7 @@
 <script lang="ts">
-  import ChevronDownIcon from "lucide-svelte/icons/chevron-down";
-  import MoonIcon from "lucide-svelte/icons/moon";
-  import SunIcon from "lucide-svelte/icons/sun";
+  import ChevronDownIcon from "~icons/tabler/chevron-down";
+  import MoonIcon from "~icons/tabler/moon";
+  import SunIcon from "~icons/tabler/sun";
 
   import * as DropdownMenu from "$ui/dropdown-menu/";
   import { Button } from "$ui/button/";
@@ -23,7 +23,7 @@
           <DropdownMenu.Trigger>
             <Button variant="outline">
               {#if mode.current === "dark"}
-                <MoonIcon class="h-4 w-4 text-primary" />
+                <MoonIcon class="text-primary h-4 w-4" />
               {:else if mode.current === "light"}
                 <SunIcon class="h-4 w-4 text-orange-500" />
               {/if}
@@ -40,7 +40,7 @@
               Light
             </DropdownMenu.Item>
             <DropdownMenu.Item onclick={() => setMode("dark")} class="flex items-center gap-2">
-              <MoonIcon class="h-4 w-4 text-primary" />
+              <MoonIcon class="text-primary h-4 w-4" />
               Dark
             </DropdownMenu.Item>
             <DropdownMenu.Item onclick={() => resetMode()} class="flex items-center gap-2">

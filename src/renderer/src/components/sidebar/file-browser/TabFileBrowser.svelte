@@ -2,14 +2,14 @@
   import { Button } from "$ui/button";
   import FileBrowserItem from "./FileBrowserItem.svelte";
 
-  import AlertCircle from "~icons/lucide/alert-circle";
-  import ArrowDown01 from "~icons/lucide/arrow-down-01";
-  import ArrowDownAZ from "~icons/lucide/arrow-down-a-z";
-  import ArrowUp10 from "~icons/lucide/arrow-up-10";
-  import ArrowUpAZ from "~icons/lucide/arrow-up-a-z";
-  import FolderPlus from "~icons/lucide/folder-plus";
-  import ListRestart from "~icons/lucide/list-restart";
-  import Loader2 from "~icons/lucide/loader-2";
+  import AlertCircle from "~icons/tabler/alert-circle";
+  import ArrowDown01 from "~icons/tabler/sort-descending-numbers";
+  import ArrowDownAZ from "~icons/tabler/sort-descending-letters";
+  import ArrowUp10 from "~icons/tabler/sort-ascending-numbers";
+  import ArrowUpAZ from "~icons/tabler/sort-ascending-letters";
+  import FolderPlus from "~icons/tabler/folder-plus";
+  import ListRestart from "~icons/tabler/refresh";
+  import Loader2 from "~icons/tabler/loader-2";
 
   import { fileBrowserState } from "$lib/state/file-browser.svelte";
   import { playerState } from "$lib/state/player.svelte";

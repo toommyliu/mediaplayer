@@ -2,7 +2,7 @@
   import { Button } from "$ui/button/";
   import * as Tooltip from "$ui/tooltip/";
 
-  import LucideRewind from "~icons/lucide/rewind";
+  import IconRewind from "~icons/tabler/player-skip-back";
 
   import { playerState } from "$lib/state/player.svelte";
   import { queue } from "$lib/state/queue.svelte";
@@ -18,7 +18,7 @@
         onclick={async () => playerState.playPreviousVideo()}
         disabled={!queue.currentItem || playerState.isLoading}
       >
-        <LucideRewind class="size-4" />
+        <IconRewind class="size-4" />
       </Button>
     </Tooltip.Trigger>
     <Tooltip.Content>
