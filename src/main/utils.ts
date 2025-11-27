@@ -27,9 +27,18 @@ async function getWorkerPool(): Promise<WorkerPool> {
   return workerPool;
 }
 
-app.on("before-quit", async () => {
+async function terminateWorkerPool() {
   await workerPool?.terminate();
   workerPool = null;
+}
+
+app.on('web-contents-created', (_ev, webContents) => {
+  webContents.on('did-start-navigation', async () => {
+    await terminateWorkerPool();
+  });
+});
+app.on("before-quit", async () => {
+  await terminateWorkerPool();
 });
 
 const directoryCache = new Map<string, DirectoryContents>();
