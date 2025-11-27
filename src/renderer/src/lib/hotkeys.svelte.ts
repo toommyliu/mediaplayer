@@ -6,11 +6,10 @@ import { platformState } from "$lib/state/platform.svelte";
 import { playerState } from "$lib/state/player.svelte";
 import { queue } from "$lib/state/queue.svelte";
 import { sidebarState } from "$lib/state/sidebar.svelte";
+import { settings } from "$lib/state/settings.svelte";
 import { volume } from "$lib/state/volume.svelte";
-import { SEEK_TIME_STEP, VOLUME_STEP } from "./constants";
-import { navigateToParent } from "./file-browser.svelte";
+import { SEEK_TIME_STEP, VOLUME_STEP, FRAME_TIME_STEP } from "./constants";
 import { logger } from "./logger";
-import { playNextVideo, playPreviousVideo } from "./video-playback";
 
 type HotkeyAction = {
   description: string;
@@ -18,6 +17,7 @@ type HotkeyAction = {
   handler(event: KeyboardEvent): void;
   id: string;
   keys: string[];
+  configurable?: boolean; // whether a user can change this hotkey via the UI
 };
 
 type HotkeyCategory = {
@@ -43,6 +43,7 @@ class HotkeyConfig {
 
     this.modKey = platformState.isMac ? "command" : "ctrl";
     this.initializeDefaultConfig();
+    this.saveHotkeys();
     this.initialized = true;
   }
 
@@ -84,6 +85,20 @@ class HotkeyConfig {
             description: "Seek forward",
             keys: ["right"],
             handler: this.seekForward,
+            enabled: true
+          },
+          {
+            id: "frameBackward",
+            description: "Frame backward",
+            keys: [","],
+            handler: this.frameBackward,
+            enabled: true
+          },
+          {
+            id: "frameForward",
+            description: "Frame forward",
+            keys: ["."],
+            handler: this.frameForward,
             enabled: true
           },
           {
@@ -152,8 +167,33 @@ class HotkeyConfig {
       {
         name: "Time Navigation",
         actions: []
+      },
+      {
+        name: "Application",
+        actions: [
+          {
+            id: "openSettings",
+            description: "Open settings",
+            keys: [`${this.modKey}+,`],
+            handler: this.openSettings,
+            enabled: true,
+            configurable: false
+          }
+        ]
       }
     ];
+
+    // Load saved hotkeys and apply them
+    const saved = this.loadHotkeys();
+    if (saved) {
+      for (const category of this.categories) {
+        for (const action of category.actions) {
+          if (saved[action.id]) {
+            action.keys = saved[action.id];
+          }
+        }
+      }
+    }
 
     // Jump to percentage hotkeys
     for (let idx = 0; idx <= 9; idx++) {
@@ -164,6 +204,28 @@ class HotkeyConfig {
     }
   }
 
+  private saveHotkeys(): void {
+    const hotkeys: Record<string, string[]> = {};
+    for (const category of this.categories) {
+      for (const action of category.actions) {
+        hotkeys[action.id] = action.keys;
+      }
+    }
+    localStorage.setItem("mediaplayer-hotkeys", JSON.stringify(hotkeys));
+  }
+
+  private loadHotkeys(): Record<string, string[]> | null {
+    const stored = localStorage.getItem("mediaplayer-hotkeys");
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  }
+
   // Action handlers
   private readonly togglePlayback = async (ev: KeyboardEvent): Promise<void> => {
     ev.preventDefault();
@@ -172,7 +234,9 @@ class HotkeyConfig {
       if (playerState.isPlaying) {
         try {
           await playerState.videoElement?.play();
-        } catch {}
+        } catch (e) {
+          /* ignore */
+        }
       } else {
         playerState.videoElement?.pause();
       }
@@ -182,14 +246,14 @@ class HotkeyConfig {
   private readonly previousVideo = (ev: KeyboardEvent): void => {
     ev.preventDefault();
     if (queue.currentItem) {
-      playPreviousVideo();
+      playerState.playPreviousVideo();
     }
   };
 
   private readonly nextVideo = (ev: KeyboardEvent): void => {
     ev.preventDefault();
     if (queue.currentItem) {
-      playNextVideo();
+      playerState.playNextVideo();
     }
   };
 
@@ -208,6 +272,28 @@ class HotkeyConfig {
     ev.preventDefault();
     if (queue.currentItem) {
       const newTime = Math.min(playerState.duration, playerState.currentTime + SEEK_TIME_STEP);
+      playerState.currentTime = newTime;
+      if (playerState.videoElement) {
+        playerState.videoElement.currentTime = newTime;
+      }
+    }
+  };
+
+  private readonly frameBackward = (ev: KeyboardEvent): void => {
+    ev.preventDefault();
+    if (queue.currentItem) {
+      const newTime = Math.max(0, playerState.currentTime - FRAME_TIME_STEP);
+      playerState.currentTime = newTime;
+      if (playerState.videoElement) {
+        playerState.videoElement.currentTime = newTime;
+      }
+    }
+  };
+
+  private readonly frameForward = (ev: KeyboardEvent): void => {
+    ev.preventDefault();
+    if (queue.currentItem) {
+      const newTime = Math.min(playerState.duration, playerState.currentTime + FRAME_TIME_STEP);
       playerState.currentTime = newTime;
       if (playerState.videoElement) {
         playerState.videoElement.currentTime = newTime;
@@ -266,10 +352,16 @@ class HotkeyConfig {
     ev.preventDefault();
     if (!fileBrowserState.currentPath || fileBrowserState.isAtRoot) return;
     try {
-      await navigateToParent();
+      await fileBrowserState.navigateToParent();
     } catch (error) {
       logger.error("Failed to navigate to parent directory:", error);
     }
+  };
+
+  private readonly openSettings = (ev: KeyboardEvent): void => {
+    ev.preventDefault();
+    // Open the settings dialog
+    settings.showDialog = true;
   };
 
   private readonly jumpToPercent = (ev: KeyboardEvent, percent: number): void => {
@@ -287,14 +379,36 @@ class HotkeyConfig {
     for (const category of this.categories) {
       const action = category.actions.find((a) => a.id === actionId);
       if (action) {
-        Mousetrap.unbind(action.keys);
+        // Do not allow changes to non-configurable actions
+        if (action.configurable === false) return false;
+        if (Array.isArray(action.keys)) {
+          for (const key of action.keys) {
+            Mousetrap.unbind(key);
+          }
+        }
         action.keys = newKeys;
         this.bindAction(action);
+        this.saveHotkeys();
         return true;
       }
     }
 
     return false;
+  }
+
+  public resetToDefaults(): void {
+    // Clear out existing bindings and saved hotkey configuration so we truly
+    // restore to the app defaults when reinitializing.
+    this.unbindAll();
+    this.categories = [];
+    // Remove any saved overrides from localStorage so initializeDefaultConfig
+    // won't re-apply saved hotkeys over the defaults.
+    try {
+      localStorage.removeItem("mediaplayer-hotkeys");
+    } catch (e) {}
+    this.initializeDefaultConfig();
+    this.bindAllActions();
+    this.saveHotkeys();
   }
 
   private bindAction(action: HotkeyAction): void {
@@ -304,6 +418,37 @@ class HotkeyConfig {
     for (const key of action.keys) {
       Mousetrap.unbind(key);
       Mousetrap.bind(key, (ev) => {
+        // If any settings dialog is open, let the dialog handle key events rather than global hotkeys
+        if (settings.showDialog) return;
+
+        // If focus is inside a dialog or a form control, skip global hotkeys so the dialog/input
+        // can handle keyboard events (e.g., arrow keys to scroll a list).
+        try {
+          const target =
+            (ev.target as HTMLElement | null) || (document.activeElement as HTMLElement | null);
+          const active = document.activeElement as HTMLElement | null;
+          // prefer checking the activeElement if present
+          const elToCheck = active || target;
+          if (elToCheck) {
+            // Skip if inside dialog content
+            if (elToCheck.closest('[data-slot="dialog-content"]')) {
+              return;
+            }
+
+            // Skip if focus is a form control or contenteditable
+            const tagName = elToCheck.tagName;
+            if (
+              tagName === "INPUT" ||
+              tagName === "TEXTAREA" ||
+              tagName === "SELECT" ||
+              (elToCheck as HTMLElement).isContentEditable
+            ) {
+              return;
+            }
+          }
+        } catch (e) {
+          /* ignore */
+        }
         ev.preventDefault();
         action.handler(ev);
       });
@@ -331,8 +476,17 @@ class HotkeyConfig {
   }
 
   public unbindAll(): void {
-    for (const action of this.getAllShortcuts()) {
-      Mousetrap.unbind(action.keys);
+    // Unbind all keys bound for the actions in the categories, including
+    // numeric percentage keys (0-9) which are bound separately.
+    for (const category of this.categories) {
+      for (const action of category.actions) {
+        for (const key of action.keys) {
+          Mousetrap.unbind(key);
+        }
+      }
+    }
+    for (let idx = 0; idx <= 9; idx++) {
+      Mousetrap.unbind(String(idx));
     }
   }
 
@@ -343,6 +497,7 @@ class HotkeyConfig {
     enabled: boolean;
     id: string;
     keys: string;
+    configurable?: boolean;
   }[] {
     if (!this.initialized) {
       return [];
@@ -354,6 +509,7 @@ class HotkeyConfig {
       enabled: boolean;
       id: string;
       keys: string;
+      configurable?: boolean;
     }[] = [];
 
     for (const category of this.categories) {
@@ -363,7 +519,8 @@ class HotkeyConfig {
           id: action.id,
           description: action.description,
           keys: action.keys.join(", "),
-          enabled: action.enabled !== false
+          enabled: action.enabled !== false,
+          configurable: action.configurable
         });
       }
     }
@@ -376,10 +533,10 @@ export const hotkeyConfig = new HotkeyConfig();
 
 export function setupMediaKeyHandlers(): void {
   handlers.mediaPreviousTrack.listen(() => {
-    playPreviousVideo();
+    playerState.playPreviousVideo();
   });
   handlers.mediaNextTrack.listen(() => {
-    playNextVideo();
+    playerState.playNextVideo();
   });
   handlers.mediaPlayPause.listen(async () => {
     if (queue.currentItem) {
@@ -387,7 +544,7 @@ export function setupMediaKeyHandlers(): void {
       if (playerState.isPlaying) {
         try {
           await playerState.videoElement?.play();
-        } catch {}
+        } catch (e) {}
       } else {
         playerState.videoElement?.pause();
       }

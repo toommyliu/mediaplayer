@@ -3,17 +3,17 @@ import { tipc } from "@egoist/tipc/main";
 import { platform } from "@electron-toolkit/utils";
 import { shell } from "electron";
 import { logger } from "./logger";
-import { showFilePicker, loadDirectoryContents, type PickerResult } from "./utils";
-import { mainWindow } from ".";
+import { showFilePicker, loadDirectoryContents, getAllVideoFilesRecursive, type PickerResult } from "./utils";
+import { setFullScreen } from "./windowManager";
 
 export const tipcInstance = tipc.create();
 
 export const router = {
   enterFullscreen: tipcInstance.procedure.action(async () => {
-    mainWindow?.setFullScreen(true);
+    setFullScreen(true);
   }),
   exitFullscreen: tipcInstance.procedure.action(async () => {
-    mainWindow?.setFullScreen(false);
+    setFullScreen(false);
   }),
 
   selectFile: tipcInstance.procedure.action(async () => showFilePicker("file")),
@@ -23,6 +23,10 @@ export const router = {
   readDirectory: tipcInstance.procedure
     .input<string>()
     .action(async ({ input }) => loadDirectoryContents(input)),
+
+  getAllVideoFiles: tipcInstance.procedure
+    .input<string>()
+    .action(async ({ input }) => getAllVideoFilesRecursive(input)),
 
   showItemInFolder: tipcInstance.procedure.input<string>().action(async ({ input }) => {
     try {
@@ -49,4 +53,5 @@ export type RendererHandlers = {
   mediaNextTrack(): void;
   mediaPlayPause(): void;
   mediaPreviousTrack(): void;
+  openSettings(): void;
 };

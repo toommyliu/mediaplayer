@@ -1,4 +1,4 @@
-import { cmdOrCtrl, optionOrAlt } from "$hooks/is-mac.svelte";
+import { isMac } from "$hooks/is-mac.svelte";
 
 export type RecordedKeys = {
   display: string;
@@ -192,15 +192,14 @@ export class HotkeyRecorder {
 export const hotkeyRecorder = new HotkeyRecorder();
 
 export function formatHotkeyDisplay(keys: string[] | string): string {
-  if (typeof keys === "string") {
-    return keys;
-  }
+  // Convert string to array if needed
+  const keyArray = typeof keys === "string" ? [keys] : keys;
 
-  return keys
+  return keyArray
     .map((key) =>
       key
         .split("+")
-        .map((key) => keyToChar(key.trim()))
+        .map((k) => keyToChar(k.trim()))
         .join(" + ")
     )
     .join(", ");
@@ -209,24 +208,53 @@ export function formatHotkeyDisplay(keys: string[] | string): string {
 function keyToChar(key: string): string {
   switch (key) {
     case "cmd":
+    case "command":
+      return isMac ? "⌘" : "Win";
     case "ctrl":
-      return cmdOrCtrl;
+      return isMac ? "⌃" : "Ctrl";
     case "alt":
+      return isMac ? "⌥" : "Alt";
     case "option":
-      return optionOrAlt;
+      return isMac ? "⌥" : "Alt";
     case "shift":
-      return "Shift";
+      return isMac ? "⇧" : "Shift";
     case "space":
       return "Space";
     case "enter":
-      return "Enter";
+    case "return":
+      return isMac ? "↵" : "Enter";
     case "tab":
-      return "Tab";
+      return isMac ? "⇥" : "Tab";
     case "backspace":
-      return "Backspace";
+      return isMac ? "⌫" : "Backspace";
     case "delete":
-      return "Delete";
+      return isMac ? "⌦" : "Del";
+    case "escape":
+    case "esc":
+      return isMac ? "⎋" : "Esc";
+    case "capslock":
+      return isMac ? "⇪" : "Caps Lock";
+    case "up":
+      return "↑";
+    case "down":
+      return "↓";
+    case "left":
+      return "←";
+    case "right":
+      return "→";
+    case "pageup":
+      return isMac ? "⇞" : "PgUp";
+    case "pagedown":
+      return isMac ? "⇟" : "PgDn";
+    case "home":
+      return isMac ? "↖" : "Home";
+    case "end":
+      return isMac ? "↘" : "End";
     default:
+      // Handle function keys (F1-F12, etc.)
+      if (/^f\d+$/i.test(key)) {
+        return key.toUpperCase();
+      }
       return key.toUpperCase();
   }
 }

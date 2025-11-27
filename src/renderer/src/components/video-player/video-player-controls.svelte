@@ -1,27 +1,4 @@
 <script lang="ts">
-  import FastForward from "lucide-svelte/icons/fast-forward";
-  import Maximize from "lucide-svelte/icons/maximize";
-  import Menu from "lucide-svelte/icons/menu";
-  import Minimize from "lucide-svelte/icons/minimize";
-  import Pause from "lucide-svelte/icons/pause";
-  import Play from "lucide-svelte/icons/play";
-  import Rewind from "lucide-svelte/icons/rewind";
-  import IconSettings from "lucide-svelte/icons/settings";
-  import Volume1 from "lucide-svelte/icons/volume-1";
-  import Volume2 from "lucide-svelte/icons/volume-2";
-  import VolumeX from "lucide-svelte/icons/volume-x";
-  import { client } from "$/tipc";
-  import { ICON_SIZE } from "$lib/constants";
-  import { makeTimeString } from "$lib/makeTimeString";
-  import { playerState } from "$lib/state/player.svelte";
-  import { queue } from "$lib/state/queue.svelte";
-  import { sidebarState } from "$lib/state/sidebar.svelte";
-  import { volume } from "$lib/state/volume.svelte";
-  import { cn } from "$lib/utils";
-  import { playNextVideo, playPreviousVideo, playVideoElement } from "$lib/video-playback";
-  import Button from "$ui/button/button.svelte";
-  import * as Tooltip from "$ui/tooltip/";
-  import { fade } from "svelte/transition";
   import PlayButton from "./controls/PlayButton.svelte";
   import PreviousButton from "./controls/PreviousButton.svelte";
   import ForwardButton from "./controls/ForwardButton.svelte";
@@ -29,58 +6,57 @@
   import SettingsButton from "./controls/SettingsButton.svelte";
   import FullScreenButton from "./controls/FullScreenButton.svelte";
   import SideBarButton from "./controls/SideBarButton.svelte";
+  import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuItem,
+    DropdownMenuTrigger
+  } from "$components/ui/dropdown-menu";
+  import TablerAspectRatio from "~icons/tabler/aspect-ratio";
+
+  import { playerState } from "$lib/state/player.svelte";
+
+  import { makeTimeString } from "$lib/makeTimeString";
+  import { SEEK_TIME_STEP } from "$lib/constants";
+  import { cn } from "$lib/utils";
+
+  let { aspectRatio, onAspectRatioChange }: Props = $props();
+
+  type Props = {
+    aspectRatio: "contain" | "cover" | "fill";
+    onAspectRatioChange: (mode: "contain" | "cover" | "fill") => void;
+  };
 
   let isDragging = $state(false);
   let hoverTime = $state(0);
   let isHovering = $state(false);
-  let bufferedPercentage = $state(0);
-  let isVolumeHovering = $state(false);
-  let isVolumeDragging = $state(false);
-  let showSettingsDialog = $state(false);
+
+  let dragTime = $state<number | null>(null);
+  let dragTargetPercentage = $state<number | null>(null);
+  let dragAnimationFrameId: number | null = null;
+
   let smoothProgressPercentage = $state(0);
   let animationFrameId: number | null = null;
 
-  const { showOverlay }: { showOverlay: boolean } = $props();
+  const SEEK_THROTTLE_MS = 100;
 
   const lerp = (start: number, end: number, factor: number): number =>
     start + (end - start) * factor;
 
-  $effect(() => {
-    if (!playerState.videoElement || !playerState.duration) return undefined;
-
-    const updateBuffered = (): void => {
-      if (playerState.videoElement && playerState.videoElement.buffered.length > 0) {
-        const bufferedEnd = playerState.videoElement.buffered.end(
-          playerState.videoElement.buffered.length - 1
-        );
-        bufferedPercentage = Math.min(100, (bufferedEnd / playerState.duration) * 100);
-      }
-    };
-
-    const handleProgress = (): void => updateBuffered();
-
-    playerState.videoElement.addEventListener("progress", handleProgress);
-    updateBuffered();
-
-    return () => {
-      if (playerState.videoElement) {
-        playerState.videoElement.removeEventListener("progress", handleProgress);
-      }
-    };
-  });
-
-  // Smooth progress animation effect with lerp
   $effect(() => {
     if (!playerState.duration) {
       smoothProgressPercentage = 0;
       return;
     }
 
-    const targetPercentage = (playerState.currentTime / playerState.duration) * 100;
+    const targetPercentage =
+      isDragging && dragTime !== null
+        ? (dragTime / playerState.duration) * 100
+        : (playerState.currentTime / playerState.duration) * 100;
 
-    // If dragging, update immediately
+    // If dragging, skip the normal animation; a separate drag animation will lerp toward the drag target
     if (isDragging) {
-      smoothProgressPercentage = targetPercentage;
       return;
     }
 
@@ -146,6 +122,31 @@
     }
   };
 
+  const startDragAnimation = (): void => {
+    if (dragAnimationFrameId) return;
+
+    const step = (): void => {
+      if (!isDragging || dragTargetPercentage === null) {
+        dragAnimationFrameId = null;
+        return;
+      }
+
+      // Lerp while dragging for a smooth feel (lower factor = smoother but slightly laggier)
+      smoothProgressPercentage = lerp(smoothProgressPercentage, dragTargetPercentage, 0.22);
+
+      // Stop when close enough to target (use a slightly larger threshold for stability)
+      if (Math.abs(smoothProgressPercentage - dragTargetPercentage) < 0.12) {
+        smoothProgressPercentage = dragTargetPercentage;
+        dragAnimationFrameId = null;
+        return;
+      }
+
+      dragAnimationFrameId = requestAnimationFrame(step);
+    };
+
+    dragAnimationFrameId = requestAnimationFrame(step);
+  };
+
   const handleProgressClick = (ev: MouseEvent): void => {
     if (isDragging) return;
 
@@ -154,51 +155,118 @@
 
   const handleProgressMouseDown = (ev: MouseEvent): void => {
     if (!playerState.videoElement || !playerState.duration) return;
-
     ev.preventDefault();
     isDragging = true;
     const wasPlaying = playerState.isPlaying;
     const progressBar = ev.currentTarget as HTMLElement;
     const barRect = progressBar.getBoundingClientRect();
 
-    handleSeek(ev, progressBar, barRect);
+    // Initialize dragTime and target percent from the initial pointer position
+    const initialPercent = Math.max(0, Math.min(1, (ev.clientX - barRect.left) / barRect.width));
+    dragTime = initialPercent * playerState.duration;
+    dragTargetPercentage = initialPercent * 100;
+    startDragAnimation();
+
+    // If playing, pause playback for smoother scrubbing visuals
+    try {
+      if (wasPlaying && playerState.videoElement && !playerState.videoElement.paused) {
+        playerState.videoElement.pause();
+      }
+    } catch (e) {
+      console.warn("Could not pause video for scrubbing", e);
+    }
 
     let lastClientX = ev.clientX;
-    let frameId: number | null = null;
-    const performSeekUpdate = (): void => {
-      const fakeEvent = { clientX: lastClientX } as MouseEvent;
+    let dragFrameId: number | null = null;
 
-      handleSeek(fakeEvent, progressBar, barRect);
+    let lastSeekTime = 0;
+    const performDragUpdate = (): void => {
+      if (!barRect || !playerState.duration) return;
+      const percent = Math.max(0, Math.min(1, (lastClientX - barRect.left) / barRect.width));
+      dragTime = percent * playerState.duration;
+      dragTargetPercentage = percent * 100;
+      startDragAnimation();
 
-      frameId = null;
+      // Throttled seek: update the actual video element and playerState.currentTime at most every SEEK_THROTTLE_MS
+      const now = Date.now();
+      if (now - lastSeekTime >= SEEK_THROTTLE_MS) {
+        lastSeekTime = now;
+        const timeToSeek = dragTime ?? playerState.currentTime;
+        try {
+          playerState.currentTime = timeToSeek;
+          if (playerState.videoElement) {
+            if (playerState.videoElement.readyState >= 2) {
+              playerState.videoElement.currentTime = timeToSeek;
+            } else {
+              // If not ready, wait for canplay and then set
+              const onCanPlay = (): void => {
+                try {
+                  if (playerState.videoElement) {
+                    playerState.videoElement.currentTime = timeToSeek;
+                  }
+                } catch (e) {
+                  console.warn("Error setting currentTime after canplay", e);
+                }
+                playerState.videoElement?.removeEventListener("canplay", onCanPlay);
+              };
+              playerState.videoElement.addEventListener("canplay", onCanPlay);
+            }
+          }
+        } catch (error) {
+          console.error("Error seeking video during drag:", error);
+        }
+      }
+
+      dragFrameId = null;
     };
 
     const handleMouseMove = (ev: MouseEvent): void => {
-      if (isDragging) {
-        lastClientX = ev.clientX;
-        frameId ??= requestAnimationFrame(performSeekUpdate);
-        ev.preventDefault();
-      }
+      if (!isDragging) return;
+      lastClientX = ev.clientX;
+      dragFrameId ??= requestAnimationFrame(performDragUpdate);
+      ev.preventDefault();
     };
 
     const handleMouseUp = async (): Promise<void> => {
+      // Apply final seek to player state and video element
+      const finalTime = dragTime ?? playerState.currentTime;
+      dragTime = null;
       isDragging = false;
 
-      if (frameId !== null) {
-        cancelAnimationFrame(frameId);
+      // stop drag animation and clear target
+      if (dragAnimationFrameId) {
+        cancelAnimationFrame(dragAnimationFrameId);
+        dragAnimationFrameId = null;
+      }
+      dragTargetPercentage = null;
+
+      try {
+        playerState.currentTime = finalTime;
+        if (playerState.videoElement) {
+          playerState.videoElement.currentTime = finalTime;
+        }
+      } catch (error) {
+        console.error("Error seeking video on scrub end:", error);
       }
 
       if (wasPlaying && playerState.videoElement) {
-        if (playerState.videoElement.readyState >= 2) {
-          await playVideoElement();
-        } else {
-          const onCanPlay = async (): Promise<void> => {
-            await playVideoElement();
-            playerState.videoElement?.removeEventListener("canplay", onCanPlay);
-          };
-
-          playerState.videoElement.addEventListener("canplay", onCanPlay);
+        try {
+          if (playerState.videoElement.readyState >= 2) {
+            await playerState.videoElement.play();
+          } else {
+            const onCanPlay = async (): Promise<void> => {
+              await playerState.videoElement?.play();
+              playerState.videoElement?.removeEventListener("canplay", onCanPlay);
+            };
+            playerState.videoElement.addEventListener("canplay", onCanPlay);
+          }
+        } catch (e) {
+          console.warn("Could not resume playback after scrubbing", e);
         }
+      }
+
+      if (dragFrameId !== null) {
+        cancelAnimationFrame(dragFrameId);
       }
 
       document.removeEventListener("mousemove", handleMouseMove);
@@ -222,159 +290,120 @@
     }
   };
 
-  const toggleMute = (): void => {
-    volume.isMuted = !volume.isMuted;
-
-    if (playerState.videoElement) {
-      playerState.videoElement.muted = volume.isMuted;
-      playerState.videoElement.volume = volume.isMuted ? 0 : volume.value;
-    }
-  };
-
-  const handleVolumeSeek = (ev: MouseEvent, volumeBar?: HTMLElement): void => {
-    const target = volumeBar ?? (ev.currentTarget as HTMLElement);
-    if (!target) return;
-
-    const rect = target.getBoundingClientRect();
-    const percent = Math.max(0, Math.min(1, (ev.clientX - rect.left) / rect.width));
-
-    const newVolume = percent;
-    const newMuted = percent === 0;
-
-    if (volume.value !== newVolume || volume.isMuted !== newMuted) {
-      volume.value = newVolume;
-      volume.isMuted = newMuted;
-    }
-  };
-
-  const handleVolumeMouseDown = (ev: MouseEvent): void => {
-    ev.preventDefault();
-    isVolumeDragging = true;
-    const volumeBar = ev.currentTarget as HTMLElement;
-
-    handleVolumeSeek(ev, volumeBar);
-
-    let rafId: number | null = null;
-
-    const performVolumeUpdate = (clientX: number): void => {
-      const rect = volumeBar.getBoundingClientRect();
-      const percent = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-
-      if (volume.value !== percent) {
-        volume.value = percent;
-        volume.isMuted = percent === 0;
-      }
-
-      rafId = null;
-    };
-
-    const handleMouseMove = (ev: MouseEvent): void => {
-      if (isVolumeDragging) {
-        ev.preventDefault();
-        rafId ??= requestAnimationFrame(() => performVolumeUpdate(ev.clientX));
-      }
-    };
-
-    const handleMouseUp = (): void => {
-      isVolumeDragging = false;
-
-      // Reset hover state when drag ends
-      if (!volumeBar.matches(":hover")) {
-        isVolumeHovering = false;
-      }
-
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-
-      // Cancel any pending animation frame
-      if (rafId !== null) {
-        cancelAnimationFrame(rafId);
-      }
-    };
-
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
-  };
-
-  const handleVolumeClick = (ev: MouseEvent): void => {
-    if (isVolumeDragging) return;
-    handleVolumeSeek(ev);
-  };
-
-  const toggleFullscreen = (): void => {
-    if (playerState.isFullscreen) void client.exitFullscreen();
-    else void client.enterFullscreen();
-
-    playerState.isFullscreen = !playerState.isFullscreen;
-  };
-
-  const progressPercentage = $derived(
-    isDragging || !playerState.duration
-      ? (playerState.currentTime / playerState.duration) * 100 || 0
-      : smoothProgressPercentage
-  );
-
   const hoverPercentage = $derived(
     playerState.duration > 0 ? (hoverTime / playerState.duration) * 100 : 0
   );
 </script>
 
-{#if showOverlay}
-  <div
-    class="absolute inset-x-0 bottom-0 z-30 bg-gradient-to-t from-black/80 to-transparent pt-16 pb-6"
-    transition:fade={{ duration: 300 }}
-  >
-    <div class="mx-8 mb-4">
-      <div
-        class="relative z-10 flex items-center justify-between px-1 pb-2 font-mono text-xs text-white select-none"
-      >
-        <span>{makeTimeString(playerState.currentTime)}</span>
-        <span>
+<div
+  id="media-controls"
+  class="relative bg-gradient-to-t from-black/90 via-black/60 to-transparent pt-20 pb-4"
+>
+  <!-- Progress Bar Section -->
+  <div class="px-6">
+    <div class="w-full">
+      <!-- Time Display -->
+      <div class="mb-3 flex items-center justify-between">
+        <span class="font-mono text-sm text-white/90 tabular-nums">
+          {makeTimeString(isDragging && dragTime !== null ? dragTime : playerState.currentTime)}
+        </span>
+        <span class="font-mono text-sm text-white/70 tabular-nums">
           {#if playerState.duration}
-            -{makeTimeString(Math.max(0, playerState.duration - playerState.currentTime))}
+            {makeTimeString(playerState.duration)}
           {:else}
-            -0:00
+            0:00
           {/if}
         </span>
       </div>
-      <div
-        class={cn(
-          "group relative h-2 rounded-full bg-white/20 lg:h-3",
-          isDragging
-            ? "bg-black/70 shadow-inner shadow-blue-500/30"
-            : "transition-colors duration-200"
-        )}
-        onclick={handleProgressClick}
-        onmousedown={handleProgressMouseDown}
-        onmousemove={handleProgressMouseMove}
-        onmouseenter={() => (isHovering = true)}
-        onmouseleave={() => (isHovering = false)}
-        role="slider"
-        tabindex={0}
-      >
+
+      <!-- Progress Bar Container -->
+      <div class="relative">
         <div
-          class={cn("absolute h-2 grow rounded-full bg-white lg:h-3", {
-            "transition-all duration-75 ease-linear": !isDragging
-          })}
-          style="width: {progressPercentage > 0 ? Math.max(progressPercentage, 0.5) : 0}%"
-        ></div>
-        {#if isHovering && !isDragging && playerState.duration > 0}
+          class={cn(
+            "group relative h-2 overflow-visible rounded-full bg-white/20 backdrop-blur-sm",
+            "transition-all duration-200 focus:ring-2 focus:ring-white/40 focus:ring-offset-2 focus:ring-offset-black/50 focus:outline-none"
+          )}
+          onclick={handleProgressClick}
+          onmousedown={handleProgressMouseDown}
+          onmousemove={handleProgressMouseMove}
+          onmouseenter={() => (isHovering = true)}
+          onmouseleave={() => (isHovering = false)}
+          aria-valuemin={0}
+          aria-valuemax={playerState.duration}
+          aria-valuenow={playerState.currentTime}
+          aria-valuetext={`${makeTimeString(playerState.currentTime)} / ${makeTimeString(playerState.duration)}`}
+            onkeydown={(ev) => {
+            const e = ev as KeyboardEvent;
+            if (!playerState.duration) return;
+            if (e.key === 'ArrowLeft') {
+              e.preventDefault();
+              const newTime = Math.max(0, playerState.currentTime - SEEK_TIME_STEP);
+              playerState.currentTime = newTime;
+              if (playerState.videoElement) playerState.videoElement.currentTime = newTime;
+            } else if (e.key === 'ArrowRight') {
+              e.preventDefault();
+              const newTime = Math.min(playerState.duration, playerState.currentTime + SEEK_TIME_STEP);
+              playerState.currentTime = newTime;
+              if (playerState.videoElement) playerState.videoElement.currentTime = newTime;
+            } else if (e.key === 'Home') {
+              e.preventDefault();
+              playerState.currentTime = 0;
+              if (playerState.videoElement) playerState.videoElement.currentTime = 0;
+            } else if (e.key === 'End') {
+              e.preventDefault();
+              playerState.currentTime = playerState.duration;
+              if (playerState.videoElement) playerState.videoElement.currentTime = playerState.duration;
+            }
+          }}
+          role="slider"
+          tabindex={0}
+        >
+          <div class="absolute inset-0 rounded-full bg-white/10"></div>
+
           <div
-            class="absolute bottom-8 z-10 rounded-md bg-black/90 px-2 py-1 text-xs text-white shadow-lg"
-            style="left: {hoverPercentage}%; transform: translateX(-50%)"
-          >
-            {makeTimeString(hoverTime)}
+            class={cn(
+              "absolute top-0 left-0 h-full rounded-full bg-white shadow-sm",
+              !isDragging && "transition-all duration-100 ease-out"
+            )}
+            style="width: {smoothProgressPercentage}%"
+          ></div>
+
+          {#if isDragging && playerState.duration}
             <div
-              class="absolute top-full left-1/2 h-0 w-0 -translate-x-1/2 border-t-2 border-r-2 border-l-2 border-transparent border-t-black/90"
-            ></div>
-          </div>
-        {/if}
+              class="pointer-events-none absolute -top-10 z-30 flex justify-center"
+              style="left: calc({((dragTime ?? playerState.currentTime) /
+                (playerState.duration || 1)) *
+                100}% - 2rem)"
+            >
+              <div
+                class="rounded-lg bg-black/90 px-3 py-1.5 text-sm font-medium text-white shadow-xl backdrop-blur-sm"
+              >
+                {makeTimeString(dragTime ?? playerState.currentTime)}
+              </div>
+            </div>
+          {:else if isHovering && !isDragging && playerState.duration > 0}
+            <div
+              class="pointer-events-none absolute -top-10 z-30 flex justify-center opacity-0 transition-opacity duration-150 group-hover:opacity-100"
+              style="left: calc({hoverPercentage}% - 2rem)"
+            >
+              <div
+                class="rounded-lg bg-black/80 px-3 py-1.5 text-sm font-medium text-white/90 shadow-lg backdrop-blur-sm"
+              >
+                {makeTimeString(hoverTime)}
+              </div>
+            </div>
+          {/if}
+        </div>
       </div>
     </div>
+  </div>
 
-    <div class="flex items-center justify-between px-8">
-      <div class="flex items-center gap-4">
-        <div class="flex grow items-center gap-2 rounded-md bg-black/50 backdrop-blur-md">
+  <!-- Control Buttons Section -->
+  <div class="mt-6 px-6">
+    <div class="flex w-full items-center justify-between">
+      <!-- Left Controls -->
+      <div class="flex items-center">
+        <div class="flex items-center gap-1 rounded-xl bg-black/40 p-1 backdrop-blur-md">
           <PreviousButton />
           <PlayButton />
           <ForwardButton />
@@ -382,11 +411,87 @@
         </div>
       </div>
 
-      <div class="flex items-center gap-2 rounded-md bg-black/50 backdrop-blur-md">
+      <!-- Right Controls -->
+      <div class="flex items-center gap-1 rounded-xl bg-black/40 p-1 backdrop-blur-md">
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            class="flex h-full items-center rounded-lg p-2 text-white/80 transition-colors hover:bg-white/10 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+          >
+            <TablerAspectRatio class="size-5" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            class="mr-4 w-40 border-none bg-black/70 text-white backdrop-blur-md"
+          >
+            <DropdownMenuGroup>
+              <DropdownMenuItem
+                class="flex cursor-pointer items-center justify-between focus:bg-white/10 focus:text-white"
+                onclick={() => onAspectRatioChange("contain")}
+              >
+                <span>Contain</span>
+                {#if aspectRatio === "contain"}
+                  <div class="h-2 w-2 rounded-full bg-white"></div>
+                {/if}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                class="flex cursor-pointer items-center justify-between focus:bg-white/10 focus:text-white"
+                onclick={() => onAspectRatioChange("cover")}
+              >
+                <span>Cover</span>
+                {#if aspectRatio === "cover"}
+                  <div class="h-2 w-2 rounded-full bg-white"></div>
+                {/if}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                class="flex cursor-pointer items-center justify-between focus:bg-white/10 focus:text-white"
+                onclick={() => onAspectRatioChange("fill")}
+              >
+                <span>Fill</span>
+                {#if aspectRatio === "fill"}
+                  <div class="h-2 w-2 rounded-full bg-white"></div>
+                {/if}
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
         <SettingsButton />
         <FullScreenButton />
         <SideBarButton />
       </div>
     </div>
   </div>
-{/if}
+</div>
+
+<style>
+  /* Custom scrollbar for consistency */
+  #media-controls * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+  }
+
+  #media-controls *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  #media-controls *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  #media-controls *::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+  }
+
+  #media-controls *::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.5);
+  }
+
+  #media-controls [role="slider"] {
+    transition: all 0.2s ease-out;
+  }
+
+  #media-controls [role="slider"]:focus-visible {
+    outline: 2px solid rgba(59, 130, 246, 0.6);
+    outline-offset: 2px;
+  }
+</style>

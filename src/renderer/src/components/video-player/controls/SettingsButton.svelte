@@ -10,7 +10,12 @@
 <Tooltip.Provider>
   <Tooltip.Root>
     <Tooltip.Trigger>
-      <Button variant="ghost" size="icon" onclick={() => (settings.showDialog = true)}>
+      <Button
+        class="h-8 w-8 text-white"
+        variant="ghost"
+        size="icon"
+        onclick={() => (settings.showDialog = true)}
+      >
         <LucideSettings class="size-4" />
       </Button>
     </Tooltip.Trigger>

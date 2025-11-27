@@ -11,7 +11,12 @@
 <Tooltip.Provider>
   <Tooltip.Root>
     <Tooltip.Trigger>
-      <Button variant="ghost" size="icon" onclick={async () => playerState.togglePlayPause()}>
+      <Button
+        class="h-8 w-8 text-white"
+        variant="ghost"
+        size="icon"
+        onclick={async () => playerState.togglePlayPause()}
+      >
         {#key playerState.isPlaying}
           {#if playerState.isPlaying}
             <TablerPause class="h-4 w-4" />

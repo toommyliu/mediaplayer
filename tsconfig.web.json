@@ -6,6 +6,7 @@
     "src/renderer/src/**/*.svelte",
     "src/preload/*.d.ts",
     "src/main/tipc.ts",
+    "src/shared/**/*"
   ],
   "compilerOptions": {
     "verbatimModuleSyntax": true,
@@ -35,6 +36,9 @@
       ],
       "$main/*": [
         "src/main/*"
+      ],
+      "$shared/*": [
+        "src/shared/*"
       ],
     },
     "strictNullChecks": true

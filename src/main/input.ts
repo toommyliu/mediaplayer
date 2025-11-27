@@ -1,58 +1,189 @@
-import { setTimeout } from "node:timers/promises";
 import { getRendererHandlers } from "@egoist/tipc/main";
-import { app, BrowserWindow, globalShortcut, systemPreferences } from "electron";
+import { app, globalShortcut, systemPreferences, BrowserWindow } from "electron";
 import { logger } from "./logger";
 import type { RendererHandlers } from "./tipc";
-import { mainWindow } from "./index";
+import { getMainWindow, off, on, once } from "./windowManager";
 
-const isTrustedAccessibilityClient = systemPreferences.isTrustedAccessibilityClient(true);
+const MANAGED_SHORTCUTS = ["MediaPreviousTrack", "MediaNextTrack", "MediaPlayPause"] as const;
 
-// TODO: memory leak somewhere?
+let eventListenersRegistered = false;
+let accessibilityPermissionGranted = false;
+const ownedShortcuts = new Set<string>();
+
+function refreshAccessibilityPermission(prompt = false): void {
+  try {
+    accessibilityPermissionGranted = systemPreferences.isTrustedAccessibilityClient(prompt);
+  } catch (error) {
+    accessibilityPermissionGranted = false;
+    logger.error("Failed to determine accessibility permission:", error);
+  }
+}
+
+function invokeRendererHandler(window: BrowserWindow | null, handler: keyof RendererHandlers) {
+  return async (): Promise<void> => {
+    if (!window || window.isDestroyed()) {
+      logger.debug("No valid main window available for media key handler");
+      return;
+    }
+
+    const webContents = window.webContents;
+    if (!webContents) {
+      logger.debug("Window webContents not available for media key handler");
+      return;
+    }
+
+    try {
+      const handlers = getRendererHandlers<RendererHandlers>(webContents);
+      if (!handlers) return;
+      switch (handler) {
+        case "mediaNextTrack":
+          await handlers.mediaNextTrack?.invoke?.();
+          break;
+        case "mediaPlayPause":
+          await handlers.mediaPlayPause?.invoke?.();
+          break;
+        case "mediaPreviousTrack":
+          await handlers.mediaPreviousTrack?.invoke?.();
+          break;
+        default:
+          logger.warn(`Unknown renderer handler requested: ${String(handler)}`);
+      }
+    } catch (error) {
+      logger.error(`Failed to invoke renderer handler ${String(handler)}:`, error);
+    }
+  };
+}
 
 function registerGlobalShortcuts(): void {
-  if (!isTrustedAccessibilityClient) return;
+  refreshAccessibilityPermission(false);
+  if (!accessibilityPermissionGranted) return;
 
-  globalShortcut.register("MediaPreviousTrack", async () => {
-    const handlers = getRendererHandlers<RendererHandlers>(
-      BrowserWindow.getFocusedWindow()!.webContents
-    );
+  try {
+    for (const shortcut of MANAGED_SHORTCUTS) {
+      if (globalShortcut.isRegistered(shortcut)) {
+        logger.debug(`Global shortcut already registered: ${shortcut}`);
+        continue;
+      }
 
-    await handlers?.mediaPreviousTrack?.invoke();
-  });
+      let handler: () => Promise<void> | void;
+      switch (shortcut) {
+        case "MediaPreviousTrack":
+          handler = async () => {
+            const window = getMainWindow();
+            const invoker = invokeRendererHandler(window, "mediaPreviousTrack");
+            await invoker();
+          };
+          break;
+        case "MediaNextTrack":
+          handler = async () => {
+            const window = getMainWindow();
+            const invoker = invokeRendererHandler(window, "mediaNextTrack");
+            await invoker();
+          };
+          break;
+        case "MediaPlayPause":
+          handler = async () => {
+            const window = getMainWindow();
+            const invoker = invokeRendererHandler(window, "mediaPlayPause");
+            await invoker();
+          };
+          break;
+        default:
+          handler = () => {
+            logger.warn(`Tried to handle unknown shortcut: ${shortcut}`);
+          };
+      }
 
-  globalShortcut.register("MediaNextTrack", async () => {
-    const handlers = getRendererHandlers<RendererHandlers>(
-      BrowserWindow.getFocusedWindow()!.webContents
-    );
+      try {
+        const ok = globalShortcut.register(shortcut, () => void handler());
+        if (!ok) {
+          logger.warn(`Global shortcut registration returned false for ${shortcut}`);
+        } else {
+          logger.debug(`Registered global shortcut: ${shortcut}`);
+          ownedShortcuts.add(shortcut);
+        }
+      } catch (error) {
+        logger.error(`Failed to register global shortcut ${shortcut}:`, error);
+      }
+    }
+  } catch (error) {
+    logger.error("Failed to register global shortcuts:", error);
+  }
+}
 
-    await handlers?.mediaNextTrack?.invoke();
-  });
+function unregisterGlobalShortcuts(): void {
+  try {
+    for (const shortcut of Array.from(ownedShortcuts)) {
+      try {
+        if (globalShortcut.isRegistered(shortcut)) {
+          globalShortcut.unregister(shortcut);
+          logger.debug(`Unregistered global shortcut: ${shortcut}`);
+        }
+        ownedShortcuts.delete(shortcut);
+      } catch (error) {
+        logger.error(`Failed to unregister owned global shortcut ${shortcut}:`, error);
+      }
+    }
+  } catch (error) {
+    logger.error("Failed to unregister global shortcuts:", error);
+  }
+}
 
-  globalShortcut.register("MediaPlayPause", async () => {
-    const handlers = getRendererHandlers<RendererHandlers>(
-      BrowserWindow.getFocusedWindow()!.webContents
-    );
+const handleWindowFocus = (): void => {
+  logger.debug("mainWindow focused, registering global shortcuts");
+  registerGlobalShortcuts();
+};
 
-    await handlers?.mediaPlayPause?.invoke();
-  });
+const handleWindowBlur = (): void => {
+  logger.debug("mainWindow blurred, unregistering global shortcuts");
+  unregisterGlobalShortcuts();
+};
+
+function setupWindowEventListeners(): void {
+  if (eventListenersRegistered) return;
+  if (!getMainWindow()) return;
+
+  off("focus", handleWindowFocus);
+  off("blur", handleWindowBlur);
+  off("closed", cleanupEventListeners);
+
+  on("focus", handleWindowFocus);
+  on("blur", handleWindowBlur);
+  on("closed", cleanupEventListeners);
+
+  eventListenersRegistered = true;
+}
+
+function cleanupEventListeners(): void {
+  off("focus", handleWindowFocus);
+  off("blur", handleWindowBlur);
+  off("closed", cleanupEventListeners);
+
+  unregisterGlobalShortcuts();
+
+  eventListenersRegistered = false;
 }
 
 app.on("ready", async () => {
-  if (!isTrustedAccessibilityClient) {
+  refreshAccessibilityPermission(true);
+  if (!accessibilityPermissionGranted) {
     logger.warn("accessibility permissions not granted, global shortcuts will not work");
   }
 
-  // Ensure that global shortcuts only work when the main window is focused
-  while (!mainWindow) await setTimeout(100);
+  if (getMainWindow()) {
+    setupWindowEventListeners();
+  } else {
+    once("show", setupWindowEventListeners);
+  }
+});
 
-  mainWindow?.on("focus", () => {
-    logger.debug("mainWindow focused, registering global shortcuts");
-    globalShortcut.unregisterAll();
-    registerGlobalShortcuts();
-  });
+app.on("before-quit", () => {
+  logger.debug("App quitting, cleaning up input handlers");
+  cleanupEventListeners();
+  unregisterGlobalShortcuts();
+});
 
-  mainWindow?.on("blur", () => {
-    logger.debug("mainWindow blurred, unregistering global shortcuts");
-    globalShortcut.unregisterAll();
-  });
+app.on("window-all-closed", () => {
+  cleanupEventListeners();
+  unregisterGlobalShortcuts();
 });

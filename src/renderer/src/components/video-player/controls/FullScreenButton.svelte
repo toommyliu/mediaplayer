@@ -9,10 +9,15 @@
 
   import { client } from "$/tipc";
 
-  function toggleFullscreen() {
-    if (playerState.isFullscreen) void client.exitFullscreen();
-    else void client.enterFullscreen();
+  $effect(() => {
+    if (playerState.isFullscreen) {
+      void client.enterFullscreen();
+    } else {
+      void client.exitFullscreen();
+    }
+  });
 
+  function toggleFullscreen() {
     playerState.isFullscreen = !playerState.isFullscreen;
   }
 </script>
@@ -20,7 +25,7 @@
 <Tooltip.Provider>
   <Tooltip.Root>
     <Tooltip.Trigger>
-      <Button variant="ghost" size="icon" onclick={toggleFullscreen}>
+      <Button class="h-8 w-8 text-white" variant="ghost" size="icon" onclick={toggleFullscreen}>
         {#if playerState.isFullscreen}
           <Minimize class="size-4" />
         {:else}

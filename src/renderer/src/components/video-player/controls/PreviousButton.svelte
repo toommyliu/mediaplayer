@@ -12,9 +12,10 @@
   <Tooltip.Root>
     <Tooltip.Trigger>
       <Button
+        class="h-8 w-8 text-white"
         variant="ghost"
         size="icon"
-        onclick={async () => playerState.playPrevious()}
+        onclick={async () => playerState.playPreviousVideo()}
         disabled={!queue.currentItem || playerState.isLoading}
       >
         <LucideRewind class="size-4" />

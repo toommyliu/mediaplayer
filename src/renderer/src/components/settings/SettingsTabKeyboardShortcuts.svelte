@@ -2,18 +2,31 @@
   import { formatHotkeyDisplay, hotkeyRecorder } from "$lib/hotkeys/hotkey-recorder";
   import { hotkeyConfig } from "$lib/hotkeys.svelte";
   import { Kbd } from "$ui/kbd";
+  import { Input } from "$ui/input";
 
   import LucideX from "~icons/lucide/x";
   import LucideCirclePlus from "~icons/lucide/circle-plus";
+  import LucideRotateCcw from "~icons/lucide/rotate-ccw";
 
   let editingAction = $state<string | null>(null);
   let isRecording = $state(false);
+  let searchTerm = $state("");
 
   const shortcuts = $derived(hotkeyConfig.getAllShortcuts());
 
+  const filteredShortcuts = $derived(() => {
+    const filtered = shortcuts;
+    if (!searchTerm) return filtered;
+    return filtered.filter(
+      (s) =>
+        s.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        formatHotkeyDisplay(s.keys).toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
+
   const shortcutsByCategory = $derived(() => {
-    const grouped = new Map<string, typeof shortcuts>();
-    for (const shortcut of shortcuts) {
+    const grouped = new Map<string, ReturnType<typeof filteredShortcuts>>();
+    for (const shortcut of filteredShortcuts()) {
       if (!grouped.has(shortcut.category)) {
         grouped.set(shortcut.category, []);
       }
@@ -24,7 +37,16 @@
     return grouped;
   });
 
-  const categories = $derived(() => Array.from(shortcutsByCategory().keys()));
+  const categories = $derived(() => {
+    const keys = Array.from(shortcutsByCategory().keys());
+    const appIndex = keys.findIndex((k) => k.toLowerCase() === "application" || k.toLowerCase() === "app");
+    if (appIndex > -1) {
+      // Move 'Application' category to the front so it shows at the top
+      const [appKey] = keys.splice(appIndex, 1);
+      keys.unshift(appKey);
+    }
+    return keys;
+  });
 
   function startEditingHotkey(actionId: string): void {
     if (editingAction) {
@@ -58,18 +80,64 @@
     isRecording = false;
     hotkeyRecorder.cancelRecording();
   }
+
+  function resetToDefaults(): void {
+    hotkeyConfig.resetToDefaults();
+  }
+
+  function onContainerKeydown(ev: KeyboardEvent) {
+    const el = ev.currentTarget as HTMLElement | null;
+    if (!el) return;
+
+    switch (ev.key) {
+      case 'ArrowDown':
+        el.scrollBy({ top: 40, behavior: 'smooth' });
+        ev.preventDefault();
+        break;
+      case 'ArrowUp':
+        el.scrollBy({ top: -40, behavior: 'smooth' });
+        ev.preventDefault();
+        break;
+      case 'PageDown':
+        el.scrollBy({ top: el.clientHeight * 0.9, behavior: 'smooth' });
+        ev.preventDefault();
+        break;
+      case 'PageUp':
+        el.scrollBy({ top: -el.clientHeight * 0.9, behavior: 'smooth' });
+        ev.preventDefault();
+        break;
+      case 'Home':
+        el.scrollTo({ top: 0, behavior: 'smooth' });
+        ev.preventDefault();
+        break;
+      case 'End':
+        el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+        ev.preventDefault();
+        break;
+    }
+  }
 </script>
 
-<div class="no-scrollbar flex h-full flex-1 flex-col space-y-1 overflow-y-auto">
+<div tabindex="0" onkeydown={onContainerKeydown} class="no-scrollbar flex flex-1 min-h-0 flex-col space-y-1 overflow-y-auto">
+  <div class="mb-4 flex items-center justify-between">
+    <Input bind:value={searchTerm} placeholder="Search shortcuts..." class="mr-4 flex-1" />
+    <button
+      class="ring-offset-background focus-visible:ring-ring border-input bg-background hover:bg-accent hover:text-accent-foreground inline-flex h-9 items-center justify-center rounded-md border px-3 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
+      onclick={resetToDefaults}
+    >
+      <LucideRotateCcw class="mr-2 size-4" />
+      Reset to Defaults
+    </button>
+  </div>
   {#each categories() as category (category)}
-    <div class="mt-4 mb-1 first:mt-0">
+    <div class="mt-4 mb-1">
       <h2 class="text-lg font-bold">{category}</h2>
     </div>
-    <div class="bg-card flex flex-col rounded-md border shadow-sm">
+    <div class="bg-card flex flex-col rounded-md border shadow-sm last:mb-2">
       <div>
         {#each shortcutsByCategory().get(category)! as shortcut (shortcut.id)}
           <div
-            class="border-border flex h-12 flex-row items-center justify-between border-b p-2 last:border-0"
+            class="border-border flex h-12 flex-row items-center justify-between border-b p-2"
           >
             <div class="text-muted-foreground flex-1 p-2 text-sm">
               {shortcut.description}
@@ -94,6 +162,7 @@
                 <button
                   class="ring-offset-background focus-visible:ring-ring border-input bg-background hover:bg-accent hover:text-accent-foreground ml-1 inline-flex h-8 w-8 items-center justify-center rounded-md border text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
                   onclick={() => startEditingHotkey(shortcut.id)}
+                  disabled={shortcut.configurable === false}
                 >
                   <span class="sr-only">Edit</span>
                   <LucideCirclePlus class="size-3" />

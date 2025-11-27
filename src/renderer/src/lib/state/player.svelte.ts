@@ -1,4 +1,5 @@
 import { queue } from "./queue.svelte";
+import { logger } from "../logger";
 
 class PlayerState {
   public isPlaying = $state(false);
@@ -15,7 +16,6 @@ class PlayerState {
 
   public isFullscreen = $state(false);
 
-  public repeatMode = $state<"all" | "off" | "one">("off");
 
   public videoElement = $state<HTMLVideoElement | null>(null);
 
@@ -27,35 +27,69 @@ class PlayerState {
     this.duration = 0;
   }
 
+  /**
+   * Plays a video from the source URL.
+   *
+   * @param src - The source URL of the video to play.
+   */
+  public playVideo(src: string): void {
+    logger.debug(`playVideo: ${src}`);
+
+    this.isLoading = true;
+    this.error = null;
+
+    const videoUrl = src.startsWith("file://") ? src : `file://${src}`;
+    this.currentVideo = videoUrl;
+
+    const queueIndex = queue.items.findIndex((item) => item.path === src);
+
+    if (queueIndex === -1) {
+      console.warn("Video not found in queue:", src);
+      console.warn("Current queue items:", queue.items);
+      return;
+    }
+
+    queue.index = queueIndex;
+    this.currentTime = 0;
+    this.isPlaying = true;
+
+    if (this.videoElement) {
+      this.videoElement.currentTime = 0;
+      this.videoElement.load();
+    }
+  }
+
   public async togglePlayPause() {
     if (!this.videoElement || !queue.currentItem) return;
 
     if (this.isPlaying) {
-      this.videoElement.pause();
+      this.videoElement?.pause();
       this.isPlaying = false;
     } else {
       try {
         await this.videoElement?.play();
         this.isPlaying = true;
-      } catch {}
+      } catch (e) {
+        console.warn("play() failed");
+      }
     }
   }
 
-  public async playPrevious() {
+  public async playPreviousVideo() {
     if (!this.videoElement || !queue.currentItem) return;
     if (queue.items.length === 0) return;
 
     let newIndex = queue.index - 1;
 
     if (newIndex < 0) {
+      // Repeat Mode All: go to last item
       if (queue.repeatMode === "all") {
         newIndex = queue.items.length - 1;
       } else {
+        // Repeat Mode Off/One: stop playback of video
+        //
         this.isPlaying = false;
-        if (this.videoElement) {
-          this.videoElement.pause();
-        }
-
+        this.videoElement?.pause();
         return;
       }
     }
@@ -76,7 +110,7 @@ class PlayerState {
     }
   }
 
-  public async playNext() {
+  public async playNextVideo() {
     if (!this.videoElement || !queue.currentItem) return;
     if (queue.items.length === 0) return;
 
@@ -87,10 +121,7 @@ class PlayerState {
         newIndex = 0;
       } else {
         this.isPlaying = false;
-        if (this.videoElement) {
-          this.videoElement.pause();
-        }
-
+        this.videoElement?.pause();
         return;
       }
     }
