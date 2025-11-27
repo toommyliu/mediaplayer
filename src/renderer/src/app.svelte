@@ -1,21 +1,23 @@
 <script lang="ts">
-  import AlertTriangle from "lucide-svelte/icons/alert-triangle";
-  import IconX from "lucide-svelte/icons/x";
-  import { ModeWatcher } from "mode-watcher";
-  import { Pane, PaneGroup, PaneResizer } from "paneforge";
-  import { onDestroy, onMount } from "svelte";
-  import { droppable, type DragDropState } from "@thisux/sveltednd";
+  import Settings from "$components/Settings.svelte";
   import Sidebar from "$components/sidebar.svelte";
   import VideoPlayer from "$components/video-player/video-player.svelte";
-  import Settings from "$components/Settings.svelte";
   import { logger } from "$lib/logger";
   import { QueueManager } from "$lib/queue-manager";
   import { fileBrowserState } from "$lib/state/file-browser.svelte";
   import { platformState } from "$lib/state/platform.svelte";
   import { playerState } from "$lib/state/player.svelte";
-  import { sidebarState } from "$lib/state/sidebar.svelte";
-  import { client, handlers } from "./tipc";
   import { settings } from "$lib/state/settings.svelte";
+  import { sidebarState } from "$lib/state/sidebar.svelte";
+  import { droppable, type DragDropState } from "@thisux/sveltednd";
+  import AlertTriangle from "lucide-svelte/icons/alert-triangle";
+  import IconX from "lucide-svelte/icons/x";
+  import { ModeWatcher } from "mode-watcher";
+  import { Pane, PaneGroup, PaneResizer } from "paneforge";
+  import { onDestroy, onMount } from "svelte";
+  import { cubicOut } from "svelte/easing";
+  import { fly } from "svelte/transition";
+  import { client, handlers } from "./tipc";
 
   QueueManager.initialize();
 
@@ -144,12 +146,17 @@
   let isDraggingSidebar = $state(false);
   let dropZoneActive = $state<"left" | "right" | null>(null);
 
+  let isHoverOpen = $state(false);
+  let closeTimeout: NodeJS.Timeout;
+
   function handleDrop(state: DragDropState<{ type: "sidebar" }>) {
     const { targetContainer } = state;
     if (targetContainer === "drop-left") {
       sidebarState.position = "left";
+      sidebarState.isOpen = true;
     } else if (targetContainer === "drop-right") {
       sidebarState.position = "right";
+      sidebarState.isOpen = true;
     }
     isDraggingSidebar = false;
     dropZoneActive = null;
@@ -324,3 +331,39 @@
     </aside>
   </Pane>
 {/snippet}
+
+<!-- the hover trigger zone -->
+{#if !sidebarState.isOpen}
+  <div
+    role="presentation"
+    class="fixed top-0 bottom-0 z-40 w-4 transition-colors"
+    class:left-0={sidebarState.position === "left"}
+    class:right-0={sidebarState.position === "right"}
+    onmouseenter={() => {
+      clearTimeout(closeTimeout);
+      isHoverOpen = true;
+    }}
+  ></div>
+{/if}
+
+{#if !sidebarState.isOpen && isHoverOpen}
+  <div
+    role="presentation"
+    class="bg-background/95 border-sidebar-border fixed top-4 bottom-4 z-50 w-[300px] overflow-hidden rounded-xl border shadow-2xl backdrop-blur-md"
+    class:left-4={sidebarState.position === "left"}
+    class:right-4={sidebarState.position === "right"}
+    transition:fly={{
+      x: sidebarState.position === "left" ? -20 : 20,
+      duration: 200,
+      easing: cubicOut
+    }}
+    onmouseenter={() => clearTimeout(closeTimeout)}
+    onmouseleave={() => {
+      closeTimeout = setTimeout(() => {
+        isHoverOpen = false;
+      }, 300);
+    }}
+  >
+    <Sidebar onDragStart={handleDragStart} onDragEnd={handleDragEnd} />
+  </div>
+{/if}
