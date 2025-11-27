@@ -46,6 +46,7 @@ export default defineConfig({
         $hooks: resolve("src/renderer/src/hooks/"),
         $shared: resolve("src/shared/")
       }
-    }
+    },
+    publicDir: resolve(__dirname, "src/renderer/public"),
   }
 });
