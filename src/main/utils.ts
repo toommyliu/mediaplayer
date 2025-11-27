@@ -41,7 +41,6 @@ app.on("before-quit", async () => {
   await terminateWorkerPool();
 });
 
-const directoryCache = new Map<string, DirectoryContents>();
 let previousPath: string | null = null;
 
 const isHidden = (name: string) => name.startsWith(".");
@@ -367,11 +366,6 @@ export async function loadDirectoryContents(
 ): Promise<DirectoryContents> {
   const resolvedPath = normalizePath(resolve(dirPath));
 
-  // Check cache first
-  if (directoryCache.has(resolvedPath)) {
-    return directoryCache.get(resolvedPath)!;
-  }
-
   try {
     const pool = await getWorkerPool();
     const entries = await readdir(resolvedPath, { withFileTypes: true });
@@ -436,8 +430,6 @@ export async function loadDirectoryContents(
       isAtRoot,
       files: sortedFiles
     };
-
-    directoryCache.set(resolvedPath, contents);
 
     return contents;
   } catch (error) {
