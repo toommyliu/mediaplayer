@@ -8,3 +8,6 @@ out
 *.env*
 .github/copilot-instructions.md
 .github/*/*.instructions.md
+
+# Build scripts
+build-and-install-mac.sh
