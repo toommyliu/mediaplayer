@@ -6,10 +6,19 @@
   import VideoPlayerControls from "./video-player-controls.svelte";
   import UpNextNotification from "./notifications/UpNextNotification.svelte";
   import VideoInfoDisplay from "./notifications/VideoInfoDisplay.svelte";
+  import { onDestroy } from "svelte";
 
   type AspectRatioMode = "contain" | "cover" | "fill";
   let aspectRatio: AspectRatioMode = $state("contain");
   let videoAspectRatio = $state<number | null>(null);
+
+  // Directional hold state
+  type HoldDirection = "left" | "right" | null;
+  let isHolding = $state(false);
+  let holdDirection = $state<HoldDirection>(null);
+  let holdInterval: ReturnType<typeof setInterval> | null = null;
+  const HOLD_THRESHOLD = 300; // ms before triggering hold
+  const SEEK_SPEED = 3; // seconds per second of holding
 
   let restoring = playerState.currentVideo !== null;
   let resumeTime = playerState.currentTime;
@@ -272,6 +281,77 @@
       else await playerState.togglePlayPause();
     }
   }
+
+  // Directional hold handlers
+  function handleMouseDown(ev: MouseEvent): void {
+    if (!playerState.videoElement || !queue.currentItem) return;
+
+    const target = ev.target as HTMLElement | null;
+    // Ignore if clicking on controls
+    if (target && typeof target.closest === "function") {
+      const controlsElement = target.closest("#media-controls");
+      if (controlsElement) return;
+    }
+
+    const videoContainer = document.querySelector("#video-container") as HTMLElement | null;
+    if (!videoContainer) return;
+
+    // Determine which side of the video was clicked
+    const rect = videoContainer.getBoundingClientRect();
+    const clickX = ev.clientX - rect.left;
+    const middle = rect.width / 2;
+
+    const direction: HoldDirection = clickX < middle ? "left" : "right";
+    const holdTimer = setTimeout(() => {
+      startHoldSeeking(direction);
+    }, HOLD_THRESHOLD);
+    const cleanup = () => {
+      clearTimeout(holdTimer);
+      stopHoldSeeking();
+      window.removeEventListener("mouseup", cleanup);
+    };
+
+    window.addEventListener("mouseup", cleanup, { once: true });
+  }
+
+  function startHoldSeeking(direction: HoldDirection): void {
+    if (!playerState.videoElement || !direction) return;
+
+    isHolding = true;
+    holdDirection = direction;
+
+    const seekInterval = 100;
+    const seekAmount = (SEEK_SPEED * seekInterval) / 1000; // seconds
+
+    holdInterval = setInterval(() => {
+      if (!playerState.videoElement) {
+        stopHoldSeeking();
+        return;
+      }
+
+      const currentTime = playerState.videoElement.currentTime;
+      const newTime =
+        direction === "right"
+          ? Math.min(currentTime + seekAmount, playerState.duration)
+          : Math.max(currentTime - seekAmount, 0);
+
+      playerState.videoElement.currentTime = newTime;
+    }, seekInterval);
+  }
+
+  function stopHoldSeeking(): void {
+    isHolding = false;
+    holdDirection = null;
+
+    if (holdInterval) {
+      clearInterval(holdInterval);
+      holdInterval = null;
+    }
+  }
+
+  onDestroy(() => {
+    stopHoldSeeking();
+  });
 </script>
 
 <div
@@ -284,12 +364,14 @@
 >
   {#if queue.currentItem}
     <div
+      id="video-container"
       class={cn(
         "relative flex min-h-0 flex-1 items-center justify-center bg-black transition-all duration-300",
         !showControls && "cursor-none"
       )}
       onclick={handleClick}
       ondblclick={handleDblClick}
+      onmousedown={handleMouseDown}
       onmousemove={handleMouseMove}
       onmouseleave={handleMouseLeave}
     >
@@ -324,6 +406,42 @@
         >
         </video>
       </div>
+
+      <!-- Hold direction indicators -->
+      {#if isHolding && holdDirection}
+        <div
+          class={cn(
+            "pointer-events-none absolute top-1/2 z-20 -translate-y-1/2",
+            "flex items-center justify-center",
+            "h-8 w-8 rounded-full bg-black/40 backdrop-blur-sm",
+            "border border-white/20",
+            "animate-in fade-in zoom-in duration-150",
+            holdDirection === "left" ? "left-8" : "right-8"
+          )}
+        >
+          <div class="flex items-center text-white/80">
+            {#if holdDirection === "left"}
+              <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+            {:else}
+              <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            {/if}
+          </div>
+        </div>
+      {/if}
 
       <VideoInfoDisplay visible={showControls} />
       <UpNextNotification />
