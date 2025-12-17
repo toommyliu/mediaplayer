@@ -20,8 +20,25 @@
   import { sortFileTree, type SortOptions } from "$shared/index";
 
   import { fade } from "svelte/transition";
+  import { untrack } from "svelte";
 
   const hasNoFiles = $derived(() => fileBrowserState.fileSystem.length === 0);
+
+  let scrollContainer: HTMLDivElement | null = $state(null);
+
+  $effect(() => {
+    if (scrollContainer) {
+      const savedScrollTop = untrack(() => fileBrowserState.scrollTop);
+      if (savedScrollTop > 0) {
+        scrollContainer.scrollTop = savedScrollTop;
+      }
+    }
+  });
+
+  function handleScroll(event: Event) {
+    const target = event.target as HTMLDivElement;
+    fileBrowserState.scrollTop = target.scrollTop;
+  }
 
   const sortedFileSystem = $derived(() => {
     const sortOptions: SortOptions = {
@@ -126,10 +143,12 @@
     </div>
   {:else}
     <div
+      bind:this={scrollContainer}
       class="no-scrollbar flex-1 overflow-y-auto"
       role="listbox"
       aria-activedescendant={fileBrowserState.focusedItemPath ?? undefined}
       tabindex={0}
+      onscroll={handleScroll}
       onkeydown={(ev: KeyboardEvent) => {
         const triggers = Array.from(
           document.querySelectorAll('[data-item-trigger="true"]')

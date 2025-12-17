@@ -34,6 +34,8 @@ class FileBrowserState {
 
   public focusedItemPath = $state<string | null>(null);
 
+  public scrollTop = $state(0);
+
   public get fileSystem() {
     return this.fileTree?.files ?? [];
   }
