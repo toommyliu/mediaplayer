@@ -10,7 +10,6 @@
 
   type AspectRatioMode = "contain" | "cover" | "fill";
   let aspectRatio: AspectRatioMode = $state("contain");
-  let videoAspectRatio = $state<number | null>(null);
 
   // Directional hold state
   type HoldDirection = "left" | "right" | null;
@@ -152,10 +151,6 @@
   function handleLoadedMetadata(): void {
     if (playerState.videoElement) {
       playerState.duration = playerState.videoElement.duration;
-      const { videoWidth, videoHeight } = playerState.videoElement;
-      if (videoWidth && videoHeight) {
-        videoAspectRatio = videoWidth / videoHeight;
-      }
     }
   }
 
@@ -253,7 +248,6 @@
     }
 
     // Always attempt to play next video for repeatMode 'all' and 'off'.
-    videoAspectRatio = null;
     playerState.playNextVideo();
   }
 
@@ -375,37 +369,26 @@
       onmousemove={handleMouseMove}
       onmouseleave={handleMouseLeave}
     >
-      <div
-        class="shrink-0"
-        style:max-width={aspectRatio === "contain" ? "100%" : undefined}
-        style:max-height={aspectRatio === "contain" ? "100%" : undefined}
-        style:aspect-ratio={aspectRatio === "contain"
-          ? videoAspectRatio
-            ? `${videoAspectRatio}`
-            : "16 / 9"
-          : undefined}
+      <video
+        bind:this={playerState.videoElement}
+        src={`file://${queue.currentItem.path}`}
+        class={cn("h-full w-full bg-black", aspectRatioClass)}
+        onloadstart={handleLoadStart}
+        onloadeddata={handleLoadedData}
+        onloadedmetadata={handleLoadedMetadata}
+        ontimeupdate={handleTimeUpdate}
+        onseeked={handleSeeked}
+        onerror={handleError}
+        oncanplay={handleCanPlay}
+        onplay={handlePlay}
+        onpause={handlePause}
+        onended={handleEnded}
+        preload="metadata"
+        controls={false}
+        controlslist="nodownload nofullscreen noremoteplaybook"
+        disablepictureinpicture
       >
-        <video
-          bind:this={playerState.videoElement}
-          src={`file://${queue.currentItem.path}`}
-          class={cn("h-full w-full bg-black", aspectRatioClass)}
-          onloadstart={handleLoadStart}
-          onloadeddata={handleLoadedData}
-          onloadedmetadata={handleLoadedMetadata}
-          ontimeupdate={handleTimeUpdate}
-          onseeked={handleSeeked}
-          onerror={handleError}
-          oncanplay={handleCanPlay}
-          onplay={handlePlay}
-          onpause={handlePause}
-          onended={handleEnded}
-          preload="metadata"
-          controls={false}
-          controlslist="nodownload nofullscreen noremoteplaybook"
-          disablepictureinpicture
-        >
-        </video>
-      </div>
+      </video>
 
       <!-- Hold direction indicators -->
       {#if isHolding && holdDirection}
@@ -465,7 +448,7 @@
       ondblclick={handleDblClick}
     ></div>
 
-    <div class="pointer-events-none flex-shrink-0 opacity-0">
+    <div class="pointer-events-none shrink-0 opacity-0">
       <VideoPlayerControls aspectRatio="contain" onAspectRatioChange={() => {}} />
     </div>
   {/if}
