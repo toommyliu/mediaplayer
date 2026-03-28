@@ -15,7 +15,6 @@ export default defineConfig({
     },
     plugins: [
       react(),
-      // @ts-expect-error should be ok
       babel({ presets: [reactCompilerPreset()] }),
       tailwindcss(),
     ],
