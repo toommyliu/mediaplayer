@@ -1,46 +1,22 @@
 {
   "extends": "@electron-toolkit/tsconfig/tsconfig.web.json",
-  "include": [
-    "src/renderer/src/vite-env.d.ts.d.ts",
-    "src/renderer/src/**/*",
-    "src/renderer/src/**/*.svelte",
-    "src/preload/*.d.ts",
-    "src/main/tipc.ts",
-    "src/shared/**/*"
-  ],
   "compilerOptions": {
-    "verbatimModuleSyntax": true,
-    "useDefineForClassFields": true,
-    "strict": false,
-    "allowJs": true,
-    "checkJs": true,
     "composite": true,
-    "moduleResolution": "bundler",
-    "lib": ["ESNext", "DOM", "DOM.Iterable"],
-    "baseUrl": ".",
+    "jsx": "react-jsx",
     "paths": {
-      "$/*": [
+      "@renderer/*": [
         "./src/renderer/src/*"
       ],
-      "$components/*": [
-        "src/renderer/src/components/*"
-      ],
-      "$ui/*": [
-        "src/renderer/src/components/ui/*"
-      ],
-      "$lib/*": [
-        "src/renderer/src/lib/*"
-      ],
-      "$hooks/*": [
-        "src/renderer/src/hooks/*"
-      ],
-      "$main/*": [
-        "src/main/*"
-      ],
-      "$shared/*": [
-        "src/shared/*"
-      ],
-    },
-    "strictNullChecks": true
-  }
+      "@/*": [
+        "./src/renderer/src/*"
+      ]
+    }
+  },
+  "include": [
+    "src/renderer/src/env.d.ts",
+    "src/renderer/src/**/*",
+    "src/renderer/src/**/*.tsx",
+    "src/preload/*.d.ts",
+    "src/common/**/*"
+  ]
 }

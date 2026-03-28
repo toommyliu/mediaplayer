@@ -1,27 +1,10 @@
 {
-  "files": [],
-  "references": [{ "path": "./tsconfig.node.json" }, { "path": "./tsconfig.web.json" }],
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "$/*": [
-        "./src/renderer/src/*"
-      ],
-      "$components/*": [
-        "src/renderer/src/components/*"
-      ],
-      "$ui/*": [
-        "src/renderer/src/components/ui/*"
-      ],
-      "$lib/*": [
-        "src/renderer/src/lib/*"
-      ],
-      "$hooks/*": [
-        "src/renderer/src/hooks/*"
-      ],
-      "$main/*": [
-        "src/main/*"
-      ],
-    },
-  }
+      "@/*": ["src/renderer/src/*"]
+    }
+  },
+  "references": [{ "path": "./tsconfig.node.json" }, { "path": "./tsconfig.web.json" }],
+  "files": []
 }
