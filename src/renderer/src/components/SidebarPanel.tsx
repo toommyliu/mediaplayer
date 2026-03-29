@@ -10,8 +10,8 @@ import {
   TabsTrigger
 } from "@/components/ui/tabs";
 import {
-  SettingsIcon,
-} from "@/lib/icons";
+  Settings,
+} from "lucide-react";
 import {
   settingsCommands,
   sidebarCommands,
@@ -52,7 +52,7 @@ export default function SidebarPanel() {
             onClick={() => settingsCommands.setSettingsDialogOpen(true)}
             type="button"
           >
-            <SettingsIcon className="h-4 w-4" />
+            <Settings className="h-4 w-4" />
           </button>
 
           <div

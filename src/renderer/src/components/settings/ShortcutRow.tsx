@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 import { useHotkeyRecorder, formatForDisplay } from "@tanstack/react-hotkeys";
+import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
-import { CloseIcon } from "@/lib/icons";
 import { hotkeyCommands } from "@/lib/store";
 
 interface ShortcutRowProps {
@@ -65,7 +65,7 @@ export function ShortcutRow({
             type="button"
             variant="outline"
           >
-            <CloseIcon className="size-3" />
+            <X className="size-3" />
           </Button>
         ) : (
           <Button
