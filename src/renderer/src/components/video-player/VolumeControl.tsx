@@ -171,10 +171,10 @@ export function VolumeControl() {
 
 
       <div className="group/volume flex h-full items-center">
-        <div className="mx-1.5 h-3 w-1 rounded-full bg-white/20 transition-all group-hover/volume:opacity-0 group-focus-within/volume:opacity-0" />
+        <div className="mx-1 h-3 w-px rounded-full bg-white/20 transition-all group-hover/volume:opacity-0 group-focus-within/volume:opacity-0" />
 
         <div className="w-0 overflow-hidden opacity-0 pointer-events-none transition-[width,opacity] duration-200 ease-out group-hover/volume:w-28 group-hover/volume:opacity-100 group-hover/volume:pointer-events-auto group-focus-within/volume:w-28 group-focus-within/volume:opacity-100 group-focus-within/volume:pointer-events-auto">
-          <div className="flex h-full w-28 items-center px-2">
+          <div className="flex h-full w-28 items-center pl-0 pr-2">
             <VolumeSlider
               value={volume.value}
               isMuted={volume.isMuted}
