@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { CloseIcon } from "@/lib/icons";
+import { X } from "lucide-react"
+
 import {
   useNotificationsView,
   usePlayerView,
   useQueueView
 } from "@/lib/store";
+import { cn } from "@/lib/utils";
 
 export function UpNextNotification() {
   const player = usePlayerView();
@@ -40,31 +42,30 @@ export function UpNextNotification() {
 
   return (
     <div
-      className={`absolute z-40 flex max-w-sm flex-col gap-3 rounded-xl border border-border/60 bg-card/95 p-4 shadow-xl backdrop-blur-md ${positionClass}`}
+      className={cn("absolute z-40 flex w-64 flex-col gap-2 rounded-lg bg-card/95 p-3 shadow-xl ring-1 ring-foreground/10",
+        positionClass
+      )}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-          Up Next
-        </span>
+        <div className="flex items-baseline gap-1.5">
+          <span className="text-[11px] font-medium text-muted-foreground">Up Next</span>
+          <span className="text-[10px] text-muted-foreground/50 tabular-nums">
+            &middot; {Math.ceil(remaining)}s
+          </span>
+        </div>
         <Button
-          className="size-8 p-0 text-muted-foreground hover:text-foreground"
+          className="text-muted-foreground/60 hover:text-foreground"
           onClick={() => setIsDismissed(true)}
-          size="icon-sm"
-          type="button"
+          size="icon-xs"
           variant="ghost"
         >
-          <CloseIcon className="h-4 w-4" />
+          <X className="size-3.5" />
         </Button>
       </div>
 
-      <div className="line-clamp-2 text-base font-semibold">{nextItem?.name}</div>
-      <div className="h-1 overflow-hidden rounded-full bg-muted/50">
-        <div
-          className="h-full rounded-full bg-primary/70 transition-all"
-          style={{ width: `${Math.max(0, Math.min(100, (remaining / 10) * 100))}%` }}
-        />
+      <div className="line-clamp-2 text-xs font-medium leading-relaxed">
+        {nextItem?.name}
       </div>
-      <div className="text-xs text-muted-foreground">Playing in {Math.ceil(remaining)}s</div>
     </div>
   );
 }
