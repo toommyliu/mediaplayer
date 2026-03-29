@@ -1,14 +1,13 @@
-import { registerIpcMain } from "@egoist/tipc/main";
 import { electronApp, platform, optimizer } from "@electron-toolkit/utils";
 import { app, BrowserWindow } from "electron";
 import windowManager from "./windowManager";
 import "./input";
 import "./menu";
-import { router } from "./tipc";
+import { registerIpcHandlers } from "./ipc";
 
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = "true";
 
-registerIpcMain(router);
+registerIpcHandlers();
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.

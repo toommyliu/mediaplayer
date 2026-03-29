@@ -1,7 +1,6 @@
-import { getRendererHandlers } from "@egoist/tipc/main";
 import { app, globalShortcut, systemPreferences, BrowserWindow } from "electron";
+import { emitRendererEvent } from "./ipc";
 import { logger } from "./logger";
-import type { RendererHandlers } from "./tipc";
 import { getMainWindow, off, on, once } from "./windowManager";
 
 const MANAGED_SHORTCUTS = ["MediaPreviousTrack", "MediaNextTrack", "MediaPlayPause"] as const;
@@ -19,7 +18,9 @@ function refreshAccessibilityPermission(prompt = false): void {
   }
 }
 
-function invokeRendererHandler(window: BrowserWindow | null, handler: keyof RendererHandlers) {
+type MediaHandlerName = "mediaNextTrack" | "mediaPlayPause" | "mediaPreviousTrack";
+
+function invokeRendererHandler(window: BrowserWindow | null, handler: MediaHandlerName) {
   return async (): Promise<void> => {
     if (!window || window.isDestroyed()) {
       logger.debug("No valid main window available for media key handler");
@@ -33,21 +34,7 @@ function invokeRendererHandler(window: BrowserWindow | null, handler: keyof Rend
     }
 
     try {
-      const handlers = getRendererHandlers<RendererHandlers>(webContents);
-      if (!handlers) return;
-      switch (handler) {
-        case "mediaNextTrack":
-          await handlers.mediaNextTrack?.invoke?.();
-          break;
-        case "mediaPlayPause":
-          await handlers.mediaPlayPause?.invoke?.();
-          break;
-        case "mediaPreviousTrack":
-          await handlers.mediaPreviousTrack?.invoke?.();
-          break;
-        default:
-          logger.warn(`Unknown renderer handler requested: ${String(handler)}`);
-      }
+      emitRendererEvent(webContents, handler, undefined);
     } catch (error) {
       logger.error(`Failed to invoke renderer handler ${String(handler)}:`, error);
     }

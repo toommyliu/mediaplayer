@@ -1,7 +1,15 @@
 import { create } from "zustand";
 import { flattenVideoFiles, sortFileTree } from "../../../shared";
 import type { DirectoryContents, PickerResult } from "@/lib/contracts";
-import { client } from "@/lib/tipc";
+import {
+  enterFullscreen,
+  exitFullscreen,
+  getAllVideoFiles,
+  getPlatform,
+  readDirectory,
+  selectFileOrFolder,
+  showItemInFolder
+} from "@/lib/ipc";
 import type {
   AppState,
   FileSystemItem,
@@ -378,7 +386,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
     get().resetQueue();
     videoElement?.pause();
 
-    const dirResult = await client.readDirectory(result.rootPath);
+    const dirResult = await readDirectory(result.rootPath);
     const nextFileTree = {
       files: get().transformDirectoryContents(dirResult),
       rootPath: dirResult.currentPath
@@ -394,7 +402,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
       }
     }));
 
-    const allVideoFiles = await client.getAllVideoFiles(result.rootPath);
+    const allVideoFiles = await getAllVideoFiles(result.rootPath);
     if (allVideoFiles.length > 0) {
       get().addMultipleToQueue(allVideoFiles);
       get().playVideo(allVideoFiles[0].path);
@@ -419,7 +427,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
     });
 
     try {
-      const result = await client.selectFileOrFolder();
+      const result = await selectFileOrFolder();
       if (!result) {
         get().setFileBrowserState({ isLoading: false });
         return;
@@ -448,7 +456,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
     get().setFileBrowserState({ loadingFolders });
 
     try {
-      const result = await client.readDirectory(folderPath);
+      const result = await readDirectory(folderPath);
       const folderContents = get().transformDirectoryContents(result);
       const updated = get().updateFolderContents(fileSystem, folderPath, folderContents);
 
@@ -471,7 +479,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
   },
 
   async loadPlatform() {
-    const info = await client.getPlatform();
+    const info = await getPlatform();
     set({
       platform: {
         isLinux: info.isLinux,
@@ -524,7 +532,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
         loadingFolders: new Set<string>()
       });
 
-      const result = await client.readDirectory(dirPath);
+      const result = await readDirectory(dirPath);
       const nextFileTree = {
         files: get().transformDirectoryContents(result),
         rootPath: result.currentPath
@@ -542,7 +550,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
       }));
 
       get().updatePlayerQueueForced(true);
-      const allVideoFiles = await client.getAllVideoFiles(dirPath);
+      const allVideoFiles = await getAllVideoFiles(dirPath);
       if (allVideoFiles.length > 0) {
         get().addMultipleToQueue(allVideoFiles);
       }
@@ -560,7 +568,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
     get().setFileBrowserState({ isLoading: true });
     try {
-      const result = await client.readDirectory(state.fileBrowser.currentPath);
+      const result = await readDirectory(state.fileBrowser.currentPath);
       if (result.parentPath) {
         await get().navigateToDirectory(result.parentPath);
       }
@@ -780,9 +788,9 @@ export const useAppStore = create<AppStore>((set, get) => ({
   async setFullscreen(isFullscreen) {
     get().setPlayerState({ isFullscreen });
     if (isFullscreen) {
-      await client.enterFullscreen();
+      await enterFullscreen();
     } else {
-      await client.exitFullscreen();
+      await exitFullscreen();
     }
   },
 
@@ -919,7 +927,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
   },
 
   async showItemInFolder(path) {
-    await client.showItemInFolder(path);
+    await showItemInFolder(path);
   },
 
   shuffleQueue() {

@@ -1,9 +1,8 @@
-import { getRendererHandlers } from "@egoist/tipc/main";
 import { platform } from "@electron-toolkit/utils";
 import { Menu, app } from "electron";
+import { emitRendererEvent } from "./ipc";
 import { getOrCreateMainWindow } from "./windowManager";
 import { logger } from "./logger";
-import { type RendererHandlers } from "./tipc";
 import { showFilePicker } from "./utils";
 
 const macAppMenu: Electron.MenuItemConstructorOptions = {
@@ -17,8 +16,7 @@ const macAppMenu: Electron.MenuItemConstructorOptions = {
       click: async () => {
         try {
           const browserWindow = getOrCreateMainWindow();
-          const handlers = getRendererHandlers<RendererHandlers>(browserWindow.webContents);
-          handlers.openSettings.send();
+          emitRendererEvent(browserWindow.webContents, "openSettings", undefined);
         } catch (error) {
           logger.error("Failed to open settings via app menu:", error);
         }
@@ -41,9 +39,7 @@ const fileMenu: Electron.MenuItemConstructorOptions = {
 
         try {
           const browserWindow = getOrCreateMainWindow();
-          console.log("ret", ret);
-          const handlers = getRendererHandlers<RendererHandlers>(browserWindow.webContents);
-          handlers.addFile.send(ret);
+          emitRendererEvent(browserWindow.webContents, "addFile", ret);
         } catch (error) {
           logger.error("Failed to handle file open:", error);
         }
@@ -58,8 +54,7 @@ const fileMenu: Electron.MenuItemConstructorOptions = {
 
         try {
           const browserWindow = getOrCreateMainWindow();
-          const handlers = getRendererHandlers<RendererHandlers>(browserWindow.webContents);
-          handlers.addFolder.send(ret);
+          emitRendererEvent(browserWindow.webContents, "addFolder", ret);
         } catch (error) {
           logger.error("Failed to handle folder open:", error);
         }

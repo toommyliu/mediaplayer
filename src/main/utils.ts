@@ -7,9 +7,11 @@ import { cpus } from "node:os";
 import { dirname, extname, join, resolve } from "node:path";
 import { promisify } from "node:util";
 import { sortFileTree, type FileTreeItem, type SortOptions } from "../shared";
+import type { DirectoryContents, PickerResult, VideoFileItem } from "../common/contracts";
 import { DEFAULT_SORT_OPTIONS, VIDEO_EXTENSIONS } from "../shared/constants";
 import { logger } from "./logger";
 import { WorkerPool } from "./worker/worker-pool";
+import fileWorkerPath from "./worker/fileWorker?modulePath";
 
 const execFileAsync = promisify(execFile);
 let isFfmpegInitialized = false;
@@ -19,8 +21,7 @@ let workerPool: WorkerPool | null = null;
 async function getWorkerPool(): Promise<WorkerPool> {
   if (!workerPool) {
     const poolSize = Math.max(2, cpus().length);
-    const workerPath = join(__dirname, "worker", "fileWorker.js");
-    workerPool = new WorkerPool(poolSize, workerPath);
+    workerPool = new WorkerPool(poolSize, fileWorkerPath);
     await workerPool.initialize();
   }
 
@@ -440,8 +441,8 @@ export async function loadDirectoryContents(
 
 export async function getAllVideoFilesRecursive(
   folderPath: string
-): Promise<{ duration?: number; name: string; path: string }[]> {
-  const videoFiles: { duration?: number; name: string; path: string }[] = [];
+): Promise<VideoFileItem[]> {
+  const videoFiles: VideoFileItem[] = [];
 
   async function scan(dirPath: string) {
     const contents = await loadDirectoryContents(dirPath);
@@ -462,26 +463,6 @@ export async function getAllVideoFilesRecursive(
   await scan(folderPath);
   return videoFiles;
 }
-
-export type PickerResult =
-  | {
-      path: string;
-      type: "file";
-    }
-  | {
-      rootPath: string;
-      tree: PickerNode[];
-      type: "folder";
-    };
-
-export type PickerNode = FileTreeItem;
-
-export type DirectoryContents = {
-  currentPath: string;
-  files: FileTreeItem[];
-  isAtRoot: boolean;
-  parentPath: string | null;
-};
 
 type FfmpegProbeMetadata = {
   format?: {

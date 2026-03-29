@@ -1,5 +1,5 @@
 import Mousetrap from "mousetrap";
-import { handlers } from "@/lib/tipc";
+import { onMediaNextTrack, onMediaPlayPause, onMediaPreviousTrack } from "@/lib/ipc";
 import { FRAME_TIME_STEP, SEEK_TIME_STEP } from "@/lib/constants";
 import { useAppStore, getCurrentQueueItem } from "@/lib/store";
 import type { HotkeyAction, HotkeyCategory } from "@/types";
@@ -205,13 +205,13 @@ export function initializeHotkeys(): void {
   useAppStore.getState().setHotkeyCategories(categories.map(cloneCategory), modKey, true);
 
   if (!mediaHandlersBound) {
-    handlers.mediaPreviousTrack.listen(() => {
+    onMediaPreviousTrack(() => {
       void useAppStore.getState().playPreviousVideo();
     });
-    handlers.mediaNextTrack.listen(() => {
+    onMediaNextTrack(() => {
       void useAppStore.getState().playNextVideo();
     });
-    handlers.mediaPlayPause.listen(() => {
+    onMediaPlayPause(() => {
       void useAppStore.getState().togglePlayPause();
     });
     mediaHandlersBound = true;

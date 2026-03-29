@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { cleanupHotkeys, initializeHotkeys } from "@/lib/hotkeys";
-import { handlers } from "@/lib/tipc";
+import { onAddFile, onAddFolder, onOpenSettings } from "@/lib/ipc";
 import { useThemeMode } from "@/hooks/use-theme-mode";
 import SidebarPanel from "@/components/SidebarPanel";
 import VideoPlayer from "@/components/VideoPlayer";
@@ -32,13 +32,13 @@ export default function App() {
     });
 
     const disposers = [
-      handlers.addFile.listen((result) => {
+      onAddFile((result) => {
         void useAppStore.getState().handleAddFileEvent(result);
       }),
-      handlers.addFolder.listen((result) => {
+      onAddFolder((result) => {
         void useAppStore.getState().handleAddFolderEvent(result);
       }),
-      handlers.openSettings.listen(() => {
+      onOpenSettings(() => {
         useAppStore.getState().setSettingsDialogOpen(true);
       })
     ];
