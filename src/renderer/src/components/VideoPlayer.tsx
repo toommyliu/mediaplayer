@@ -504,6 +504,7 @@ export default function VideoPlayer() {
         onMouseDown={(event) => {
           if (event.button !== 0 || !videoRef.current) return;
           const target = event.target as HTMLElement | null;
+          if (target && !event.currentTarget.contains(target)) return;
           if (target?.closest("#media-controls")) return;
           const rect = containerRef.current?.getBoundingClientRect();
           if (!rect) return;
