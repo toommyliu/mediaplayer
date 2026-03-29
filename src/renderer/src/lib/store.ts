@@ -52,6 +52,7 @@ import {
   getStoredHotkeys,
   setHotkeyCategories,
   setStoredHotkeys,
+  updateHotkeyInState,
   useHotkeysState
 } from "@/lib/state/hotkeys";
 import {
@@ -242,7 +243,8 @@ export const hotkeyCommands = {
   clearStoredHotkeys,
   getStoredHotkeys,
   setHotkeyCategories,
-  setStoredHotkeys
+  setStoredHotkeys,
+  updateHotkey: updateHotkeyInState
 };
 
 export const stateSnapshots = {

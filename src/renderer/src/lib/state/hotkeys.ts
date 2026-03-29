@@ -49,3 +49,29 @@ export function getStoredHotkeys(): Record<string, string[]> | null {
 export function setStoredHotkeys(hotkeys: Record<string, string[]>): void {
   writeStorage(STORAGE_KEYS.hotkeys, hotkeys);
 }
+
+export function updateHotkeyInState(actionId: string, newKeys: string[]): boolean {
+  const state = useHotkeysStoreBase.getState();
+  const category = state.categories.find((cat) => cat.actions.some((a) => a.id === actionId));
+  if (!category) return false;
+
+  const action = category.actions.find((a) => a.id === actionId);
+  if (!action || action.configurable === false) return false;
+
+  const updatedCategories = state.categories.map((cat) => ({
+    ...cat,
+    actions: cat.actions.map((a) => (a.id === actionId ? { ...a, keys: newKeys } : a))
+  }));
+
+  useHotkeysStoreBase.setState({ categories: updatedCategories });
+
+  const hotkeys: Record<string, string[]> = {};
+  for (const cat of updatedCategories) {
+    for (const a of cat.actions) {
+      hotkeys[a.id] = a.keys;
+    }
+  }
+  setStoredHotkeys(hotkeys);
+
+  return true;
+}

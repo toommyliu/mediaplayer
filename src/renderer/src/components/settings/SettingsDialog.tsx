@@ -5,10 +5,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogPanel, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Kbd } from "@/components/ui/kbd";
-import { formatHotkeyDisplay, hotkeyRecorder } from "@/lib/hotkey-recorder";
-import { resetHotkeysToDefaults, updateHotkey } from "@/lib/hotkeys";
+import { formatForDisplay, useHotkeyRecorder } from "@tanstack/react-hotkeys";
 import { ChevronDownIcon, CloseIcon, MoonIcon, SettingsIcon, SunIcon } from "@/lib/icons";
 import {
+  hotkeyCommands,
   notificationCommands,
   settingsCommands,
   useHotkeysView,
@@ -34,6 +34,82 @@ function tabButtonClass(active: boolean): string {
     : "w-full justify-start text-left text-muted-foreground";
 }
 
+function formatHotkeyDisplay(keys: string[]): string {
+  if (keys.length === 0) return "";
+  if (keys.length === 1) return formatForDisplay(keys[0]);
+  return keys.map((key) => formatForDisplay(key)).join(", ");
+}
+
+function ShortcutRow({
+  action,
+  isRecording,
+  editingAction,
+  onEdit,
+  onCancel
+}: {
+  action: { id: string; description: string; keys: string[]; configurable?: boolean };
+  isRecording: boolean;
+  editingAction: string | null;
+  onEdit: (id: string) => void;
+  onCancel: () => void;
+}) {
+  const recorder = useHotkeyRecorder({
+    onRecord: (hotkey) => {
+      hotkeyCommands.updateHotkey(action.id, [hotkey]);
+      onCancel();
+    },
+    onCancel: () => {
+      onCancel();
+    }
+  });
+
+  const isEditing = isRecording && editingAction === action.id;
+
+  useEffect(() => {
+    if (isEditing) {
+      recorder.startRecording();
+    } else {
+      recorder.cancelRecording();
+    }
+  }, [isEditing]);
+
+  return (
+    <div className="flex items-center justify-between gap-4 border-b px-4 py-3 last:border-b-0">
+      <div className="text-muted-foreground text-sm">{action.description}</div>
+      <div className="flex items-center gap-2">
+        <Kbd className="h-7 text-xs">
+          {isEditing
+            ? "Press hotkey..."
+            : action.keys.length > 0
+              ? formatHotkeyDisplay(action.keys)
+              : "None"}
+        </Kbd>
+        {isEditing ? (
+          <Button
+            className="h-8 w-8 p-0"
+            onClick={onCancel}
+            size="sm"
+            type="button"
+            variant="outline"
+          >
+            <CloseIcon className="h-4 w-4" />
+          </Button>
+        ) : (
+          <Button
+            disabled={action.configurable === false}
+            onClick={() => onEdit(action.id)}
+            size="sm"
+            type="button"
+            variant="outline"
+          >
+            Edit
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function SettingsDialog() {
   const { resolvedTheme, setTheme, theme } = useTheme();
   const settings = useSettingsView();
@@ -42,14 +118,33 @@ export default function SettingsDialog() {
   const notifications = useNotificationsView();
   const [selectedTab, setSelectedTab] = useState<SettingsTab>("general");
   const [editingAction, setEditingAction] = useState<string | null>(null);
-  const [isRecording, setIsRecording] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+
+  // useEffect(() => {
+  //   const handleKeyDown = (event: KeyboardEvent) => {
+  //     if (event.key === "Escape") {
+  //       if (editingAction) {
+  //         setEditingAction(null);
+  //       } else {
+  //         settingsCommands.setSettingsDialogOpen(false);
+  //       }
+  //     }
+  //   };
+
+  //   window.addEventListener("keydown", handleKeyDown);
+  //   return () => window.removeEventListener("keydown", handleKeyDown);
+  // }, [editingAction]);
 
   useEffect(() => {
     if (settings.showDialog) {
       setSelectedTab("general");
     }
   }, [settings.showDialog]);
+
+  const handleResetDefaults = () => {
+    hotkeyCommands.clearStoredHotkeys();
+    window.location.reload();
+  };
 
   if (!settings.showDialog) return null;
 
@@ -69,7 +164,7 @@ export default function SettingsDialog() {
 
   return (
     <Dialog
-      onOpenChange={(open) => settingsCommands.setSettingsDialogOpen(open)}
+      // onOpenChange={(open) => settingsCommands.setSettingsDialogOpen(open)}
       open={settings.showDialog}
     >
       <DialogContent
@@ -86,7 +181,7 @@ export default function SettingsDialog() {
         </Button>
 
         <aside className="border-sidebar-border bg-sidebar/60 w-full border-b p-4 md:w-64 md:border-r md:border-b-0">
-          <h2 className="mb-4 px-3 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+          <h2 className="text-muted-foreground mb-4 px-3 text-xs font-semibold tracking-[0.18em] uppercase">
             Settings
           </h2>
           <nav
@@ -175,15 +270,16 @@ export default function SettingsDialog() {
             <div className="space-y-6">
               <div>
                 <h3 className="mb-2 text-base font-semibold">Playback</h3>
-                <p className="mb-3 text-sm text-muted-foreground">
-                  Autoplay follows queue selection and starts on load when a file or folder is opened.
+                <p className="text-muted-foreground mb-3 text-sm">
+                  Autoplay follows queue selection and starts on load when a file or folder is
+                  opened.
                 </p>
               </div>
 
               <div>
                 <label className="mb-2 block text-sm font-medium">Current Volume</label>
                 <input
-                  className="w-full accent-primary"
+                  className="accent-primary w-full"
                   max={1}
                   min={0}
                   onChange={(event) => {
@@ -209,7 +305,9 @@ export default function SettingsDialog() {
                   <Checkbox
                     checked={notifications.upNextEnabled}
                     onCheckedChange={(checked) =>
-                      notificationCommands.setNotificationSettings({ upNextEnabled: checked === true })
+                      notificationCommands.setNotificationSettings({
+                        upNextEnabled: checked === true
+                      })
                     }
                   />
                   Show "Up Next" notification
@@ -234,7 +332,7 @@ export default function SettingsDialog() {
                 <label className="mb-2 block text-sm font-medium">Up Next Position</label>
                 <div className="relative max-w-xs">
                   <select
-                    className="h-10 w-full appearance-none rounded-md border border-input bg-background px-3 pr-10 text-sm"
+                    className="border-input bg-background h-10 w-full appearance-none rounded-md border px-3 pr-10 text-sm"
                     onChange={(event) =>
                       notificationCommands.setNotificationSettings({
                         upNextPosition: event.target.value as NotificationPosition
@@ -247,7 +345,7 @@ export default function SettingsDialog() {
                     <option value="bottom-left">Bottom Left</option>
                     <option value="bottom-right">Bottom Right</option>
                   </select>
-                  <ChevronDownIcon className="pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <ChevronDownIcon className="text-muted-foreground pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2" />
                 </div>
               </div>
             </div>
@@ -257,11 +355,7 @@ export default function SettingsDialog() {
             <div className="space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <h3 className="text-base font-semibold">Keyboard Shortcuts</h3>
-                <Button
-                  onClick={() => resetHotkeysToDefaults()}
-                  type="button"
-                  variant="outline"
-                >
+                <Button onClick={handleResetDefaults} type="button" variant="outline">
                   Reset to Defaults
                 </Button>
               </div>
@@ -274,7 +368,7 @@ export default function SettingsDialog() {
               />
 
               {hotkeys.categories.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   Shortcut bindings will appear here once the hotkey layer is wired.
                 </p>
               ) : (
@@ -283,64 +377,14 @@ export default function SettingsDialog() {
                     <div className="border-b px-4 py-3 text-sm font-semibold">{category.name}</div>
                     <div>
                       {category.actions.map((action) => (
-                        <div
-                          className="flex items-center justify-between gap-4 border-b px-4 py-3 last:border-b-0"
+                        <ShortcutRow
+                          action={action}
+                          editingAction={editingAction}
+                          isRecording={editingAction !== null}
                           key={action.id}
-                        >
-                          <div className="text-sm text-muted-foreground">{action.description}</div>
-                          <div className="flex items-center gap-2">
-                            <Kbd className="h-7 text-xs">
-                              {isRecording && editingAction === action.id
-                                ? "Press hotkey..."
-                                : action.keys.length > 0
-                                  ? formatHotkeyDisplay(action.keys)
-                                  : "None"}
-                            </Kbd>
-                            {isRecording && editingAction === action.id ? (
-                              <Button
-                                className="h-8 w-8 p-0"
-                                onClick={() => {
-                                  hotkeyRecorder.cancelRecording();
-                                  setEditingAction(null);
-                                  setIsRecording(false);
-                                }}
-                                size="sm"
-                                type="button"
-                                variant="outline"
-                              >
-                                <CloseIcon className="h-4 w-4" />
-                              </Button>
-                            ) : (
-                              <Button
-                                disabled={action.configurable === false}
-                                onClick={() => {
-                                  if (editingAction) {
-                                    hotkeyRecorder.cancelRecording();
-                                  }
-
-                                  setEditingAction(action.id);
-                                  setIsRecording(true);
-                                  hotkeyRecorder.startRecording(
-                                    (result) => {
-                                      updateHotkey(action.id, result.keys);
-                                      setEditingAction(null);
-                                      setIsRecording(false);
-                                    },
-                                    () => {
-                                      setEditingAction(null);
-                                      setIsRecording(false);
-                                    }
-                                  );
-                                }}
-                                size="sm"
-                                type="button"
-                                variant="outline"
-                              >
-                                Edit
-                              </Button>
-                            )}
-                          </div>
-                        </div>
+                          onCancel={() => setEditingAction(null)}
+                          onEdit={(id) => setEditingAction(id)}
+                        />
                       ))}
                     </div>
                   </div>
