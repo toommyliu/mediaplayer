@@ -3,9 +3,6 @@ import type { MouseEvent, KeyboardEvent, ComponentProps } from 'react'
 import { ChevronDown, Dot, Loader } from 'lucide-react'
 import {
   ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuSeparator,
   ContextMenuTrigger
 } from "@/components/ui/context-menu";
 
@@ -15,12 +12,12 @@ import {
   libraryCommands,
   normalizeVideoPath,
   playbackCommands,
-  queueCommands,
   useCurrentQueueItem,
   useFileBrowserView,
   usePlatformView,
   usePlayerView
 } from "@/lib/store";
+import { FileBrowserItemContextMenu } from "./FileBrowserItemContextMenu";
 import { cn } from "@/lib/utils";
 import type { FileSystemItem } from "@/types";
 
@@ -88,13 +85,6 @@ export function FileBrowserItem({ item, depth }: { depth: number; item: FileSyst
     playbackCommands.playVideo(item.path);
   }
 
-  async function copyItemPath(): Promise<void> {
-    try {
-      await navigator.clipboard.writeText(item.path);
-    } catch (error) {
-      console.error("Failed to copy path", error);
-    }
-  }
 
   return (
     <div>
@@ -164,7 +154,7 @@ export function FileBrowserItem({ item, depth }: { depth: number; item: FileSyst
                   {containsCurrent ? <Dot className="text-primary h-3 w-3" /> : null}
                   {isFolder ? (
                     <ChevronDown
-                      className={`text-muted-foreground h-4 w-4 transition ${isExpanded ? "rotate-180" : ""}`}
+                      className={cn("text-muted-foreground h-4 w-4 transition", isExpanded ? "rotate-180" : "")}
                     />
                   ) : null}
                 </button>
@@ -173,76 +163,10 @@ export function FileBrowserItem({ item, depth }: { depth: number; item: FileSyst
           }}
         ></ContextMenuTrigger>
 
-        <ContextMenuContent>
-          {isFolder ? (
-            <>
-              <ContextMenuItem
-                onSelect={() => {
-                  void libraryCommands.navigateToDirectory(item.path);
-                }}
-              >
-                Open folder
-              </ContextMenuItem>
-              <ContextMenuItem
-                onSelect={() => {
-                  libraryCommands.toggleFolder(item.path);
-                }}
-              >
-                {isExpanded ? "Collapse folder" : "Expand folder"}
-              </ContextMenuItem>
-              <ContextMenuItem
-                onSelect={() => {
-                  void libraryCommands.revealItemInFolder(item.path);
-                }}
-              >
-                Reveal in Finder/Explorer
-              </ContextMenuItem>
-              <ContextMenuSeparator />
-              <ContextMenuItem onSelect={copyItemPath}>Copy path</ContextMenuItem>
-            </>
-          ) : (
-            <>
-              <ContextMenuItem
-                onSelect={() => {
-                  playbackCommands.playVideo(item.path);
-                }}
-              >
-                Play video
-              </ContextMenuItem>
-              <ContextMenuItem
-                onSelect={() => {
-                  queueCommands.addToQueue({
-                    duration: item.duration,
-                    name: item.name,
-                    path: item.path
-                  });
-                }}
-              >
-                Add to queue
-              </ContextMenuItem>
-              <ContextMenuItem
-                onSelect={() => {
-                  queueCommands.addNextToQueue({
-                    duration: item.duration,
-                    name: item.name,
-                    path: item.path
-                  });
-                }}
-              >
-                Add next
-              </ContextMenuItem>
-              <ContextMenuItem
-                onSelect={() => {
-                  void libraryCommands.revealItemInFolder(item.path);
-                }}
-              >
-                Reveal in Finder/Explorer
-              </ContextMenuItem>
-              <ContextMenuSeparator />
-              <ContextMenuItem onSelect={copyItemPath}>Copy path</ContextMenuItem>
-            </>
-          )}
-        </ContextMenuContent>
+        <FileBrowserItemContextMenu
+          item={item}
+          isExpanded={isExpanded}
+        />
       </ContextMenu>
 
       {isFolder && isExpanded ? (
