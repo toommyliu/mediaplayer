@@ -1,7 +1,6 @@
 import {
   useEffect,
   useRef,
-  useState,
   type ComponentProps,
   type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent
@@ -40,15 +39,10 @@ import {
 } from "@/components/ui/empty";
 import {
   ChevronDownIcon,
-  CloseIcon,
   DotIcon,
-  FilmIcon,
   FolderIcon,
   LoaderIcon,
-  RepeatIcon,
-  RepeatOneIcon,
   SettingsIcon,
-  ShuffleIcon
 } from "@/lib/icons";
 import { makeTimeString } from "@/lib/make-time-string";
 import {
@@ -63,14 +57,11 @@ import {
   useFileBrowserView,
   usePlatformView,
   usePlayerView,
-  useQueueView,
   useSidebarView
 } from "@/lib/store";
 import { cn } from "@/lib/utils";
-import type { FileSystemItem, QueueItem } from "@/types";
-import { ShuffleButton } from "./ShuffleButton";
-import { RepeatButton } from "./RepeatButton";
-import { ClearQueueButton } from "./ClearQueueButton";
+import type { FileSystemItem } from "@/types";
+import { QueuePanel } from "./queue/QueuePanel";
 
 function iconButtonClass(): string {
   return "h-7 px-2 text-xs";
@@ -437,139 +428,6 @@ function FileBrowserPanel() {
   );
 }
 
-function QueuePanel() {
-  const queue = useQueueView();
-  const currentItem = useCurrentQueueItem();
-  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
-
-  function removeItem(item: QueueItem): void {
-    const isCurrent = currentItem?.id === item.id;
-    if (!isCurrent) {
-      queueCommands.removeFromQueue(item.id);
-      return;
-    }
-
-    const currentIndex = queue.items.findIndex((queueItem) => queueItem.id === item.id);
-    let nextVideoToPlay: string | null = null;
-
-    if (queue.items.length > 1) {
-      if (currentIndex < queue.items.length - 1) {
-        nextVideoToPlay = queue.items[currentIndex + 1].path;
-      } else if (currentIndex > 0) {
-        nextVideoToPlay = queue.items[currentIndex - 1].path;
-      }
-    }
-
-    queueCommands.removeFromQueue(item.id);
-
-    if (nextVideoToPlay) {
-      playbackCommands.playVideo(nextVideoToPlay);
-    } else {
-      playbackCommands.stopPlayback(true);
-    }
-  }
-
-  return (
-    <div className="flex min-h-0 flex-1 flex-col gap-2.5">
-      <div className="flex shrink-0 items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5">
-          <ShuffleButton />
-          <RepeatButton />
-        </div>
-
-        <ClearQueueButton />
-      </div>
-
-      <div className="flex min-h-0 flex-1 flex-col">
-        {queue.items.length === 0 ? (
-          <Empty className="h-full py-0">
-            <EmptyMedia variant="icon">
-              <FilmIcon className="size-6 text-muted-foreground/60" />
-            </EmptyMedia>
-            <EmptyHeader>
-              <EmptyTitle className="text-base font-medium">Queue is empty</EmptyTitle>
-              <EmptyDescription className="text-xs">
-                Add videos to your queue to watch them sequentially.
-              </EmptyDescription>
-            </EmptyHeader>
-          </Empty>
-        ) : (
-          <ScrollArea className="flex-1" scrollFade>
-            <div className="pr-1">
-              <div className="space-y-1">
-                {queue.items.map((item, index) => {
-                  const isPlaying = currentItem?.id === item.id;
-                  return (
-                    <div
-                      key={item.id}
-                      className={cn(
-                        "group flex items-center gap-3 rounded-md border p-2 text-sm transition-all duration-200",
-                        {
-                          "border-primary bg-primary/10": dragOverIndex === index,
-                          "border-primary/20 bg-primary/5 text-primary": isPlaying,
-                          "border-transparent hover:bg-muted/40":
-                            dragOverIndex !== index && !isPlaying
-                        }
-                      )}
-                      draggable
-                      onClick={() => playbackCommands.playVideo(item.path)}
-                      onDragOver={(event) => {
-                        event.preventDefault();
-                        setDragOverIndex(index);
-                      }}
-                      onDragStart={(event) => {
-                        event.dataTransfer.setData("text/plain", String(index));
-                      }}
-                      onDragEnd={() => setDragOverIndex(null)}
-                      onDrop={(event) => {
-                        event.preventDefault();
-                        const fromIndex = Number.parseInt(
-                          event.dataTransfer.getData("text/plain"),
-                          10
-                        );
-                        if (!Number.isNaN(fromIndex) && fromIndex !== index) {
-                          queueCommands.moveQueueItem(fromIndex, index);
-                        }
-                        setDragOverIndex(null);
-                      }}
-                      role="button"
-                      tabIndex={0}
-                    >
-                      <span className="w-4 text-center text-[10px] font-medium text-muted-foreground/60 tabular-nums">
-                        {index + 1}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <div className="truncate font-medium leading-tight">{item.name}</div>
-                        {item.duration ? (
-                          <div className="mt-0.5 text-[10px] text-muted-foreground/70">
-                            {makeTimeString(item.duration)}
-                          </div>
-                        ) : null}
-                      </div>
-
-                      <Button
-                        className="hidden size-6 p-0 text-muted-foreground/60 hover:bg-destructive/10 hover:text-destructive group-hover:inline-flex"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          removeItem(item);
-                        }}
-                        size="icon-xs"
-                        type="button"
-                        variant="ghost"
-                      >
-                        <CloseIcon className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </ScrollArea>
-        )}
-      </div>
-    </div>
-  );
-}
 
 export default function SidebarPanel() {
   const sidebar = useSidebarView();

@@ -11,7 +11,6 @@ import { Slider } from "@/components/ui/slider";
 import { getVideoElement } from "@/lib/controllers/media-runtime";
 import {
   CloseIcon,
-  FilmIcon,
   FullscreenIcon,
   LoaderIcon,
   MuteIcon,
@@ -430,7 +429,7 @@ export default function VideoPlayer() {
         }
       }, 3000);
     }
-    }
+  }
 
   function stopHoldSeeking(): void {
     setHoldDirection(null);
@@ -480,22 +479,15 @@ export default function VideoPlayer() {
         onDoubleClick={() => {
           void libraryCommands.loadFileSystemStructure();
         }}
-      >
-        <div>
-          <FilmIcon className="mx-auto mb-4 h-12 w-12 opacity-50" />
-          <p className="text-base font-medium">No video selected</p>
-          <p className="text-sm opacity-70">Double-click to open a file or folder</p>
-        </div>
-      </div>
+      />
     );
   }
 
   return (
     <div className="relative flex h-full w-full flex-col" id="video-player">
       <div
-        className={`relative flex min-h-0 flex-1 items-center justify-center bg-black ${
-          showControls ? "" : "cursor-none"
-        }`}
+        className={`relative flex min-h-0 flex-1 items-center justify-center bg-black ${showControls ? "" : "cursor-none"
+          }`}
         id="video-container"
         onDoubleClick={async (event) => {
           const target = event.target as HTMLElement | null;
@@ -534,13 +526,12 @@ export default function VideoPlayer() {
         ref={containerRef}
       >
         <video
-            className={`h-full w-full bg-black ${
-            player.aspectRatio === "cover"
+          className={`h-full w-full bg-black ${player.aspectRatio === "cover"
               ? "object-cover"
               : player.aspectRatio === "fill"
                 ? "object-fill"
                 : "object-contain"
-          }`}
+            }`}
           controls={false}
           disablePictureInPicture
           onCanPlay={() => playerCommands.setPlayerState({ isLoading: false })}
@@ -603,9 +594,8 @@ export default function VideoPlayer() {
 
         {holdDirection ? (
           <div
-            className={`pointer-events-none absolute top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white backdrop-blur-sm ${
-              holdDirection === "left" ? "left-8" : "right-8"
-            }`}
+            className={`pointer-events-none absolute top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white backdrop-blur-sm ${holdDirection === "left" ? "left-8" : "right-8"
+              }`}
           >
             {holdDirection === "left" ? "←" : "→"}
           </div>
