@@ -199,7 +199,7 @@ function PlayerControls({
 
   return (
     <div
-      className="absolute inset-x-0 bottom-0 z-30 bg-gradient-to-t from-black/90 via-black/60 to-transparent px-6 pb-4 pt-20"
+      className="absolute inset-x-0 bottom-0 z-30 bg-gradient-to-t from-black/90 via-black/60 to-transparent px-6 pb-4 pt-12"
       id="media-controls"
       onMouseEnter={onControlsMouseEnter}
       onMouseLeave={onControlsMouseLeave}
@@ -223,6 +223,7 @@ function PlayerControls({
             const rect = event.currentTarget.getBoundingClientRect();
             setHoverTime(seekTo(event.clientX, rect));
           }}
+          onMouseLeave={() => setHoverTime(0)}
           role="slider"
           tabIndex={0}
         >
@@ -236,7 +237,7 @@ function PlayerControls({
           />
         </div>
 
-        {!isDragging && player.duration > 0 ? (
+        {!isDragging && player.duration > 0 && hoverTime > 0 ? (
           <div
             className="pointer-events-none absolute -top-8 rounded bg-black/70 px-2 py-1 text-xs text-white"
             style={{
@@ -385,7 +386,7 @@ export default function VideoPlayer() {
   const hideTimerRef = useRef<number | null>(null);
   const holdTimerRef = useRef<number | null>(null);
   const holdIntervalRef = useRef<number | null>(null);
-  const [showControls, setShowControls] = useState(true);
+  const [showControls, setShowControls] = useState(false);
   const [isControlsHovered, setIsControlsHovered] = useState(false);
   const [holdDirection, setHoldDirection] = useState<HoldDirection>(null);
 
@@ -610,18 +611,22 @@ export default function VideoPlayer() {
           </div>
         ) : null}
 
-        <VideoInfoOverlay visible={showControls} />
-        <UpNextNotification />
-        <PlayerControls
-          onControlsMouseEnter={() => {
-            setIsControlsHovered(true);
-            setShowControls(true);
-          }}
-          onControlsMouseLeave={() => {
-            setIsControlsHovered(false);
-            resetHideTimer();
-          }}
-        />
+        {showControls && (
+          <>
+            <VideoInfoOverlay visible={showControls} />
+            <UpNextNotification />
+            <PlayerControls
+              onControlsMouseEnter={() => {
+                setIsControlsHovered(true);
+                setShowControls(true);
+              }}
+              onControlsMouseLeave={() => {
+                setIsControlsHovered(false);
+                resetHideTimer();
+              }}
+            />
+          </>
+        )}
       </div>
     </div>
   );
