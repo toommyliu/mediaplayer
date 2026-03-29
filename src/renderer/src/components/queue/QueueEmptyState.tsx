@@ -1,7 +1,7 @@
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { Film } from "lucide-react";
 
-export function EmptyQueuePanel() {
+export function QueueEmptyState() {
   return <Empty className="h-full py-0">
     <EmptyMedia variant="icon">
       <Film className="size-6 text-muted-foreground/60" />

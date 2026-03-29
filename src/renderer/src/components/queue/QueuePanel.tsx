@@ -1,6 +1,6 @@
 
 import { ClearQueueButton } from "../ClearQueueButton";
-import { EmptyQueuePanel } from "./EmptyQueuePanel";
+import { QueueEmptyState } from "./QueueEmptyState";
 import { RepeatButton } from "../RepeatButton";
 import { ShuffleButton } from "../ShuffleButton";
 import { QueueList } from "./QueueList";
@@ -23,7 +23,7 @@ export function QueuePanel() {
 
       <div className="flex min-h-0 flex-1 flex-col">
         {queue.items.length === 0 ? (
-          <EmptyQueuePanel />
+          <QueueEmptyState />
         ) : (
           <QueueList />
         )}
