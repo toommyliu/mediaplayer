@@ -26,12 +26,12 @@ importers:
       '@ffprobe-installer/ffprobe':
         specifier: ^2.1.2
         version: 2.1.2
-      '@fontsource/inter':
-        specifier: ^5.2.8
-        version: 5.2.8
-      '@rolldown/plugin-babel':
-        specifier: ^0.2.2
-        version: 0.2.2(@babel/core@7.28.5)(@babel/runtime@7.29.2)(rolldown@1.0.0-rc.12(@emnapi/core@1.7.1)(@emnapi/runtime@1.7.1))(vite@8.0.3(@emnapi/core@1.7.1)(@emnapi/runtime@1.7.1)(@types/node@22.19.1)(jiti@2.6.1)(yaml@2.8.1))
+      '@fontsource/geist-mono':
+        specifier: ^5.2.7
+        version: 5.2.7
+      '@fontsource/geist-sans':
+        specifier: ^5.2.5
+        version: 5.2.5
       '@tailwindcss/postcss':
         specifier: ^4.1.10
         version: 4.1.17
@@ -93,9 +93,9 @@ importers:
       '@eslint/js':
         specifier: ^9.18.0
         version: 9.39.1
-      '@internationalized/date':
-        specifier: ^3.8.1
-        version: 3.10.0
+      '@rolldown/plugin-babel':
+        specifier: ^0.2.2
+        version: 0.2.2(@babel/core@7.28.5)(@babel/runtime@7.29.2)(rolldown@1.0.0-rc.12(@emnapi/core@1.7.1)(@emnapi/runtime@1.7.1))(vite@8.0.3(@emnapi/core@1.7.1)(@emnapi/runtime@1.7.1)(@types/node@22.19.1)(jiti@2.6.1)(yaml@2.8.1))
       '@types/node':
         specifier: ^22.14.1
         version: 22.19.1
@@ -704,8 +704,11 @@ packages:
   '@floating-ui/utils@0.2.11':
     resolution: {integrity: sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg==}
 
-  '@fontsource/inter@5.2.8':
-    resolution: {integrity: sha512-P6r5WnJoKiNVV+zvW2xM13gNdFhAEpQ9dQJHt3naLvfg+LkF2ldgSLiF4T41lf1SQCM9QmkqPTn4TH568IRagg==}
+  '@fontsource/geist-mono@5.2.7':
+    resolution: {integrity: sha512-xVPVFISJg/K0VVd+aQN0Y7X/sw9hUcJPyDWFJ5GpyU3bHELhoRsJkPSRSHXW32mOi0xZCUQDOaPj1sqIFJ1FGg==}
+
+  '@fontsource/geist-sans@5.2.5':
+    resolution: {integrity: sha512-anllOHyJbElRs9fV15TeDRqAeb1IKm4bSknPl6ZMoyPTx1BBy7logudcUwpNjmQLkzn4Q0JGQLRCUKJYoyST6A==}
 
   '@gar/promisify@1.1.3':
     resolution: {integrity: sha512-k2Ty1JcVojjJFwrg/ThKi2ujJ7XNLYaFGNB/bWT9wGR+oSMJHMa5w+CUq6p/pVrKeNNgA7pCqEcjSnHVoqJQFw==}
@@ -725,9 +728,6 @@ packages:
   '@humanwhocodes/retry@0.4.3':
     resolution: {integrity: sha512-bV0Tgo9K4hfPCek+aMAn81RppFKv2ySDQeMoSZuvTASywNTnVJCArCZE2FWqpvIatKu7VMRLWlR1EazvVhDyhQ==}
     engines: {node: '>=18.18'}
-
-  '@internationalized/date@3.10.0':
-    resolution: {integrity: sha512-oxDR/NTEJ1k+UFVQElaNIk65E/Z83HK1z1WI3lQyhTtnNg4R5oVXaPzK3jcpKG8UHKDVuDQHzn+wsxSz8RP3aw==}
 
   '@isaacs/balanced-match@4.0.1':
     resolution: {integrity: sha512-yzMTt9lEb8Gv7zRioUilSglI0c0smZ9k5D65677DLWLtWJaXIS3CqcGyUFByYKlnUj6TkjLVs54fBl6+TiGQDQ==}
@@ -1017,9 +1017,6 @@ packages:
     resolution: {integrity: sha512-znp1A/Y1Jj4l/Zy7PX5DZKBE0ZNY+5QBngiE21NJkfSTyzzC5iKNWOtwFXKtIrn7MXEFBck4jD95iBNkGjK92Q==}
     peerDependencies:
       acorn: ^8.9.0
-
-  '@swc/helpers@0.5.17':
-    resolution: {integrity: sha512-5IKx/Y13RsYd+sauPb2x+U/xZikHjolzfuDgTAl/Tdf3Q8rslRvC19NKDLgAJQ6wsqADk10ntlv08nPFw/gO/A==}
 
   '@szmarczak/http-timer@4.0.6':
     resolution: {integrity: sha512-4BAffykYOgO+5nzBWYwE3W90sBgLJoUPRWWcL8wlyiM8IB8ipJz3UMJ9KXQd1RKQXpKp8Tutn80HZtWsu2u76w==}
@@ -5472,7 +5469,9 @@ snapshots:
 
   '@floating-ui/utils@0.2.11': {}
 
-  '@fontsource/inter@5.2.8': {}
+  '@fontsource/geist-mono@5.2.7': {}
+
+  '@fontsource/geist-sans@5.2.5': {}
 
   '@gar/promisify@1.1.3': {}
 
@@ -5486,10 +5485,6 @@ snapshots:
   '@humanwhocodes/module-importer@1.0.1': {}
 
   '@humanwhocodes/retry@0.4.3': {}
-
-  '@internationalized/date@3.10.0':
-    dependencies:
-      '@swc/helpers': 0.5.17
 
   '@isaacs/balanced-match@4.0.1': {}
 
@@ -5778,10 +5773,6 @@ snapshots:
   '@sveltejs/acorn-typescript@1.0.7(acorn@8.15.0)':
     dependencies:
       acorn: 8.15.0
-
-  '@swc/helpers@0.5.17':
-    dependencies:
-      tslib: 2.8.1
 
   '@szmarczak/http-timer@4.0.6':
     dependencies:
