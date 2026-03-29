@@ -21,7 +21,6 @@ import { FileBrowserItemContextMenu } from "./FileBrowserItemContextMenu";
 import { cn } from "@/lib/utils";
 import type { FileSystemItem } from "@/types";
 
-import { sortFileTree } from "../../../../shared/file-tree-utils";
 
 function isCurrentVideo(itemPath: string | undefined, currentVideo: string | null): boolean {
   if (!itemPath || !currentVideo) return false;
@@ -48,12 +47,6 @@ export function FileBrowserItem({ item, depth }: { depth: number; item: FileSyst
   const containsCurrent =
     isFolder && !isExpanded && hasCurrentVideoInFolder(item.path, player.currentVideo);
 
-  const children = item.files
-    ? sortFileTree(item.files, {
-      sortBy: fileBrowser.sortBy,
-      sortDirection: fileBrowser.sortDirection
-    })
-    : [];
 
   function focusRelative(offset: number): void {
     const triggers = Array.from(
@@ -168,16 +161,6 @@ export function FileBrowserItem({ item, depth }: { depth: number; item: FileSyst
           isExpanded={isExpanded}
         />
       </ContextMenu>
-
-      {isFolder && isExpanded ? (
-        <div className="mt-1 space-y-1">
-          {children.map((child) => (
-            <div key={child.path}>
-              <FileBrowserItem item={child} depth={depth + 1} />
-            </div>
-          ))}
-        </div>
-      ) : null}
     </div>
   );
 }
