@@ -1,3 +1,4 @@
+import * as React from "react";
 import { Maximize, Minimize } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
@@ -49,11 +50,11 @@ export function FullscreenButton() {
   const button = player.isFullscreen ? <FullscreenExitButton /> : <FullscreenEnterButton />;
 
   return <Tooltip>
-    <TooltipTrigger>
-      {button}
-    </TooltipTrigger>
+    <TooltipTrigger render={(props) => {
+      return React.cloneElement(button, props);
+    }} />
     <TooltipContent>
       <p>{player.isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}</p>
     </TooltipContent>
-  </Tooltip>
+  </Tooltip >
 }
