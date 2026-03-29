@@ -103,9 +103,12 @@ export default function VideoPlayer() {
       }
 
       const seekAmount = 0.3;
+      const duration = player.duration;
+      if (!Number.isFinite(duration)) return;
+
       const nextTime =
         direction === "right"
-          ? Math.min(videoRef.current.currentTime + seekAmount, player.duration)
+          ? Math.min(videoRef.current.currentTime + seekAmount, duration)
           : Math.max(videoRef.current.currentTime - seekAmount, 0);
 
       videoRef.current.currentTime = nextTime;

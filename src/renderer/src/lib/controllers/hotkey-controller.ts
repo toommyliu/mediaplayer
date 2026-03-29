@@ -44,7 +44,7 @@ export async function runHotkeyAction(actionId: string): Promise<void> {
       }
       break;
     case "seekForward":
-      if (currentItem) {
+      if (currentItem && Number.isFinite(player.duration)) {
         const nextTime = Math.min(player.duration, player.currentTime + SEEK_TIME_STEP);
         setCurrentTime(nextTime);
         if (video) video.currentTime = nextTime;
@@ -58,7 +58,7 @@ export async function runHotkeyAction(actionId: string): Promise<void> {
       }
       break;
     case "frameForward":
-      if (currentItem) {
+      if (currentItem && Number.isFinite(player.duration)) {
         const nextTime = Math.min(player.duration, player.currentTime + FRAME_TIME_STEP);
         setCurrentTime(nextTime);
         if (video) video.currentTime = nextTime;
@@ -92,7 +92,7 @@ export async function runHotkeyAction(actionId: string): Promise<void> {
       setSettingsDialogOpen(true);
       break;
     default:
-      if (/^jump-\d$/.test(actionId) && currentItem) {
+      if (/^jump-\d$/.test(actionId) && currentItem && Number.isFinite(player.duration)) {
         const percent = Number.parseInt(actionId.split("-")[1], 10) / 10;
         const nextTime = percent * player.duration;
         setCurrentTime(nextTime);
