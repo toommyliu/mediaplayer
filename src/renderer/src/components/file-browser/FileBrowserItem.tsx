@@ -100,11 +100,12 @@ export function FileBrowserItem({ item, depth }: { depth: number; item: FileSyst
             return (
               <div
                 {...triggerProps}
+                data-slot="file-browser-item"
                 className={cn(
-                  "group relative flex min-h-8 items-center rounded-md border px-2 transition-all duration-200",
+                  "group relative flex h-7 items-center rounded-md border px-2 transition-all duration-100",
                   isPlaying
-                    ? "border-primary/20 bg-primary/5 text-primary"
-                    : "border-transparent hover:bg-muted/40",
+                    ? "border-primary/20 bg-primary/10 text-primary"
+                    : "border-transparent hover:bg-muted/50 hover:text-foreground",
                   triggerClassName
                 )}
                 style={{
@@ -113,7 +114,7 @@ export function FileBrowserItem({ item, depth }: { depth: number; item: FileSyst
                 }}
               >
                 <button
-                  className="flex min-h-8 min-w-0 flex-1 items-center gap-2 text-left outline-none"
+                  className="flex h-7 min-w-0 flex-1 items-center gap-2.5 text-left outline-none"
                   data-item-trigger="true"
                   data-path={item.path}
                   onClick={handleItemClick}
@@ -144,7 +145,7 @@ export function FileBrowserItem({ item, depth }: { depth: number; item: FileSyst
                       render={(triggerProps) => (
                         <span
                           {...triggerProps}
-                          className="min-w-0 flex-1 truncate text-sm font-medium"
+                          className="min-w-0 flex-1 truncate text-xs/relaxed font-medium"
                         >
                           {item.name}
                           {isFolder ? "/" : ""}
@@ -160,16 +161,16 @@ export function FileBrowserItem({ item, depth }: { depth: number; item: FileSyst
                   </Tooltip>
 
                   {!isFolder ? (
-                    <span className="rounded-sm bg-muted/30 px-1 py-0.5 font-mono text-[9px] font-medium tracking-tight text-muted-foreground/60 ring-1 ring-inset ring-muted-foreground/10">
+                    <span className="flex h-5 items-center rounded-full bg-secondary px-2 text-[0.625rem] font-medium text-secondary-foreground ring-1 ring-inset ring-foreground/5">
                       {item.duration ? makeTimeString(item.duration) : "--:--"}
                     </span>
                   ) : null}
 
-                  {isLoading ? <Loader className="text-primary h-4 w-4 animate-spin" /> : null}
-                  {containsCurrent ? <Dot className="text-primary h-3 w-3" /> : null}
+                  {isLoading ? <Loader className="text-primary size-3.5 animate-spin" /> : null}
+                  {containsCurrent ? <Dot className="text-primary size-4" /> : null}
                   {isFolder ? (
                     <ChevronDown
-                      className={cn("text-muted-foreground h-4 w-4 transition", isExpanded ? "rotate-180" : "")}
+                      className={cn("text-muted-foreground size-3.5 transition duration-100", isExpanded ? "rotate-180" : "")}
                     />
                   ) : null}
                 </button>
