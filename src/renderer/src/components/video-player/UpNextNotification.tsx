@@ -28,8 +28,6 @@ export function UpNextNotification() {
     setIsDismissed(false);
   }, [player.currentVideo]);
 
-  if (!showNotification) return null;
-
   const nextItem =
     queue.index < queue.items.length - 1 ? queue.items[queue.index + 1] : queue.items[0];
 
@@ -42,9 +40,14 @@ export function UpNextNotification() {
 
   return (
     <div
-      className={cn("absolute z-40 flex w-64 flex-col gap-2 rounded-lg bg-card/95 p-3 shadow-xl ring-1 ring-foreground/10",
-        positionClass
+      className={cn(
+        "absolute z-40 flex w-64 flex-col gap-2 rounded-lg bg-card/95 p-3 shadow-xl ring-1 ring-foreground/10 transition-all duration-300 will-change-[transform,opacity]",
+        positionClass,
+        showNotification
+          ? "translate-y-0 opacity-100 scale-100"
+          : "translate-y-2 opacity-0 scale-[0.96] pointer-events-none"
       )}
+      style={{ transitionTimingFunction: "cubic-bezier(0.23, 1, 0.32, 1)" }}
     >
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-baseline gap-1.5">
