@@ -15,7 +15,7 @@ export interface QueueItemProps {
 export function QueueItem({ index, item }: QueueItemProps) {
   const queue = useQueueView();
   const currentItem = useCurrentQueueItem();
-  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [dropPosition, setDropPosition] = useState<"top" | "bottom" | null>(null);
 
   function removeItem(item: QueueItemType): void {
     const isCurrent = currentItem?.id === item.id;
@@ -50,41 +50,59 @@ export function QueueItem({ index, item }: QueueItemProps) {
       key={item.id}
       data-slot="queue-item"
       className={cn(
-        "group/queue-item flex items-center gap-2.5 rounded-lg ring-1 ring-foreground/10 px-3 py-1.5 text-xs transition-all duration-200",
+        "group/queue-item relative flex items-center gap-2.5 rounded-lg ring-1 ring-foreground/10 px-3 py-1.5 text-xs transition-all duration-200 select-none",
         {
-          "ring-primary bg-primary/10": dragOverIndex === index,
           "ring-primary/20 bg-primary/5 text-primary": isPlaying,
-          "ring-transparent hover:bg-muted/40":
-            dragOverIndex !== index && !isPlaying
+          "ring-transparent hover:bg-muted/40": !isPlaying
         }
       )}
       draggable
       onClick={() => playbackCommands.playVideo(item.path)}
       onDragOver={(e) => {
         e.preventDefault();
-        setDragOverIndex(index);
+        const rect = e.currentTarget.getBoundingClientRect();
+        const relativeY = e.clientY - rect.top;
+        setDropPosition(relativeY < rect.height / 2 ? "top" : "bottom");
       }}
+      onDragLeave={() => setDropPosition(null)}
       onDragStart={(event) => {
         event.dataTransfer.setData("text/plain", String(index));
       }}
-      onDragEnd={() => setDragOverIndex(null)}
+      onDragEnd={() => setDropPosition(null)}
       onDrop={(event) => {
         event.preventDefault();
         const fromIndex = Number.parseInt(
           event.dataTransfer.getData("text/plain"),
           10
         );
-        if (!Number.isNaN(fromIndex) && fromIndex !== index) {
-          queueCommands.moveQueueItem(fromIndex, index);
+        if (!Number.isNaN(fromIndex)) {
+          let targetIndex = index;
+          if (dropPosition === "bottom") {
+            targetIndex = index + 1;
+          }
+
+          if (fromIndex !== targetIndex && fromIndex !== targetIndex - 1) {
+            queueCommands.moveQueueItem(fromIndex, targetIndex > fromIndex ? targetIndex - 1 : targetIndex);
+          }
         }
-        setDragOverIndex(null);
+        setDropPosition(null);
       }}
       role="button"
       tabIndex={0}
     >
+      {dropPosition && (
+        <div
+          className={cn(
+            "absolute left-0 right-0 h-0.5 bg-primary z-50 pointer-events-none",
+            dropPosition === "top" ? "-top-px" : "-bottom-px"
+          )}
+        />
+      )}
+
       <span className="w-4 text-center text-[0.625rem] font-medium text-muted-foreground/60 tabular-nums">
         {index + 1}
       </span>
+
       <div className="min-w-0 flex-1">
         <div className="truncate font-medium leading-tight">{item.name}</div>
         {item.duration ? (
