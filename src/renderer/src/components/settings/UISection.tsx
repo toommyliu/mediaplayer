@@ -1,5 +1,4 @@
 import { Checkbox } from "@/components/ui/checkbox";
-import { notificationCommands, useNotificationsView } from "@/lib/store";
 import type { NotificationPosition } from "@/types";
 import { Label } from "@/components/ui/label";
 import {
@@ -9,9 +8,13 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
+import { useNotificationsStore } from "@stores/notifications";
 
 export function UISection() {
-  const notifications = useNotificationsView();
+  const upNextEnabled = useNotificationsStore((state) => state.upNextEnabled);
+  const upNextPosition = useNotificationsStore((state) => state.upNextPosition);
+  const videoInfoEnabled = useNotificationsStore((state) => state.videoInfoEnabled);
+  const setNotificationSettings = useNotificationsStore((state) => state.setNotificationSettings);
 
   return (
     <div className="space-y-4">
@@ -20,9 +23,9 @@ export function UISection() {
         <div className="space-y-2">
           <Label className="flex items-center gap-2 text-xs">
             <Checkbox
-              checked={notifications.upNextEnabled}
+              checked={upNextEnabled}
               onCheckedChange={(checked) =>
-                notificationCommands.setNotificationSettings({
+                setNotificationSettings({
                   upNextEnabled: checked === true
                 })
               }
@@ -31,9 +34,9 @@ export function UISection() {
           </Label>
           <Label className="flex items-center gap-2 text-xs">
             <Checkbox
-              checked={notifications.videoInfoEnabled}
+              checked={videoInfoEnabled}
               onCheckedChange={(checked) =>
-                notificationCommands.setNotificationSettings({
+                setNotificationSettings({
                   videoInfoEnabled: checked === true
                 })
               }
@@ -46,16 +49,19 @@ export function UISection() {
       <div>
         <Label className="mb-1.5 block text-xs font-medium">Up Next Position</Label>
         <Select
-          value={notifications.upNextPosition}
+          value={upNextPosition}
           onValueChange={(value) =>
-            notificationCommands.setNotificationSettings({
+            setNotificationSettings({
               upNextPosition: value as NotificationPosition
             })
           }
         >
           <SelectTrigger className="h-7 w-40 text-xs">
             <SelectValue>
-              {notifications.upNextPosition.split('-').map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+              {upNextPosition
+                .split("-")
+                .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(" ")}
             </SelectValue>
           </SelectTrigger>
           <SelectContent side="bottom" sideOffset={4}>

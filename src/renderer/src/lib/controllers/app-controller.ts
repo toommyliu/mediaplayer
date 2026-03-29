@@ -1,10 +1,10 @@
 import { getPlatform } from "@/lib/ipc";
 import { initializeQueue } from "@/lib/controllers/library-controller";
-import { setPlatformState } from "@/lib/state/platform";
+import { usePlatformStore } from "@stores/platform";
 
 export async function loadPlatformInfo(): Promise<void> {
   const info = await getPlatform();
-  setPlatformState({
+  usePlatformStore.getState().setPlatformState({
     isLinux: info.isLinux,
     isMac: info.isMacOS,
     isWindows: info.isWindows,

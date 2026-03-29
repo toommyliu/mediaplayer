@@ -1,4 +1,4 @@
-import { getVolumeState } from "@/lib/state/volume";
+import { useVolumeStore } from "@stores/volume";
 
 let videoElement: HTMLVideoElement | null = null;
 
@@ -14,7 +14,7 @@ export function getVideoElement(): HTMLVideoElement | null {
 export function syncVolumeToVideoElement(): void {
   if (!videoElement) return;
 
-  const volume = getVolumeState();
+  const volume = useVolumeStore.getState();
   videoElement.volume = volume.isMuted ? 0 : volume.value;
   videoElement.muted = volume.isMuted;
 }

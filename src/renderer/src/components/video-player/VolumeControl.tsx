@@ -1,18 +1,14 @@
 import { useState } from "react";
-import { VolumeX, Volume, Volume2 } from "lucide-react"
+import { VolumeX, Volume, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useVolumeView, volumeCommands } from "@/lib/store";
-import {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-} from "@/components/ui/tooltip";
-
+import { setMutedWithMediaSync, setVolumeWithMediaSync } from "@/lib/controllers/volume-controller";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { useVolumeStore } from "@stores/volume";
 
 function VolumeSlider({
   value,
   isMuted,
-  onChange,
+  onChange
 }: {
   value: number;
   isMuted: boolean;
@@ -45,7 +41,7 @@ function VolumeSlider({
                 {
                   "--fill": fillColor,
                   "--track": trackColor,
-                  "--pct": `${fillPercent}%`,
+                  "--pct": `${fillPercent}%`
                 } as React.CSSProperties
               }
             />
@@ -139,24 +135,25 @@ function VolumeSlider({
 }
 
 export function VolumeControl() {
-  const volume = useVolumeView();
+  const isMuted = useVolumeStore((state) => state.isMuted);
+  const value = useVolumeStore((state) => state.value);
 
   return (
-    <div className="flex h-9 items-center rounded-lg border border-white/10 bg-white/10 text-white transition-colors hover:bg-white/15 focus-within:bg-white/15 sm:h-8">
+    <div className="flex h-9 items-center rounded-lg border border-white/10 bg-white/10 text-white transition-colors focus-within:bg-white/15 hover:bg-white/15 sm:h-8">
       <Tooltip>
         <TooltipTrigger
           render={(props) => (
             <Button
               {...props}
               className="size-8 shrink-0 border-0 bg-transparent p-0 text-white shadow-none hover:bg-white/10"
-              onClick={() => volumeCommands.setMuted(!volume.isMuted)}
+              onClick={() => setMutedWithMediaSync(!isMuted)}
               size="icon-sm"
               type="button"
               variant="ghost"
             >
-              {volume.isMuted || volume.value === 0 ? (
+              {isMuted || value === 0 ? (
                 <VolumeX className="h-4 w-4" />
-              ) : volume.value < 0.5 ? (
+              ) : value < 0.5 ? (
                 <Volume className="h-4 w-4" />
               ) : (
                 <Volume2 className="h-4 w-4" />
@@ -165,30 +162,27 @@ export function VolumeControl() {
           )}
         />
         <TooltipContent side="top" sideOffset={8}>
-          {volume.isMuted ? "Unmute" : "Mute"} ({Math.round(volume.value * 100)}%)
+          {isMuted ? "Unmute" : "Mute"} ({Math.round(value * 100)}%)
         </TooltipContent>
       </Tooltip>
 
-
       <div className="group/volume flex h-full items-center">
-        <div className="mx-1 h-3 w-px rounded-full bg-white/20 transition-all group-hover/volume:opacity-0 group-focus-within/volume:opacity-0" />
+        <div className="mx-1 h-3 w-px rounded-full bg-white/20 transition-all group-focus-within/volume:opacity-0 group-hover/volume:opacity-0" />
 
-        <div className="w-0 overflow-hidden opacity-0 pointer-events-none transition-[width,opacity] duration-200 ease-out group-hover/volume:w-28 group-hover/volume:opacity-100 group-hover/volume:pointer-events-auto group-focus-within/volume:w-28 group-focus-within/volume:opacity-100 group-focus-within/volume:pointer-events-auto">
-          <div className="flex h-full w-28 items-center pl-0 pr-2">
+        <div className="pointer-events-none w-0 overflow-hidden opacity-0 transition-[width,opacity] duration-200 ease-out group-focus-within/volume:pointer-events-auto group-focus-within/volume:w-28 group-focus-within/volume:opacity-100 group-hover/volume:pointer-events-auto group-hover/volume:w-28 group-hover/volume:opacity-100">
+          <div className="flex h-full w-28 items-center pr-2 pl-0">
             <VolumeSlider
-              value={volume.value}
-              isMuted={volume.isMuted}
+              value={value}
+              isMuted={isMuted}
               onChange={(nextVolume) => {
-                volumeCommands.setVolume(nextVolume);
+                setVolumeWithMediaSync(nextVolume);
                 if (nextVolume > 0) {
-                  volumeCommands.setMuted(false);
+                  setMutedWithMediaSync(false);
                 }
               }}
             />
           </div>
         </div>
-
-
       </div>
     </div>
   );

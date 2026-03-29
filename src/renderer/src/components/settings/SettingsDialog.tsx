@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogPanel, DialogTitle } from "@/components/ui/dialog";
-import { settingsCommands, useSettingsView } from "@/lib/store";
+import { useSettingsStore } from "@stores/settings";
 import { GeneralSection } from "./GeneralSection";
 import { PlaybackSection } from "./PlaybackSection";
 import { UISection } from "./UISection";
@@ -23,32 +23,28 @@ function tabButtonClass(active: boolean): string {
 }
 
 export default function SettingsDialog() {
-  const settings = useSettingsView();
+  const showDialog = useSettingsStore((state) => state.showDialog);
+  const setSettingsDialogOpen = useSettingsStore((state) => state.setSettingsDialogOpen);
   const [selectedTab, setSelectedTab] = useState<SettingsTab>("general");
   const [editingAction, setEditingAction] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    if (settings.showDialog) {
+    if (showDialog) {
       setSelectedTab("general");
     }
-  }, [settings.showDialog]);
+  }, [showDialog]);
 
-  if (!settings.showDialog) return null;
+  if (!showDialog) return null;
 
   return (
-    <Dialog
-      onOpenChange={(open) => settingsCommands.setSettingsDialogOpen(open)}
-      open={settings.showDialog}
-    >
+    <Dialog onOpenChange={setSettingsDialogOpen} open={showDialog}>
       <DialogContent
         className="ring-foreground/10 flex h-full w-full max-w-4xl flex-col overflow-hidden p-0 ring-1 md:h-[75vh] md:flex-row"
         showCloseButton={false}
       >
         <aside className="border-sidebar-border bg-sidebar/40 w-full border-b p-3 md:w-48 md:border-r md:border-b-0 lg:w-56">
-          <h2 className="text-muted-foreground mb-3 px-2 text-sm font-medium">
-            Settings
-          </h2>
+          <h2 className="text-muted-foreground mb-3 px-2 text-sm font-medium">Settings</h2>
           <nav
             className="space-y-0.5"
             onKeyDown={(event) => {

@@ -1,58 +1,61 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react"
+import { X } from "lucide-react";
 
-import {
-  useNotificationsView,
-  usePlayerView,
-  useQueueView
-} from "@/lib/store";
+import { usePlayerState } from "@/lib/state/player";
+import { useQueueState } from "@/lib/state/queue";
 import { cn } from "@/lib/utils";
+import { useNotificationsStore } from "@stores/notifications";
 
 export function UpNextNotification() {
-  const player = usePlayerView();
-  const queue = useQueueView();
-  const notifications = useNotificationsView();
+  const currentTime = usePlayerState((state) => state.currentTime);
+  const currentVideo = usePlayerState((state) => state.currentVideo);
+  const duration = usePlayerState((state) => state.duration);
+  const index = useQueueState((state) => state.index);
+  const items = useQueueState((state) => state.items);
+  const repeatMode = useQueueState((state) => state.repeatMode);
+  const upNextEnabled = useNotificationsStore((state) => state.upNextEnabled);
+  const upNextPosition = useNotificationsStore((state) => state.upNextPosition);
   const [isDismissed, setIsDismissed] = useState(false);
 
-  const remaining = player.duration - player.currentTime;
+  const remaining = duration - currentTime;
   const showNotification =
-    notifications.upNextEnabled &&
+    upNextEnabled &&
     !isDismissed &&
-    player.duration > 0 &&
+    duration > 0 &&
     remaining <= 10 &&
     remaining > 0 &&
-    (queue.index < queue.items.length - 1 || queue.repeatMode === "all");
+    (index < items.length - 1 || repeatMode === "all");
 
   useEffect(() => {
     setIsDismissed(false);
-  }, [player.currentVideo]);
+  }, [currentVideo]);
 
-  const nextItem =
-    queue.index < queue.items.length - 1 ? queue.items[queue.index + 1] : queue.items[0];
+  const nextItem = index < items.length - 1 ? items[index + 1] : items[0];
 
-  const positionClass = {
-    "bottom-left": "bottom-24 left-8",
-    "bottom-right": "bottom-24 right-8",
-    "top-left": "top-8 left-8",
-    "top-right": "top-8 right-8"
-  }[notifications.upNextPosition as keyof typeof notifications.upNextPosition] || "bottom-right";
+  const positionClass =
+    {
+      "bottom-left": "bottom-24 left-8",
+      "bottom-right": "bottom-24 right-8",
+      "top-left": "top-8 left-8",
+      "top-right": "top-8 right-8"
+    }[upNextPosition as keyof typeof upNextPosition] || "bottom-right";
 
   return (
     <div
       className={cn(
-        "absolute z-40 flex w-64 flex-col gap-2 rounded-lg bg-card/95 p-3 shadow-xl ring-1 ring-foreground/10 transition-all duration-300 will-change-[transform,opacity]",
+        "bg-card/95 ring-foreground/10 absolute z-40 flex w-64 flex-col gap-2 rounded-lg p-3 shadow-xl ring-1 transition-all duration-300 will-change-[transform,opacity]",
         positionClass,
         showNotification
-          ? "translate-y-0 opacity-100 scale-100"
-          : "translate-y-2 opacity-0 scale-[0.96] pointer-events-none"
+          ? "translate-y-0 scale-100 opacity-100"
+          : "pointer-events-none translate-y-2 scale-[0.96] opacity-0"
       )}
       style={{ transitionTimingFunction: "cubic-bezier(0.23, 1, 0.32, 1)" }}
     >
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-baseline gap-1.5">
-          <span className="text-[11px] font-medium text-muted-foreground">Up Next</span>
-          <span className="text-[10px] text-muted-foreground/50 tabular-nums">
+          <span className="text-muted-foreground text-[11px] font-medium">Up Next</span>
+          <span className="text-muted-foreground/50 text-[10px] tabular-nums">
             &middot; {Math.ceil(remaining)}s
           </span>
         </div>
@@ -66,9 +69,7 @@ export function UpNextNotification() {
         </Button>
       </div>
 
-      <div className="line-clamp-2 text-xs font-medium leading-relaxed">
-        {nextItem?.name}
-      </div>
+      <div className="line-clamp-2 text-xs leading-relaxed font-medium">{nextItem?.name}</div>
     </div>
   );
 }

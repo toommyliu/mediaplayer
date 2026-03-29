@@ -1,35 +1,24 @@
-import {
-  SidebarContent,
-  SidebarFooter,
-  SidebarHeader,
-} from "@/components/ui/sidebar";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger
-} from "@/components/ui/tabs";
-import {
-  Settings,
-} from "lucide-react";
-import {
-  settingsCommands,
-  sidebarCommands,
-  useSidebarView
-} from "@/lib/store";
+import { SidebarContent, SidebarFooter, SidebarHeader } from "@/components/ui/sidebar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Settings } from "lucide-react";
 import { QueuePanel } from "./queue/QueuePanel";
-import { FileBrowserPanel } from './file-browser/FileBrowserPanel';
+import { FileBrowserPanel } from "./file-browser/FileBrowserPanel";
+import { useSettingsStore } from "@stores/settings";
+import { useSidebarStore } from "@stores/sidebar";
 
 export default function SidebarPanel() {
-  const sidebar = useSidebarView();
+  const currentTab = useSidebarStore((state) => state.currentTab);
+  const setSidebarTab = useSidebarStore((state) => state.setSidebarTab);
+  const setSidebarDragging = useSidebarStore((state) => state.setSidebarDragging);
+  const setSettingsDialogOpen = useSettingsStore((state) => state.setSettingsDialogOpen);
 
   return (
     <Tabs
       className="flex h-full flex-col overflow-hidden"
-      onValueChange={(value) => sidebarCommands.setSidebarTab(value as any)}
-      value={sidebar.currentTab}
+      onValueChange={(value) => setSidebarTab(value as any)}
+      value={currentTab}
     >
-      <SidebarHeader className="px-4 pb-1 pt-4">
+      <SidebarHeader className="px-4 pt-4 pb-1">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="file-browser">Files</TabsTrigger>
           <TabsTrigger value="queue">Queue</TabsTrigger>
@@ -49,7 +38,7 @@ export default function SidebarPanel() {
         <div className="flex items-center justify-between gap-2">
           <button
             className="h-7 px-2 text-xs"
-            onClick={() => settingsCommands.setSettingsDialogOpen(true)}
+            onClick={() => setSettingsDialogOpen(true)}
             type="button"
           >
             <Settings className="h-4 w-4" />
@@ -58,8 +47,8 @@ export default function SidebarPanel() {
           <div
             className="group flex cursor-grab items-center justify-center px-2 py-2 active:cursor-grabbing"
             draggable
-            onDragEnd={() => sidebarCommands.setSidebarDragging(false)}
-            onDragStart={() => sidebarCommands.setSidebarDragging(true)}
+            onDragEnd={() => setSidebarDragging(false)}
+            onDragStart={() => setSidebarDragging(true)}
           >
             <div className="bg-border h-1 w-16 rounded-full opacity-60 transition group-hover:w-24 group-hover:opacity-100" />
           </div>

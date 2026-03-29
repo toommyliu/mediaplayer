@@ -1,10 +1,6 @@
-
-import type { MouseEvent, KeyboardEvent, ComponentProps } from 'react'
-import { ChevronDown, Dot, Loader } from 'lucide-react'
-import {
-  ContextMenu,
-  ContextMenuTrigger
-} from "@/components/ui/context-menu";
+import type { MouseEvent, KeyboardEvent, ComponentProps } from "react";
+import { ChevronDown, Dot, Loader } from "lucide-react";
+import { ContextMenu, ContextMenuTrigger } from "@/components/ui/context-menu";
 
 import { makeTimeString } from "@/lib/make-time-string";
 import {
@@ -14,19 +10,14 @@ import {
   playbackCommands,
   useCurrentQueueItem,
   useFileBrowserView,
-  usePlatformView,
-  usePlayerView,
-  useSidebarView
+  usePlayerView
 } from "@/lib/store";
 import { FileBrowserItemContextMenu } from "./FileBrowserItemContextMenu";
 import { cn } from "@/lib/utils";
 import type { FileSystemItem } from "@/types";
-import {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-} from "@/components/ui/tooltip";
-
+import { usePlatformStore } from "@stores/platform";
+import { useSidebarStore } from "@stores/sidebar";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 function isCurrentVideo(itemPath: string | undefined, currentVideo: string | null): boolean {
   if (!itemPath || !currentVideo) return false;
@@ -44,16 +35,15 @@ function hasCurrentVideoInFolder(
 export function FileBrowserItem({ item, depth }: { depth: number; item: FileSystemItem }) {
   const fileBrowser = useFileBrowserView();
   const player = usePlayerView();
-  const platform = usePlatformView();
+  const isMac = usePlatformStore((state) => state.isMac);
   const currentItem = useCurrentQueueItem();
-  const sidebar = useSidebarView();
+  const sidebarPosition = useSidebarStore((state) => state.position);
   const isFolder = item.type === "folder";
   const isExpanded = isFolder && fileBrowser.expandedFolders.has(item.path);
   const isLoading = fileBrowser.loadingFolders.has(item.path);
   const isPlaying = isCurrentVideo(item.path, player.currentVideo);
   const containsCurrent =
     isFolder && !isExpanded && hasCurrentVideoInFolder(item.path, player.currentVideo);
-
 
   function focusRelative(offset: number): void {
     const triggers = Array.from(
@@ -68,8 +58,7 @@ export function FileBrowserItem({ item, depth }: { depth: number; item: FileSyst
     if (fileBrowser.isLoading) return;
 
     if (isFolder) {
-      const isModKeyPressed =
-        "metaKey" in event ? (platform.isMac ? event.metaKey : event.ctrlKey) : false;
+      const isModKeyPressed = "metaKey" in event ? (isMac ? event.metaKey : event.ctrlKey) : false;
 
       if (isModKeyPressed) {
         event.preventDefault();
@@ -84,7 +73,6 @@ export function FileBrowserItem({ item, depth }: { depth: number; item: FileSyst
     if (currentItem?.path === item.path) return;
     playbackCommands.playVideo(item.path);
   }
-
 
   return (
     <div>
@@ -105,7 +93,7 @@ export function FileBrowserItem({ item, depth }: { depth: number; item: FileSyst
                   "group relative flex h-7 items-center rounded-md border px-2 transition-all duration-100",
                   isPlaying
                     ? "border-primary/20 bg-primary/10 text-primary"
-                    : "border-transparent hover:bg-muted/50 hover:text-foreground",
+                    : "hover:bg-muted/50 hover:text-foreground border-transparent",
                   triggerClassName
                 )}
                 style={{
@@ -154,14 +142,14 @@ export function FileBrowserItem({ item, depth }: { depth: number; item: FileSyst
                     />
                     <TooltipContent
                       align="start"
-                      side={sidebar.position === "left" ? "right" : "left"}
+                      side={sidebarPosition === "left" ? "right" : "left"}
                     >
                       {item.name}
                     </TooltipContent>
                   </Tooltip>
 
                   {!isFolder ? (
-                    <span className="flex h-5 items-center rounded-full bg-secondary px-2 text-[0.625rem] font-medium text-secondary-foreground ring-1 ring-inset ring-foreground/5">
+                    <span className="bg-secondary text-secondary-foreground ring-foreground/5 flex h-5 items-center rounded-full px-2 text-[0.625rem] font-medium ring-1 ring-inset">
                       {item.duration ? makeTimeString(item.duration) : "--:--"}
                     </span>
                   ) : null}
@@ -170,7 +158,10 @@ export function FileBrowserItem({ item, depth }: { depth: number; item: FileSyst
                   {containsCurrent ? <Dot className="text-primary size-4" /> : null}
                   {isFolder ? (
                     <ChevronDown
-                      className={cn("text-muted-foreground size-3.5 transition duration-100", isExpanded ? "rotate-180" : "")}
+                      className={cn(
+                        "text-muted-foreground size-3.5 transition duration-100",
+                        isExpanded ? "rotate-180" : ""
+                      )}
                     />
                   ) : null}
                 </button>
@@ -179,10 +170,7 @@ export function FileBrowserItem({ item, depth }: { depth: number; item: FileSyst
           }}
         ></ContextMenuTrigger>
 
-        <FileBrowserItemContextMenu
-          item={item}
-          isExpanded={isExpanded}
-        />
+        <FileBrowserItemContextMenu item={item} isExpanded={isExpanded} />
       </ContextMenu>
     </div>
   );

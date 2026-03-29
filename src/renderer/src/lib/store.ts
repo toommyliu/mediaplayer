@@ -56,12 +56,6 @@ import {
   useHotkeysState
 } from "@/lib/state/hotkeys";
 import {
-  getNotificationsState,
-  setNotificationSettings,
-  useNotificationsState
-} from "@/lib/state/notifications";
-import { getPlatformState, usePlatformState } from "@/lib/state/platform";
-import {
   getPlayerState,
   resetPlayer,
   setCurrentTime,
@@ -86,18 +80,11 @@ import {
   type QueueState,
   useQueueState
 } from "@/lib/state/queue";
-import { setSettingsDialogOpen, useSettingsState } from "@/lib/state/settings";
-import {
-  setSidebarDragging,
-  setSidebarDropZone,
-  setSidebarOpen,
-  setSidebarPosition,
-  setSidebarTab,
-  setSidebarWidth,
-  toggleSidebar,
-  useSidebarState
-} from "@/lib/state/sidebar";
-import { useVolumeState } from "@/lib/state/volume";
+import { useNotificationsStore } from "@stores/notifications";
+import { usePlatformStore } from "@stores/platform";
+import { useSettingsStore } from "@stores/settings";
+import { useSidebarStore } from "@stores/sidebar";
+import { useVolumeStore } from "@stores/volume";
 
 type Selector<State, Value> = (state: State) => Value;
 
@@ -131,7 +118,7 @@ export function useQueueView() {
 }
 
 export function useSidebarView() {
-  return useSidebarState((state) => state);
+  return useSidebarStore((state) => state);
 }
 
 export function useFileBrowserView() {
@@ -139,15 +126,15 @@ export function useFileBrowserView() {
 }
 
 export function useVolumeView() {
-  return useVolumeState((state) => state);
+  return useVolumeStore((state) => state);
 }
 
 export function useNotificationsView() {
-  return useNotificationsState((state) => state);
+  return useNotificationsStore((state) => state);
 }
 
 export function useSettingsView() {
-  return useSettingsState((state) => state);
+  return useSettingsStore((state) => state);
 }
 
 export function useHotkeysView() {
@@ -155,7 +142,7 @@ export function useHotkeysView() {
 }
 
 export function usePlatformView() {
-  return usePlatformState((state) => state);
+  return usePlatformStore((state) => state);
 }
 
 export const appCommands = {
@@ -209,13 +196,16 @@ export const queueCommands = {
 };
 
 export const sidebarCommands = {
-  setSidebarDragging,
-  setSidebarDropZone,
-  setSidebarOpen,
-  setSidebarPosition,
-  setSidebarTab,
-  setSidebarWidth,
-  toggleSidebar
+  setSidebarDragging: (isDragging: boolean) =>
+    useSidebarStore.getState().setSidebarDragging(isDragging),
+  setSidebarDropZone: (dropZoneActive: SidebarPosition | null) =>
+    useSidebarStore.getState().setSidebarDropZone(dropZoneActive),
+  setSidebarOpen: (isOpen: boolean) => useSidebarStore.getState().setSidebarOpen(isOpen),
+  setSidebarPosition: (position: SidebarPosition) =>
+    useSidebarStore.getState().setSidebarPosition(position),
+  setSidebarTab: (currentTab: SidebarTab) => useSidebarStore.getState().setSidebarTab(currentTab),
+  setSidebarWidth: (width: number) => useSidebarStore.getState().setSidebarWidth(width),
+  toggleSidebar: () => useSidebarStore.getState().toggleSidebar()
 };
 
 export const fileBrowserCommands = {
@@ -232,11 +222,18 @@ export const volumeCommands = {
 };
 
 export const settingsCommands = {
-  setSettingsDialogOpen
+  setSettingsDialogOpen: (showDialog: boolean) =>
+    useSettingsStore.getState().setSettingsDialogOpen(showDialog)
 };
 
 export const notificationCommands = {
-  setNotificationSettings
+  setNotificationSettings: (
+    patch: Partial<{
+      upNextEnabled: boolean;
+      upNextPosition: NotificationPosition;
+      videoInfoEnabled: boolean;
+    }>
+  ) => useNotificationsStore.getState().setNotificationSettings(patch)
 };
 
 export const hotkeyCommands = {
@@ -249,8 +246,8 @@ export const hotkeyCommands = {
 
 export const stateSnapshots = {
   getHotkeysState,
-  getNotificationsState,
-  getPlatformState,
+  getNotificationsState: () => useNotificationsStore.getState(),
+  getPlatformState: () => usePlatformStore.getState(),
   getPlayerState,
   getQueueState
 };

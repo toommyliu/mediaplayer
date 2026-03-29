@@ -1,7 +1,5 @@
 import { FRAME_TIME_STEP, SEEK_TIME_STEP } from "@/lib/constants";
-import {
-  navigateToParent
-} from "@/lib/controllers/library-controller";
+import { navigateToParent } from "@/lib/controllers/library-controller";
 import {
   playNextVideo,
   playPreviousVideo,
@@ -16,9 +14,9 @@ import {
 import { getVideoElement } from "@/lib/controllers/media-runtime";
 import { getPlayerState, setCurrentTime } from "@/lib/state/player";
 import { getCurrentQueueItemFromState, getQueueState } from "@/lib/state/queue";
-import { setSettingsDialogOpen } from "@/lib/state/settings";
-import { getSidebarState, setSidebarTab, toggleSidebar } from "@/lib/state/sidebar";
-import { getVolumeState } from "@/lib/state/volume";
+import { useSettingsStore } from "@stores/settings";
+import { useSidebarStore } from "@stores/sidebar";
+import { useVolumeStore } from "@stores/volume";
 
 export async function runHotkeyAction(actionId: string): Promise<void> {
   const queue = getQueueState();
@@ -71,25 +69,25 @@ export async function runHotkeyAction(actionId: string): Promise<void> {
       decreaseVolumeWithMediaSync();
       break;
     case "mute":
-      setMutedWithMediaSync(!getVolumeState().isMuted);
+      setMutedWithMediaSync(!useVolumeStore.getState().isMuted);
       break;
     case "fullscreen":
       await setFullscreen(!getPlayerState().isFullscreen);
       break;
     case "showFileBrowser":
-      setSidebarTab("file-browser");
+      useSidebarStore.getState().setSidebarTab("file-browser");
       break;
     case "showQueue":
-      setSidebarTab("queue");
+      useSidebarStore.getState().setSidebarTab("queue");
       break;
     case "toggleSidebar":
-      toggleSidebar();
+      useSidebarStore.getState().toggleSidebar();
       break;
     case "fileBrowserBack":
       await navigateToParent();
       break;
     case "openSettings":
-      setSettingsDialogOpen(true);
+      useSettingsStore.getState().setSettingsDialogOpen(true);
       break;
     default:
       if (/^jump-\d$/.test(actionId) && currentItem && Number.isFinite(player.duration)) {
@@ -103,5 +101,5 @@ export async function runHotkeyAction(actionId: string): Promise<void> {
 }
 
 export function isSidebarOpen(): boolean {
-  return getSidebarState().isOpen;
+  return useSidebarStore.getState().isOpen;
 }

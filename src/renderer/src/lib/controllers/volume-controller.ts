@@ -1,27 +1,22 @@
-import {
-  decreaseVolume,
-  increaseVolume,
-  setMuted,
-  setVolume
-} from "@/lib/state/volume";
 import { syncVolumeToVideoElement } from "@/lib/controllers/media-runtime";
+import { useVolumeStore } from "@stores/volume";
 
 export function setMutedWithMediaSync(isMuted: boolean): void {
-  setMuted(isMuted);
+  useVolumeStore.getState().setMuted(isMuted);
   syncVolumeToVideoElement();
 }
 
 export function setVolumeWithMediaSync(value: number): void {
-  setVolume(value);
+  useVolumeStore.getState().setVolume(value);
   syncVolumeToVideoElement();
 }
 
 export function increaseVolumeWithMediaSync(): void {
-  increaseVolume();
+  useVolumeStore.getState().increaseVolume();
   syncVolumeToVideoElement();
 }
 
 export function decreaseVolumeWithMediaSync(): void {
-  decreaseVolume();
+  useVolumeStore.getState().decreaseVolume();
   syncVolumeToVideoElement();
 }

@@ -6,38 +6,44 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import VideoPlayer from "@/components/video-player/VideoPlayer";
 import SettingsDialog from "@/components/settings/SettingsDialog";
 import { Sidebar, SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import {
-  appCommands,
-  libraryCommands,
-  settingsCommands,
-  sidebarCommands,
-  useSidebarView
-} from "@/lib/store";
+import { bootstrapApp } from "@/lib/controllers/app-controller";
+import { handleAddFileEvent, handleAddFolderEvent } from "@/lib/controllers/library-controller";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "./lib/utils";
+import { useSettingsStore } from "@stores/settings";
+import { useSidebarStore } from "@stores/sidebar";
 
 export default function App() {
-  const sidebar = useSidebarView();
+  const dropZoneActive = useSidebarStore((state) => state.dropZoneActive);
+  const isDragging = useSidebarStore((state) => state.isDragging);
+  const isOpen = useSidebarStore((state) => state.isOpen);
+  const position = useSidebarStore((state) => state.position);
+  const width = useSidebarStore((state) => state.width);
+  const setSidebarDropZone = useSidebarStore((state) => state.setSidebarDropZone);
+  const setSidebarOpen = useSidebarStore((state) => state.setSidebarOpen);
+  const setSidebarPosition = useSidebarStore((state) => state.setSidebarPosition);
+  const setSidebarWidth = useSidebarStore((state) => state.setSidebarWidth);
+  const setSettingsDialogOpen = useSettingsStore((state) => state.setSettingsDialogOpen);
   const [isResizing, setIsResizing] = useState(false);
-  const [draftSidebarWidth, setDraftSidebarWidth] = useState(sidebar.width);
+  const [draftSidebarWidth, setDraftSidebarWidth] = useState(width);
   const [isSidebarPreviewOpen, setIsSidebarPreviewOpen] = useState(false);
   const previewSidebarWidth = "18rem";
 
-  const sidebarWidth = isResizing ? draftSidebarWidth : sidebar.width;
-  const sidebarEdge = sidebar.isOpen ? `${sidebarWidth}%` : "0px";
+  const sidebarWidth = isResizing ? draftSidebarWidth : width;
+  const sidebarEdge = isOpen ? `${sidebarWidth}%` : "0px";
 
   useEffect(() => {
-    void appCommands.bootstrapApp();
+    void bootstrapApp();
 
     const disposers = [
       onAddFile((result) => {
-        void libraryCommands.handleAddFileEvent(result);
+        void handleAddFileEvent(result);
       }),
       onAddFolder((result) => {
-        void libraryCommands.handleAddFolderEvent(result);
+        void handleAddFolderEvent(result);
       }),
       onOpenSettings(() => {
-        settingsCommands.setSettingsDialogOpen(true);
+        setSettingsDialogOpen(true);
       })
     ];
 
@@ -51,7 +57,7 @@ export default function App() {
 
     const handleMouseMove = (event: MouseEvent) => {
       const percentage =
-        sidebar.position === "left"
+        position === "left"
           ? (event.clientX / window.innerWidth) * 100
           : ((window.innerWidth - event.clientX) / window.innerWidth) * 100;
 
@@ -59,7 +65,7 @@ export default function App() {
     };
 
     const handleMouseUp = () => {
-      sidebarCommands.setSidebarWidth(draftSidebarWidth);
+      setSidebarWidth(draftSidebarWidth);
       setIsResizing(false);
     };
 
@@ -70,18 +76,18 @@ export default function App() {
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [draftSidebarWidth, isResizing, sidebar.position]);
+  }, [draftSidebarWidth, isResizing, position, setSidebarWidth]);
 
   useEffect(() => {
     if (isResizing) return;
-    setDraftSidebarWidth(sidebar.width);
-  }, [isResizing, sidebar.width]);
+    setDraftSidebarWidth(width);
+  }, [isResizing, width]);
 
   useEffect(() => {
-    if (sidebar.isOpen) {
+    if (isOpen) {
       setIsSidebarPreviewOpen(false);
     }
-  }, [sidebar.isOpen]);
+  }, [isOpen]);
 
   return (
     <HotkeysProvider>
@@ -89,20 +95,20 @@ export default function App() {
         <ThemeProvider>
           <SidebarProvider
             className="bg-background h-screen overflow-hidden"
-            onOpenChange={(open) => sidebarCommands.setSidebarOpen(open)}
-            open={sidebar.isOpen}
+            onOpenChange={setSidebarOpen}
+            open={isOpen}
             style={{
               ["--sidebar-width" as string]: `${sidebarWidth}%`,
               ["--sidebar-width-icon" as string]: "3rem"
             }}
           >
             <div className="relative flex min-h-0 flex-1 overflow-hidden">
-              {!sidebar.isOpen ? (
+              {!isOpen ? (
                 <div
                   className="absolute inset-y-0 z-20 w-4"
                   onMouseEnter={() => setIsSidebarPreviewOpen(true)}
                   style={{
-                    [sidebar.position === "left" ? "left" : "right"]: 0
+                    [position === "left" ? "left" : "right"]: 0
                   }}
                 />
               ) : (
@@ -112,15 +118,15 @@ export default function App() {
                   onMouseDown={() => setIsResizing(true)}
                   role="separator"
                   style={{
-                    [sidebar.position === "left" ? "left" : "right"]: sidebarEdge
+                    [position === "left" ? "left" : "right"]: sidebarEdge
                   }}
                   tabIndex={-1}
                 />
               )}
 
-              {sidebar.position === "left" ? (
+              {position === "left" ? (
                 <>
-                  {sidebar.isOpen ? (
+                  {isOpen ? (
                     <Sidebar
                       className="bg-sidebar/80 border-sidebar-border backdrop-blur-md"
                       collapsible="offcanvas"
@@ -166,7 +172,7 @@ export default function App() {
                     <VideoPlayer />
                   </SidebarInset>
 
-                  {sidebar.isOpen ? (
+                  {isOpen ? (
                     <Sidebar
                       className="bg-sidebar/80 border-sidebar-border backdrop-blur-md"
                       collapsible="offcanvas"
@@ -194,7 +200,7 @@ export default function App() {
                 </>
               )}
 
-              {sidebar.isDragging ? (
+              {isDragging ? (
                 <div className="bg-background/60 absolute inset-0 z-50 flex items-center justify-center backdrop-blur-sm">
                   <div className="bg-card flex gap-4 rounded-2xl border p-4 shadow-2xl">
                     {(["left", "right"] as const).map((position) => (
@@ -203,21 +209,21 @@ export default function App() {
                           "flex h-32 w-32 items-center justify-center rounded-xl border-2 border-dashed text-sm font-medium transition",
                           {
                             "border-primary bg-primary/10 text-primary":
-                              sidebar.dropZoneActive === position,
+                              dropZoneActive === position,
                             "border-border bg-muted/50 text-muted-foreground":
-                              sidebar.dropZoneActive !== position
+                              dropZoneActive !== position
                           }
                         )}
                         key={position}
-                        onDragEnter={() => sidebarCommands.setSidebarDropZone(position)}
-                        onDragLeave={() => sidebarCommands.setSidebarDropZone(null)}
+                        onDragEnter={() => setSidebarDropZone(position)}
+                        onDragLeave={() => setSidebarDropZone(null)}
                         onDragOver={(event) => {
                           event.preventDefault();
-                          sidebarCommands.setSidebarDropZone(position);
+                          setSidebarDropZone(position);
                         }}
                         onDrop={(event) => {
                           event.preventDefault();
-                          sidebarCommands.setSidebarPosition(position);
+                          setSidebarPosition(position);
                         }}
                       >
                         <div className="text-center">

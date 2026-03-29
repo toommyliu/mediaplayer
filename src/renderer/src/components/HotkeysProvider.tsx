@@ -3,11 +3,11 @@ import { hotkeysDevtoolsPlugin } from "@tanstack/react-hotkeys-devtools";
 import { HotkeysProvider as THotkeysProvider, useHotkey } from "@tanstack/react-hotkeys";
 import { runHotkeyAction } from "@/lib/controllers/hotkey-controller";
 import { getHotkeysState, getStoredHotkeys, setHotkeyCategories } from "@/lib/state/hotkeys";
-import { getPlatformState } from "@/lib/state/platform";
-import { getSettingsState } from "@/lib/state/settings";
 import { useMemo } from "react";
 import type { HotkeyCategory } from "@/types";
 import type { RegisterableHotkey } from "@tanstack/react-hotkeys";
+import { usePlatformStore } from "@stores/platform";
+import { useSettingsStore } from "@stores/settings";
 
 function convertHotkeyFormat(keys: string[]): string[] {
   return keys.map((key) => {
@@ -80,7 +80,7 @@ function useHotkeysCategories(): HotkeyCategory[] {
       return state.categories;
     }
 
-    const modKey = getPlatformState().isMac ? "command" : "ctrl";
+    const modKey = usePlatformStore.getState().isMac ? "command" : "ctrl";
     const categories = buildDefaultCategories(modKey);
 
     const stored = getStoredHotkeys();
@@ -102,7 +102,7 @@ function useHotkeysCategories(): HotkeyCategory[] {
 
 function HotkeysRegistrar() {
   const categories = useHotkeysCategories();
-  const showDialog = getSettingsState().showDialog;
+  const showDialog = useSettingsStore((state) => state.showDialog);
 
   for (const category of categories) {
     for (const action of category.actions) {
