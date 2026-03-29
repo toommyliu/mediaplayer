@@ -8,6 +8,13 @@ import {
 import { sortFileTree } from "../../../shared";
 import { Button } from "@/components/ui/button";
 import {
+  ContextMenu,
+  ContextMenuTrigger,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator
+} from "@/components/ui/context-menu";
+import {
   ChevronDownIcon,
   CloseIcon,
   DotIcon,
@@ -114,145 +121,225 @@ function FileBrowserItem({
     playbackCommands.playVideo(item.path);
   }
 
+  async function copyItemPath(): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(item.path);
+    } catch (error) {
+      console.error("Failed to copy path", error);
+    }
+  }
+
   return (
     <div>
-      <div
-        className={`group relative flex min-h-[32px] items-center rounded-md border px-2 transition ${
-          isPlaying
-            ? "border-primary/30 bg-primary/10 text-primary"
-            : "border-transparent hover:bg-muted/40"
-        }`}
-        style={{ paddingLeft: `${depth * 14 + 8}px` }}
-      >
-        <button
-          className="flex min-h-[32px] min-w-0 flex-1 items-center gap-2 text-left outline-none"
-          data-item-trigger="true"
-          data-path={item.path}
-          onClick={handleItemClick}
-          onFocus={() => fileBrowserCommands.setFileBrowserState({ focusedItemPath: item.path })}
-          onKeyDown={(event) => {
-            if (event.key === "ArrowDown") {
-              event.preventDefault();
-              focusRelative(1);
-            } else if (event.key === "ArrowUp") {
-              event.preventDefault();
-              focusRelative(-1);
-            } else if (event.key === "ArrowRight" && isFolder && !isExpanded) {
-              event.preventDefault();
-              libraryCommands.toggleFolder(item.path);
-            } else if (event.key === "ArrowLeft" && isFolder && isExpanded) {
-              event.preventDefault();
-              libraryCommands.toggleFolder(item.path);
-            } else if (event.key === "Enter" || event.key === " ") {
-              event.preventDefault();
-              handleItemClick(event);
-            }
-          }}
-        >
-          {/* {isFolder ? (
-            <FolderIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
-          ) : (
-            <FilmIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
-          )} */}
+      <ContextMenu>
+        <ContextMenuTrigger render={() => {
+            return (
+              <div
+                className={`group relative flex min-h-[32px] items-center rounded-md border px-2 transition ${
+                  isPlaying
+                    ? "border-primary/30 bg-primary/10 text-primary"
+                    : "border-transparent hover:bg-muted/40"
+                }`}
+                style={{ paddingLeft: `${depth * 14 + 8}px` }}
+              >
+                <button
+                  className="flex min-h-[32px] min-w-0 flex-1 items-center gap-2 text-left outline-none"
+                  data-item-trigger="true"
+                  data-path={item.path}
+                  onClick={handleItemClick}
+                  onFocus={() => fileBrowserCommands.setFileBrowserState({ focusedItemPath: item.path })}
+                  onKeyDown={(event) => {
+                    if (event.key === "ArrowDown") {
+                      event.preventDefault();
+                      focusRelative(1);
+                    } else if (event.key === "ArrowUp") {
+                      event.preventDefault();
+                      focusRelative(-1);
+                    } else if (event.key === "ArrowRight" && isFolder && !isExpanded) {
+                      event.preventDefault();
+                      libraryCommands.toggleFolder(item.path);
+                    } else if (event.key === "ArrowLeft" && isFolder && isExpanded) {
+                      event.preventDefault();
+                      libraryCommands.toggleFolder(item.path);
+                    } else if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      handleItemClick(event);
+                    }
+                  }}
+                >
+                  <span className="min-w-0 flex-1 truncate text-sm font-medium">
+                    {item.name}
+                    {isFolder ? "/" : ""}
+                  </span>
 
-          <span className="min-w-0 flex-1 truncate text-sm font-medium">
-            {item.name}
-            {isFolder ? "/" : ""}
-          </span>
+                  {!isFolder ? (
+                    <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground">
+                      {item.duration ? makeTimeString(item.duration) : "--:--"}
+                    </span>
+                  ) : null}
 
-          {!isFolder ? (
-            <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground">
-              {item.duration ? makeTimeString(item.duration) : "--:--"}
-            </span>
-          ) : null}
+                  {isLoading ? <LoaderIcon className="h-4 w-4 animate-spin text-primary" /> : null}
+                  {containsCurrent ? <DotIcon className="h-3 w-3 text-primary" /> : null}
+                  {isFolder ? (
+                    <ChevronDownIcon
+                      className={`h-4 w-4 text-muted-foreground transition ${isExpanded ? "rotate-180" : ""}`}
+                    />
+                  ) : null}
+                </button>
 
-          {isLoading ? <LoaderIcon className="h-4 w-4 animate-spin text-primary" /> : null}
-          {containsCurrent ? <DotIcon className="h-3 w-3 text-primary" /> : null}
-          {isFolder ? (
-            <ChevronDownIcon
-              className={`h-4 w-4 text-muted-foreground transition ${isExpanded ? "rotate-180" : ""}`}
-            />
-          ) : null}
-        </button>
+                <div className="absolute top-1/2 right-2 hidden -translate-y-1/2 items-center gap-1 rounded-md bg-card/90 p-1 shadow group-hover:flex group-focus-within:flex">
+                  {isFolder ? (
+                    <>
+                      <Button
+                        className={iconButtonClass()}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          void libraryCommands.navigateToDirectory(item.path);
+                        }}
+                        size="xs"
+                        type="button"
+                        variant="outline"
+                      >
+                        Open
+                      </Button>
+                      <Button
+                        className={iconButtonClass()}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          void libraryCommands.revealItemInFolder(item.path);
+                        }}
+                        size="xs"
+                        type="button"
+                        variant="outline"
+                      >
+                        <RevealIcon className="h-3.5 w-3.5" />
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        className={iconButtonClass()}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          queueCommands.addToQueue({
+                            duration: item.duration,
+                            name: item.name,
+                            path: item.path
+                          });
+                        }}
+                        size="xs"
+                        type="button"
+                        variant="outline"
+                      >
+                        <PlusIcon className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        className={iconButtonClass()}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          queueCommands.addNextToQueue({
+                            duration: item.duration,
+                            name: item.name,
+                            path: item.path
+                          });
+                        }}
+                        size="xs"
+                        type="button"
+                        variant="outline"
+                      >
+                        Next
+                      </Button>
+                      <Button
+                        className={iconButtonClass()}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          void libraryCommands.revealItemInFolder(item.path);
+                        }}
+                        size="xs"
+                        type="button"
+                        variant="outline"
+                      >
+                        <RevealIcon className="h-3.5 w-3.5" />
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </div>
+            );
+        }}>
+      </ContextMenuTrigger>
 
-        <div className="absolute top-1/2 right-2 hidden -translate-y-1/2 items-center gap-1 rounded-md bg-card/90 p-1 shadow group-hover:flex group-focus-within:flex">
-          {isFolder ? (
-            <>
-              <Button
-                className={iconButtonClass()}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  void libraryCommands.navigateToDirectory(item.path);
-                }}
-                size="xs"
-                type="button"
-                variant="outline"
-              >
-                Open
-              </Button>
-              <Button
-                className={iconButtonClass()}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  void libraryCommands.revealItemInFolder(item.path);
-                }}
-                size="xs"
-                type="button"
-                variant="outline"
-              >
-                <RevealIcon className="h-3.5 w-3.5" />
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button
-                className={iconButtonClass()}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  queueCommands.addToQueue({
-                    duration: item.duration,
-                    name: item.name,
-                    path: item.path
-                  });
-                }}
-                size="xs"
-                type="button"
-                variant="outline"
-              >
-                <PlusIcon className="h-3.5 w-3.5" />
-              </Button>
-              <Button
-                className={iconButtonClass()}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  queueCommands.addNextToQueue({
-                    duration: item.duration,
-                    name: item.name,
-                    path: item.path
-                  });
-                }}
-                size="xs"
-                type="button"
-                variant="outline"
-              >
-                Next
-              </Button>
-              <Button
-                className={iconButtonClass()}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  void libraryCommands.revealItemInFolder(item.path);
-                }}
-                size="xs"
-                type="button"
-                variant="outline"
-              >
-                <RevealIcon className="h-3.5 w-3.5" />
-              </Button>
-            </>
-          )}
-        </div>
-      </div>
+      <ContextMenuContent>
+        {isFolder ? (
+          <>
+            <ContextMenuItem
+              onSelect={() => {
+                void libraryCommands.navigateToDirectory(item.path);
+              }}
+            >
+              Open folder
+            </ContextMenuItem>
+            <ContextMenuItem
+              onSelect={() => {
+                libraryCommands.toggleFolder(item.path);
+              }}
+            >
+              {isExpanded ? "Collapse folder" : "Expand folder"}
+            </ContextMenuItem>
+            <ContextMenuItem
+              onSelect={() => {
+                void libraryCommands.revealItemInFolder(item.path);
+              }}
+            >
+              Reveal in Finder/Explorer
+            </ContextMenuItem>
+            <ContextMenuSeparator />
+            <ContextMenuItem onSelect={copyItemPath}>Copy path</ContextMenuItem>
+          </>
+        ) : (
+          <>
+            <ContextMenuItem
+              onSelect={() => {
+                playbackCommands.playVideo(item.path);
+              }}
+            >
+              Play video
+            </ContextMenuItem>
+            <ContextMenuItem
+              onSelect={() => {
+                queueCommands.addToQueue({
+                  duration: item.duration,
+                  name: item.name,
+                  path: item.path
+                });
+              }}
+            >
+              Add to queue
+            </ContextMenuItem>
+            <ContextMenuItem
+              onSelect={() => {
+                queueCommands.addNextToQueue({
+                  duration: item.duration,
+                  name: item.name,
+                  path: item.path
+                });
+              }}
+            >
+              Add next
+            </ContextMenuItem>
+            <ContextMenuItem
+              onSelect={() => {
+                void libraryCommands.revealItemInFolder(item.path);
+              }}
+            >
+              Reveal in Finder/Explorer
+            </ContextMenuItem>
+            <ContextMenuSeparator />
+            <ContextMenuItem onSelect={copyItemPath}>Copy path</ContextMenuItem>
+          </>
+        )}
+      </ContextMenuContent>
+    </ContextMenu>
 
       {isFolder && isExpanded ? (
         <div className="mt-1 space-y-1">

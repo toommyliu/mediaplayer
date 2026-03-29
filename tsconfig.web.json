@@ -14,20 +14,8 @@
   },
   "include": [
     "src/renderer/src/env.d.ts",
-    "src/renderer/src/App.tsx",
-    "src/renderer/src/main.tsx",
-    "src/renderer/src/types.ts",
-    "src/renderer/src/components/SidebarPanel.tsx",
-    "src/renderer/src/components/VideoPlayer.tsx",
-    "src/renderer/src/components/settings/**/*.tsx",
-    "src/renderer/src/components/ui/button.tsx",
-    "src/renderer/src/components/ui/checkbox.tsx",
-    "src/renderer/src/components/ui/dialog.tsx",
-    "src/renderer/src/components/ui/input.tsx",
-    "src/renderer/src/components/ui/kbd.tsx",
-    "src/renderer/src/hooks/**/*.ts",
-    "src/renderer/src/lib/**/*",
-    "src/shared/**/*",
+    "src/renderer/src/**/*",
+    "src/renderer/src/**/*.tsx",
     "src/preload/*.d.ts",
     "src/common/**/*"
   ]

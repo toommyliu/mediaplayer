@@ -13,6 +13,7 @@ import {
   increaseVolumeWithMediaSync,
   setMutedWithMediaSync
 } from "@/lib/controllers/volume-controller";
+import { getVideoElement } from "@/lib/controllers/media-runtime";
 import { getPlayerState, setCurrentTime } from "@/lib/state/player";
 import { getCurrentQueueItemFromState, getQueueState } from "@/lib/state/queue";
 import { setSettingsDialogOpen } from "@/lib/state/settings";
@@ -23,7 +24,7 @@ export async function runHotkeyAction(actionId: string): Promise<void> {
   const queue = getQueueState();
   const currentItem = getCurrentQueueItemFromState(queue);
   const player = getPlayerState();
-  const video = document.querySelector("video");
+  const video = getVideoElement();
 
   switch (actionId) {
     case "playPause":

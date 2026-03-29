@@ -1,5 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
+import { getVideoElement } from "@/lib/controllers/media-runtime";
 import {
   CloseIcon,
   FilmIcon,
@@ -33,7 +42,7 @@ import {
 type HoldDirection = "left" | "right" | null;
 
 function controlButtonClass(): string {
-  return "h-9 border-white/10 bg-white/10 px-3 text-sm text-white hover:bg-white/15";
+  return "h-7 border-white/10 bg-white/10 px-3 text-sm text-white hover:bg-white/15";
 }
 
 function iconControlButtonClass(): string {
@@ -149,7 +158,7 @@ function PlayerControls({
 
   function setVideoTime(nextTime: number): void {
     playerCommands.setCurrentTime(nextTime);
-    const video = document.querySelector("video");
+    const video = getVideoElement();
     if (video) {
       video.currentTime = nextTime;
     }
@@ -244,7 +253,7 @@ function PlayerControls({
           <Button
             className={iconControlButtonClass()}
             onClick={() => sidebarCommands.toggleSidebar()}
-            size="icon"
+            size="icon-sm"
             type="button"
             variant="outline"
           >
@@ -255,7 +264,7 @@ function PlayerControls({
             onClick={() => {
               void playbackCommands.playPreviousVideo();
             }}
-            size="icon"
+            size="icon-sm"
             type="button"
             variant="outline"
           >
@@ -266,7 +275,7 @@ function PlayerControls({
             onClick={() => {
               void playbackCommands.togglePlayPause();
             }}
-            size="icon"
+            size="icon-sm"
             type="button"
             variant="outline"
           >
@@ -281,7 +290,7 @@ function PlayerControls({
             onClick={() => {
               void playbackCommands.playNextVideo();
             }}
-            size="icon"
+            size="icon-sm"
             type="button"
             variant="outline"
           >
@@ -290,50 +299,61 @@ function PlayerControls({
         </div>
 
         <div className="flex items-center gap-2">
-          <Button
-            className={iconControlButtonClass()}
-            onClick={() => volumeCommands.setMuted(!volume.isMuted)}
-            size="icon"
-            type="button"
-            variant="outline"
-          >
-            {volume.isMuted || volume.value === 0 ? (
-              <MuteIcon className="h-4 w-4" />
-            ) : (
-              <VolumeIcon className="h-4 w-4" />
-            )}
-          </Button>
-          <input
-            className="accent-primary"
-            max={1}
-            min={0}
-            onChange={(event) => {
-              volumeCommands.setVolume(Number(event.target.value));
-              if (Number(event.target.value) > 0) {
-                volumeCommands.setMuted(false);
-              }
-            }}
-            step={0.01}
-            type="range"
-            value={volume.value}
-          />
-          <select
-            className={controlButtonClass()}
-            onChange={(event) => {
+          <div className="group/volume flex items-center overflow-hidden rounded-lg border border-white/10 bg-white/10 pr-1 text-white transition-colors hover:bg-white/15 focus-within:bg-white/15">
+            <Button
+              className="size-8 shrink-0 border-0 bg-transparent p-0 text-white shadow-none hover:bg-transparent"
+              onClick={() => volumeCommands.setMuted(!volume.isMuted)}
+              size="icon-sm"
+              type="button"
+              variant="ghost"
+            >
+              {volume.isMuted || volume.value === 0 ? (
+                <MuteIcon className="h-4 w-4" />
+              ) : (
+                <VolumeIcon className="h-4 w-4" />
+              )}
+            </Button>
+            <div className="w-0 overflow-hidden opacity-0 pointer-events-none transition-[width,opacity] duration-200 ease-out group-hover/volume:w-32 group-hover/volume:opacity-100 group-hover/volume:pointer-events-auto group-focus-within/volume:w-32 group-focus-within/volume:opacity-100 group-focus-within/volume:pointer-events-auto pointer-coarse:w-32 pointer-coarse:opacity-100 pointer-coarse:pointer-events-auto">
+              <div className="px-2">
+                <Slider
+                  className="data-[orientation=horizontal]:w-full data-[orientation=horizontal]:min-w-0"
+                  max={1}
+                  min={0}
+                  onValueChange={(nextValue) => {
+                    const nextVolume = Array.isArray(nextValue) ? nextValue[0] : nextValue;
+                    volumeCommands.setVolume(nextVolume);
+                    if (nextVolume > 0) {
+                      volumeCommands.setMuted(false);
+                    }
+                  }}
+                  step={0.01}
+                  thumbAlignment="edge"
+                  value={[volume.value]}
+                />
+              </div>
+            </div>
+          </div>
+          <Select
+            onValueChange={(nextValue) => {
               playerCommands.setPlayerState({
-                aspectRatio: event.target.value as "contain" | "cover" | "fill"
+                aspectRatio: nextValue as "contain" | "cover" | "fill"
               });
             }}
             value={player.aspectRatio}
           >
-            <option value="contain">Contain</option>
-            <option value="cover">Cover</option>
-            <option value="fill">Fill</option>
-          </select>
+            <SelectTrigger className={`${controlButtonClass()} w-auto min-w-0`}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="contain">Contain</SelectItem>
+              <SelectItem value="cover">Cover</SelectItem>
+              <SelectItem value="fill">Fill</SelectItem>
+            </SelectContent>
+          </Select>
           <Button
             className={iconControlButtonClass()}
             onClick={() => settingsCommands.setSettingsDialogOpen(true)}
-            size="icon"
+            size="icon-sm"
             type="button"
             variant="outline"
           >
@@ -344,7 +364,7 @@ function PlayerControls({
             onClick={() => {
               void playbackCommands.setFullscreen(!player.isFullscreen);
             }}
-            size="icon"
+            size="icon-sm"
             type="button"
             variant="outline"
           >
@@ -369,11 +389,9 @@ export default function VideoPlayer() {
   const [isControlsHovered, setIsControlsHovered] = useState(false);
   const [holdDirection, setHoldDirection] = useState<HoldDirection>(null);
 
-  useEffect(() => {
-    playbackCommands.bindVideoElement(videoRef.current);
-    return () => {
-      playbackCommands.bindVideoElement(null);
-    };
+  const setVideoElementRef = useCallback((element: HTMLVideoElement | null) => {
+    videoRef.current = element;
+    playbackCommands.bindVideoElement(element);
   }, []);
 
   useEffect(() => {
@@ -565,7 +583,7 @@ export default function VideoPlayer() {
             }
           }}
           preload="metadata"
-          ref={videoRef}
+          ref={setVideoElementRef}
           src={toFileUrl(currentItem.path)}
         />
 
