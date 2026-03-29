@@ -15,11 +15,17 @@ import {
   useCurrentQueueItem,
   useFileBrowserView,
   usePlatformView,
-  usePlayerView
+  usePlayerView,
+  useSidebarView
 } from "@/lib/store";
 import { FileBrowserItemContextMenu } from "./FileBrowserItemContextMenu";
 import { cn } from "@/lib/utils";
 import type { FileSystemItem } from "@/types";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
 
 
 function isCurrentVideo(itemPath: string | undefined, currentVideo: string | null): boolean {
@@ -40,6 +46,7 @@ export function FileBrowserItem({ item, depth }: { depth: number; item: FileSyst
   const player = usePlayerView();
   const platform = usePlatformView();
   const currentItem = useCurrentQueueItem();
+  const sidebar = useSidebarView();
   const isFolder = item.type === "folder";
   const isExpanded = isFolder && fileBrowser.expandedFolders.has(item.path);
   const isLoading = fileBrowser.loadingFolders.has(item.path);
@@ -94,7 +101,7 @@ export function FileBrowserItem({ item, depth }: { depth: number; item: FileSyst
               <div
                 {...triggerProps}
                 className={cn(
-                  "group relative flex min-h-[32px] items-center rounded-md border px-2 transition-all duration-200",
+                  "group relative flex min-h-8 items-center rounded-md border px-2 transition-all duration-200",
                   isPlaying
                     ? "border-primary/20 bg-primary/5 text-primary"
                     : "border-transparent hover:bg-muted/40",
@@ -106,7 +113,7 @@ export function FileBrowserItem({ item, depth }: { depth: number; item: FileSyst
                 }}
               >
                 <button
-                  className="flex min-h-[32px] min-w-0 flex-1 items-center gap-2 text-left outline-none"
+                  className="flex min-h-8 min-w-0 flex-1 items-center gap-2 text-left outline-none"
                   data-item-trigger="true"
                   data-path={item.path}
                   onClick={handleItemClick}
@@ -132,13 +139,29 @@ export function FileBrowserItem({ item, depth }: { depth: number; item: FileSyst
                     }
                   }}
                 >
-                  <span className="min-w-0 flex-1 truncate text-sm font-medium">
-                    {item.name}
-                    {isFolder ? "/" : ""}
-                  </span>
+                  <Tooltip>
+                    <TooltipTrigger
+                      render={(triggerProps) => (
+                        <span
+                          {...triggerProps}
+                          className="min-w-0 flex-1 truncate text-sm font-medium"
+                        >
+                          {item.name}
+                          {isFolder ? "/" : ""}
+                        </span>
+                      )}
+                    />
+                    <TooltipContent
+                      align="start"
+                      side={sidebar.position === "left" ? "right" : "left"}
+                      sideOffset={8}
+                    >
+                      {item.name}
+                    </TooltipContent>
+                  </Tooltip>
 
                   {!isFolder ? (
-                    <span className="rounded bg-muted/50 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground/80">
+                    <span className="rounded-sm bg-muted/30 px-1 py-0.5 font-mono text-[9px] font-medium tracking-tight text-muted-foreground/60 ring-1 ring-inset ring-muted-foreground/10">
                       {item.duration ? makeTimeString(item.duration) : "--:--"}
                     </span>
                   ) : null}

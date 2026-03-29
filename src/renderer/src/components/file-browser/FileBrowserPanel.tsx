@@ -1,4 +1,4 @@
-import { Loader } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton";
 import { sortFileTree } from "../../../../shared/file-tree-utils";
 
 import {
@@ -21,15 +21,18 @@ export function FileBrowserPanel() {
 
       <div className="relative flex min-h-0 flex-1 flex-col">
         {fileBrowser.isLoading ? (
-          <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-            <div className="flex flex-col items-center gap-2">
-              <Loader className="h-7 w-7 animate-spin text-primary" />
-              <span className="text-sm text-muted-foreground">Loading…</span>
-            </div>
+          <div className="flex flex-col gap-1 p-1">
+            {Array.from({ length: 24 }).map((_, i) => (
+              <div
+                key={i}
+                className="flex min-h-8 items-center gap-2 rounded-md border border-transparent px-2"
+              >
+                <Skeleton className="h-3.5 flex-1" />
+                <Skeleton className="h-3 w-10 opacity-50" />
+              </div>
+            ))}
           </div>
-        ) : null}
-
-        {fileSystem.length === 0 ? (
+        ) : fileSystem.length === 0 ? (
           <FileBrowserEmptyState />
         ) : (
           <FileBrowserList />
