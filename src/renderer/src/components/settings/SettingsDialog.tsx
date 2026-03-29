@@ -8,7 +8,15 @@ import type { ThemeMode } from "@/hooks/use-theme-mode";
 import { formatHotkeyDisplay, hotkeyRecorder } from "@/lib/hotkey-recorder";
 import { resetHotkeysToDefaults, updateHotkey } from "@/lib/hotkeys";
 import { ChevronDownIcon, CloseIcon, MoonIcon, SettingsIcon, SunIcon } from "@/lib/icons";
-import { useAppStore } from "@/lib/store";
+import {
+  notificationCommands,
+  settingsCommands,
+  useHotkeysView,
+  useNotificationsView,
+  useSettingsView,
+  useVolumeView,
+  volumeCommands
+} from "@/lib/store";
 import type { NotificationPosition } from "@/types";
 
 const TABS = [
@@ -35,21 +43,24 @@ export default function SettingsDialog({
   setTheme: (theme: ThemeMode) => void;
   theme: ThemeMode;
 }) {
-  const state = useAppStore();
+  const settings = useSettingsView();
+  const hotkeys = useHotkeysView();
+  const volume = useVolumeView();
+  const notifications = useNotificationsView();
   const [selectedTab, setSelectedTab] = useState<SettingsTab>("general");
   const [editingAction, setEditingAction] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    if (state.settings.showDialog) {
+    if (settings.showDialog) {
       setSelectedTab("general");
     }
-  }, [state.settings.showDialog]);
+  }, [settings.showDialog]);
 
-  if (!state.settings.showDialog) return null;
+  if (!settings.showDialog) return null;
 
-  const filteredCategories = state.hotkeys.categories
+  const filteredCategories = hotkeys.categories
     .map((category) => ({
       ...category,
       actions: category.actions.filter((action) => {
@@ -65,8 +76,8 @@ export default function SettingsDialog({
 
   return (
     <Dialog
-      onOpenChange={(open) => useAppStore.getState().setSettingsDialogOpen(open)}
-      open={state.settings.showDialog}
+      onOpenChange={(open) => settingsCommands.setSettingsDialogOpen(open)}
+      open={settings.showDialog}
     >
       <DialogContent
         className="flex h-full w-full max-w-5xl flex-col overflow-hidden p-0 md:h-[85vh] md:flex-row"
@@ -74,7 +85,7 @@ export default function SettingsDialog({
       >
         <Button
           className="absolute top-4 right-4 z-10 h-8 w-8 p-0"
-          onClick={() => useAppStore.getState().setSettingsDialogOpen(false)}
+          onClick={() => settingsCommands.setSettingsDialogOpen(false)}
           type="button"
           variant="ghost"
         >
@@ -184,14 +195,14 @@ export default function SettingsDialog({
                   min={0}
                   onChange={(event) => {
                     const next = Number(event.target.value);
-                    useAppStore.getState().setVolume(next);
+                    volumeCommands.setVolume(next);
                     if (next > 0) {
-                      useAppStore.getState().setMuted(false);
+                      volumeCommands.setMuted(false);
                     }
                   }}
                   step={0.01}
                   type="range"
-                  value={state.volume.value}
+                  value={volume.value}
                 />
               </div>
             </div>
@@ -203,11 +214,9 @@ export default function SettingsDialog({
                 <h3 className="mb-3 text-base font-semibold">Video Notifications</h3>
                 <label className="flex items-center gap-3 text-sm">
                   <Checkbox
-                    checked={state.notifications.upNextEnabled}
+                    checked={notifications.upNextEnabled}
                     onCheckedChange={(checked) =>
-                      useAppStore
-                        .getState()
-                        .setNotificationSettings({ upNextEnabled: checked === true })
+                      notificationCommands.setNotificationSettings({ upNextEnabled: checked === true })
                     }
                   />
                   Show "Up Next" notification
@@ -217,11 +226,11 @@ export default function SettingsDialog({
               <div>
                 <label className="flex items-center gap-3 text-sm">
                   <Checkbox
-                    checked={state.notifications.videoInfoEnabled}
+                    checked={notifications.videoInfoEnabled}
                     onCheckedChange={(checked) =>
-                      useAppStore
-                        .getState()
-                        .setNotificationSettings({ videoInfoEnabled: checked === true })
+                      notificationCommands.setNotificationSettings({
+                        videoInfoEnabled: checked === true
+                      })
                     }
                   />
                   Show video info overlay
@@ -234,11 +243,11 @@ export default function SettingsDialog({
                   <select
                     className="h-10 w-full appearance-none rounded-md border border-input bg-background px-3 pr-10 text-sm"
                     onChange={(event) =>
-                      useAppStore.getState().setNotificationSettings({
+                      notificationCommands.setNotificationSettings({
                         upNextPosition: event.target.value as NotificationPosition
                       })
                     }
-                    value={state.notifications.upNextPosition}
+                    value={notifications.upNextPosition}
                   >
                     <option value="top-left">Top Left</option>
                     <option value="top-right">Top Right</option>
@@ -271,7 +280,7 @@ export default function SettingsDialog({
                 value={searchTerm}
               />
 
-              {state.hotkeys.categories.length === 0 ? (
+              {hotkeys.categories.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
                   Shortcut bindings will appear here once the hotkey layer is wired.
                 </p>

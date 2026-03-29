@@ -1,7 +1,13 @@
 import Mousetrap from "mousetrap";
+import { runHotkeyAction } from "@/lib/controllers/hotkey-controller";
 import { onMediaNextTrack, onMediaPlayPause, onMediaPreviousTrack } from "@/lib/ipc";
-import { FRAME_TIME_STEP, SEEK_TIME_STEP } from "@/lib/constants";
-import { useAppStore, getCurrentQueueItem } from "@/lib/store";
+import { getPlatformState } from "@/lib/state/platform";
+import { getSettingsState } from "@/lib/state/settings";
+import { playbackCommands } from "@/lib/store";
+import {
+  hotkeyCommands,
+  stateSnapshots
+} from "@/lib/store";
 import type { HotkeyAction, HotkeyCategory } from "@/types";
 
 let categories: HotkeyCategory[] = [];
@@ -60,9 +66,7 @@ function bindAction(action: HotkeyAction): void {
   for (const key of action.keys) {
     Mousetrap.unbind(key);
     Mousetrap.bind(key, (event) => {
-      const state = useAppStore.getState();
-
-      if (state.settings.showDialog) return;
+      if (getSettingsState().showDialog) return;
 
       const target =
         (event.target as HTMLElement | null) || (document.activeElement as HTMLElement | null);
@@ -80,90 +84,8 @@ function bindAction(action: HotkeyAction): void {
       }
 
       event.preventDefault();
-      void runAction(action.id);
+      void runHotkeyAction(action.id);
     });
-  }
-}
-
-async function runAction(actionId: string): Promise<void> {
-  const store = useAppStore.getState();
-  const state = useAppStore.getState();
-  const currentItem = getCurrentQueueItem(state);
-  const video = document.querySelector("video");
-
-  switch (actionId) {
-    case "playPause":
-      await store.togglePlayPause();
-      break;
-    case "previousTrack":
-      await store.playPreviousVideo();
-      break;
-    case "nextTrack":
-      await store.playNextVideo();
-      break;
-    case "seekBackward":
-      if (currentItem) {
-        const nextTime = Math.max(0, state.player.currentTime - SEEK_TIME_STEP);
-        store.setCurrentTime(nextTime);
-        if (video) video.currentTime = nextTime;
-      }
-      break;
-    case "seekForward":
-      if (currentItem) {
-        const nextTime = Math.min(state.player.duration, state.player.currentTime + SEEK_TIME_STEP);
-        store.setCurrentTime(nextTime);
-        if (video) video.currentTime = nextTime;
-      }
-      break;
-    case "frameBackward":
-      if (currentItem) {
-        const nextTime = Math.max(0, state.player.currentTime - FRAME_TIME_STEP);
-        store.setCurrentTime(nextTime);
-        if (video) video.currentTime = nextTime;
-      }
-      break;
-    case "frameForward":
-      if (currentItem) {
-        const nextTime = Math.min(state.player.duration, state.player.currentTime + FRAME_TIME_STEP);
-        store.setCurrentTime(nextTime);
-        if (video) video.currentTime = nextTime;
-      }
-      break;
-    case "volumeUp":
-      store.increaseVolume();
-      break;
-    case "volumeDown":
-      store.decreaseVolume();
-      break;
-    case "mute":
-      store.setMuted(!state.volume.isMuted);
-      break;
-    case "fullscreen":
-      await store.setFullscreen(!state.player.isFullscreen);
-      break;
-    case "showFileBrowser":
-      store.setSidebarTab("file-browser");
-      break;
-    case "showQueue":
-      store.setSidebarTab("queue");
-      break;
-    case "toggleSidebar":
-      store.toggleSidebar();
-      break;
-    case "fileBrowserBack":
-      await store.navigateToParent();
-      break;
-    case "openSettings":
-      store.setSettingsDialogOpen(true);
-      break;
-    default:
-      if (/^jump-\d$/.test(actionId) && currentItem) {
-        const percent = Number.parseInt(actionId.split("-")[1], 10) / 10;
-        const nextTime = percent * state.player.duration;
-        store.setCurrentTime(nextTime);
-        if (video) video.currentTime = nextTime;
-      }
-      break;
   }
 }
 
@@ -172,18 +94,40 @@ function bindNumericHotkeys(): void {
     Mousetrap.unbind(String(index));
     Mousetrap.bind(String(index), (event) => {
       event.preventDefault();
-      void runAction(`jump-${index}`);
+      void runHotkeyAction(`jump-${index}`);
     });
   }
+}
+
+function cloneCategory(category: HotkeyCategory): HotkeyCategory {
+  return {
+    actions: category.actions.map((action) => ({ ...action, keys: [...action.keys] })),
+    name: category.name
+  };
+}
+
+function persistCurrentHotkeys(): void {
+  const hotkeys: Record<string, string[]> = {};
+  for (const category of categories) {
+    for (const action of category.actions) {
+      hotkeys[action.id] = action.keys;
+    }
+  }
+  hotkeyCommands.setStoredHotkeys(hotkeys);
+  hotkeyCommands.setHotkeyCategories(
+    categories.map(cloneCategory),
+    stateSnapshots.getHotkeysState().modKey,
+    true
+  );
 }
 
 export function initializeHotkeys(): void {
   if (initialized) return;
 
-  const modKey = useAppStore.getState().platform.isMac ? "command" : "ctrl";
+  const modKey = getPlatformState().isMac ? "command" : "ctrl";
   categories = buildDefaultCategories(modKey);
 
-  const stored = useAppStore.getState().getStoredHotkeys();
+  const stored = hotkeyCommands.getStoredHotkeys();
   if (stored) {
     for (const category of categories) {
       for (const action of category.actions) {
@@ -202,44 +146,20 @@ export function initializeHotkeys(): void {
 
   bindNumericHotkeys();
   initialized = true;
-  useAppStore.getState().setHotkeyCategories(categories.map(cloneCategory), modKey, true);
+  hotkeyCommands.setHotkeyCategories(categories.map(cloneCategory), modKey, true);
 
   if (!mediaHandlersBound) {
     onMediaPreviousTrack(() => {
-      void useAppStore.getState().playPreviousVideo();
+      void playbackCommands.playPreviousVideo();
     });
     onMediaNextTrack(() => {
-      void useAppStore.getState().playNextVideo();
+      void playbackCommands.playNextVideo();
     });
     onMediaPlayPause(() => {
-      void useAppStore.getState().togglePlayPause();
+      void playbackCommands.togglePlayPause();
     });
     mediaHandlersBound = true;
   }
-}
-
-function cloneCategory(category: HotkeyCategory): HotkeyCategory {
-  return {
-    actions: category.actions.map((action) => ({ ...action, keys: [...action.keys] })),
-    name: category.name
-  };
-}
-
-function persistCurrentHotkeys(): void {
-  const hotkeys: Record<string, string[]> = {};
-  for (const category of categories) {
-    for (const action of category.actions) {
-      hotkeys[action.id] = action.keys;
-    }
-  }
-  useAppStore.getState().setStoredHotkeys(hotkeys);
-  useAppStore
-    .getState()
-    .setHotkeyCategories(
-      categories.map(cloneCategory),
-      useAppStore.getState().hotkeys.modKey,
-      true
-    );
 }
 
 export function updateHotkey(actionId: string, newKeys: string[]): boolean {
@@ -263,7 +183,7 @@ export function updateHotkey(actionId: string, newKeys: string[]): boolean {
 
 export function resetHotkeysToDefaults(): void {
   cleanupHotkeys();
-  useAppStore.getState().clearStoredHotkeys();
+  hotkeyCommands.clearStoredHotkeys();
   initialized = false;
   initializeHotkeys();
 }

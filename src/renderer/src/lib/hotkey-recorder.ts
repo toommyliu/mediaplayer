@@ -1,4 +1,4 @@
-import { useAppStore } from "@/lib/store";
+import { getPlatformState } from "@/lib/state/platform";
 
 export type RecordedKeys = {
   display: string;
@@ -174,7 +174,7 @@ export function formatHotkeyDisplay(keys: string[] | string): string {
 }
 
 function keyToDisplay(key: string): string {
-  const isMac = useAppStore.getState().platform.isMac;
+  const isMac = getPlatformState().isMac;
 
   switch (key) {
     case "cmd":

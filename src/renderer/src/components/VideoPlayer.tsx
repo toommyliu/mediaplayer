@@ -15,7 +15,20 @@ import {
   VolumeIcon
 } from "@/lib/icons";
 import { makeTimeString } from "@/lib/make-time-string";
-import { getCurrentQueueItem, toFileUrl, useAppStore } from "@/lib/store";
+import {
+  libraryCommands,
+  playbackCommands,
+  playerCommands,
+  settingsCommands,
+  sidebarCommands,
+  toFileUrl,
+  useCurrentQueueItem,
+  useNotificationsView,
+  usePlayerView,
+  useQueueView,
+  useVolumeView,
+  volumeCommands
+} from "@/lib/store";
 
 type HoldDirection = "left" | "right" | null;
 
@@ -28,35 +41,35 @@ function iconControlButtonClass(): string {
 }
 
 function UpNextNotification() {
-  const state = useAppStore();
+  const player = usePlayerView();
+  const queue = useQueueView();
+  const notifications = useNotificationsView();
   const [isDismissed, setIsDismissed] = useState(false);
 
-  const remaining = state.player.duration - state.player.currentTime;
+  const remaining = player.duration - player.currentTime;
   const showNotification =
-    state.notifications.upNextEnabled &&
+    notifications.upNextEnabled &&
     !isDismissed &&
-    state.player.duration > 0 &&
+    player.duration > 0 &&
     remaining <= 10 &&
     remaining > 0 &&
-    (state.queue.index < state.queue.items.length - 1 || state.queue.repeatMode === "all");
+    (queue.index < queue.items.length - 1 || queue.repeatMode === "all");
 
   useEffect(() => {
     setIsDismissed(false);
-  }, [state.player.currentVideo]);
+  }, [player.currentVideo]);
 
   if (!showNotification) return null;
 
   const nextItem =
-    state.queue.index < state.queue.items.length - 1
-      ? state.queue.items[state.queue.index + 1]
-      : state.queue.items[0];
+    queue.index < queue.items.length - 1 ? queue.items[queue.index + 1] : queue.items[0];
 
   const positionClass = {
     "bottom-left": "bottom-24 left-8",
     "bottom-right": "bottom-24 right-8",
     "top-left": "top-8 left-8",
     "top-right": "top-8 right-8"
-  }[state.notifications.upNextPosition];
+  }[notifications.upNextPosition];
 
   return (
     <div
@@ -90,10 +103,11 @@ function UpNextNotification() {
 }
 
 function VideoInfoOverlay({ visible }: { visible: boolean }) {
-  const state = useAppStore();
-  const currentItem = getCurrentQueueItem(state);
+  const notifications = useNotificationsView();
+  const queue = useQueueView();
+  const currentItem = useCurrentQueueItem();
 
-  if (!visible || !currentItem || !state.notifications.videoInfoEnabled) return null;
+  if (!visible || !currentItem || !notifications.videoInfoEnabled) return null;
 
   return (
     <div className="pointer-events-none absolute top-0 left-0 z-20 w-full bg-gradient-to-b from-black/70 via-black/40 to-transparent p-8 pb-16">
@@ -101,9 +115,9 @@ function VideoInfoOverlay({ visible }: { visible: boolean }) {
         <h1 className="text-2xl font-bold text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
           {currentItem.name}
         </h1>
-        {state.queue.items.length > 1 ? (
+        {queue.items.length > 1 ? (
           <p className="text-sm font-medium text-white/75">
-            Video {state.queue.index + 1} of {state.queue.items.length}
+            Video {queue.index + 1} of {queue.items.length}
           </p>
         ) : null}
       </div>
@@ -118,22 +132,23 @@ function PlayerControls({
   onControlsMouseEnter: () => void;
   onControlsMouseLeave: () => void;
 }) {
-  const state = useAppStore();
+  const player = usePlayerView();
+  const volume = useVolumeView();
   const [dragTime, setDragTime] = useState<number | null>(null);
   const [hoverTime, setHoverTime] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
 
-  const progressTime = dragTime ?? state.player.currentTime;
+  const progressTime = dragTime ?? player.currentTime;
   const progressPercentage =
-    state.player.duration > 0 ? (progressTime / state.player.duration) * 100 : 0;
+    player.duration > 0 ? (progressTime / player.duration) * 100 : 0;
 
   function seekTo(clientX: number, rect: DOMRect): number {
     const percent = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-    return percent * state.player.duration;
+    return percent * player.duration;
   }
 
   function setVideoTime(nextTime: number): void {
-    useAppStore.getState().setCurrentTime(nextTime);
+    playerCommands.setCurrentTime(nextTime);
     const video = document.querySelector("video");
     if (video) {
       video.currentTime = nextTime;
@@ -141,16 +156,16 @@ function PlayerControls({
   }
 
   function handleProgressMouseDown(event: import("react").MouseEvent<HTMLDivElement>): void {
-    if (!state.player.duration) return;
+    if (!player.duration) return;
     event.preventDefault();
     const rect = event.currentTarget.getBoundingClientRect();
-    const wasPlaying = state.player.isPlaying;
+    const wasPlaying = player.isPlaying;
 
     setIsDragging(true);
     setDragTime(seekTo(event.clientX, rect));
 
     if (wasPlaying) {
-      useAppStore.getState().pausePlayback();
+      playbackCommands.pausePlayback();
     }
 
     const handleMouseMove = (moveEvent: MouseEvent) => {
@@ -165,7 +180,7 @@ function PlayerControls({
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
       if (wasPlaying) {
-        await useAppStore.getState().togglePlayPause();
+        await playbackCommands.togglePlayPause();
       }
     };
 
@@ -182,20 +197,20 @@ function PlayerControls({
     >
       <div className="mb-3 flex items-center justify-between text-sm font-mono text-white/90">
         <span>{makeTimeString(progressTime)}</span>
-        <span>{state.player.duration ? makeTimeString(state.player.duration) : "0:00"}</span>
+        <span>{player.duration ? makeTimeString(player.duration) : "0:00"}</span>
       </div>
 
       <div className="relative mb-4">
         <div
           className="relative h-2 cursor-pointer rounded-full bg-white/20"
           onClick={(event) => {
-            if (isDragging || !state.player.duration) return;
+            if (isDragging || !player.duration) return;
             const rect = event.currentTarget.getBoundingClientRect();
             setVideoTime(seekTo(event.clientX, rect));
           }}
           onMouseDown={handleProgressMouseDown}
           onMouseMove={(event) => {
-            if (!state.player.duration || isDragging) return;
+            if (!player.duration || isDragging) return;
             const rect = event.currentTarget.getBoundingClientRect();
             setHoverTime(seekTo(event.clientX, rect));
           }}
@@ -212,11 +227,11 @@ function PlayerControls({
           />
         </div>
 
-        {!isDragging && state.player.duration > 0 ? (
+        {!isDragging && player.duration > 0 ? (
           <div
             className="pointer-events-none absolute -top-8 rounded bg-black/70 px-2 py-1 text-xs text-white"
             style={{
-              left: `${Math.max(0, Math.min(95, (hoverTime / state.player.duration) * 100))}%`
+              left: `${Math.max(0, Math.min(95, (hoverTime / player.duration) * 100))}%`
             }}
           >
             {makeTimeString(hoverTime)}
@@ -228,7 +243,7 @@ function PlayerControls({
         <div className="flex items-center gap-2">
           <Button
             className={iconControlButtonClass()}
-            onClick={() => useAppStore.getState().toggleSidebar()}
+            onClick={() => sidebarCommands.toggleSidebar()}
             size="icon"
             type="button"
             variant="outline"
@@ -238,7 +253,7 @@ function PlayerControls({
           <Button
             className={iconControlButtonClass()}
             onClick={() => {
-              void useAppStore.getState().playPreviousVideo();
+              void playbackCommands.playPreviousVideo();
             }}
             size="icon"
             type="button"
@@ -249,13 +264,13 @@ function PlayerControls({
           <Button
             className={iconControlButtonClass()}
             onClick={() => {
-              void useAppStore.getState().togglePlayPause();
+              void playbackCommands.togglePlayPause();
             }}
             size="icon"
             type="button"
             variant="outline"
           >
-            {state.player.isPlaying ? (
+            {player.isPlaying ? (
               <PauseIcon className="h-4 w-4" />
             ) : (
               <PlayIcon className="h-4 w-4" />
@@ -264,7 +279,7 @@ function PlayerControls({
           <Button
             className={iconControlButtonClass()}
             onClick={() => {
-              void useAppStore.getState().playNextVideo();
+              void playbackCommands.playNextVideo();
             }}
             size="icon"
             type="button"
@@ -277,12 +292,12 @@ function PlayerControls({
         <div className="flex items-center gap-2">
           <Button
             className={iconControlButtonClass()}
-            onClick={() => useAppStore.getState().setMuted(!state.volume.isMuted)}
+            onClick={() => volumeCommands.setMuted(!volume.isMuted)}
             size="icon"
             type="button"
             variant="outline"
           >
-            {state.volume.isMuted || state.volume.value === 0 ? (
+            {volume.isMuted || volume.value === 0 ? (
               <MuteIcon className="h-4 w-4" />
             ) : (
               <VolumeIcon className="h-4 w-4" />
@@ -293,23 +308,23 @@ function PlayerControls({
             max={1}
             min={0}
             onChange={(event) => {
-              useAppStore.getState().setVolume(Number(event.target.value));
+              volumeCommands.setVolume(Number(event.target.value));
               if (Number(event.target.value) > 0) {
-                useAppStore.getState().setMuted(false);
+                volumeCommands.setMuted(false);
               }
             }}
             step={0.01}
             type="range"
-            value={state.volume.value}
+            value={volume.value}
           />
           <select
             className={controlButtonClass()}
             onChange={(event) => {
-              useAppStore.getState().setPlayerState({
+              playerCommands.setPlayerState({
                 aspectRatio: event.target.value as "contain" | "cover" | "fill"
               });
             }}
-            value={state.player.aspectRatio}
+            value={player.aspectRatio}
           >
             <option value="contain">Contain</option>
             <option value="cover">Cover</option>
@@ -317,7 +332,7 @@ function PlayerControls({
           </select>
           <Button
             className={iconControlButtonClass()}
-            onClick={() => useAppStore.getState().setSettingsDialogOpen(true)}
+            onClick={() => settingsCommands.setSettingsDialogOpen(true)}
             size="icon"
             type="button"
             variant="outline"
@@ -327,7 +342,7 @@ function PlayerControls({
           <Button
             className={iconControlButtonClass()}
             onClick={() => {
-              void useAppStore.getState().setFullscreen(!state.player.isFullscreen);
+              void playbackCommands.setFullscreen(!player.isFullscreen);
             }}
             size="icon"
             type="button"
@@ -342,8 +357,9 @@ function PlayerControls({
 }
 
 export default function VideoPlayer() {
-  const state = useAppStore();
-  const currentItem = getCurrentQueueItem(state);
+  const player = usePlayerView();
+  const queue = useQueueView();
+  const currentItem = useCurrentQueueItem();
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const hideTimerRef = useRef<number | null>(null);
@@ -354,18 +370,18 @@ export default function VideoPlayer() {
   const [holdDirection, setHoldDirection] = useState<HoldDirection>(null);
 
   useEffect(() => {
-    useAppStore.getState().bindVideoElement(videoRef.current);
+    playbackCommands.bindVideoElement(videoRef.current);
     return () => {
-      useAppStore.getState().bindVideoElement(null);
+      playbackCommands.bindVideoElement(null);
     };
   }, []);
 
   useEffect(() => {
-    useAppStore.getState().setPlayerState({ showControls });
+    playerCommands.setPlayerState({ showControls });
   }, [showControls]);
 
   useEffect(() => {
-    if (!state.player.isPlaying) {
+    if (!player.isPlaying) {
       setShowControls(true);
       if (hideTimerRef.current) {
         window.clearTimeout(hideTimerRef.current);
@@ -379,7 +395,7 @@ export default function VideoPlayer() {
         window.clearTimeout(hideTimerRef.current);
       }
     };
-  }, [state.player.isPlaying, currentItem?.id]);
+  }, [player.isPlaying, currentItem?.id]);
 
   function resetHideTimer(): void {
     if (hideTimerRef.current) {
@@ -388,18 +404,18 @@ export default function VideoPlayer() {
 
     setShowControls(true);
 
-    if (!isControlsHovered && state.player.isPlaying) {
+    if (!isControlsHovered && player.isPlaying) {
       hideTimerRef.current = window.setTimeout(() => {
         if (!isControlsHovered) {
           setShowControls(false);
         }
       }, 3000);
     }
-  }
+    }
 
   function stopHoldSeeking(): void {
     setHoldDirection(null);
-    useAppStore.getState().setPlayerState({ isHolding: false });
+    playerCommands.setPlayerState({ isHolding: false });
     if (holdTimerRef.current) {
       window.clearTimeout(holdTimerRef.current);
       holdTimerRef.current = null;
@@ -418,7 +434,7 @@ export default function VideoPlayer() {
 
   function startHoldSeeking(direction: HoldDirection): void {
     if (!videoRef.current || !direction) return;
-    useAppStore.getState().setPlayerState({ isHolding: true });
+    playerCommands.setPlayerState({ isHolding: true });
     setHoldDirection(direction);
 
     holdIntervalRef.current = window.setInterval(() => {
@@ -430,11 +446,11 @@ export default function VideoPlayer() {
       const seekAmount = 0.3;
       const nextTime =
         direction === "right"
-          ? Math.min(videoRef.current.currentTime + seekAmount, state.player.duration)
+          ? Math.min(videoRef.current.currentTime + seekAmount, player.duration)
           : Math.max(videoRef.current.currentTime - seekAmount, 0);
 
       videoRef.current.currentTime = nextTime;
-      useAppStore.getState().setCurrentTime(nextTime);
+      playerCommands.setCurrentTime(nextTime);
     }, 100);
   }
 
@@ -443,7 +459,7 @@ export default function VideoPlayer() {
       <div
         className="group flex h-full w-full items-center justify-center bg-black/90 text-center text-muted-foreground transition hover:bg-black/80"
         onDoubleClick={() => {
-          void useAppStore.getState().loadFileSystemStructure();
+          void libraryCommands.loadFileSystemStructure();
         }}
       >
         <div>
@@ -465,7 +481,7 @@ export default function VideoPlayer() {
         onDoubleClick={async (event) => {
           const target = event.target as HTMLElement | null;
           if (target?.closest("#media-controls")) return;
-          await useAppStore.getState().togglePlayPause();
+          await playbackCommands.togglePlayPause();
         }}
         onMouseDown={(event) => {
           if (event.button !== 0 || !videoRef.current) return;
@@ -490,7 +506,7 @@ export default function VideoPlayer() {
           if (hideTimerRef.current) {
             window.clearTimeout(hideTimerRef.current);
           }
-          if (state.player.isPlaying && !isControlsHovered) {
+          if (player.isPlaying && !isControlsHovered) {
             setShowControls(false);
           }
         }}
@@ -498,54 +514,54 @@ export default function VideoPlayer() {
         ref={containerRef}
       >
         <video
-          className={`h-full w-full bg-black ${
-            state.player.aspectRatio === "cover"
+            className={`h-full w-full bg-black ${
+            player.aspectRatio === "cover"
               ? "object-cover"
-              : state.player.aspectRatio === "fill"
+              : player.aspectRatio === "fill"
                 ? "object-fill"
                 : "object-contain"
           }`}
           controls={false}
           disablePictureInPicture
-          onCanPlay={() => useAppStore.getState().setPlayerState({ isLoading: false })}
+          onCanPlay={() => playerCommands.setPlayerState({ isLoading: false })}
           onEnded={() => {
-            if (state.queue.repeatMode === "one" && videoRef.current) {
+            if (queue.repeatMode === "one" && videoRef.current) {
               videoRef.current.currentTime = 0;
-              useAppStore.getState().setCurrentTime(0);
+              playerCommands.setCurrentTime(0);
               void videoRef.current.play();
               return;
             }
-            void useAppStore.getState().playNextVideo();
+            void playbackCommands.playNextVideo();
           }}
           onError={() => {
-            useAppStore.getState().setPlayerState({
+            playerCommands.setPlayerState({
               error: "Video format not supported or file could not be played.",
               isLoading: false
             });
           }}
           onLoadedData={() => {
-            useAppStore.getState().setPlayerState({ isLoading: false });
+            playerCommands.setPlayerState({ isLoading: false });
             if (videoRef.current) {
-              useAppStore.getState().setDuration(videoRef.current.duration);
+              playerCommands.setDuration(videoRef.current.duration);
               void videoRef.current.play().catch(() => undefined);
             }
           }}
           onLoadedMetadata={() => {
             if (videoRef.current) {
-              useAppStore.getState().setDuration(videoRef.current.duration);
+              playerCommands.setDuration(videoRef.current.duration);
             }
           }}
-          onLoadStart={() => useAppStore.getState().setPlayerState({ isLoading: true })}
-          onPause={() => useAppStore.getState().setPlayerState({ isPlaying: false })}
-          onPlay={() => useAppStore.getState().setPlayerState({ isPlaying: true })}
+          onLoadStart={() => playerCommands.setPlayerState({ isLoading: true })}
+          onPause={() => playerCommands.setPlayerState({ isPlaying: false })}
+          onPlay={() => playerCommands.setPlayerState({ isPlaying: true })}
           onSeeked={() => {
             if (videoRef.current) {
-              useAppStore.getState().setCurrentTime(videoRef.current.currentTime);
+              playerCommands.setCurrentTime(videoRef.current.currentTime);
             }
           }}
           onTimeUpdate={() => {
             if (videoRef.current) {
-              useAppStore.getState().setCurrentTime(videoRef.current.currentTime);
+              playerCommands.setCurrentTime(videoRef.current.currentTime);
             }
           }}
           preload="metadata"
@@ -553,15 +569,15 @@ export default function VideoPlayer() {
           src={toFileUrl(currentItem.path)}
         />
 
-        {state.player.isLoading ? (
+        {player.isLoading ? (
           <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/40">
             <LoaderIcon className="h-8 w-8 animate-spin text-white" />
           </div>
         ) : null}
 
-        {state.player.error ? (
+        {player.error ? (
           <div className="absolute top-6 left-1/2 z-30 -translate-x-1/2 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-2 text-sm text-destructive">
-            {state.player.error}
+            {player.error}
           </div>
         ) : null}
 
