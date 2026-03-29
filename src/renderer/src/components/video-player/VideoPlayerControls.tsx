@@ -1,44 +1,35 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
-import { Minimize, Maximize } from "lucide-react";
 import { getVideoElement } from "@/lib/controllers/media-runtime";
 import {
   NextIcon,
-  PanelLeftIcon,
   PauseIcon,
   PlayIcon,
   PreviousIcon,
 } from "@/lib/icons";
 import { makeTimeString } from "@/lib/make-time-string";
 import {
-  playbackCommands,
   playerCommands,
-  sidebarCommands,
-  usePlayerView
+  usePlayerView,
+  playbackCommands
 } from "@/lib/store";
 import { VolumeControl } from "./VolumeControl";
 import { FullscreenButton } from "../FullscreenButton";
+import { AspectRatioControl } from "../AspectRatioControl";
 
 const controlGroupClass = "flex items-center rounded-lg border border-white/10 bg-white/10 overflow-hidden h-9 sm:h-8";
 const controlItemClass = "h-full border-0 bg-transparent px-2.5 text-white hover:bg-white/10 rounded-none shadow-none transition-colors focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/20";
 const controlSeparatorClass = "h-4 w-px bg-white/10 shrink-0";
 
-export interface PlayerControlsProps {
+export interface VideoPlayerControlsProps {
   onControlsMouseEnter: () => void;
   onControlsMouseLeave: () => void;
 }
 
-export function PlayerControls({
+export function VideoPlayerControls({
   onControlsMouseEnter,
   onControlsMouseLeave
-}: PlayerControlsProps) {
+}: VideoPlayerControlsProps) {
   const player = usePlayerView();
   const [dragTime, setDragTime] = useState<number | null>(null);
   const [hoverTime, setHoverTime] = useState(0);
@@ -150,16 +141,6 @@ export function PlayerControls({
         <div className={controlGroupClass}>
           <Button
             className={controlItemClass}
-            onClick={() => sidebarCommands.toggleSidebar()}
-            size="icon"
-            type="button"
-            variant="ghost"
-          >
-            <PanelLeftIcon className="size-4" />
-          </Button>
-          <div className={controlSeparatorClass} />
-          <Button
-            className={controlItemClass}
             onClick={() => {
               void playbackCommands.playPreviousVideo();
             }}
@@ -202,23 +183,8 @@ export function PlayerControls({
         <div className="flex items-center gap-2">
           <VolumeControl />
           <div className={controlGroupClass}>
-            <Select
-              onValueChange={(nextValue) => {
-                playerCommands.setPlayerState({
-                  aspectRatio: nextValue as "contain" | "cover" | "fill"
-                });
-              }}
-              value={player.aspectRatio}
-            >
-              <SelectTrigger className="h-full border-0 bg-transparent px-3 text-xs font-medium text-white shadow-none ring-0 hover:bg-white/10 focus:ring-0">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="contain">Contain</SelectItem>
-                <SelectItem value="cover">Cover</SelectItem>
-                <SelectItem value="fill">Fill</SelectItem>
-              </SelectContent>
-            </Select>
+            <AspectRatioControl />
+
             <div className={controlSeparatorClass} />
             <FullscreenButton />
           </div>

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
-import { PlayerControls } from "./VideoPlayerControls";
+import { VideoPlayerControls } from "./VideoPlayerControls";
 import { UpNextNotification } from "./UpNextNotification";
 import { VideoInfoOverlay } from "./VideoInfoOverlay";
 
@@ -247,7 +247,7 @@ export default function VideoPlayer() {
           <>
             <VideoInfoOverlay visible={showControls} />
             <UpNextNotification />
-            <PlayerControls
+            <VideoPlayerControls
               onControlsMouseEnter={() => {
                 setIsControlsHovered(true);
                 setShowControls(true);
