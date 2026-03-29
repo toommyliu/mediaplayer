@@ -5,6 +5,7 @@ import { useThemeMode } from "@/hooks/use-theme-mode";
 import SidebarPanel from "@/components/SidebarPanel";
 import VideoPlayer from "@/components/VideoPlayer";
 import SettingsDialog from "@/components/settings/SettingsDialog";
+import { Sidebar, SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import {
   appCommands,
   libraryCommands,
@@ -13,22 +14,16 @@ import {
   useSidebarView
 } from "@/lib/store";
 
-function Resizer({ onMouseDown }: { onMouseDown: () => void }) {
-  return (
-    <div
-      className="z-30 w-1 cursor-col-resize bg-sidebar-border transition-colors hover:bg-primary/50"
-      onMouseDown={onMouseDown}
-      role="separator"
-      aria-orientation="vertical"
-      tabIndex={-1}
-    />
-  );
-}
-
 export default function App() {
   const sidebar = useSidebarView();
   const { resolvedTheme, setTheme, theme } = useThemeMode();
   const [isResizing, setIsResizing] = useState(false);
+  const [draftSidebarWidth, setDraftSidebarWidth] = useState(sidebar.width);
+  const [isSidebarPreviewOpen, setIsSidebarPreviewOpen] = useState(false);
+  const previewSidebarWidth = "18rem";
+
+  const sidebarWidth = isResizing ? draftSidebarWidth : sidebar.width;
+  const sidebarEdge = sidebar.isOpen ? `${sidebarWidth}%` : "0px";
 
   useEffect(() => {
     void appCommands.bootstrapApp().then(() => {
@@ -62,10 +57,11 @@ export default function App() {
           ? (event.clientX / window.innerWidth) * 100
           : ((window.innerWidth - event.clientX) / window.innerWidth) * 100;
 
-      sidebarCommands.setSidebarWidth(percentage);
+      setDraftSidebarWidth(percentage);
     };
 
     const handleMouseUp = () => {
+      sidebarCommands.setSidebarWidth(draftSidebarWidth);
       setIsResizing(false);
     };
 
@@ -76,35 +72,124 @@ export default function App() {
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [isResizing, sidebar.position]);
+  }, [draftSidebarWidth, isResizing, sidebar.position]);
 
-  const sidebarPanel = sidebar.isOpen && !sidebar.isDragging ? (
-    <div
-      className="bg-sidebar/80 border-sidebar-border flex h-full min-w-[240px] flex-col border-r backdrop-blur-md"
-      style={{ width: `${sidebar.width}%` }}
-    >
-      <SidebarPanel />
-    </div>
-  ) : null;
+  useEffect(() => {
+    if (isResizing) return;
+    setDraftSidebarWidth(sidebar.width);
+  }, [isResizing, sidebar.width]);
+
+  useEffect(() => {
+    if (sidebar.isOpen) {
+      setIsSidebarPreviewOpen(false);
+    }
+  }, [sidebar.isOpen]);
 
   return (
-    <div className="bg-background flex h-screen flex-col overflow-hidden">
+    <SidebarProvider
+      className="bg-background h-screen overflow-hidden"
+      open={sidebar.isOpen}
+      onOpenChange={(open) => sidebarCommands.setSidebarOpen(open)}
+      style={{
+        ["--sidebar-width" as string]: `${sidebarWidth}%`,
+        ["--sidebar-width-icon" as string]: "3rem"
+      }}
+    >
       <div className="relative flex min-h-0 flex-1 overflow-hidden">
+        {!sidebar.isOpen ? (
+          <div
+            className="absolute inset-y-0 z-20 w-4"
+            style={{
+              [sidebar.position === "left" ? "left" : "right"]: 0
+            }}
+            onMouseEnter={() => setIsSidebarPreviewOpen(true)}
+          />
+        ) : (
+          <div
+            className="bg-sidebar-border hover:bg-primary/50 absolute inset-y-0 z-30 w-1 cursor-col-resize transition-colors"
+            onMouseDown={() => setIsResizing(true)}
+            role="separator"
+            aria-orientation="vertical"
+            tabIndex={-1}
+            style={{
+              [sidebar.position === "left" ? "left" : "right"]: sidebarEdge
+            }}
+          />
+        )}
+
         {sidebar.position === "left" ? (
           <>
-            {sidebarPanel}
-            {sidebarPanel ? <Resizer onMouseDown={() => setIsResizing(true)} /> : null}
-            <div className="min-w-0 flex-1">
+            {sidebar.isOpen ? (
+              <Sidebar
+                collapsible="offcanvas"
+                className="bg-sidebar/80 border-sidebar-border backdrop-blur-md"
+                side="left"
+                resizing={isResizing}
+              >
+                <SidebarPanel />
+              </Sidebar>
+            ) : isSidebarPreviewOpen ? (
+              <div
+                className="border-sidebar-border bg-sidebar/95 absolute top-2 bottom-2 left-0 z-20 w-[18rem] overflow-hidden rounded-r-2xl border shadow-2xl backdrop-blur-md"
+                onMouseEnter={() => setIsSidebarPreviewOpen(true)}
+                onMouseLeave={() => setIsSidebarPreviewOpen(false)}
+              >
+                <Sidebar
+                  collapsible="none"
+                  className="h-full"
+                  side="left"
+                  style={{ width: previewSidebarWidth }}
+                >
+                  <SidebarPanel />
+                </Sidebar>
+              </div>
+            ) : null}
+
+            <SidebarInset
+              className="min-w-0"
+              style={{
+                marginLeft: sidebarEdge
+              }}
+            >
               <VideoPlayer />
-            </div>
+            </SidebarInset>
           </>
         ) : (
           <>
-            <div className="min-w-0 flex-1">
+            <SidebarInset
+              className="min-w-0"
+              style={{
+                marginRight: sidebarEdge
+              }}
+            >
               <VideoPlayer />
-            </div>
-            {sidebarPanel ? <Resizer onMouseDown={() => setIsResizing(true)} /> : null}
-            {sidebarPanel}
+            </SidebarInset>
+
+            {sidebar.isOpen ? (
+              <Sidebar
+                collapsible="offcanvas"
+                className="bg-sidebar/80 border-sidebar-border backdrop-blur-md"
+                side="right"
+                resizing={isResizing}
+              >
+                <SidebarPanel />
+              </Sidebar>
+            ) : isSidebarPreviewOpen ? (
+              <div
+                className="border-sidebar-border bg-sidebar/95 absolute top-2 right-0 bottom-2 z-20 w-[18rem] overflow-hidden rounded-l-2xl border shadow-2xl backdrop-blur-md"
+                onMouseEnter={() => setIsSidebarPreviewOpen(true)}
+                onMouseLeave={() => setIsSidebarPreviewOpen(false)}
+              >
+                <Sidebar
+                  collapsible="none"
+                  className="h-full"
+                  side="right"
+                  style={{ width: previewSidebarWidth }}
+                >
+                  <SidebarPanel />
+                </Sidebar>
+              </div>
+            ) : null}
           </>
         )}
 
@@ -141,11 +226,7 @@ export default function App() {
         ) : null}
       </div>
 
-      <SettingsDialog
-        resolvedTheme={resolvedTheme}
-        setTheme={setTheme}
-        theme={theme}
-      />
-    </div>
+      <SettingsDialog resolvedTheme={resolvedTheme} setTheme={setTheme} theme={theme} />
+    </SidebarProvider>
   );
 }
