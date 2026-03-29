@@ -7,33 +7,28 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
+import { Minimize, Maximize } from "lucide-react";
 import { getVideoElement } from "@/lib/controllers/media-runtime";
 import {
-  FullscreenIcon,
   NextIcon,
   PanelLeftIcon,
   PauseIcon,
   PlayIcon,
   PreviousIcon,
-  SettingsIcon
 } from "@/lib/icons";
 import { makeTimeString } from "@/lib/make-time-string";
 import {
   playbackCommands,
   playerCommands,
-  settingsCommands,
   sidebarCommands,
   usePlayerView
 } from "@/lib/store";
 import { VolumeControl } from "./VolumeControl";
+import { FullscreenButton } from "../FullscreenButton";
 
-function controlButtonClass(): string {
-  return "h-7 border-white/10 bg-white/10 px-3 text-sm text-white hover:bg-white/15";
-}
-
-function iconControlButtonClass(): string {
-  return "size-9 border-white/10 bg-white/10 p-0 text-white hover:bg-white/15";
-}
+const controlGroupClass = "flex items-center rounded-lg border border-white/10 bg-white/10 overflow-hidden h-9 sm:h-8";
+const controlItemClass = "h-full border-0 bg-transparent px-2.5 text-white hover:bg-white/10 rounded-none shadow-none transition-colors focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/20";
+const controlSeparatorClass = "h-4 w-px bg-white/10 shrink-0";
 
 export interface PlayerControlsProps {
   onControlsMouseEnter: () => void;
@@ -151,95 +146,82 @@ export function PlayerControls({
         ) : null}
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className={controlGroupClass}>
           <Button
-            className={iconControlButtonClass()}
+            className={controlItemClass}
             onClick={() => sidebarCommands.toggleSidebar()}
-            size="icon-sm"
+            size="icon"
             type="button"
-            variant="outline"
+            variant="ghost"
           >
-            <PanelLeftIcon className="h-4 w-4" />
+            <PanelLeftIcon className="size-4" />
           </Button>
+          <div className={controlSeparatorClass} />
           <Button
-            className={iconControlButtonClass()}
+            className={controlItemClass}
             onClick={() => {
               void playbackCommands.playPreviousVideo();
             }}
-            size="icon-sm"
+            size="icon"
             type="button"
-            variant="outline"
+            variant="ghost"
           >
-            <PreviousIcon className="h-4 w-4" />
+            <PreviousIcon className="size-4" />
           </Button>
+          <div className={controlSeparatorClass} />
           <Button
-            className={iconControlButtonClass()}
+            className={controlItemClass}
             onClick={() => {
               void playbackCommands.togglePlayPause();
             }}
-            size="icon-sm"
+            size="icon"
             type="button"
-            variant="outline"
+            variant="ghost"
           >
             {player.isPlaying ? (
-              <PauseIcon className="h-4 w-4" />
+              <PauseIcon className="size-4" />
             ) : (
-              <PlayIcon className="h-4 w-4" />
+              <PlayIcon className="size-4" />
             )}
           </Button>
+          <div className={controlSeparatorClass} />
           <Button
-            className={iconControlButtonClass()}
+            className={controlItemClass}
             onClick={() => {
               void playbackCommands.playNextVideo();
             }}
-            size="icon-sm"
+            size="icon"
             type="button"
-            variant="outline"
+            variant="ghost"
           >
-            <NextIcon className="h-4 w-4" />
+            <NextIcon className="size-4" />
           </Button>
         </div>
 
         <div className="flex items-center gap-2">
           <VolumeControl />
-          <Select
-            onValueChange={(nextValue) => {
-              playerCommands.setPlayerState({
-                aspectRatio: nextValue as "contain" | "cover" | "fill"
-              });
-            }}
-            value={player.aspectRatio}
-          >
-            <SelectTrigger className={`${controlButtonClass()} w-auto min-w-0`}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="contain">Contain</SelectItem>
-              <SelectItem value="cover">Cover</SelectItem>
-              <SelectItem value="fill">Fill</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button
-            className={iconControlButtonClass()}
-            onClick={() => settingsCommands.setSettingsDialogOpen(true)}
-            size="icon-sm"
-            type="button"
-            variant="outline"
-          >
-            <SettingsIcon className="h-4 w-4" />
-          </Button>
-          <Button
-            className={iconControlButtonClass()}
-            onClick={() => {
-              void playbackCommands.setFullscreen(!player.isFullscreen);
-            }}
-            size="icon-sm"
-            type="button"
-            variant="outline"
-          >
-            <FullscreenIcon className="h-4 w-4" />
-          </Button>
+          <div className={controlGroupClass}>
+            <Select
+              onValueChange={(nextValue) => {
+                playerCommands.setPlayerState({
+                  aspectRatio: nextValue as "contain" | "cover" | "fill"
+                });
+              }}
+              value={player.aspectRatio}
+            >
+              <SelectTrigger className="h-full border-0 bg-transparent px-3 text-xs font-medium text-white shadow-none ring-0 hover:bg-white/10 focus:ring-0">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="contain">Contain</SelectItem>
+                <SelectItem value="cover">Cover</SelectItem>
+                <SelectItem value="fill">Fill</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className={controlSeparatorClass} />
+            <FullscreenButton />
+          </div>
         </div>
       </div>
     </div>

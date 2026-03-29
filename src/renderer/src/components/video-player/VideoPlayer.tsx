@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { LoaderIcon } from "@/lib/icons";
+import { Loader2 } from "lucide-react";
+import { PlayerControls } from "./VideoPlayerControls";
+import { UpNextNotification } from "./UpNextNotification";
+import { VideoInfoOverlay } from "./VideoInfoOverlay";
+
 import {
   libraryCommands,
   playbackCommands,
@@ -9,9 +13,7 @@ import {
   usePlayerView,
   useQueueView
 } from "@/lib/store";
-import { PlayerControls } from "./PlayerControls";
-import { UpNextNotification } from "./UpNextNotification";
-import { VideoInfoOverlay } from "./VideoInfoOverlay";
+import { cn } from "@/lib/utils";
 
 type HoldDirection = "left" | "right" | null;
 
@@ -221,7 +223,7 @@ export default function VideoPlayer() {
 
         {player.isLoading ? (
           <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/40">
-            <LoaderIcon className="h-8 w-8 animate-spin text-white" />
+            <Loader2 className="h-8 w-8 animate-spin text-white" />
           </div>
         ) : null}
 
@@ -233,8 +235,9 @@ export default function VideoPlayer() {
 
         {holdDirection ? (
           <div
-            className={`pointer-events-none absolute top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white backdrop-blur-sm ${holdDirection === "left" ? "left-8" : "right-8"
-              }`}
+            className={cn("pointer-events-none absolute top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white backdrop-blur-sm",
+              holdDirection === "left" ? "left-8" : "right-8"
+            )}
           >
             {holdDirection === "left" ? "←" : "→"}
           </div>

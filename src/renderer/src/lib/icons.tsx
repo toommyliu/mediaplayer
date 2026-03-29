@@ -113,6 +113,21 @@ export function FullscreenIcon(props: IconProps) {
   );
 }
 
+export function FullscreenExitIcon(props: IconProps) {
+  return (
+    <BaseIcon {...props}>
+      <path d="M3 13h5v5" />
+      <path d="m8 13-5 5" />
+      <path d="M21 13h-5v5" />
+      <path d="m16 13 5 5" />
+      <path d="M3 11h5V6" />
+      <path d="m8 11-5-5" />
+      <path d="M21 11h-5V6" />
+      <path d="m16 11 5-5" />
+    </BaseIcon>
+  );
+}
+
 export function PanelLeftIcon(props: IconProps) {
   return (
     <BaseIcon {...props}>

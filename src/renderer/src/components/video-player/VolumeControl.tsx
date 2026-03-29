@@ -7,7 +7,7 @@ export function VolumeControl() {
   const volume = useVolumeView();
 
   return (
-    <div className="group/volume flex items-center overflow-hidden rounded-lg border border-white/10 bg-white/10 pr-1 text-white transition-colors hover:bg-white/15 focus-within:bg-white/15">
+    <div className="group/volume flex h-9 items-center overflow-hidden rounded-lg border border-white/10 bg-white/10 pr-1 text-white transition-colors hover:bg-white/15 focus-within:bg-white/15 sm:h-8">
       <Button
         className="size-8 shrink-0 border-0 bg-transparent p-0 text-white shadow-none hover:bg-transparent"
         onClick={() => volumeCommands.setMuted(!volume.isMuted)}
