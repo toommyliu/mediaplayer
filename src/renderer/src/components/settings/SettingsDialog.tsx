@@ -29,21 +29,6 @@ export default function SettingsDialog() {
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        if (editingAction) {
-          setEditingAction(null);
-        } else if (settings.showDialog) {
-          settingsCommands.setSettingsDialogOpen(false);
-        }
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [editingAction, settings.showDialog]);
-
-  useEffect(() => {
     if (settings.showDialog) {
       setSelectedTab("general");
     }
