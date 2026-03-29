@@ -2,6 +2,7 @@ import {
   useEffect,
   useRef,
   useState,
+  type ComponentProps,
   type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent
 } from "react";
@@ -21,10 +22,8 @@ import {
   FilmIcon,
   FolderIcon,
   LoaderIcon,
-  PlusIcon,
   RepeatIcon,
   RepeatOneIcon,
-  RevealIcon,
   SettingsIcon,
   ShuffleIcon
 } from "@/lib/icons";
@@ -44,6 +43,7 @@ import {
   useQueueView,
   useSidebarView
 } from "@/lib/store";
+import { cn } from "@/lib/utils";
 import type { FileSystemItem, QueueItem } from "@/types";
 
 function sidebarButtonClass(active = false): string {
@@ -132,15 +132,27 @@ function FileBrowserItem({
   return (
     <div>
       <ContextMenu>
-        <ContextMenuTrigger render={() => {
+        <ContextMenuTrigger render={(defaultProps: ComponentProps<"div">) => {
+            const {
+              className: triggerClassName,
+              style: triggerStyle,
+              ...triggerProps
+            } = defaultProps;
+
             return (
               <div
-                className={`group relative flex min-h-[32px] items-center rounded-md border px-2 transition ${
+                {...triggerProps}
+                className={cn(
+                  "group relative flex min-h-[32px] items-center rounded-md border px-2 transition",
                   isPlaying
                     ? "border-primary/30 bg-primary/10 text-primary"
-                    : "border-transparent hover:bg-muted/40"
-                }`}
-                style={{ paddingLeft: `${depth * 14 + 8}px` }}
+                    : "border-transparent hover:bg-muted/40",
+                  triggerClassName
+                )}
+                style={{
+                  ...triggerStyle,
+                  paddingLeft: `${depth * 14 + 8}px`
+                }}
               >
                 <button
                   className="flex min-h-[32px] min-w-0 flex-1 items-center gap-2 text-left outline-none"
@@ -186,84 +198,6 @@ function FileBrowserItem({
                     />
                   ) : null}
                 </button>
-
-                <div className="absolute top-1/2 right-2 hidden -translate-y-1/2 items-center gap-1 rounded-md bg-card/90 p-1 shadow group-hover:flex group-focus-within:flex">
-                  {isFolder ? (
-                    <>
-                      <Button
-                        className={iconButtonClass()}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          void libraryCommands.navigateToDirectory(item.path);
-                        }}
-                        size="xs"
-                        type="button"
-                        variant="outline"
-                      >
-                        Open
-                      </Button>
-                      <Button
-                        className={iconButtonClass()}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          void libraryCommands.revealItemInFolder(item.path);
-                        }}
-                        size="xs"
-                        type="button"
-                        variant="outline"
-                      >
-                        <RevealIcon className="h-3.5 w-3.5" />
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Button
-                        className={iconButtonClass()}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          queueCommands.addToQueue({
-                            duration: item.duration,
-                            name: item.name,
-                            path: item.path
-                          });
-                        }}
-                        size="xs"
-                        type="button"
-                        variant="outline"
-                      >
-                        <PlusIcon className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button
-                        className={iconButtonClass()}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          queueCommands.addNextToQueue({
-                            duration: item.duration,
-                            name: item.name,
-                            path: item.path
-                          });
-                        }}
-                        size="xs"
-                        type="button"
-                        variant="outline"
-                      >
-                        Next
-                      </Button>
-                      <Button
-                        className={iconButtonClass()}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          void libraryCommands.revealItemInFolder(item.path);
-                        }}
-                        size="xs"
-                        type="button"
-                        variant="outline"
-                      >
-                        <RevealIcon className="h-3.5 w-3.5" />
-                      </Button>
-                    </>
-                  )}
-                </div>
               </div>
             );
         }}>
