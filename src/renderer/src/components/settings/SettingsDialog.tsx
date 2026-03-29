@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
+import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogPanel, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Kbd } from "@/components/ui/kbd";
-import type { ThemeMode } from "@/hooks/use-theme-mode";
 import { formatHotkeyDisplay, hotkeyRecorder } from "@/lib/hotkey-recorder";
 import { resetHotkeysToDefaults, updateHotkey } from "@/lib/hotkeys";
 import { ChevronDownIcon, CloseIcon, MoonIcon, SettingsIcon, SunIcon } from "@/lib/icons";
@@ -34,15 +34,8 @@ function tabButtonClass(active: boolean): string {
     : "w-full justify-start text-left text-muted-foreground";
 }
 
-export default function SettingsDialog({
-  resolvedTheme,
-  setTheme,
-  theme
-}: {
-  resolvedTheme: "dark" | "light";
-  setTheme: (theme: ThemeMode) => void;
-  theme: ThemeMode;
-}) {
+export default function SettingsDialog() {
+  const { resolvedTheme, setTheme, theme } = useTheme();
   const settings = useSettingsView();
   const hotkeys = useHotkeysView();
   const volume = useVolumeView();

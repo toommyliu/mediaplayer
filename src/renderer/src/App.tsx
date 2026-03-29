@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { cleanupHotkeys, initializeHotkeys } from "@/lib/hotkeys";
 import { onAddFile, onAddFolder, onOpenSettings } from "@/lib/ipc";
-import { useThemeMode } from "@/hooks/use-theme-mode";
 import SidebarPanel from "@/components/SidebarPanel";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import VideoPlayer from "@/components/VideoPlayer";
 import SettingsDialog from "@/components/settings/SettingsDialog";
 import { Sidebar, SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
