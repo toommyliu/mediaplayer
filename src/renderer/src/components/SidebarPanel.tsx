@@ -19,6 +19,11 @@ import {
   TabsList,
   TabsTrigger
 } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  ToggleGroup,
+  ToggleGroupItem
+} from "@/components/ui/toggle-group";
 import {
   ContextMenu,
   ContextMenuTrigger,
@@ -26,6 +31,13 @@ import {
   ContextMenuItem,
   ContextMenuSeparator
 } from "@/components/ui/context-menu";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle
+} from "@/components/ui/empty";
 import {
   ChevronDownIcon,
   CloseIcon,
@@ -146,10 +158,10 @@ function FileBrowserItem({ item, depth }: { depth: number; item: FileSystemItem 
               <div
                 {...triggerProps}
                 className={cn(
-                  "group relative flex min-h-[32px] items-center rounded-md border px-2 transition",
+                  "group relative flex min-h-[32px] items-center rounded-md border px-2 transition-all duration-200",
                   isPlaying
-                    ? "border-primary/30 bg-primary/10 text-primary"
-                    : "hover:bg-muted/40 border-transparent",
+                    ? "border-primary/20 bg-primary/5 text-primary"
+                    : "border-transparent hover:bg-muted/40",
                   triggerClassName
                 )}
                 style={{
@@ -190,7 +202,7 @@ function FileBrowserItem({ item, depth }: { depth: number; item: FileSystemItem 
                   </span>
 
                   {!isFolder ? (
-                    <span className="bg-muted text-muted-foreground rounded px-1.5 py-0.5 font-mono text-[11px]">
+                    <span className="rounded bg-muted/50 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground/80">
                       {item.duration ? makeTimeString(item.duration) : "--:--"}
                     </span>
                   ) : null}
@@ -308,89 +320,26 @@ function FileBrowserPanel() {
   }, [fileBrowser.scrollTop, fileBrowser.fileTree]);
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="relative min-h-0 flex-1 rounded-xl rounded-b-none">
-        {fileBrowser.isLoading ? (
-          <div className="bg-background/80 absolute inset-0 z-20 flex items-center justify-center backdrop-blur-sm">
-            <div className="flex flex-col items-center gap-2">
-              <LoaderIcon className="text-primary h-7 w-7 animate-spin" />
-              <span className="text-muted-foreground text-sm">Loading…</span>
-            </div>
-          </div>
-        ) : null}
-
-        {fileSystem.length === 0 ? (
-          <Button
-            className="text-muted-foreground h-full w-full flex-col gap-2 rounded-xl text-center"
-            onDoubleClick={libraryCommands.resetAndBrowseLibrary}
-            type="button"
-            variant="ghost"
-          >
-            <FolderIcon className="h-8 w-8 opacity-60" />
-            <div className="text-sm font-medium">No media files loaded</div>
-            <div className="text-xs opacity-75">Double-click to browse</div>
-          </Button>
-        ) : (
-          <div
-            className="h-full overflow-y-auto"
-            onKeyDown={(event) => {
-              const triggers = Array.from(
-                document.querySelectorAll<HTMLElement>("[data-item-trigger='true']")
-              );
-              if (triggers.length === 0) return;
-
-              if (event.key === "Home") {
-                event.preventDefault();
-                triggers[0]?.focus();
-              } else if (event.key === "End") {
-                event.preventDefault();
-                triggers[triggers.length - 1]?.focus();
-              }
-            }}
-            onScroll={(event) => {
-              fileBrowserCommands.setFileBrowserScrollTop(
-                (event.target as HTMLDivElement).scrollTop
-              );
-            }}
-            ref={scrollContainerRef}
-          >
-            <div className="space-y-1">
-              {!fileBrowser.isAtRoot && fileBrowser.currentPath ? (
-                <Button
-                  className="text-muted-foreground w-full justify-start px-3 py-2 text-left text-sm"
-                  onClick={() => {
-                    void libraryCommands.navigateToParent();
-                  }}
-                  type="button"
-                  variant="ghost"
-                >
-                  ../
-                </Button>
-              ) : null}
-
-              {fileSystem.map((item) => (
-                <div key={item.path}>
-                  <FileBrowserItem item={item} depth={0} />
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="border-sidebar-border/60 mt-4 flex items-center justify-between gap-2 border-t pt-3">
-        <Tabs
-          onValueChange={(value) => fileBrowserCommands.setFileBrowserSort(value as any)}
-          value={fileBrowser.sortBy}
+    <div className="flex flex-1 flex-col gap-2.5">
+      <div className="flex shrink-0 items-center justify-between gap-2">
+        <ToggleGroup
+          onValueChange={(value) => {
+            const first = Array.isArray(value) ? value[0] : value;
+            if (first) fileBrowserCommands.setFileBrowserSort(first as 'name' | 'duration');
+          }}
+          value={[fileBrowser.sortBy] as ('name' | 'duration')[]}
+          variant="outline"
         >
-          <TabsList>
-            <TabsTrigger value="name">Name</TabsTrigger>
-            <TabsTrigger value="duration">Duration</TabsTrigger>
-          </TabsList>
-        </Tabs>
+          <ToggleGroupItem className="h-7 px-2.5 text-xs" value="name">
+            Name
+          </ToggleGroupItem>
+          <ToggleGroupItem className="h-7 px-2.5 text-xs" value="duration">
+            Duration
+          </ToggleGroupItem>
+        </ToggleGroup>
 
         <Button
-          className={iconButtonClass()}
+          className={cn(iconButtonClass(), "border-sidebar-border/60")}
           onClick={libraryCommands.resetAndBrowseLibrary}
           size="xs"
           type="button"
@@ -398,6 +347,88 @@ function FileBrowserPanel() {
         >
           Browse
         </Button>
+      </div>
+
+      <div className="relative flex min-h-0 flex-1 flex-col">
+        {fileBrowser.isLoading ? (
+          <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+            <div className="flex flex-col items-center gap-2">
+              <LoaderIcon className="h-7 w-7 animate-spin text-primary" />
+              <span className="text-sm text-muted-foreground">Loading…</span>
+            </div>
+          </div>
+        ) : null}
+
+        {fileSystem.length === 0 ? (
+          <Empty className="h-full py-0">
+            <EmptyMedia variant="icon">
+              <FolderIcon className="size-6 text-muted-foreground/60" />
+            </EmptyMedia>
+            <EmptyHeader>
+              <EmptyTitle className="text-base font-medium">No media loaded</EmptyTitle>
+              <EmptyDescription className="text-xs">
+                Browse your folders to add media files to the library.
+              </EmptyDescription>
+            </EmptyHeader>
+            <Button
+              className="mt-2 h-8 px-4 text-xs"
+              onClick={libraryCommands.resetAndBrowseLibrary}
+              variant="outline"
+            >
+              Browse Files
+            </Button>
+          </Empty>
+        ) : (
+          <ScrollArea
+            className="flex-1"
+            onScroll={(event) => {
+              fileBrowserCommands.setFileBrowserScrollTop(
+                (event.target as HTMLDivElement).scrollTop
+              );
+            }}
+            scrollFade
+            viewportRef={scrollContainerRef}
+          >
+            <div
+              className="pr-1"
+              onKeyDown={(event) => {
+                const triggers = Array.from(
+                  document.querySelectorAll<HTMLElement>("[data-item-trigger='true']")
+                );
+                if (triggers.length === 0) return;
+
+                if (event.key === "Home") {
+                  event.preventDefault();
+                  triggers[0]?.focus();
+                } else if (event.key === "End") {
+                  event.preventDefault();
+                  triggers[triggers.length - 1]?.focus();
+                }
+              }}
+            >
+              <div className="space-y-1">
+                {!fileBrowser.isAtRoot && fileBrowser.currentPath ? (
+                  <Button
+                    className="w-full justify-start px-3 py-2 text-left text-sm text-muted-foreground hover:bg-muted/40"
+                    onClick={() => {
+                      void libraryCommands.navigateToParent();
+                    }}
+                    type="button"
+                    variant="ghost"
+                  >
+                    ../
+                  </Button>
+                ) : null}
+
+                {fileSystem.map((item) => (
+                  <div key={item.path}>
+                    <FileBrowserItem item={item} depth={0} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </ScrollArea>
+        )}
       </div>
     </div>
   );
@@ -443,103 +474,131 @@ function QueuePanel() {
     );
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        {queue.items.length === 0 ? (
-          <div className="text-muted-foreground flex h-full items-center justify-center text-center">
-            <div>
-              <FilmIcon className="mx-auto mb-2 h-8 w-8 opacity-50" />
-              <p className="text-sm font-medium">No videos in queue</p>
-              <p className="text-xs opacity-75">Add videos to start queueing</p>
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-1">
-            {queue.items.map((item, index) => {
-              const isPlaying = currentItem?.id === item.id;
-              return (
-                <div
-                  key={item.id}
-                  className={`group flex items-center gap-2 rounded-md border p-2 text-sm transition ${
-                    dragOverIndex === index
-                      ? "border-primary bg-primary/10"
-                      : isPlaying
-                        ? "border-primary/30 bg-primary/10 text-primary"
-                        : "hover:bg-muted/40 border-transparent"
-                  }`}
-                  draggable
-                  onClick={() => playbackCommands.playVideo(item.path)}
-                  onDragOver={(event) => {
-                    event.preventDefault();
-                    setDragOverIndex(index);
-                  }}
-                  onDragStart={(event) => {
-                    event.dataTransfer.setData("text/plain", String(index));
-                  }}
-                  onDragEnd={() => setDragOverIndex(null)}
-                  onDrop={(event) => {
-                    event.preventDefault();
-                    const fromIndex = Number.parseInt(event.dataTransfer.getData("text/plain"), 10);
-                    if (!Number.isNaN(fromIndex) && fromIndex !== index) {
-                      queueCommands.moveQueueItem(fromIndex, index);
-                    }
-                    setDragOverIndex(null);
-                  }}
-                  role="button"
-                  tabIndex={0}
-                >
-                  <span className="text-muted-foreground w-5 text-center text-xs">{index + 1}</span>
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate font-medium">{item.name}</div>
-                    {item.duration ? (
-                      <div className="text-muted-foreground text-xs">
-                        {makeTimeString(item.duration)}
-                      </div>
-                    ) : null}
-                  </div>
+    <div className="flex flex-1 flex-col gap-2.5">
+      <div className="flex shrink-0 items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5">
+          <Button
+            className={cn(iconButtonClass(), "border-sidebar-border/60")}
+            onClick={() => queueCommands.shuffleQueue()}
+            size="xs"
+            type="button"
+            variant="outline"
+          >
+            <ShuffleIcon className="h-3.5 w-3.5" />
+          </Button>
+          <Button
+            className={cn(
+              queue.repeatMode === "off"
+                ? "border-sidebar-border/60 h-7 px-2 text-xs"
+                : "h-7 border-primary/20 bg-primary/5 px-2 text-xs text-primary hover:bg-primary/10",
+              "transition-colors"
+            )}
+            onClick={() => queueCommands.toggleRepeatMode()}
+            size="xs"
+            type="button"
+            variant={queue.repeatMode === "off" ? "outline" : "secondary"}
+          >
+            {repeatIcon}
+          </Button>
+        </div>
 
-                  <Button
-                    className="text-muted-foreground hover:text-destructive hidden size-7 p-0 group-hover:inline-flex"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      removeItem(item);
-                    }}
-                    size="icon-xs"
-                    type="button"
-                    variant="ghost"
-                  >
-                    <CloseIcon className="h-4 w-4" />
-                  </Button>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      <div className="border-sidebar-border mt-4 flex items-center justify-center gap-2 border-t pt-3">
         <Button
-          className={iconButtonClass()}
-          onClick={() => queueCommands.shuffleQueue()}
+          className={cn(iconButtonClass(), "border-sidebar-border/60")}
+          onClick={() => queueCommands.resetQueue()}
           size="xs"
           type="button"
           variant="outline"
         >
-          <ShuffleIcon className="h-4 w-4" />
+          Clear
         </Button>
-        <Button
-          className={
-            queue.repeatMode === "off"
-              ? iconButtonClass()
-              : "border-primary/30 bg-primary/10 text-primary hover:bg-primary/15 h-7 px-2"
-          }
-          onClick={() => queueCommands.toggleRepeatMode()}
-          size="xs"
-          type="button"
-          variant={queue.repeatMode === "off" ? "outline" : "secondary"}
-        >
-          {repeatIcon}
-        </Button>
+      </div>
+
+      <div className="flex min-h-0 flex-1 flex-col">
+        {queue.items.length === 0 ? (
+          <Empty className="h-full py-0">
+            <EmptyMedia variant="icon">
+              <FilmIcon className="size-6 text-muted-foreground/60" />
+            </EmptyMedia>
+            <EmptyHeader>
+              <EmptyTitle className="text-base font-medium">Queue is empty</EmptyTitle>
+              <EmptyDescription className="text-xs">
+                Add videos to your queue to watch them sequentially.
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
+        ) : (
+          <ScrollArea className="flex-1" scrollFade>
+            <div className="pr-1">
+              <div className="space-y-1">
+                {queue.items.map((item, index) => {
+                  const isPlaying = currentItem?.id === item.id;
+                  return (
+                    <div
+                      key={item.id}
+                      className={cn(
+                        "group flex items-center gap-3 rounded-md border p-2 text-sm transition-all duration-200",
+                        {
+                          "border-primary bg-primary/10": dragOverIndex === index,
+                          "border-primary/20 bg-primary/5 text-primary": isPlaying,
+                          "border-transparent hover:bg-muted/40":
+                            dragOverIndex !== index && !isPlaying
+                        }
+                      )}
+                      draggable
+                      onClick={() => playbackCommands.playVideo(item.path)}
+                      onDragOver={(event) => {
+                        event.preventDefault();
+                        setDragOverIndex(index);
+                      }}
+                      onDragStart={(event) => {
+                        event.dataTransfer.setData("text/plain", String(index));
+                      }}
+                      onDragEnd={() => setDragOverIndex(null)}
+                      onDrop={(event) => {
+                        event.preventDefault();
+                        const fromIndex = Number.parseInt(
+                          event.dataTransfer.getData("text/plain"),
+                          10
+                        );
+                        if (!Number.isNaN(fromIndex) && fromIndex !== index) {
+                          queueCommands.moveQueueItem(fromIndex, index);
+                        }
+                        setDragOverIndex(null);
+                      }}
+                      role="button"
+                      tabIndex={0}
+                    >
+                      <span className="w-4 text-center text-[10px] font-medium text-muted-foreground/60 tabular-nums">
+                        {index + 1}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate font-medium leading-tight">{item.name}</div>
+                        {item.duration ? (
+                          <div className="mt-0.5 text-[10px] text-muted-foreground/70">
+                            {makeTimeString(item.duration)}
+                          </div>
+                        ) : null}
+                      </div>
+
+                      <Button
+                        className="hidden size-6 p-0 text-muted-foreground/60 hover:bg-destructive/10 hover:text-destructive group-hover:inline-flex"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          removeItem(item);
+                        }}
+                        size="icon-xs"
+                        type="button"
+                        variant="ghost"
+                      >
+                        <CloseIcon className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </ScrollArea>
+        )}
       </div>
     </div>
   );
@@ -554,18 +613,18 @@ export default function SidebarPanel() {
       onValueChange={(value) => sidebarCommands.setSidebarTab(value as any)}
       value={sidebar.currentTab}
     >
-      <SidebarHeader className="px-4 pt-4">
+      <SidebarHeader className="px-4 pb-1 pt-4">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="file-browser">Files</TabsTrigger>
           <TabsTrigger value="queue">Queue</TabsTrigger>
         </TabsList>
       </SidebarHeader>
 
-      <SidebarContent className="min-h-0 flex-1 px-4 pt-4">
-        <TabsContent className="h-full" value="file-browser">
+      <SidebarContent className="min-h-0 flex-1 px-4 pt-0">
+        <TabsContent className="flex min-h-0 flex-1 flex-col" value="file-browser">
           <FileBrowserPanel />
         </TabsContent>
-        <TabsContent className="h-full" value="queue">
+        <TabsContent className="flex min-h-0 flex-1 flex-col" value="queue">
           <QueuePanel />
         </TabsContent>
       </SidebarContent>
