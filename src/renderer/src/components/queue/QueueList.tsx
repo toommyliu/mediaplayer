@@ -4,8 +4,9 @@ import { useQueueView } from "@/lib/store";
 
 export function QueueList() {
   const queue = useQueueView();
-  return <ScrollArea className="flex-1" scrollFade>
-    <div className="pr-1">
+
+  return <ScrollArea className="flex-1" hideScrollbar scrollFade>
+    <div className="px-1 py-1">
       <div className="space-y-1">
         {queue.items.map((item, index) => (
           <QueueItem key={item.id} index={index} item={item} />

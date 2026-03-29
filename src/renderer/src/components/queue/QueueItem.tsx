@@ -48,12 +48,13 @@ export function QueueItem({ index, item }: QueueItemProps) {
   return (
     <div
       key={item.id}
+      data-slot="queue-item"
       className={cn(
-        "group flex items-center gap-3 rounded-md border p-2 text-sm transition-all duration-200",
+        "group/queue-item flex items-center gap-2.5 rounded-lg ring-1 ring-foreground/10 px-3 py-1.5 text-xs transition-all duration-200",
         {
-          "border-primary bg-primary/10": dragOverIndex === index,
-          "border-primary/20 bg-primary/5 text-primary": isPlaying,
-          "border-transparent hover:bg-muted/40":
+          "ring-primary bg-primary/10": dragOverIndex === index,
+          "ring-primary/20 bg-primary/5 text-primary": isPlaying,
+          "ring-transparent hover:bg-muted/40":
             dragOverIndex !== index && !isPlaying
         }
       )}
@@ -81,20 +82,21 @@ export function QueueItem({ index, item }: QueueItemProps) {
       role="button"
       tabIndex={0}
     >
-      <span className="w-4 text-center text-[10px] font-medium text-muted-foreground/60 tabular-nums">
+      <span className="w-4 text-center text-[0.625rem] font-medium text-muted-foreground/60 tabular-nums">
         {index + 1}
       </span>
       <div className="min-w-0 flex-1">
         <div className="truncate font-medium leading-tight">{item.name}</div>
         {item.duration ? (
-          <div className="mt-0.5 text-[10px] text-muted-foreground/70">
+          <div className="mt-0.5 text-[0.625rem] text-muted-foreground/60">
             {makeTimeString(item.duration)}
           </div>
         ) : null}
       </div>
 
       <Button
-        className="hidden size-6 p-0 text-muted-foreground/60 hover:bg-destructive/10 hover:text-destructive group-hover:inline-flex"
+        className="hidden size-5 p-0 text-muted-foreground/60 hover:bg-destructive/10 hover:text-destructive group-hover/queue-item:inline-flex"
+        data-slot="queue-item-remove"
         onClick={(event) => {
           event.stopPropagation();
           removeItem(item);
@@ -103,7 +105,7 @@ export function QueueItem({ index, item }: QueueItemProps) {
         type="button"
         variant="ghost"
       >
-        <X className="size-3.5" />
+        <X className="size-3" />
       </Button>
     </div>
   );

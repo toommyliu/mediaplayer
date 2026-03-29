@@ -314,7 +314,7 @@ function FileBrowserPanel() {
   }, [fileBrowser.scrollTop, fileBrowser.fileTree]);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-2.5">
+    <div className="flex min-h-0 flex-1 flex-col gap-2.5 pt-1">
       <div className="flex shrink-0 items-center justify-between gap-2">
         <ToggleGroup
           onValueChange={(value) => {
