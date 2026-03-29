@@ -12,8 +12,13 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-  SidebarTrigger
 } from "@/components/ui/sidebar";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger
+} from "@/components/ui/tabs";
 import {
   ContextMenu,
   ContextMenuTrigger,
@@ -51,10 +56,6 @@ import {
 } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import type { FileSystemItem, QueueItem } from "@/types";
-
-function sidebarButtonClass(active = false): string {
-  return active ? "shadow-sm" : "text-muted-foreground";
-}
 
 function iconButtonClass(): string {
   return "h-7 px-2 text-xs";
@@ -378,24 +379,15 @@ function FileBrowserPanel() {
       </div>
 
       <div className="border-sidebar-border/60 mt-4 flex items-center justify-between gap-2 border-t pt-3">
-        <div className="flex items-center gap-2">
-          <Button
-            className={sidebarButtonClass(fileBrowser.sortBy === "name")}
-            onClick={() => fileBrowserCommands.setFileBrowserSort("name")}
-            type="button"
-            variant={fileBrowser.sortBy === "name" ? "secondary" : "ghost"}
-          >
-            Name
-          </Button>
-          <Button
-            className={sidebarButtonClass(fileBrowser.sortBy === "duration")}
-            onClick={() => fileBrowserCommands.setFileBrowserSort("duration")}
-            type="button"
-            variant={fileBrowser.sortBy === "duration" ? "secondary" : "ghost"}
-          >
-            Duration
-          </Button>
-        </div>
+        <Tabs
+          onValueChange={(value) => fileBrowserCommands.setFileBrowserSort(value as any)}
+          value={fileBrowser.sortBy}
+        >
+          <TabsList>
+            <TabsTrigger value="name">Name</TabsTrigger>
+            <TabsTrigger value="duration">Duration</TabsTrigger>
+          </TabsList>
+        </Tabs>
 
         <Button
           className={iconButtonClass()}
@@ -557,30 +549,25 @@ export default function SidebarPanel() {
   const sidebar = useSidebarView();
 
   return (
-    <div className="flex h-full flex-col overflow-hidden">
+    <Tabs
+      className="flex h-full flex-col overflow-hidden"
+      onValueChange={(value) => sidebarCommands.setSidebarTab(value as any)}
+      value={sidebar.currentTab}
+    >
       <SidebarHeader className="px-4 pt-4">
-        <div className="border-sidebar-border bg-sidebar-accent grid grid-cols-2 gap-1 rounded-lg border p-1">
-          <Button
-            className={sidebarButtonClass(sidebar.currentTab === "file-browser")}
-            onClick={() => sidebarCommands.setSidebarTab("file-browser")}
-            type="button"
-            variant={sidebar.currentTab === "file-browser" ? "secondary" : "ghost"}
-          >
-            Files
-          </Button>
-          <Button
-            className={sidebarButtonClass(sidebar.currentTab === "queue")}
-            onClick={() => sidebarCommands.setSidebarTab("queue")}
-            type="button"
-            variant={sidebar.currentTab === "queue" ? "secondary" : "ghost"}
-          >
-            Queue
-          </Button>
-        </div>
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="file-browser">Files</TabsTrigger>
+          <TabsTrigger value="queue">Queue</TabsTrigger>
+        </TabsList>
       </SidebarHeader>
 
       <SidebarContent className="min-h-0 flex-1 px-4 pt-4">
-        {sidebar.currentTab === "file-browser" ? <FileBrowserPanel /> : <QueuePanel />}
+        <TabsContent className="h-full" value="file-browser">
+          <FileBrowserPanel />
+        </TabsContent>
+        <TabsContent className="h-full" value="queue">
+          <QueuePanel />
+        </TabsContent>
       </SidebarContent>
 
       <SidebarFooter className="px-4 pt-2 pb-4">
@@ -603,67 +590,6 @@ export default function SidebarPanel() {
           </div>
         </div>
       </SidebarFooter>
-    </div>
-  );
-}
-
-export function CompactSidebarPanel() {
-  const sidebar = useSidebarView();
-
-  return (
-    <div className="flex h-full flex-col items-stretch overflow-hidden">
-      <SidebarHeader className="px-2 pt-4">
-        <div className="flex flex-col gap-1">
-          <SidebarTrigger className="h-8 w-8 self-center" />
-          <Button
-            className={cn(
-              "h-8 w-8 p-0",
-              sidebar.currentTab === "file-browser" ? "shadow-sm" : "text-muted-foreground"
-            )}
-            onClick={() => sidebarCommands.setSidebarTab("file-browser")}
-            size="icon"
-            type="button"
-            variant={sidebar.currentTab === "file-browser" ? "secondary" : "ghost"}
-          >
-            <FolderIcon className="h-4 w-4" />
-          </Button>
-          <Button
-            className={cn(
-              "h-8 w-8 p-0",
-              sidebar.currentTab === "queue" ? "shadow-sm" : "text-muted-foreground"
-            )}
-            onClick={() => sidebarCommands.setSidebarTab("queue")}
-            size="icon"
-            type="button"
-            variant={sidebar.currentTab === "queue" ? "secondary" : "ghost"}
-          >
-            <FilmIcon className="h-4 w-4" />
-          </Button>
-        </div>
-      </SidebarHeader>
-
-      <div className="flex-1" />
-
-      <SidebarFooter className="px-2 pt-2 pb-4">
-        <div className="flex flex-col items-center gap-2">
-          <button
-            className={cn(iconButtonClass(), "px-0")}
-            onClick={() => settingsCommands.setSettingsDialogOpen(true)}
-            type="button"
-          >
-            <SettingsIcon className="h-4 w-4" />
-          </button>
-
-          <div
-            className="group flex cursor-grab items-center justify-center px-2 py-2 active:cursor-grabbing"
-            draggable
-            onDragEnd={() => sidebarCommands.setSidebarDragging(false)}
-            onDragStart={() => sidebarCommands.setSidebarDragging(true)}
-          >
-            <div className="bg-border h-1 w-8 rounded-full opacity-60 transition group-hover:w-12 group-hover:opacity-100" />
-          </div>
-        </div>
-      </SidebarFooter>
-    </div>
+    </Tabs>
   );
 }
