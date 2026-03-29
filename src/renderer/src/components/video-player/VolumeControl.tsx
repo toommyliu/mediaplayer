@@ -1,6 +1,13 @@
+import { useState } from "react";
 import { VolumeX, Volume, Volume2 } from "lucide-react"
 import { Button } from "@/components/ui/button";
 import { useVolumeView, volumeCommands } from "@/lib/store";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
+
 
 function VolumeSlider({
   value,
@@ -11,28 +18,44 @@ function VolumeSlider({
   isMuted: boolean;
   onChange: (v: number) => void;
 }) {
+  const [isDragging, setIsDragging] = useState(false);
   const fillPercent = value * 100;
   const fillColor = isMuted ? "rgba(255,255,255,0.25)" : "rgba(255,255,255,0.9)";
   const trackColor = "rgba(255,255,255,0.15)";
 
   return (
     <div className="relative flex h-full w-full items-center">
-      <input
-        type="range"
-        min={0}
-        max={1}
-        step={0.01}
-        value={value}
-        onChange={(e) => onChange(parseFloat(e.target.value))}
-        className="volume-slider w-full cursor-pointer appearance-none bg-transparent outline-none"
-        style={
-          {
-            "--fill": fillColor,
-            "--track": trackColor,
-            "--pct": `${fillPercent}%`,
-          } as React.CSSProperties
-        }
-      />
+      <Tooltip open={isDragging}>
+        <TooltipTrigger
+          render={(props) => (
+            <input
+              {...props}
+              type="range"
+              min={0}
+              max={1}
+              step={0.01}
+              value={value}
+              onChange={(e) => onChange(parseFloat(e.target.value))}
+              onMouseDown={() => setIsDragging(true)}
+              onMouseUp={() => setIsDragging(false)}
+              onTouchStart={() => setIsDragging(true)}
+              onTouchEnd={() => setIsDragging(false)}
+              className="volume-slider w-full cursor-pointer appearance-none bg-transparent outline-none"
+              style={
+                {
+                  "--fill": fillColor,
+                  "--track": trackColor,
+                  "--pct": `${fillPercent}%`,
+                } as React.CSSProperties
+              }
+            />
+          )}
+        />
+        <TooltipContent side="top" sideOffset={12}>
+          {Math.round(value * 100)}%
+        </TooltipContent>
+      </Tooltip>
+
       <style>{`
         .volume-slider {
           height: 16px;
@@ -120,21 +143,32 @@ export function VolumeControl() {
 
   return (
     <div className="flex h-9 items-center rounded-lg border border-white/10 bg-white/10 text-white transition-colors hover:bg-white/15 focus-within:bg-white/15 sm:h-8">
-      <Button
-        className="size-8 shrink-0 border-0 bg-transparent p-0 text-white shadow-none hover:bg-white/10"
-        onClick={() => volumeCommands.setMuted(!volume.isMuted)}
-        size="icon-sm"
-        type="button"
-        variant="ghost"
-      >
-        {volume.isMuted || volume.value === 0 ? (
-          <VolumeX className="h-4 w-4" />
-        ) : volume.value < 0.5 ? (
-          <Volume className="h-4 w-4" />
-        ) : (
-          <Volume2 className="h-4 w-4" />
-        )}
-      </Button>
+      <Tooltip>
+        <TooltipTrigger
+          render={(props) => (
+            <Button
+              {...props}
+              className="size-8 shrink-0 border-0 bg-transparent p-0 text-white shadow-none hover:bg-white/10"
+              onClick={() => volumeCommands.setMuted(!volume.isMuted)}
+              size="icon-sm"
+              type="button"
+              variant="ghost"
+            >
+              {volume.isMuted || volume.value === 0 ? (
+                <VolumeX className="h-4 w-4" />
+              ) : volume.value < 0.5 ? (
+                <Volume className="h-4 w-4" />
+              ) : (
+                <Volume2 className="h-4 w-4" />
+              )}
+            </Button>
+          )}
+        />
+        <TooltipContent side="top" sideOffset={8}>
+          {volume.isMuted ? "Unmute" : "Mute"} ({Math.round(volume.value * 100)}%)
+        </TooltipContent>
+      </Tooltip>
+
 
       <div className="group/volume flex h-full items-center">
         <div className="mx-1.5 h-3 w-1 rounded-full bg-white/20 transition-all group-hover/volume:opacity-0 group-focus-within/volume:opacity-0" />
@@ -153,6 +187,8 @@ export function VolumeControl() {
             />
           </div>
         </div>
+
+
       </div>
     </div>
   );
