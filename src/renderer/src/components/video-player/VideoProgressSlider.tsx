@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { getVideoElement } from "@/lib/controllers/media-runtime";
 import { makeTimeString } from "@/lib/make-time-string";
 import {
@@ -12,8 +12,29 @@ export function VideoProgressSlider() {
   const [dragTime, setDragTime] = useState<number | null>(null);
   const [hoverTime, setHoverTime] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [localTime, setLocalTime] = useState<number | null>(null);
 
-  const progressTime = dragTime ?? player.currentTime;
+  // Smooth progress updates
+  useEffect(() => {
+    if (!player.isPlaying || isDragging) {
+      setLocalTime(null);
+      return;
+    }
+
+    let frameId: number;
+    const updateTime = () => {
+      const video = getVideoElement();
+      if (video && !video.paused) {
+        setLocalTime(video.currentTime);
+      }
+      frameId = requestAnimationFrame(updateTime);
+    };
+
+    frameId = requestAnimationFrame(updateTime);
+    return () => cancelAnimationFrame(frameId);
+  }, [player.isPlaying, isDragging]);
+
+  const progressTime = dragTime ?? localTime ?? player.currentTime;
   const progressPercentage =
     player.duration > 0 ? (progressTime / player.duration) * 100 : 0;
 
@@ -37,14 +58,18 @@ export function VideoProgressSlider() {
     const wasPlaying = player.isPlaying;
 
     setIsDragging(true);
-    setDragTime(seekTo(event.clientX, rect));
+    const initialTime = seekTo(event.clientX, rect);
+    setDragTime(initialTime);
+    setVideoTime(initialTime);
 
     if (wasPlaying) {
       playbackCommands.pausePlayback();
     }
 
     const handleMouseMove = (moveEvent: MouseEvent) => {
-      setDragTime(seekTo(moveEvent.clientX, rect));
+      const nextTime = seekTo(moveEvent.clientX, rect);
+      setDragTime(nextTime);
+      setVideoTime(nextTime);
     };
 
     const handleMouseUp = async (upEvent: MouseEvent) => {
@@ -93,7 +118,7 @@ export function VideoProgressSlider() {
           aria-valuenow={progressTime}
         >
           <div
-            className="absolute top-0 left-0 h-full rounded-full bg-primary transition-all"
+            className="absolute top-0 left-0 h-full rounded-full bg-primary"
             style={{ width: `${progressPercentage}%` }}
           />
           <div
