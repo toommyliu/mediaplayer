@@ -1,7 +1,7 @@
 {
   "name": "mediaplayer",
   "version": "1.0.0",
-  "description": "An Electron application with Svelte and TypeScript",
+  "description": "An Electron application with React and TypeScript",
   "main": "./out/main/index.js",
   "scripts": {
     "format": "prettier --write .",
