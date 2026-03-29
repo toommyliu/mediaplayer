@@ -154,7 +154,6 @@ export function FileBrowserItem({ item, depth }: { depth: number; item: FileSyst
                     <TooltipContent
                       align="start"
                       side={sidebar.position === "left" ? "right" : "left"}
-                      sideOffset={8}
                     >
                       {item.name}
                     </TooltipContent>
