@@ -1,8 +1,8 @@
 
-import { ClearQueueButton } from "./ClearQueueButton";
+import { ClearQueueButton } from "../ClearQueueButton";
 import { EmptyQueuePanel } from "./EmptyQueuePanel";
-import { RepeatButton } from "./RepeatButton";
-import { ShuffleButton } from "./ShuffleButton";
+import { RepeatButton } from "../RepeatButton";
+import { ShuffleButton } from "../ShuffleButton";
 import { QueueList } from "./QueueList";
 
 import { useQueueView } from "@/lib/store";
