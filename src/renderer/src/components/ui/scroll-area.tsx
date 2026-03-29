@@ -7,12 +7,14 @@ import { cn } from "@/lib/utils";
 export function ScrollArea({
   className,
   viewportClassName,
+  viewportRef,
   children,
   scrollFade = false,
   scrollbarGutter = false,
   ...props
 }: ScrollAreaPrimitive.Root.Props & {
   viewportClassName?: string;
+  viewportRef?: React.Ref<HTMLDivElement>;
   scrollFade?: boolean;
   scrollbarGutter?: boolean;
 }): React.ReactElement {
@@ -31,6 +33,7 @@ export function ScrollArea({
           viewportClassName,
         )}
         data-slot="scroll-area-viewport"
+        ref={viewportRef}
       >
         {children}
       </ScrollAreaPrimitive.Viewport>

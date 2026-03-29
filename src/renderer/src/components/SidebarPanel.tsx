@@ -68,6 +68,9 @@ import {
 } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import type { FileSystemItem, QueueItem } from "@/types";
+import { ShuffleButton } from "./ShuffleButton";
+import { RepeatButton } from "./RepeatButton";
+import { ClearQueueButton } from "./ClearQueueButton";
 
 function iconButtonClass(): string {
   return "h-7 px-2 text-xs";
@@ -100,9 +103,9 @@ function FileBrowserItem({ item, depth }: { depth: number; item: FileSystemItem 
 
   const children = item.files
     ? sortFileTree(item.files, {
-        sortBy: fileBrowser.sortBy,
-        sortDirection: fileBrowser.sortDirection
-      })
+      sortBy: fileBrowser.sortBy,
+      sortDirection: fileBrowser.sortDirection
+    })
     : [];
 
   function focusRelative(offset: number): void {
@@ -320,7 +323,7 @@ function FileBrowserPanel() {
   }, [fileBrowser.scrollTop, fileBrowser.fileTree]);
 
   return (
-    <div className="flex flex-1 flex-col gap-2.5">
+    <div className="flex min-h-0 flex-1 flex-col gap-2.5">
       <div className="flex shrink-0 items-center justify-between gap-2">
         <ToggleGroup
           onValueChange={(value) => {
@@ -381,9 +384,9 @@ function FileBrowserPanel() {
         ) : (
           <ScrollArea
             className="flex-1"
-            onScroll={(event) => {
+            onScroll={() => {
               fileBrowserCommands.setFileBrowserScrollTop(
-                (event.target as HTMLDivElement).scrollTop
+                scrollContainerRef.current?.scrollTop ?? 0
               );
             }}
             scrollFade
@@ -466,51 +469,15 @@ function QueuePanel() {
     }
   }
 
-  const repeatIcon =
-    queue.repeatMode === "one" ? (
-      <RepeatOneIcon className="h-4 w-4" />
-    ) : (
-      <RepeatIcon className="h-4 w-4" />
-    );
-
   return (
-    <div className="flex flex-1 flex-col gap-2.5">
+    <div className="flex min-h-0 flex-1 flex-col gap-2.5">
       <div className="flex shrink-0 items-center justify-between gap-2">
         <div className="flex items-center gap-1.5">
-          <Button
-            className={cn(iconButtonClass(), "border-sidebar-border/60")}
-            onClick={() => queueCommands.shuffleQueue()}
-            size="xs"
-            type="button"
-            variant="outline"
-          >
-            <ShuffleIcon className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            className={cn(
-              queue.repeatMode === "off"
-                ? "border-sidebar-border/60 h-7 px-2 text-xs"
-                : "h-7 border-primary/20 bg-primary/5 px-2 text-xs text-primary hover:bg-primary/10",
-              "transition-colors"
-            )}
-            onClick={() => queueCommands.toggleRepeatMode()}
-            size="xs"
-            type="button"
-            variant={queue.repeatMode === "off" ? "outline" : "secondary"}
-          >
-            {repeatIcon}
-          </Button>
+          <ShuffleButton />
+          <RepeatButton />
         </div>
 
-        <Button
-          className={cn(iconButtonClass(), "border-sidebar-border/60")}
-          onClick={() => queueCommands.resetQueue()}
-          size="xs"
-          type="button"
-          variant="outline"
-        >
-          Clear
-        </Button>
+        <ClearQueueButton />
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col">
