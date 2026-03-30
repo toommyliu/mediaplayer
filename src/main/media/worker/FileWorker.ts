@@ -1,6 +1,6 @@
 import ffprobeInstaller from "@ffprobe-installer/ffprobe";
-import { parentPort } from "node:worker_threads";
 import { execFile } from "node:child_process";
+import { parentPort } from "node:worker_threads";
 import { promisify } from "node:util";
 
 const execFileAsync = promisify(execFile);
@@ -27,9 +27,6 @@ type FfmpegProbeMetadata = {
   [key: string]: unknown;
 };
 
-/**
- * Execute ffprobe and return JSON metadata.
- */
 async function getFfprobeMetadata(filePath: string): Promise<FfmpegProbeMetadata> {
   try {
     const args = ["-v", "error", "-show_format", "-print_format", "json", filePath];
@@ -45,9 +42,6 @@ async function getFfprobeMetadata(filePath: string): Promise<FfmpegProbeMetadata
   }
 }
 
-/**
- * Get the duration of a video file.
- */
 async function getVideoDuration(filePath: string): Promise<number> {
   const metadata = await getFfprobeMetadata(filePath);
   const rawDuration = metadata?.format?.duration;
@@ -57,7 +51,6 @@ async function getVideoDuration(filePath: string): Promise<number> {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-// Listen for messages from the main thread
 if (parentPort) {
   parentPort.on("message", async (message: WorkerMessage) => {
     const response: WorkerResponse = {
