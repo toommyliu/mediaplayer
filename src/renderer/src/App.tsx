@@ -289,17 +289,18 @@ export default function App() {
         <div
           ref={sidebarContainerRef}
           className={cn(
-            "absolute inset-y-0 z-20 flex flex-col",
-            "bg-sidebar/95 border-sidebar-border",
+            "absolute inset-y-0 flex flex-col",
+            isOpen ? "z-20" : "z-40",
+            isOpen ? "bg-sidebar/95 border-sidebar-border" : "bg-sidebar/70 backdrop-blur-3xl border-white/20 dark:border-white/10",
             isOpen && "border-r shadow-none",
             !isOpen && [
-              "top-2 bottom-2 border shadow-2xl",
-              isLeft ? "rounded-r-2xl" : "rounded-l-2xl",
-              !isCommitting && "transition-transform duration-300 ease-out",
+              "top-10 bottom-24 border shadow-[0_20px_50px_rgba(0,0,0,0.3)]",
+              isLeft ? "rounded-r-3xl" : "rounded-l-3xl",
+              !isCommitting && "transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1)",
               isPeeking
-                ? "translate-x-0 opacity-100"
+                ? "translate-x-0 opacity-100 scale-100"
                 : cn(
-                    "pointer-events-none opacity-0",
+                    "pointer-events-none opacity-0 scale-95",
                     isLeft ? "-translate-x-full" : "translate-x-full",
                   ),
             ],

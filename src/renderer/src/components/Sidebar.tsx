@@ -29,10 +29,10 @@ export function Sidebar() {
     >
       <div
         className={cn(
-          "absolute top-1/2 z-50 h-16 w-0.5 -translate-y-1/2 rounded-full",
-          "bg-primary/20 opacity-0 transition-all duration-500",
-          "group-hover/sidebar:opacity-100 group-active/sidebar:h-24 group-active/sidebar:bg-primary/40",
-          isLeft ? "-right-px" : "-left-px",
+          "absolute top-1/2 z-50 h-12 w-1 -translate-y-1/2 rounded-full",
+          "bg-primary/10 opacity-0 transition-all duration-500",
+          "group-hover/sidebar:opacity-100 group-active/sidebar:h-20 group-active/sidebar:bg-primary/30",
+          isLeft ? "-right-0.5" : "-left-0.5",
         )}
       />
 
@@ -55,44 +55,25 @@ export function Sidebar() {
         </TabsContent>
       </div>
 
-      <div className="px-4 pt-2 pb-4">
-        <div className="grid grid-cols-3 items-center">
-          <div className="flex items-center justify-start">
-            {isLeft && (
-              <Button
-                className="h-7 px-2 text-xs"
-                onClick={() => setSettingsDialogOpen(true)}
-                size="icon"
-                variant="ghost"
-              >
-                <Settings className="size-4" />
-              </Button>
-            )}
-          </div>
-
-          <div
-            className="group flex cursor-grab items-center justify-center py-2 active:cursor-grabbing"
-            onMouseDown={(e) => {
-              e.preventDefault();
-              setSidebarDragging(true);
-            }}
-          >
-            <div className="bg-border h-1 w-16 rounded-full opacity-60 transition-all group-hover:bg-primary/50 group-hover:w-24 group-hover:opacity-100 group-active:bg-primary/80" />
-          </div>
-
-          <div className="flex items-center justify-end">
-            {!isLeft && (
-              <Button
-                className="h-7 px-2 text-xs"
-                onClick={() => setSettingsDialogOpen(true)}
-                size="icon"
-                variant="ghost"
-              >
-                <Settings className="size-4" />
-              </Button>
-            )}
-          </div>
+      <div className="flex items-center justify-between px-5 pt-3 pb-5">
+        <div
+          className="group flex flex-1 cursor-grab items-center justify-center py-2 active:cursor-grabbing"
+          onMouseDown={(e) => {
+            e.preventDefault();
+            setSidebarDragging(true);
+          }}
+        >
+          <div className="h-1 w-12 rounded-full bg-foreground/10 transition-all group-hover:w-16 group-hover:bg-primary/40 group-active:w-20 group-active:bg-primary/60" />
         </div>
+
+        <Button
+          className="h-8 w-8 text-muted-foreground/60 transition-colors hover:bg-primary/10 hover:text-primary"
+          onClick={() => setSettingsDialogOpen(true)}
+          size="icon"
+          variant="ghost"
+        >
+          <Settings className="size-4" />
+        </Button>
       </div>
     </Tabs>
   );
