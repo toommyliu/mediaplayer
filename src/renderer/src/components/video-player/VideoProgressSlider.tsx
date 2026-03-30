@@ -69,6 +69,8 @@ export function VideoProgressSlider() {
       <div className="relative mb-4">
         <Slider
           className="w-full"
+          trackClassName="before:bg-white/20"
+          indicatorClassName="bg-white"
           disabled={!duration}
           min={0}
           max={duration || 100}
