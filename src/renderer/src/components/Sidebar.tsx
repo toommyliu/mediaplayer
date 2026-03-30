@@ -1,5 +1,6 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Settings } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { QueuePanel } from "./queue/QueuePanel";
 import { FileBrowserPanel } from "./file-browser/FileBrowserPanel";
 import { useSettingsStore } from "@/stores/settings";
@@ -36,13 +37,14 @@ export function Sidebar() {
 
       <div className="px-4 pt-2 pb-4">
         <div className="flex items-center justify-between gap-2">
-          <button
+          <Button
             className="h-7 px-2 text-xs"
             onClick={() => setSettingsDialogOpen(true)}
-            type="button"
+            size="icon"
+            variant="ghost"
           >
-            <Settings className="h-4 w-4" />
-          </button>
+            <Settings className="size-4" />
+          </Button>
 
           <div
             className="group flex cursor-grab items-center justify-center px-2 py-2 active:cursor-grabbing"
