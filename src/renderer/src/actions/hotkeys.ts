@@ -5,11 +5,6 @@ import {
   setFullscreen,
   togglePlayPause,
 } from "@/actions/playback";
-import {
-  decreaseVolumeWithMediaSync,
-  increaseVolumeWithMediaSync,
-  setMutedWithMediaSync,
-} from "@/actions/volume";
 import { FRAME_TIME_STEP, SEEK_TIME_STEP } from "@/lib/constants";
 import { usePlayerStore } from "@/stores/player";
 import { getCurrentQueueItemFromState, useQueueStore } from "@/stores/queue";
@@ -38,7 +33,8 @@ export async function runHotkeyAction(actionId: string): Promise<void> {
       if (currentItem) {
         const nextTime = Math.max(0, player.currentTime - SEEK_TIME_STEP);
         usePlayerStore.getState().setCurrentTime(nextTime);
-        if (video) video.currentTime = nextTime;
+        if (video)
+          video.currentTime = nextTime;
       }
       break;
     case "seekForward":
@@ -48,14 +44,16 @@ export async function runHotkeyAction(actionId: string): Promise<void> {
           player.currentTime + SEEK_TIME_STEP,
         );
         usePlayerStore.getState().setCurrentTime(nextTime);
-        if (video) video.currentTime = nextTime;
+        if (video)
+          video.currentTime = nextTime;
       }
       break;
     case "frameBackward":
       if (currentItem) {
         const nextTime = Math.max(0, player.currentTime - FRAME_TIME_STEP);
         usePlayerStore.getState().setCurrentTime(nextTime);
-        if (video) video.currentTime = nextTime;
+        if (video)
+          video.currentTime = nextTime;
       }
       break;
     case "frameForward":
@@ -65,17 +63,18 @@ export async function runHotkeyAction(actionId: string): Promise<void> {
           player.currentTime + FRAME_TIME_STEP,
         );
         usePlayerStore.getState().setCurrentTime(nextTime);
-        if (video) video.currentTime = nextTime;
+        if (video)
+          video.currentTime = nextTime;
       }
       break;
     case "volumeUp":
-      increaseVolumeWithMediaSync();
+      useVolumeStore.getState().increaseVolume();
       break;
     case "volumeDown":
-      decreaseVolumeWithMediaSync();
+      useVolumeStore.getState().decreaseVolume();
       break;
     case "mute":
-      setMutedWithMediaSync(!useVolumeStore.getState().isMuted);
+      useVolumeStore.getState().setMuted(!useVolumeStore.getState().isMuted);
       break;
     case "fullscreen":
       await setFullscreen(!usePlayerStore.getState().isFullscreen);
@@ -97,14 +96,15 @@ export async function runHotkeyAction(actionId: string): Promise<void> {
       break;
     default:
       if (
-        /^jump-\d$/.test(actionId) &&
-        currentItem &&
-        Number.isFinite(player.duration)
+        /^jump-\d$/.test(actionId)
+        && currentItem
+        && Number.isFinite(player.duration)
       ) {
         const percent = Number.parseInt(actionId.split("-")[1], 10) / 10;
         const nextTime = percent * player.duration;
         usePlayerStore.getState().setCurrentTime(nextTime);
-        if (video) video.currentTime = nextTime;
+        if (video)
+          video.currentTime = nextTime;
       }
       break;
   }
