@@ -1,246 +1,270 @@
-import { useEffect, useState } from "react";
-import { onAddFile, onAddFolder, onOpenSettings } from "@/lib/ipc";
-import SidebarPanel from "@/components/SidebarPanel";
-import { HotkeysProvider } from "@/components/HotkeysProvider";
-import { ThemeProvider } from "@/components/ThemeProvider";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
+import { Sidebar } from "@/components/Sidebar";
 import VideoPlayer from "@/components/video-player/VideoPlayer";
 import SettingsDialog from "@/components/settings/SettingsDialog";
-import { Sidebar, SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { Providers } from "@/components/Providers";
+import { Kbd } from "@/components/ui/kbd";
+import { onAddFile, onAddFolder, onOpenSettings } from "@/lib/ipc";
 import { bootstrapApp } from "@/actions/app";
 import { handleAddFileEvent, handleAddFolderEvent } from "@/actions/library";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { cn } from "./lib/utils";
+import { cn } from "@/lib/utils";
 import { useSettingsStore } from "@/stores/settings";
 import { useSidebarStore } from "@/stores/sidebar";
 
+const PEEK_WIDTH = "18rem";
+const PEEK_DELAY_MS = 80;
+const EASE_OUT = "cubic-bezier(0.23, 1, 0.32, 1)";
+
 export default function App() {
-  const dropZoneActive = useSidebarStore((state) => state.dropZoneActive);
-  const isDragging = useSidebarStore((state) => state.isDragging);
   const isOpen = useSidebarStore((state) => state.isOpen);
   const position = useSidebarStore((state) => state.position);
   const width = useSidebarStore((state) => state.width);
-  const setSidebarDropZone = useSidebarStore((state) => state.setSidebarDropZone);
-  const setSidebarOpen = useSidebarStore((state) => state.setSidebarOpen);
-  const setSidebarPosition = useSidebarStore((state) => state.setSidebarPosition);
+  const isDragging = useSidebarStore((state) => state.isDragging);
   const setSidebarWidth = useSidebarStore((state) => state.setSidebarWidth);
+  const setSidebarPosition = useSidebarStore((state) => state.setSidebarPosition);
+  const setSidebarDragging = useSidebarStore((state) => state.setSidebarDragging);
   const setSettingsDialogOpen = useSettingsStore((state) => state.setSettingsDialogOpen);
-  const [isResizing, setIsResizing] = useState(false);
-  const [draftSidebarWidth, setDraftSidebarWidth] = useState(width);
-  const [isSidebarPreviewOpen, setIsSidebarPreviewOpen] = useState(false);
-  const previewSidebarWidth = "18rem";
 
-  const sidebarWidth = isResizing ? draftSidebarWidth : width;
-  const sidebarEdge = isOpen ? `${sidebarWidth}%` : "0px";
+  const [isResizing, setIsResizing] = useState(false);
+  const [draftWidth, setDraftWidth] = useState(width);
+  const [isPeeking, setIsPeeking] = useState(false);
+  const [dropSide, setDropSide] = useState<"left" | "right" | null>(null);
+  const [isCommitting, setIsCommitting] = useState(false);
+  const peekTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const lastPositionRef = useRef(position);
 
   useEffect(() => {
-    void bootstrapApp();
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    if (lastPositionRef.current !== position) {
+      setIsCommitting(true);
+      timer = setTimeout(() => setIsCommitting(false), 50);
+      lastPositionRef.current = position;
+    }
+    return () => { if (timer) clearTimeout(timer); };
+  }, [position]);
 
-    const disposers = [
-      onAddFile((result) => {
-        void handleAddFileEvent(result);
-      }),
-      onAddFolder((result) => {
-        void handleAddFolderEvent(result);
-      }),
-      onOpenSettings(() => {
-        setSettingsDialogOpen(true);
-      })
-    ];
+  const sidebarWidth = isResizing ? draftWidth : width;
+  const isLeft = position === "left";
+  const openSidebarEdge = `${sidebarWidth}%`;
 
-    return () => {
-      for (const dispose of disposers) dispose();
-    };
+  const startPeek = useCallback(() => {
+    if (isOpen) return;
+    clearTimeout(peekTimeoutRef.current);
+    setIsPeeking(true);
+  }, [isOpen]);
+
+  const endPeek = useCallback(() => {
+    peekTimeoutRef.current = setTimeout(() => setIsPeeking(false), PEEK_DELAY_MS);
   }, []);
 
   useEffect(() => {
-    if (!isResizing) return undefined;
-
-    const handleMouseMove = (event: MouseEvent) => {
-      const percentage =
-        position === "left"
-          ? (event.clientX / window.innerWidth) * 100
-          : ((window.innerWidth - event.clientX) / window.innerWidth) * 100;
-
-      setDraftSidebarWidth(percentage);
-    };
-
-    const handleMouseUp = () => {
-      setSidebarWidth(draftSidebarWidth);
-      setIsResizing(false);
-    };
-
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseup", handleMouseUp);
-
-    return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
-    };
-  }, [draftSidebarWidth, isResizing, position, setSidebarWidth]);
+    if (isOpen) setIsPeeking(false);
+  }, [isOpen]);
 
   useEffect(() => {
-    if (isResizing) return;
-    setDraftSidebarWidth(width);
+    if (!isResizing) return;
+    const onMouseMove = (e: MouseEvent) => {
+      const pct = isLeft
+        ? (e.clientX / window.innerWidth) * 100
+        : ((window.innerWidth - e.clientX) / window.innerWidth) * 100;
+      setDraftWidth(pct);
+    };
+    const onMouseUp = () => {
+      setSidebarWidth(draftWidth);
+      setIsResizing(false);
+    };
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    };
+  }, [isResizing, draftWidth, isLeft, setSidebarWidth]);
+
+  useEffect(() => {
+    if (!isResizing) setDraftWidth(width);
   }, [isResizing, width]);
 
   useEffect(() => {
-    if (isOpen) {
-      setIsSidebarPreviewOpen(false);
-    }
-  }, [isOpen]);
+    if (!isDragging) return;
+    const onMouseMove = (e: MouseEvent) => {
+      setDropSide(e.clientX < window.innerWidth / 2 ? "left" : "right");
+    };
+    const onMouseUp = (e: MouseEvent) => {
+      const side = e.clientX < window.innerWidth / 2 ? "left" : "right";
+      setSidebarPosition(side);
+      setSidebarDragging(false);
+      setDropSide(null);
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setSidebarDragging(false);
+        setDropSide(null);
+      }
+    };
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [isDragging, setSidebarPosition, setSidebarDragging]);
+
+  useEffect(() => {
+    void bootstrapApp();
+    const disposers = [
+      onAddFile((result) => { void handleAddFileEvent(result); }),
+      onAddFolder((result) => { void handleAddFolderEvent(result); }),
+      onOpenSettings(() => { setSettingsDialogOpen(true); }),
+    ];
+    return () => { for (const dispose of disposers) dispose(); };
+  }, []);
 
   return (
-    <HotkeysProvider>
-      <TooltipProvider delay={0}>
-        <ThemeProvider>
-          <SidebarProvider
-            className="bg-background h-screen overflow-hidden"
-            onOpenChange={setSidebarOpen}
-            open={isOpen}
-            style={{
-              ["--sidebar-width" as string]: `${sidebarWidth}%`,
-              ["--sidebar-width-icon" as string]: "3rem"
-            }}
-          >
-            <div className="relative flex min-h-0 flex-1 overflow-hidden">
-              {!isOpen ? (
+    <Providers>
+      <div className="relative flex h-screen overflow-hidden">
+        {isDragging && (
+          <div className="bg-background/20 pointer-events-none absolute inset-0 z-100 flex items-center justify-center backdrop-blur-sm animate-in fade-in duration-200" style={{ transitionTimingFunction: EASE_OUT }}>
+            <div className="flex flex-col items-center gap-6 animate-in fade-in zoom-in-95 duration-200" style={{ transitionTimingFunction: EASE_OUT }}>
+              <div className="bg-background/80 border-border/50 flex w-[360px] gap-2 rounded-3xl border p-2 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] backdrop-blur-xl">
                 <div
-                  className="absolute inset-y-0 z-20 w-4"
-                  onMouseEnter={() => setIsSidebarPreviewOpen(true)}
-                  style={{
-                    [position === "left" ? "left" : "right"]: 0
-                  }}
-                />
-              ) : (
-                <div
-                  aria-orientation="vertical"
-                  className="bg-sidebar-border hover:bg-primary/50 absolute inset-y-0 z-30 w-1 cursor-col-resize transition-colors"
-                  onMouseDown={() => setIsResizing(true)}
-                  role="separator"
-                  style={{
-                    [position === "left" ? "left" : "right"]: sidebarEdge
-                  }}
-                  tabIndex={-1}
-                />
-              )}
-
-              {position === "left" ? (
-                <>
-                  {isOpen ? (
-                    <Sidebar
-                      className="bg-sidebar/80 border-sidebar-border backdrop-blur-md"
-                      collapsible="offcanvas"
-                      resizing={isResizing}
-                      side="left"
-                    >
-                      <SidebarPanel />
-                    </Sidebar>
-                  ) : isSidebarPreviewOpen ? (
+                  className={cn(
+                    "relative flex-1 rounded-2xl p-6 transition-all duration-300",
+                    dropSide === "left" ? "bg-primary/5 shadow-inner" : "bg-transparent"
+                  )}
+                >
+                  <div
+                    className={cn(
+                      "absolute inset-0 rounded-2xl border-2 border-dashed transition-all duration-300",
+                      dropSide === "left" ? "border-primary/40 scale-[0.98]" : "border-transparent"
+                    )}
+                  />
+                  <div className="relative flex flex-col items-center gap-3">
                     <div
-                      className="border-sidebar-border bg-sidebar/95 absolute top-2 bottom-2 left-0 z-20 w-[18rem] overflow-hidden rounded-r-2xl border shadow-2xl backdrop-blur-md"
-                      onMouseEnter={() => setIsSidebarPreviewOpen(true)}
-                      onMouseLeave={() => setIsSidebarPreviewOpen(false)}
+                      className={cn(
+                        "flex h-12 w-12 items-center justify-center rounded-xl border transition-all duration-200",
+                        dropSide === "left"
+                          ? "border-primary bg-primary/10 text-primary scale-[1.05] shadow-lg shadow-primary/20"
+                          : "border-border bg-background/50 text-muted-foreground/50"
+                      )}
+                      style={{ transitionTimingFunction: EASE_OUT }}
                     >
-                      <Sidebar
-                        className="h-full"
-                        collapsible="none"
-                        side="left"
-                        style={{ width: previewSidebarWidth }}
-                      >
-                        <SidebarPanel />
-                      </Sidebar>
+                      <ArrowLeft className="h-6 w-6" />
                     </div>
-                  ) : null}
-
-                  <SidebarInset
-                    className="min-w-0"
-                    style={{
-                      marginLeft: sidebarEdge
-                    }}
-                  >
-                    <VideoPlayer />
-                  </SidebarInset>
-                </>
-              ) : (
-                <>
-                  <SidebarInset
-                    className="min-w-0"
-                    style={{
-                      marginRight: sidebarEdge
-                    }}
-                  >
-                    <VideoPlayer />
-                  </SidebarInset>
-
-                  {isOpen ? (
-                    <Sidebar
-                      className="bg-sidebar/80 border-sidebar-border backdrop-blur-md"
-                      collapsible="offcanvas"
-                      resizing={isResizing}
-                      side="right"
-                    >
-                      <SidebarPanel />
-                    </Sidebar>
-                  ) : isSidebarPreviewOpen ? (
-                    <div
-                      className="border-sidebar-border bg-sidebar/95 absolute top-2 right-0 bottom-2 z-20 w-[18rem] overflow-hidden rounded-l-2xl border shadow-2xl backdrop-blur-md"
-                      onMouseEnter={() => setIsSidebarPreviewOpen(true)}
-                      onMouseLeave={() => setIsSidebarPreviewOpen(false)}
-                    >
-                      <Sidebar
-                        className="h-full"
-                        collapsible="none"
-                        side="right"
-                        style={{ width: previewSidebarWidth }}
-                      >
-                        <SidebarPanel />
-                      </Sidebar>
-                    </div>
-                  ) : null}
-                </>
-              )}
-
-              {isDragging ? (
-                <div className="bg-background/60 absolute inset-0 z-50 flex items-center justify-center backdrop-blur-sm">
-                  <div className="bg-card flex gap-4 rounded-2xl border p-4 shadow-2xl">
-                    {(["left", "right"] as const).map((position) => (
-                      <div
+                    <div className="text-center">
+                      <p
                         className={cn(
-                          "flex h-32 w-32 items-center justify-center rounded-xl border-2 border-dashed text-sm font-medium transition",
-                          {
-                            "border-primary bg-primary/10 text-primary":
-                              dropZoneActive === position,
-                            "border-border bg-muted/50 text-muted-foreground":
-                              dropZoneActive !== position
-                          }
+                          "text-sm font-semibold transition-colors duration-300",
+                          dropSide === "left" ? "text-primary" : "text-foreground"
                         )}
-                        key={position}
-                        onDragEnter={() => setSidebarDropZone(position)}
-                        onDragLeave={() => setSidebarDropZone(null)}
-                        onDragOver={(event) => {
-                          event.preventDefault();
-                          setSidebarDropZone(position);
-                        }}
-                        onDrop={(event) => {
-                          event.preventDefault();
-                          setSidebarPosition(position);
-                        }}
                       >
-                        <div className="text-center">
-                          <div className="mb-2 text-3xl">{position === "left" ? "←" : "→"}</div>
-                          <div>{position === "left" ? "Dock Left" : "Dock Right"}</div>
-                        </div>
-                      </div>
-                    ))}
+                        Left
+                      </p>
+                    </div>
                   </div>
                 </div>
-              ) : null}
-            </div>
 
-            <SettingsDialog />
-          </SidebarProvider>
-        </ThemeProvider>
-      </TooltipProvider>
-    </HotkeysProvider>
+                <div
+                  className={cn(
+                    "relative flex-1 rounded-2xl p-6 transition-all duration-300",
+                    dropSide === "right" ? "bg-primary/5 shadow-inner" : "bg-transparent"
+                  )}
+                >
+                  <div
+                    className={cn(
+                      "absolute inset-0 rounded-2xl border-2 border-dashed transition-all duration-300",
+                      dropSide === "right" ? "border-primary/40 scale-[0.98]" : "border-transparent"
+                    )}
+                  />
+                  <div className="relative flex flex-col items-center gap-3">
+                    <div
+                      className={cn(
+                        "flex h-12 w-12 items-center justify-center rounded-xl border transition-all duration-200",
+                        dropSide === "right"
+                          ? "border-primary bg-primary/10 text-primary scale-[1.05] shadow-lg shadow-primary/20"
+                          : "border-border bg-background/50 text-muted-foreground/50"
+                      )}
+                      style={{ transitionTimingFunction: EASE_OUT }}
+                    >
+                      <ArrowRight className="h-6 w-6" />
+                    </div>
+                    <div className="text-center">
+                      <p
+                        className={cn(
+                          "text-sm font-semibold transition-colors duration-300",
+                          dropSide === "right" ? "text-primary" : "text-foreground"
+                        )}
+                      >
+                        Right
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 text-[13px] font-medium text-foreground/70 animate-in fade-in slide-in-from-bottom-2 duration-300" style={{ transitionTimingFunction: EASE_OUT }}>
+                Press <Kbd className="h-6 min-w-8 font-bold shadow-sm uppercase tracking-tighter text-[11px] text-foreground bg-muted/80">Esc</Kbd> to cancel
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div
+          className={cn(
+            "absolute inset-y-0 z-20 flex flex-col",
+            "bg-sidebar/95 border-sidebar-border",
+            isOpen && "border-r shadow-none",
+            !isOpen && [
+              "top-2 bottom-2 border shadow-2xl",
+              isLeft ? "rounded-r-2xl" : "rounded-l-2xl",
+              !isCommitting && "transition-transform duration-300 ease-out",
+              isPeeking ? "translate-x-0 opacity-100" : cn(
+                "pointer-events-none opacity-0",
+                isLeft ? "-translate-x-full" : "translate-x-full"
+              )
+            ],
+            isLeft ? "left-0" : "right-0",
+            !isLeft && isOpen && "border-l border-r-0",
+          )}
+          style={{ width: isOpen ? openSidebarEdge : PEEK_WIDTH }}
+          onMouseEnter={startPeek}
+          onMouseLeave={endPeek}
+        >
+          <Sidebar />
+        </div>
+
+        {!isOpen && (
+          <div
+            className={cn("absolute inset-y-0 z-30 w-3", isLeft ? "left-0" : "right-0")}
+            onMouseEnter={startPeek}
+            onMouseLeave={endPeek}
+          />
+        )}
+
+        {isOpen && (
+          <div
+            className={cn(
+              "absolute inset-y-0 z-30 w-1 cursor-col-resize",
+              "bg-sidebar-border hover:bg-primary/50 transition-colors",
+              isResizing && "bg-primary/50"
+            )}
+            style={{ [isLeft ? "left" : "right"]: openSidebarEdge }}
+            onMouseDown={() => setIsResizing(true)}
+          />
+        )}
+
+        <div
+          className={cn("flex-1 min-w-0", !isCommitting && "transition-[margin] duration-300")}
+          style={{ [isLeft ? "marginLeft" : "marginRight"]: isOpen ? openSidebarEdge : 0 }}
+        >
+          <VideoPlayer />
+        </div>
+      </div>
+
+      <SettingsDialog />
+    </Providers>
   );
 }

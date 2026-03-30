@@ -16,7 +16,7 @@ export function VideoInfoOverlay({ visible }: VideoInfoOverlayProps) {
   if (!visible || !currentItem || !videoInfoEnabled) return null;
 
   return (
-    <div className="pointer-events-none absolute top-0 left-0 z-20 w-full bg-linear-to-b from-black/70 via-black/40 to-transparent p-8 pb-16">
+    <div className="pointer-events-none absolute top-0 left-0 z-10 w-full bg-linear-to-b from-black/70 via-black/40 to-transparent p-8 pb-16">
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl font-bold text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
           {currentItem.name}
