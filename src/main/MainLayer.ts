@@ -10,7 +10,7 @@ import { WindowLayer } from "./windows/Layer";
 const WindowDomainLayer = WindowLayer.pipe(Layer.provide(LoggerLayer));
 const MediaDomainLayer = MediaLayer.pipe(
   Layer.provide(LoggerLayer),
-  Layer.provide(WindowLayer),
+  Layer.provide(WindowDomainLayer),
 );
 
 const CoreLayer = Layer.mergeAll(
