@@ -1,12 +1,12 @@
+import type {
+  IpcInvokeRequestMap,
+  IpcInvokeResponseMap,
+} from "../../shared/ipc";
 import { sep } from "node:path";
 import { platform } from "@electron-toolkit/utils";
-import { ipcMain, shell } from "electron";
 import { Effect, Layer } from "effect";
-import {
-  IPC_INVOKE_CHANNELS,
-  type IpcInvokeRequestMap,
-  type IpcInvokeResponseMap
-} from "../../shared/ipc";
+import { ipcMain, shell } from "electron";
+import { IPC_INVOKE_CHANNELS } from "../../shared/ipc";
 import { LoggerService } from "../logging/Service";
 import { MediaService } from "../media/Service";
 import { WindowService } from "../windows/Service";
@@ -22,7 +22,7 @@ export const IpcInvokeLayer = Layer.effectDiscard(
 
     const handlers: {
       [K in IpcInvokeName]: (
-        payload: IpcInvokeRequestMap[K]
+        payload: IpcInvokeRequestMap[K],
       ) => Effect.Effect<IpcInvokeResponseMap[K], unknown, never>;
     } = {
       enterFullscreen: () => windows.setFullScreen(true),
@@ -39,15 +39,15 @@ export const IpcInvokeLayer = Layer.effectDiscard(
           Effect.catch((error) => {
             logger.error("Error showing item in folder", error);
             return Effect.void;
-          })
+          }),
         ),
       getPlatform: () =>
         Effect.succeed({
           isMacOS: platform.isMacOS,
           isWindows: platform.isWindows,
           isLinux: platform.isLinux,
-          pathSep: sep
-        })
+          pathSep: sep,
+        }),
     };
 
     const services = yield* Effect.services<IpcInvokeEnvironment>();
@@ -56,14 +56,17 @@ export const IpcInvokeLayer = Layer.effectDiscard(
     const registerHandler = <K extends IpcInvokeName>(
       name: K,
       handler: (
-        payload: IpcInvokeRequestMap[K]
-      ) => Effect.Effect<IpcInvokeResponseMap[K], unknown, never>
+        payload: IpcInvokeRequestMap[K],
+      ) => Effect.Effect<IpcInvokeResponseMap[K], unknown, never>,
     ): void => {
       const channel = IPC_INVOKE_CHANNELS[name];
       ipcMain.removeHandler(channel);
-      ipcMain.handle(channel, async (_event, payload: IpcInvokeRequestMap[K]) => {
-        return await runWithServices(handler(payload));
-      });
+      ipcMain.handle(
+        channel,
+        async (_event, payload: IpcInvokeRequestMap[K]) => {
+          return await runWithServices(handler(payload));
+        },
+      );
     };
 
     registerHandler("enterFullscreen", handlers.enterFullscreen);
@@ -81,7 +84,7 @@ export const IpcInvokeLayer = Layer.effectDiscard(
         for (const channel of Object.values(IPC_INVOKE_CHANNELS)) {
           ipcMain.removeHandler(channel);
         }
-      })
+      }),
     );
-  })
+  }),
 );

@@ -3,7 +3,10 @@ import { createConsola, LogLevels } from "consola";
 import { Layer } from "effect";
 import { LoggerService } from "./Service";
 
-function callLog(fn: (message: any, ...args: any[]) => void, args: unknown[]): void {
+function callLog(
+  fn: (message: any, ...args: any[]) => void,
+  args: unknown[],
+): void {
   if (args.length === 0) return;
   const [message, ...rest] = args;
   fn(message, ...rest);
@@ -11,7 +14,8 @@ function callLog(fn: (message: any, ...args: any[]) => void, args: unknown[]): v
 
 export const LoggerLayer = Layer.sync(LoggerService)(() => {
   const logger = createConsola({
-    level: process.env.NODE_ENV === "production" ? LogLevels.info : LogLevels.debug
+    level:
+      process.env.NODE_ENV === "production" ? LogLevels.info : LogLevels.debug,
   });
 
   return {
@@ -26,6 +30,6 @@ export const LoggerLayer = Layer.sync(LoggerService)(() => {
     },
     error: (...args: unknown[]) => {
       callLog(logger.error, args);
-    }
+    },
   };
 });

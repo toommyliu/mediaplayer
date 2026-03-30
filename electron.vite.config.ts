@@ -11,9 +11,13 @@ export default defineConfig({
     resolve: {
       alias: {
         "@": resolve("src/renderer/src"),
-        "@stores": resolve("src/renderer/stores")
-      }
+        "@stores": resolve("src/renderer/stores"),
+      },
     },
-    plugins: [react({}), babel({ presets: [reactCompilerPreset()] }), tailwindcss()]
-  }
+    plugins: [
+      react({}),
+      babel({ presets: [reactCompilerPreset()] }),
+      tailwindcss(),
+    ],
+  },
 });

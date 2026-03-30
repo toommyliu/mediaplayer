@@ -1,13 +1,13 @@
-import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
-import { Sidebar } from "@/components/Sidebar";
-import VideoPlayer from "@/components/video-player/VideoPlayer";
-import SettingsDialog from "@/components/settings/SettingsDialog";
-import { Providers } from "@/components/Providers";
-import { Kbd } from "@/components/ui/kbd";
-import { onAddFile, onAddFolder, onOpenSettings } from "@/lib/ipc";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { bootstrapApp } from "@/actions/app";
 import { handleAddFileEvent, handleAddFolderEvent } from "@/actions/library";
+import { Providers } from "@/components/Providers";
+import SettingsDialog from "@/components/settings/SettingsDialog";
+import { Sidebar } from "@/components/Sidebar";
+import { Kbd } from "@/components/ui/kbd";
+import VideoPlayer from "@/components/video-player/VideoPlayer";
+import { onAddFile, onAddFolder, onOpenSettings } from "@/lib/ipc";
 import { cn } from "@/lib/utils";
 import { useSettingsStore } from "@/stores/settings";
 import { useSidebarStore } from "@/stores/sidebar";
@@ -22,9 +22,15 @@ export default function App() {
   const width = useSidebarStore((state) => state.width);
   const isDragging = useSidebarStore((state) => state.isDragging);
   const setSidebarWidth = useSidebarStore((state) => state.setSidebarWidth);
-  const setSidebarPosition = useSidebarStore((state) => state.setSidebarPosition);
-  const setSidebarDragging = useSidebarStore((state) => state.setSidebarDragging);
-  const setSettingsDialogOpen = useSettingsStore((state) => state.setSettingsDialogOpen);
+  const setSidebarPosition = useSidebarStore(
+    (state) => state.setSidebarPosition,
+  );
+  const setSidebarDragging = useSidebarStore(
+    (state) => state.setSidebarDragging,
+  );
+  const setSettingsDialogOpen = useSettingsStore(
+    (state) => state.setSettingsDialogOpen,
+  );
 
   const [isResizing, setIsResizing] = useState(false);
   const [draftWidth, setDraftWidth] = useState(width);
@@ -38,10 +44,12 @@ export default function App() {
     let timer: ReturnType<typeof setTimeout> | undefined;
     if (lastPositionRef.current !== position) {
       setIsCommitting(true);
-      timer = setTimeout(() => setIsCommitting(false), 50);
+      timer = setTimeout(setIsCommitting, 50, false);
       lastPositionRef.current = position;
     }
-    return () => { if (timer) clearTimeout(timer); };
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
   }, [position]);
 
   const sidebarWidth = isResizing ? draftWidth : width;
@@ -55,7 +63,7 @@ export default function App() {
   }, [isOpen]);
 
   const endPeek = useCallback(() => {
-    peekTimeoutRef.current = setTimeout(() => setIsPeeking(false), PEEK_DELAY_MS);
+    peekTimeoutRef.current = setTimeout(setIsPeeking, PEEK_DELAY_MS, false);
   }, []);
 
   useEffect(() => {
@@ -116,30 +124,48 @@ export default function App() {
   useEffect(() => {
     void bootstrapApp();
     const disposers = [
-      onAddFile((result) => { void handleAddFileEvent(result); }),
-      onAddFolder((result) => { void handleAddFolderEvent(result); }),
-      onOpenSettings(() => { setSettingsDialogOpen(true); }),
+      onAddFile((result) => {
+        void handleAddFileEvent(result);
+      }),
+      onAddFolder((result) => {
+        void handleAddFolderEvent(result);
+      }),
+      onOpenSettings(() => {
+        setSettingsDialogOpen(true);
+      }),
     ];
-    return () => { for (const dispose of disposers) dispose(); };
+    return () => {
+      for (const dispose of disposers) dispose();
+    };
   }, []);
 
   return (
     <Providers>
       <div className="relative flex h-screen overflow-hidden">
         {isDragging && (
-          <div className="bg-background/20 pointer-events-none absolute inset-0 z-100 flex items-center justify-center backdrop-blur-sm animate-in fade-in duration-200" style={{ transitionTimingFunction: EASE_OUT }}>
-            <div className="flex flex-col items-center gap-6 animate-in fade-in zoom-in-95 duration-200" style={{ transitionTimingFunction: EASE_OUT }}>
+          <div
+            className="bg-background/20 pointer-events-none absolute inset-0 z-100 flex items-center justify-center backdrop-blur-sm animate-in fade-in duration-200"
+            style={{ transitionTimingFunction: EASE_OUT }}
+          >
+            <div
+              className="flex flex-col items-center gap-6 animate-in fade-in zoom-in-95 duration-200"
+              style={{ transitionTimingFunction: EASE_OUT }}
+            >
               <div className="bg-background/80 border-border/50 flex w-[360px] gap-2 rounded-3xl border p-2 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] backdrop-blur-xl">
                 <div
                   className={cn(
                     "relative flex-1 rounded-2xl p-6 transition-all duration-300",
-                    dropSide === "left" ? "bg-primary/5 shadow-inner" : "bg-transparent"
+                    dropSide === "left"
+                      ? "bg-primary/5 shadow-inner"
+                      : "bg-transparent",
                   )}
                 >
                   <div
                     className={cn(
                       "absolute inset-0 rounded-2xl border-2 border-dashed transition-all duration-300",
-                      dropSide === "left" ? "border-primary/40 scale-[0.98]" : "border-transparent"
+                      dropSide === "left"
+                        ? "border-primary/40 scale-[0.98]"
+                        : "border-transparent",
                     )}
                   />
                   <div className="relative flex flex-col items-center gap-3">
@@ -148,7 +174,7 @@ export default function App() {
                         "flex h-12 w-12 items-center justify-center rounded-xl border transition-all duration-200",
                         dropSide === "left"
                           ? "border-primary bg-primary/10 text-primary scale-[1.05] shadow-lg shadow-primary/20"
-                          : "border-border bg-background/50 text-muted-foreground/50"
+                          : "border-border bg-background/50 text-muted-foreground/50",
                       )}
                       style={{ transitionTimingFunction: EASE_OUT }}
                     >
@@ -158,7 +184,9 @@ export default function App() {
                       <p
                         className={cn(
                           "text-sm font-semibold transition-colors duration-300",
-                          dropSide === "left" ? "text-primary" : "text-foreground"
+                          dropSide === "left"
+                            ? "text-primary"
+                            : "text-foreground",
                         )}
                       >
                         Left
@@ -170,13 +198,17 @@ export default function App() {
                 <div
                   className={cn(
                     "relative flex-1 rounded-2xl p-6 transition-all duration-300",
-                    dropSide === "right" ? "bg-primary/5 shadow-inner" : "bg-transparent"
+                    dropSide === "right"
+                      ? "bg-primary/5 shadow-inner"
+                      : "bg-transparent",
                   )}
                 >
                   <div
                     className={cn(
                       "absolute inset-0 rounded-2xl border-2 border-dashed transition-all duration-300",
-                      dropSide === "right" ? "border-primary/40 scale-[0.98]" : "border-transparent"
+                      dropSide === "right"
+                        ? "border-primary/40 scale-[0.98]"
+                        : "border-transparent",
                     )}
                   />
                   <div className="relative flex flex-col items-center gap-3">
@@ -185,7 +217,7 @@ export default function App() {
                         "flex h-12 w-12 items-center justify-center rounded-xl border transition-all duration-200",
                         dropSide === "right"
                           ? "border-primary bg-primary/10 text-primary scale-[1.05] shadow-lg shadow-primary/20"
-                          : "border-border bg-background/50 text-muted-foreground/50"
+                          : "border-border bg-background/50 text-muted-foreground/50",
                       )}
                       style={{ transitionTimingFunction: EASE_OUT }}
                     >
@@ -195,7 +227,9 @@ export default function App() {
                       <p
                         className={cn(
                           "text-sm font-semibold transition-colors duration-300",
-                          dropSide === "right" ? "text-primary" : "text-foreground"
+                          dropSide === "right"
+                            ? "text-primary"
+                            : "text-foreground",
                         )}
                       >
                         Right
@@ -205,8 +239,15 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 text-[13px] font-medium text-foreground/70 animate-in fade-in slide-in-from-bottom-2 duration-300" style={{ transitionTimingFunction: EASE_OUT }}>
-                Press <Kbd className="h-6 min-w-8 font-bold shadow-sm uppercase tracking-tighter text-[11px] text-foreground bg-muted/80">Esc</Kbd> to cancel
+              <div
+                className="flex items-center gap-2 text-[13px] font-medium text-foreground/70 animate-in fade-in slide-in-from-bottom-2 duration-300"
+                style={{ transitionTimingFunction: EASE_OUT }}
+              >
+                Press{" "}
+                <Kbd className="h-6 min-w-8 font-bold shadow-sm uppercase tracking-tighter text-[11px] text-foreground bg-muted/80">
+                  Esc
+                </Kbd>{" "}
+                to cancel
               </div>
             </div>
           </div>
@@ -221,10 +262,12 @@ export default function App() {
               "top-2 bottom-2 border shadow-2xl",
               isLeft ? "rounded-r-2xl" : "rounded-l-2xl",
               !isCommitting && "transition-transform duration-300 ease-out",
-              isPeeking ? "translate-x-0 opacity-100" : cn(
-                "pointer-events-none opacity-0",
-                isLeft ? "-translate-x-full" : "translate-x-full"
-              )
+              isPeeking
+                ? "translate-x-0 opacity-100"
+                : cn(
+                    "pointer-events-none opacity-0",
+                    isLeft ? "-translate-x-full" : "translate-x-full",
+                  ),
             ],
             isLeft ? "left-0" : "right-0",
             !isLeft && isOpen && "border-l border-r-0",
@@ -238,7 +281,10 @@ export default function App() {
 
         {!isOpen && (
           <div
-            className={cn("absolute inset-y-0 z-30 w-3", isLeft ? "left-0" : "right-0")}
+            className={cn(
+              "absolute inset-y-0 z-30 w-3",
+              isLeft ? "left-0" : "right-0",
+            )}
             onMouseEnter={startPeek}
             onMouseLeave={endPeek}
           />
@@ -249,7 +295,7 @@ export default function App() {
             className={cn(
               "absolute inset-y-0 z-30 w-4 cursor-col-resize",
               isLeft ? "-translate-x-1/2" : "translate-x-1/2",
-              "transition-colors duration-300"
+              "transition-colors duration-300",
             )}
             style={{ [isLeft ? "left" : "right"]: openSidebarEdge }}
             onMouseDown={() => setIsResizing(true)}
@@ -258,15 +304,22 @@ export default function App() {
               className={cn(
                 "absolute inset-y-0 w-px bg-sidebar-border transition-colors",
                 isLeft ? "left-1/2" : "right-1/2",
-                isResizing && "bg-primary"
+                isResizing && "bg-primary",
               )}
             />
           </div>
         )}
 
         <div
-          className={cn("flex-1 min-w-0", !isCommitting && "transition-[margin] duration-300")}
-          style={{ [isLeft ? "marginLeft" : "marginRight"]: isOpen ? openSidebarEdge : 0 }}
+          className={cn(
+            "flex-1 min-w-0",
+            !isCommitting && "transition-[margin] duration-300",
+          )}
+          style={{
+            [isLeft ? "marginLeft" : "marginRight"]: isOpen
+              ? openSidebarEdge
+              : 0,
+          }}
         >
           <VideoPlayer />
         </div>

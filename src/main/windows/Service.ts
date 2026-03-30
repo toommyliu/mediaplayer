@@ -1,9 +1,16 @@
+import type { Effect } from "effect";
 import type { BrowserWindow } from "electron";
-import { Effect, ServiceMap } from "effect";
+import { ServiceMap } from "effect";
 
-export type WindowEventName = "ready-to-show" | "show" | "close" | "closed" | "focus" | "blur";
+export type WindowEventName =
+  | "ready-to-show"
+  | "show"
+  | "close"
+  | "closed"
+  | "focus"
+  | "blur";
 
-export type WindowServiceShape = {
+export interface WindowServiceShape {
   create: Effect.Effect<BrowserWindow>;
   getMainWindow: Effect.Effect<BrowserWindow | null>;
   getOrCreateMainWindow: Effect.Effect<BrowserWindow>;
@@ -12,10 +19,17 @@ export type WindowServiceShape = {
   hide: Effect.Effect<void>;
   destroy: Effect.Effect<void>;
   isCreated: Effect.Effect<boolean>;
-  on: (event: WindowEventName, listener: (...args: any[]) => void) => Effect.Effect<() => void>;
-  once: (event: WindowEventName, listener: (...args: any[]) => void) => Effect.Effect<() => void>;
-};
+  on: (
+    event: WindowEventName,
+    listener: (...args: any[]) => void,
+  ) => Effect.Effect<() => void>;
+  once: (
+    event: WindowEventName,
+    listener: (...args: any[]) => void,
+  ) => Effect.Effect<() => void>;
+}
 
-export class WindowService extends ServiceMap.Service<WindowService, WindowServiceShape>()(
-  "main/windows/WindowService"
-) {}
+export class WindowService extends ServiceMap.Service<
+  WindowService,
+  WindowServiceShape
+>()("main/windows/WindowService") {}

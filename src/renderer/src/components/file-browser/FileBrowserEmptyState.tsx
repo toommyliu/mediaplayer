@@ -1,13 +1,13 @@
+import { Folder } from "lucide-react";
+import { resetAndBrowseLibrary } from "@/actions/library";
 import { Button } from "@/components/ui/button";
 import {
   Empty,
-  EmptyMedia,
+  EmptyDescription,
   EmptyHeader,
+  EmptyMedia,
   EmptyTitle,
-  EmptyDescription
 } from "@/components/ui/empty";
-import { Folder } from "lucide-react";
-import { resetAndBrowseLibrary } from "@/actions/library";
 
 export function FileBrowserEmptyState() {
   return (
@@ -16,12 +16,18 @@ export function FileBrowserEmptyState() {
         <Folder className="text-muted-foreground/60 size-6" />
       </EmptyMedia>
       <EmptyHeader>
-        <EmptyTitle className="text-base font-medium">No media loaded</EmptyTitle>
+        <EmptyTitle className="text-base font-medium">
+          No media loaded
+        </EmptyTitle>
         <EmptyDescription className="text-xs">
           Browse your folders to add media files to the library.
         </EmptyDescription>
       </EmptyHeader>
-      <Button className="mt-2 h-8 px-4 text-xs" onClick={resetAndBrowseLibrary} variant="outline">
+      <Button
+        className="mt-2 h-8 px-4 text-xs"
+        onClick={resetAndBrowseLibrary}
+        variant="outline"
+      >
         Browse Files
       </Button>
     </Empty>

@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { clamp } from "@/lib/clamp";
 import { VOLUME_STEP } from "@/lib/constants";
-import { clamp } from "@/stores/utils";
 
 export interface VolumeState {
   isMuted: boolean;
@@ -22,12 +22,12 @@ export const useVolumeStore = create<VolumeStore>()(
     (set, get) => ({
       isMuted: false,
       value: 1.0,
-      setMuted: (isMuted) => set({ isMuted }),
+      setMuted: isMuted => set({ isMuted }),
       setVolume: (value) => {
         const next = clamp(value, 0, 1);
-        set((state) => ({
+        set(state => ({
           isMuted: next === 0 ? true : state.isMuted,
-          value: next
+          value: next,
         }));
       },
       increaseVolume: (step = VOLUME_STEP) => {
@@ -41,14 +41,14 @@ export const useVolumeStore = create<VolumeStore>()(
         const next = Math.max(0, get().value - step);
         get().setVolume(next);
         get().setMuted(next === 0);
-      }
+      },
     }),
     {
       name: "volume-store",
-      partialize: (state) => ({
+      partialize: state => ({
         isMuted: state.isMuted,
-        value: state.value
-      })
-    }
-  )
+        value: state.value,
+      }),
+    },
+  ),
 );

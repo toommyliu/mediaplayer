@@ -1,13 +1,17 @@
-import { Shrink, Expand, Scaling } from "lucide-react";
+import { Expand, Scaling, Shrink } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
-  DropdownMenuTrigger
+  DropdownMenuTrigger,
 } from "@/components/ui/menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { usePlayerStore } from "@/stores/player";
 
@@ -25,7 +29,7 @@ export function AspectRatioControl() {
                 <Button
                   className={cn(
                     "h-full rounded-none border-0 bg-transparent px-2.5 text-white shadow-none transition-colors hover:bg-white/10",
-                    "focus-visible:ring-1 focus-visible:ring-white/20 focus-visible:ring-inset"
+                    "focus-visible:ring-1 focus-visible:ring-white/20 focus-visible:ring-inset",
                   )}
                   size="icon"
                   type="button"
@@ -45,7 +49,7 @@ export function AspectRatioControl() {
         <DropdownMenuRadioGroup
           onValueChange={(nextValue) =>
             setPlayerState({
-              aspectRatio: nextValue as "contain" | "cover" | "fill"
+              aspectRatio: nextValue as "contain" | "cover" | "fill",
             })
           }
           value={aspectRatio}

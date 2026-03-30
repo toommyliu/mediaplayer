@@ -1,12 +1,12 @@
-import { Button } from "@/components/ui/button";
+import type { QueueItem as QueueItemType } from "@/types";
 import { X } from "lucide-react";
 import { useState } from "react";
 
+import { playVideo, stopPlayback } from "@/actions/playback";
+import { Button } from "@/components/ui/button";
 import { makeTimeString } from "@/lib/make-time-string";
 import { cn } from "@/lib/utils";
-import type { QueueItem as QueueItemType } from "@/types";
-import { playVideo, stopPlayback } from "@/actions/playback";
-import { useQueueStore, useCurrentQueueItem } from "@/stores/queue";
+import { useCurrentQueueItem, useQueueStore } from "@/stores/queue";
 
 export interface QueueItemProps {
   index: number;
@@ -18,7 +18,9 @@ export function QueueItem({ index, item }: QueueItemProps) {
   const moveQueueItem = useQueueStore((state) => state.moveQueueItem);
   const removeQueueItem = useQueueStore((state) => state.removeQueueItem);
   const currentItem = useCurrentQueueItem();
-  const [dropPosition, setDropPosition] = useState<"top" | "bottom" | null>(null);
+  const [dropPosition, setDropPosition] = useState<"top" | "bottom" | null>(
+    null,
+  );
 
   function removeItem(item: QueueItemType): void {
     const isCurrent = currentItem?.id === item.id;
@@ -27,7 +29,9 @@ export function QueueItem({ index, item }: QueueItemProps) {
       return;
     }
 
-    const currentIndex = queueItems.findIndex((queueItem) => queueItem.id === item.id);
+    const currentIndex = queueItems.findIndex(
+      (queueItem) => queueItem.id === item.id,
+    );
     let nextVideoToPlay: string | null = null;
 
     if (queueItems.length > 1) {
@@ -56,8 +60,8 @@ export function QueueItem({ index, item }: QueueItemProps) {
         "group/queue-item ring-foreground/10 relative flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-xs ring-1 transition-all duration-200 select-none",
         {
           "ring-primary/20 bg-primary/5 text-primary": isPlaying,
-          "hover:bg-muted/40 ring-transparent": !isPlaying
-        }
+          "hover:bg-muted/40 ring-transparent": !isPlaying,
+        },
       )}
       draggable
       onClick={() => playVideo(item.path)}
@@ -74,7 +78,10 @@ export function QueueItem({ index, item }: QueueItemProps) {
       onDragEnd={() => setDropPosition(null)}
       onDrop={(event) => {
         event.preventDefault();
-        const fromIndex = Number.parseInt(event.dataTransfer.getData("text/plain"), 10);
+        const fromIndex = Number.parseInt(
+          event.dataTransfer.getData("text/plain"),
+          10,
+        );
         if (!Number.isNaN(fromIndex)) {
           let targetIndex = index;
           if (dropPosition === "bottom") {
@@ -82,7 +89,10 @@ export function QueueItem({ index, item }: QueueItemProps) {
           }
 
           if (fromIndex !== targetIndex && fromIndex !== targetIndex - 1) {
-            moveQueueItem(fromIndex, targetIndex > fromIndex ? targetIndex - 1 : targetIndex);
+            moveQueueItem(
+              fromIndex,
+              targetIndex > fromIndex ? targetIndex - 1 : targetIndex,
+            );
           }
         }
         setDropPosition(null);
@@ -94,7 +104,7 @@ export function QueueItem({ index, item }: QueueItemProps) {
         <div
           className={cn(
             "bg-primary pointer-events-none absolute right-0 left-0 z-50 h-0.5",
-            dropPosition === "top" ? "-top-px" : "-bottom-px"
+            dropPosition === "top" ? "-top-px" : "-bottom-px",
           )}
         />
       )}

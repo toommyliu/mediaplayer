@@ -11,22 +11,22 @@ export type PickerResult =
       type: "folder";
     };
 
-export type DirectoryContents = {
+export interface DirectoryContents {
   currentPath: string;
   files: FileTreeItem[];
   isAtRoot: boolean;
   parentPath: string | null;
-};
+}
 
-export type PlatformInfo = {
+export interface PlatformInfo {
   isLinux: boolean;
   isMacOS: boolean;
   isWindows: boolean;
   pathSep: string;
-};
+}
 
-export type VideoFileItem = {
+export interface VideoFileItem {
   duration?: number;
   name: string;
   path: string;
-};
+}

@@ -1,9 +1,9 @@
+import { useQueueStore } from "@/stores/queue";
 import { ClearQueueButton } from "../ClearQueueButton";
-import { QueueEmptyState } from "./QueueEmptyState";
 import { RepeatButton } from "../RepeatButton";
 import { ShuffleButton } from "../ShuffleButton";
+import { QueueEmptyState } from "./QueueEmptyState";
 import { QueueList } from "./QueueList";
-import { useQueueStore } from "@/stores/queue";
 
 export function QueuePanel() {
   const queueItemsLength = useQueueStore((state) => state.items.length);

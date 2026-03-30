@@ -5,5 +5,7 @@ export function toFileUrl(path: string): string {
 }
 
 export function normalizeVideoPath(path: string): string {
-  return path.startsWith(FILE_URL_PREFIX) ? path.slice(FILE_URL_PREFIX.length) : path;
+  return path.startsWith(FILE_URL_PREFIX)
+    ? path.slice(FILE_URL_PREFIX.length)
+    : path;
 }

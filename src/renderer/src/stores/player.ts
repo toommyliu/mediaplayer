@@ -1,5 +1,5 @@
-import { create } from "zustand";
 import type { AspectRatioMode } from "@/types";
+import { create } from "zustand";
 
 export interface PlayerState {
   aspectRatio: AspectRatioMode;
@@ -33,7 +33,7 @@ const initialPlayerState: PlayerState = {
   isHolding: false,
   isLoading: false,
   isPlaying: false,
-  showControls: true
+  showControls: true,
 };
 
 export const usePlayerStore = create<PlayerStore>()((set) => ({
@@ -44,8 +44,8 @@ export const usePlayerStore = create<PlayerStore>()((set) => ({
       ...state,
       currentTime: 0,
       duration: 0,
-      isPlaying: false
+      isPlaying: false,
     })),
   setCurrentTime: (currentTime) => set({ currentTime }),
-  setDuration: (duration) => set({ duration })
+  setDuration: (duration) => set({ duration }),
 }));

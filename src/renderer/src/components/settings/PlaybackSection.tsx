@@ -1,7 +1,11 @@
 import { useState } from "react";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useVolumeStore } from "@/stores/volume";
 
 export function PlaybackSection() {
@@ -15,7 +19,8 @@ export function PlaybackSection() {
       <div>
         <h3 className="mb-1 text-sm font-medium">Playback</h3>
         <p className="text-muted-foreground text-xs leading-relaxed">
-          Autoplay follows queue selection and starts on load when a file or folder is opened.
+          Autoplay follows queue selection and starts on load when a file or
+          folder is opened.
         </p>
       </div>
       <div>
@@ -38,7 +43,9 @@ export function PlaybackSection() {
                     onMouseEnter={() => setIsDragging(true)}
                     onMouseLeave={() => setIsDragging(false)}
                     onValueChange={(next) => {
-                      const val = Array.isArray(next) ? Number(next[0]) : Number(next);
+                      const val = Array.isArray(next)
+                        ? Number(next[0])
+                        : Number(next);
                       setVolume(val);
                       if (val > 0) {
                         setMuted(false);
@@ -48,7 +55,9 @@ export function PlaybackSection() {
                 );
               }}
             />
-            <TooltipContent side="top">{Math.round(value * 100)}%</TooltipContent>
+            <TooltipContent side="top">
+              {Math.round(value * 100)}%
+            </TooltipContent>
           </Tooltip>
         </div>
       </div>

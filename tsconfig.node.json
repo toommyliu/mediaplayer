@@ -4,9 +4,7 @@
     "composite": true,
     "module": "nodenext",
     "moduleResolution": "nodenext",
-    "types": [
-      "electron-vite/node"
-    ]
+    "types": ["electron-vite/node"]
   },
   "include": [
     "electron.vite.config.*",

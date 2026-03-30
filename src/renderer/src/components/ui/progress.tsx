@@ -1,7 +1,7 @@
 "use client";
 
+import type * as React from "react";
 import { Progress as ProgressPrimitive } from "@base-ui/react/progress";
-import type React from "react";
 import { cn } from "@/lib/utils";
 
 export function Progress({
@@ -15,9 +15,7 @@ export function Progress({
       data-slot="progress"
       {...props}
     >
-      {children ? (
-        children
-      ) : (
+      {children || (
         <ProgressTrack>
           <ProgressIndicator />
         </ProgressTrack>

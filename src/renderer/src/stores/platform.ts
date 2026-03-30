@@ -1,5 +1,5 @@
-import { create } from "zustand";
 import type { PlatformState } from "@/types";
+import { create } from "zustand";
 
 export interface PlatformActions {
   setPlatformState: (next: PlatformState) => void;
@@ -11,10 +11,10 @@ const initialPlatformState: PlatformState = {
   isLinux: false,
   isMac: false,
   isWindows: false,
-  pathSep: "/"
+  pathSep: "/",
 };
 
 export const usePlatformStore = create<PlatformStore>()((set) => ({
   ...initialPlatformState,
-  setPlatformState: (next) => set(next)
+  setPlatformState: (next) => set(next),
 }));

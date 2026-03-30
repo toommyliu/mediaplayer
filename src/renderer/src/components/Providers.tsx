@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from "react";
 import { HotkeysProvider } from "@/components/HotkeysProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,9 +11,7 @@ export function Providers({ children }: ProvidersProps) {
   return (
     <HotkeysProvider>
       <TooltipProvider delay={0}>
-        <ThemeProvider>
-          {children}
-        </ThemeProvider>
+        <ThemeProvider>{children}</ThemeProvider>
       </TooltipProvider>
     </HotkeysProvider>
   );

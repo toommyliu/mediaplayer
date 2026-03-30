@@ -1,17 +1,22 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogPanel, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogPanel,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useSettingsStore } from "@/stores/settings";
 import { GeneralSection } from "./GeneralSection";
 import { PlaybackSection } from "./PlaybackSection";
-import { UISection } from "./UISection";
 import { ShortcutsSection } from "./ShortcutsSection";
+import { UISection } from "./UISection";
 
 const TABS = [
   { id: "general", label: "General" },
   { id: "playback", label: "Playback" },
   { id: "ui", label: "UI" },
-  { id: "shortcuts", label: "Keyboard Shortcuts" }
+  { id: "shortcuts", label: "Keyboard Shortcuts" },
 ] as const;
 
 type SettingsTab = (typeof TABS)[number]["id"];
@@ -24,7 +29,9 @@ function tabButtonClass(active: boolean): string {
 
 export default function SettingsDialog() {
   const showDialog = useSettingsStore((state) => state.showDialog);
-  const setSettingsDialogOpen = useSettingsStore((state) => state.setSettingsDialogOpen);
+  const setSettingsDialogOpen = useSettingsStore(
+    (state) => state.setSettingsDialogOpen,
+  );
   const [selectedTab, setSelectedTab] = useState<SettingsTab>("general");
   const [editingAction, setEditingAction] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -44,16 +51,21 @@ export default function SettingsDialog() {
         showCloseButton={false}
       >
         <aside className="border-sidebar-border bg-sidebar/40 w-full border-b p-3 md:w-48 md:border-r md:border-b-0 lg:w-56">
-          <h2 className="text-muted-foreground mb-3 px-2 text-sm font-medium">Settings</h2>
+          <h2 className="text-muted-foreground mb-3 px-2 text-sm font-medium">
+            Settings
+          </h2>
           <nav
             className="space-y-0.5"
             onKeyDown={(event) => {
-              const currentIndex = TABS.findIndex((tab) => tab.id === selectedTab);
+              const currentIndex = TABS.findIndex(
+                (tab) => tab.id === selectedTab,
+              );
               let nextIndex = currentIndex;
               if (event.key === "ArrowDown") {
                 nextIndex = (currentIndex + 1) % TABS.length;
               } else if (event.key === "ArrowUp") {
-                nextIndex = currentIndex === 0 ? TABS.length - 1 : currentIndex - 1;
+                nextIndex =
+                  currentIndex === 0 ? TABS.length - 1 : currentIndex - 1;
               } else if (event.key === "Home") {
                 nextIndex = 0;
               } else if (event.key === "End") {

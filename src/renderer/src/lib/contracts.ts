@@ -2,5 +2,5 @@ export type {
   DirectoryContents,
   PickerResult,
   PlatformInfo,
-  VideoFileItem
+  VideoFileItem,
 } from "../../../shared/contracts";

@@ -1,6 +1,6 @@
+import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNotificationsStore } from "@/stores/notifications";
 import { usePlayerStore } from "@/stores/player";
@@ -37,7 +37,7 @@ export function UpNextNotification() {
       "bottom-left": "bottom-24 left-8",
       "bottom-right": "bottom-24 right-8",
       "top-left": "top-8 left-8",
-      "top-right": "top-8 right-8"
+      "top-right": "top-8 right-8",
     }[upNextPosition as keyof typeof upNextPosition] || "bottom-right";
 
   return (
@@ -47,13 +47,15 @@ export function UpNextNotification() {
         positionClass,
         showNotification
           ? "translate-y-0 scale-100 opacity-100"
-          : "pointer-events-none translate-y-2 scale-[0.96] opacity-0"
+          : "pointer-events-none translate-y-2 scale-[0.96] opacity-0",
       )}
       style={{ transitionTimingFunction: "cubic-bezier(0.23, 1, 0.32, 1)" }}
     >
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-baseline gap-1.5">
-          <span className="text-muted-foreground text-[11px] font-medium">Up Next</span>
+          <span className="text-muted-foreground text-[11px] font-medium">
+            Up Next
+          </span>
           <span className="text-muted-foreground/50 text-[10px] tabular-nums">
             &middot; {Math.ceil(remaining)}s
           </span>
@@ -68,7 +70,9 @@ export function UpNextNotification() {
         </Button>
       </div>
 
-      <div className="line-clamp-2 text-xs leading-relaxed font-medium">{nextItem?.name}</div>
+      <div className="line-clamp-2 text-xs leading-relaxed font-medium">
+        {nextItem?.name}
+      </div>
     </div>
   );
 }

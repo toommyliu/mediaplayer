@@ -1,15 +1,13 @@
 "use client";
 
 import type { Toggle as TogglePrimitive } from "@base-ui/react/toggle";
-import { ToggleGroup as ToggleGroupPrimitive } from "@base-ui/react/toggle-group";
 import type { VariantProps } from "class-variance-authority";
+import type { toggleVariants } from "@/components/ui/toggle";
+import { ToggleGroup as ToggleGroupPrimitive } from "@base-ui/react/toggle-group";
 import * as React from "react";
-import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
-import {
-  Toggle as ToggleComponent,
-  type toggleVariants,
-} from "@/components/ui/toggle";
+import { Toggle as ToggleComponent } from "@/components/ui/toggle";
+import { cn } from "@/lib/utils";
 
 export const ToggleGroupContext: React.Context<
   VariantProps<typeof toggleVariants>
@@ -47,9 +45,9 @@ export function ToggleGroup({
       orientation={orientation}
       {...props}
     >
-      <ToggleGroupContext.Provider value={{ size, variant }}>
+      <ToggleGroupContext value={{ size, variant }}>
         {children}
-      </ToggleGroupContext.Provider>
+      </ToggleGroupContext>
     </ToggleGroupPrimitive>
   );
 }
@@ -62,7 +60,7 @@ export function Toggle({
   ...props
 }: TogglePrimitive.Props &
   VariantProps<typeof toggleVariants>): React.ReactElement {
-  const context = React.useContext(ToggleGroupContext);
+  const context = React.use(ToggleGroupContext);
 
   const resolvedVariant = context.variant || variant;
   const resolvedSize = context.size || size;
@@ -100,4 +98,4 @@ export function ToggleGroupSeparator({
   );
 }
 
-export { ToggleGroupPrimitive, Toggle as ToggleGroupItem };
+export { Toggle as ToggleGroupItem, ToggleGroupPrimitive };

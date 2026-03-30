@@ -2,8 +2,8 @@ import { formatForDisplay } from "@tanstack/react-hotkeys";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ShortcutRow } from "./ShortcutRow";
 import { useHotkeysStore } from "@/stores/hotkeys";
+import { ShortcutRow } from "./ShortcutRow";
 
 function formatHotkeyDisplay(keys: string[]): string {
   if (keys.length === 0) return "";
@@ -15,7 +15,7 @@ export function ShortcutsSection({
   editingAction,
   setEditingAction,
   searchTerm,
-  setSearchTerm
+  setSearchTerm,
 }: {
   editingAction: string | null;
   setEditingAction: (id: string | null) => void;
@@ -23,7 +23,9 @@ export function ShortcutsSection({
   setSearchTerm: (term: string) => void;
 }) {
   const categories = useHotkeysStore((state) => state.categories);
-  const clearStoredHotkeys = useHotkeysStore((state) => state.clearStoredHotkeys);
+  const clearStoredHotkeys = useHotkeysStore(
+    (state) => state.clearStoredHotkeys,
+  );
 
   const handleResetDefaults = () => {
     clearStoredHotkeys();
@@ -40,7 +42,7 @@ export function ShortcutsSection({
           action.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
           display.toLowerCase().includes(searchTerm.toLowerCase())
         );
-      })
+      }),
     }))
     .filter((category) => category.actions.length > 0);
 

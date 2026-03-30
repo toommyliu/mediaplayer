@@ -1,12 +1,13 @@
-import { VolumeControl } from "./VolumeControl";
-import { FullscreenButton } from "../FullscreenButton";
 import { AspectRatioControl } from "../AspectRatioControl";
-import { VideoProgressSlider } from "./VideoProgressSlider";
-import { PlayPauseButton } from "../PlayPauseButton";
+import { FullscreenButton } from "../FullscreenButton";
 import { NextVideoButton } from "../NextVideoButton";
+import { PlayPauseButton } from "../PlayPauseButton";
 import { PreviousVideoButton } from "../PreviousVideoButton";
+import { VideoProgressSlider } from "./VideoProgressSlider";
+import { VolumeControl } from "./VolumeControl";
 
-const controlGroupClass = "flex items-center rounded-lg border border-white/10 bg-white/10 overflow-hidden h-9 sm:h-8";
+const controlGroupClass =
+  "flex items-center rounded-lg border border-white/10 bg-white/10 overflow-hidden h-9 sm:h-8";
 const controlSeparatorClass = "h-4 w-px bg-white/10 shrink-0";
 
 export interface VideoPlayerControlsProps {
@@ -16,7 +17,7 @@ export interface VideoPlayerControlsProps {
 
 export function VideoPlayerControls({
   onControlsMouseEnter,
-  onControlsMouseLeave
+  onControlsMouseLeave,
 }: VideoPlayerControlsProps) {
   return (
     <div

@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { getVideoElement } from "@/video-element";
-import { makeTimeString } from "@/lib/make-time-string";
-import { Slider } from "@/components/ui/slider";
 import { pausePlayback, togglePlayPause } from "@/actions/playback";
+import { Slider } from "@/components/ui/slider";
+import { makeTimeString } from "@/lib/make-time-string";
 import { usePlayerStore } from "@/stores/player";
+import { getVideoElement } from "@/video-element";
 
 export function VideoProgressSlider() {
   const currentTime = usePlayerStore((state) => state.currentTime);

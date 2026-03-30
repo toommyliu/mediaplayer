@@ -1,7 +1,7 @@
 "use client";
 
+import type * as React from "react";
 import { Meter as MeterPrimitive } from "@base-ui/react/meter";
-import type React from "react";
 import { cn } from "@/lib/utils";
 
 export function Meter({
@@ -14,9 +14,7 @@ export function Meter({
       className={cn("flex w-full flex-col gap-2", className)}
       {...props}
     >
-      {children ? (
-        children
-      ) : (
+      {children || (
         <MeterTrack>
           <MeterIndicator />
         </MeterTrack>

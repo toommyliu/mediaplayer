@@ -1,19 +1,23 @@
+import type { SidebarTab } from "@/types";
 import { Settings } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { QueuePanel } from "./queue/QueuePanel";
-import { FileBrowserPanel } from "./file-browser/FileBrowserPanel";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
 import { useSettingsStore } from "@/stores/settings";
 import { useSidebarStore } from "@/stores/sidebar";
-import { cn } from "@/lib/utils";
-import type { SidebarTab } from "@/types";
+import { FileBrowserPanel } from "./file-browser/FileBrowserPanel";
+import { QueuePanel } from "./queue/QueuePanel";
 
 export function Sidebar() {
   const currentTab = useSidebarStore((state) => state.currentTab);
   const position = useSidebarStore((state) => state.position);
   const setSidebarTab = useSidebarStore((state) => state.setSidebarTab);
-  const setSidebarDragging = useSidebarStore((state) => state.setSidebarDragging);
-  const setSettingsDialogOpen = useSettingsStore((state) => state.setSettingsDialogOpen);
+  const setSidebarDragging = useSidebarStore(
+    (state) => state.setSidebarDragging,
+  );
+  const setSettingsDialogOpen = useSettingsStore(
+    (state) => state.setSettingsDialogOpen,
+  );
 
   const isLeft = position === "left";
 
@@ -28,7 +32,7 @@ export function Sidebar() {
           "absolute top-1/2 z-50 h-16 w-0.5 -translate-y-1/2 rounded-full",
           "bg-primary/20 opacity-0 transition-all duration-500",
           "group-hover/sidebar:opacity-100 group-active/sidebar:h-24 group-active/sidebar:bg-primary/40",
-          isLeft ? "-right-px" : "-left-px"
+          isLeft ? "-right-px" : "-left-px",
         )}
       />
 
@@ -40,7 +44,10 @@ export function Sidebar() {
       </div>
 
       <div className="min-h-0 flex-1 overflow-hidden px-4 pt-0">
-        <TabsContent className="flex min-h-0 flex-1 flex-col" value="file-browser">
+        <TabsContent
+          className="flex min-h-0 flex-1 flex-col"
+          value="file-browser"
+        >
           <FileBrowserPanel />
         </TabsContent>
         <TabsContent className="flex min-h-0 flex-1 flex-col" value="queue">

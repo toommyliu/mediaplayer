@@ -1,40 +1,55 @@
-import type { MouseEvent, KeyboardEvent, ComponentProps } from "react";
+import type { ComponentProps, KeyboardEvent, MouseEvent } from "react";
+import type { FileSystemItem } from "@/types";
 import { ChevronDown, Dot, Loader } from "lucide-react";
-import { ContextMenu, ContextMenuTrigger } from "@/components/ui/context-menu";
 
+import { navigateToDirectory, toggleFolder } from "@/actions/library";
+import { playVideo } from "@/actions/playback";
+import { ContextMenu, ContextMenuTrigger } from "@/components/ui/context-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { makeTimeString } from "@/lib/make-time-string";
 import { normalizeVideoPath } from "@/lib/media-path";
-import { FileBrowserItemContextMenu } from "./FileBrowserItemContextMenu";
 import { cn } from "@/lib/utils";
-import type { FileSystemItem } from "@/types";
-import { usePlatformStore } from "@/stores/platform";
-import { useSidebarStore } from "@/stores/sidebar";
 import { useFileBrowserStore } from "@/stores/file-browser";
-import { useCurrentQueueItem } from "@/stores/queue";
-import { playVideo } from "@/actions/playback";
-import { navigateToDirectory, toggleFolder } from "@/actions/library";
+import { usePlatformStore } from "@/stores/platform";
 import { usePlayerStore } from "@/stores/player";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { useCurrentQueueItem } from "@/stores/queue";
+import { useSidebarStore } from "@/stores/sidebar";
+import { FileBrowserItemContextMenu } from "./FileBrowserItemContextMenu";
 
-function isCurrentVideo(itemPath: string | undefined, currentVideo: string | null): boolean {
+function isCurrentVideo(
+  itemPath: string | undefined,
+  currentVideo: string | null,
+): boolean {
   if (!itemPath || !currentVideo) return false;
   return itemPath === normalizeVideoPath(currentVideo).replace(/\\/g, "/");
 }
 
 function hasCurrentVideoInFolder(
   folderPath: string | undefined,
-  currentVideo: string | null
+  currentVideo: string | null,
 ): boolean {
   if (!folderPath || !currentVideo) return false;
   return normalizeVideoPath(currentVideo).startsWith(`${folderPath}/`);
 }
 
-export function FileBrowserItem({ item, depth }: { depth: number; item: FileSystemItem }) {
+export function FileBrowserItem({
+  item,
+  depth,
+}: {
+  depth: number;
+  item: FileSystemItem;
+}) {
   const expandedFolders = useFileBrowserStore((state) => state.expandedFolders);
   const loadingFolders = useFileBrowserStore((state) => state.loadingFolders);
   const isFileBrowserLoading = useFileBrowserStore((state) => state.isLoading);
   const currentVideo = usePlayerStore((state) => state.currentVideo);
-  const setFileBrowserState = useFileBrowserStore((state) => state.setFileBrowserState);
+  const setFileBrowserState = useFileBrowserStore(
+    (state) => state.setFileBrowserState,
+  );
   const isMac = usePlatformStore((state) => state.isMac);
   const currentItem = useCurrentQueueItem();
   const sidebarPosition = useSidebarStore((state) => state.position);
@@ -47,9 +62,11 @@ export function FileBrowserItem({ item, depth }: { depth: number; item: FileSyst
 
   function focusRelative(offset: number): void {
     const triggers = Array.from(
-      document.querySelectorAll<HTMLElement>("[data-item-trigger='true']")
+      document.querySelectorAll<HTMLElement>("[data-item-trigger='true']"),
     );
-    const currentIndex = triggers.findIndex((trigger) => trigger.dataset.path === item.path);
+    const currentIndex = triggers.findIndex(
+      (trigger) => trigger.dataset.path === item.path,
+    );
     const next = triggers[currentIndex + offset];
     next?.focus();
   }
@@ -58,7 +75,8 @@ export function FileBrowserItem({ item, depth }: { depth: number; item: FileSyst
     if (isFileBrowserLoading) return;
 
     if (isFolder) {
-      const isModKeyPressed = "metaKey" in event ? (isMac ? event.metaKey : event.ctrlKey) : false;
+      const isModKeyPressed =
+        "metaKey" in event ? (isMac ? event.metaKey : event.ctrlKey) : false;
 
       if (isModKeyPressed) {
         event.preventDefault();
@@ -94,11 +112,11 @@ export function FileBrowserItem({ item, depth }: { depth: number; item: FileSyst
                   isPlaying
                     ? "border-primary/20 bg-primary/10 text-primary"
                     : "hover:bg-muted/50 hover:text-foreground border-transparent",
-                  triggerClassName
+                  triggerClassName,
                 )}
                 style={{
                   ...triggerStyle,
-                  paddingLeft: `${depth * 14 + 8}px`
+                  paddingLeft: `${depth * 14 + 8}px`,
                 }}
               >
                 <button
@@ -106,7 +124,9 @@ export function FileBrowserItem({ item, depth }: { depth: number; item: FileSyst
                   data-item-trigger="true"
                   data-path={item.path}
                   onClick={handleItemClick}
-                  onFocus={() => setFileBrowserState({ focusedItemPath: item.path })}
+                  onFocus={() =>
+                    setFileBrowserState({ focusedItemPath: item.path })
+                  }
                   onKeyDown={(event) => {
                     if (event.key === "ArrowDown") {
                       event.preventDefault();
@@ -114,10 +134,18 @@ export function FileBrowserItem({ item, depth }: { depth: number; item: FileSyst
                     } else if (event.key === "ArrowUp") {
                       event.preventDefault();
                       focusRelative(-1);
-                    } else if (event.key === "ArrowRight" && isFolder && !isExpanded) {
+                    } else if (
+                      event.key === "ArrowRight" &&
+                      isFolder &&
+                      !isExpanded
+                    ) {
                       event.preventDefault();
                       toggleFolder(item.path);
-                    } else if (event.key === "ArrowLeft" && isFolder && isExpanded) {
+                    } else if (
+                      event.key === "ArrowLeft" &&
+                      isFolder &&
+                      isExpanded
+                    ) {
                       event.preventDefault();
                       toggleFolder(item.path);
                     } else if (event.key === "Enter" || event.key === " ") {
@@ -152,13 +180,17 @@ export function FileBrowserItem({ item, depth }: { depth: number; item: FileSyst
                     </span>
                   ) : null}
 
-                  {isLoading ? <Loader className="text-primary size-3.5 animate-spin" /> : null}
-                  {containsCurrent ? <Dot className="text-primary size-4" /> : null}
+                  {isLoading ? (
+                    <Loader className="text-primary size-3.5 animate-spin" />
+                  ) : null}
+                  {containsCurrent ? (
+                    <Dot className="text-primary size-4" />
+                  ) : null}
                   {isFolder ? (
                     <ChevronDown
                       className={cn(
                         "text-muted-foreground size-3.5 transition duration-100",
-                        isExpanded ? "rotate-180" : ""
+                        isExpanded ? "rotate-180" : "",
                       )}
                     />
                   ) : null}

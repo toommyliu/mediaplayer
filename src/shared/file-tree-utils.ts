@@ -21,7 +21,7 @@ function extractDatePrefix(name: string): Date | null {
     const date = new Date(
       Number.parseInt(year, 10),
       Number.parseInt(month, 10) - 1,
-      Number.parseInt(day, 10)
+      Number.parseInt(day, 10),
     );
 
     if (!Number.isNaN(date.getTime())) {
@@ -56,7 +56,7 @@ function naturalCompare(a: string, b: string): number {
       // Compare as strings
       const result = chunkA.localeCompare(chunkB, undefined, {
         numeric: true,
-        sensitivity: "base"
+        sensitivity: "base",
       });
       if (result !== 0) {
         return result;
@@ -98,11 +98,14 @@ function smartNameCompare(a: string, b: string): number {
 /**
  * Sorts an array of FileTreeItem objects according to the specified options
  */
-export function sortFileTree(items: FileTreeItem[], sortOptions: SortOptions): FileTreeItem[] {
+export function sortFileTree(
+  items: FileTreeItem[],
+  sortOptions: SortOptions,
+): FileTreeItem[] {
   const sorted = [...items].sort((a, b) => {
     // Folders first
-    if (a.type === 'folder' && b.type !== 'folder') return -1;
-    if (a.type !== 'folder' && b.type === 'folder') return 1;
+    if (a.type === "folder" && b.type !== "folder") return -1;
+    if (a.type !== "folder" && b.type === "folder") return 1;
 
     let comparison = 0;
 
@@ -118,7 +121,7 @@ export function sortFileTree(items: FileTreeItem[], sortOptions: SortOptions): F
   });
 
   // Recursively sort children and create new objects to avoid mutating the original
-  return sorted.map(item => {
+  return sorted.map((item) => {
     if (item.files) {
       return { ...item, files: sortFileTree(item.files, sortOptions) };
     }
@@ -129,12 +132,18 @@ export function sortFileTree(items: FileTreeItem[], sortOptions: SortOptions): F
 /**
  * Flattens a file tree into a list of video files
  */
-export function flattenVideoFiles(items: FileTreeItem[]): { name: string; path: string; duration?: number }[] {
+export function flattenVideoFiles(
+  items: FileTreeItem[],
+): { name: string; path: string; duration?: number }[] {
   const videos: { name: string; path: string; duration?: number }[] = [];
 
   function traverse(item: FileTreeItem) {
     if (item.type === "video") {
-      videos.push({ name: item.name, path: item.path, duration: item.duration });
+      videos.push({
+        name: item.name,
+        path: item.path,
+        duration: item.duration,
+      });
     } else if (item.files) {
       for (const child of item.files) {
         traverse(child);

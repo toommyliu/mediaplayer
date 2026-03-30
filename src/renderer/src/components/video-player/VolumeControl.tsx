@@ -1,14 +1,21 @@
+import { Volume, Volume2, VolumeX } from "lucide-react";
 import { useState } from "react";
-import { VolumeX, Volume, Volume2 } from "lucide-react";
+import {
+  setMutedWithMediaSync,
+  setVolumeWithMediaSync,
+} from "@/actions/volume";
 import { Button } from "@/components/ui/button";
-import { setMutedWithMediaSync, setVolumeWithMediaSync } from "@/actions/volume";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useVolumeStore } from "@/stores/volume";
 
 function VolumeSlider({
   value,
   isMuted,
-  onChange
+  onChange,
 }: {
   value: number;
   isMuted: boolean;
@@ -16,7 +23,9 @@ function VolumeSlider({
 }) {
   const [isDragging, setIsDragging] = useState(false);
   const fillPercent = value * 100;
-  const fillColor = isMuted ? "rgba(255,255,255,0.25)" : "rgba(255,255,255,0.9)";
+  const fillColor = isMuted
+    ? "rgba(255,255,255,0.25)"
+    : "rgba(255,255,255,0.9)";
   const trackColor = "rgba(255,255,255,0.15)";
 
   return (
@@ -31,7 +40,7 @@ function VolumeSlider({
               max={1}
               step={0.01}
               value={value}
-              onChange={(e) => onChange(parseFloat(e.target.value))}
+              onChange={(e) => onChange(Number.parseFloat(e.target.value))}
               onMouseDown={() => setIsDragging(true)}
               onMouseUp={() => setIsDragging(false)}
               onTouchStart={() => setIsDragging(true)}
@@ -41,7 +50,7 @@ function VolumeSlider({
                 {
                   "--fill": fillColor,
                   "--track": trackColor,
-                  "--pct": `${fillPercent}%`
+                  "--pct": `${fillPercent}%`,
                 } as React.CSSProperties
               }
             />
@@ -52,7 +61,8 @@ function VolumeSlider({
         </TooltipContent>
       </Tooltip>
 
-      <style>{`
+      <style>
+        {`
         .volume-slider {
           height: 16px;
           -webkit-tap-highlight-color: transparent;
@@ -129,7 +139,8 @@ function VolumeSlider({
             0 0 0 4px #fff;
           transform: scale(1.25);
         }
-      `}</style>
+      `}
+      </style>
     </div>
   );
 }
@@ -162,7 +173,8 @@ export function VolumeControl() {
           )}
         />
         <TooltipContent side="top" sideOffset={8}>
-          {isMuted ? "Unmute" : "Mute"} ({Math.round(value * 100)}%)
+          {isMuted ? "Unmute" : "Mute"} ({Math.round(value * 100)}
+          %)
         </TooltipContent>
       </Tooltip>
 

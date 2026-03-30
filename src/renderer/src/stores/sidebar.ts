@@ -1,7 +1,7 @@
+import type { SidebarPosition, SidebarTab } from "@/types";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { SidebarPosition, SidebarTab } from "@/types";
-import { clamp } from "@/stores/utils";
+import { clamp } from "@/lib/clamp";
 
 export interface SidebarState {
   currentTab: SidebarTab;
@@ -46,33 +46,34 @@ export const useSidebarStore = create<SidebarStore>()(
       minWidth: MIN_WIDTH,
       position: INITIAL_POSITION,
       width: INITIAL_WIDTH,
-      setSidebarTab: (currentTab) => set({ currentTab }),
-      setSidebarOpen: (isOpen) => set({ isOpen }),
+      setSidebarTab: currentTab => set({ currentTab }),
+      setSidebarOpen: isOpen => set({ isOpen }),
       toggleSidebar: () => set({ isOpen: !get().isOpen }),
-      setSidebarDragging: (isDragging) =>
-        set((state) => ({
+      setSidebarDragging: isDragging =>
+        set(state => ({
           dropZoneActive: isDragging ? state.dropZoneActive : null,
-          isDragging
+          isDragging,
         })),
-      setSidebarDropZone: (dropZoneActive) => set({ dropZoneActive }),
-      setSidebarPosition: (position) =>
+      setSidebarDropZone: dropZoneActive => set({ dropZoneActive }),
+      setSidebarPosition: position =>
         set({
           dropZoneActive: null,
           isDragging: false,
           isOpen: true,
-          position
+          position,
         }),
-      setSidebarWidth: (width) =>
-        set((state) => ({
-          width: Math.round(clamp(width, state.minWidth, state.maxWidth) * 10) / 10
-        }))
+      setSidebarWidth: width =>
+        set(state => ({
+          width:
+            Math.round(clamp(width, state.minWidth, state.maxWidth) * 10) / 10,
+        })),
     }),
     {
       name: "sidebar-storage",
-      partialize: (state) => ({
+      partialize: state => ({
         position: state.position,
-        width: state.width
-      })
-    }
-  )
+        width: state.width,
+      }),
+    },
+  ),
 );

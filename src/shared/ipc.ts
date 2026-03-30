@@ -1,6 +1,11 @@
-import type { DirectoryContents, PickerResult, PlatformInfo, VideoFileItem } from "./contracts";
+import type {
+  DirectoryContents,
+  PickerResult,
+  PlatformInfo,
+  VideoFileItem,
+} from "./contracts";
 
-export type IpcInvokeRequestMap = {
+export interface IpcInvokeRequestMap {
   enterFullscreen: undefined;
   exitFullscreen: undefined;
   getAllVideoFiles: string;
@@ -10,9 +15,9 @@ export type IpcInvokeRequestMap = {
   selectFileOrFolder: undefined;
   selectFolder: undefined;
   showItemInFolder: string;
-};
+}
 
-export type IpcInvokeResponseMap = {
+export interface IpcInvokeResponseMap {
   enterFullscreen: void;
   exitFullscreen: void;
   getAllVideoFiles: VideoFileItem[];
@@ -22,16 +27,16 @@ export type IpcInvokeResponseMap = {
   selectFileOrFolder: PickerResult | null;
   selectFolder: PickerResult | null;
   showItemInFolder: void;
-};
+}
 
-export type RendererEventPayloadMap = {
+export interface RendererEventPayloadMap {
   addFile: PickerResult;
   addFolder: PickerResult;
   mediaNextTrack: undefined;
   mediaPlayPause: undefined;
   mediaPreviousTrack: undefined;
   openSettings: undefined;
-};
+}
 
 export const IPC_INVOKE_CHANNELS = {
   enterFullscreen: "mediaplayer:invoke:enterFullscreen",
@@ -42,7 +47,7 @@ export const IPC_INVOKE_CHANNELS = {
   selectFile: "mediaplayer:invoke:selectFile",
   selectFileOrFolder: "mediaplayer:invoke:selectFileOrFolder",
   selectFolder: "mediaplayer:invoke:selectFolder",
-  showItemInFolder: "mediaplayer:invoke:showItemInFolder"
+  showItemInFolder: "mediaplayer:invoke:showItemInFolder",
 } as const satisfies Record<keyof IpcInvokeRequestMap, string>;
 
 export const IPC_EVENT_CHANNELS = {
@@ -51,5 +56,5 @@ export const IPC_EVENT_CHANNELS = {
   mediaNextTrack: "mediaplayer:event:mediaNextTrack",
   mediaPlayPause: "mediaplayer:event:mediaPlayPause",
   mediaPreviousTrack: "mediaplayer:event:mediaPreviousTrack",
-  openSettings: "mediaplayer:event:openSettings"
+  openSettings: "mediaplayer:event:openSettings",
 } as const satisfies Record<keyof RendererEventPayloadMap, string>;

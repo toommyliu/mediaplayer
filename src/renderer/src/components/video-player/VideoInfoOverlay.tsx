@@ -6,11 +6,13 @@ export interface VideoInfoOverlayProps {
 }
 
 export function VideoInfoOverlay({ visible }: VideoInfoOverlayProps) {
-  const videoInfoEnabled = useNotificationsStore((state) => state.videoInfoEnabled);
+  const videoInfoEnabled = useNotificationsStore(
+    (state) => state.videoInfoEnabled,
+  );
   const index = useQueueStore((state) => state.index);
   const items = useQueueStore((state) => state.items);
   const currentItem = useQueueStore((state) =>
-    state.items.length > 0 ? (state.items[state.index] ?? null) : null
+    state.items.length > 0 ? (state.items[state.index] ?? null) : null,
   );
 
   if (!visible || !currentItem || !videoInfoEnabled) return null;

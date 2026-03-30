@@ -1,6 +1,15 @@
-import antfu from '@antfu/eslint-config'
+import antfu from "@antfu/eslint-config";
 
 export default antfu({
   formatters: true,
-  react: true,
-})
+  stylistic: {
+    quotes: "double",
+    semi: true,
+    overrides: {
+      "style/comma-dangle": ["error", "only-multiline"],
+    },
+  },
+  react: {
+    reactCompiler: true,
+  },
+});

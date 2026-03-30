@@ -1,7 +1,11 @@
 import { PauseIcon, PlayIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { togglePlayPause } from "@/actions/playback";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { usePlayerStore } from "@/stores/player";
 
 export function PlayPauseButton() {
@@ -21,7 +25,11 @@ export function PlayPauseButton() {
             type="button"
             variant="ghost"
           >
-            {isPlaying ? <PauseIcon className="size-4" /> : <PlayIcon className="size-4" />}
+            {isPlaying ? (
+              <PauseIcon className="size-4" />
+            ) : (
+              <PlayIcon className="size-4" />
+            )}
           </Button>
         )}
       />

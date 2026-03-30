@@ -1,9 +1,9 @@
 import { platform } from "@electron-toolkit/utils";
-import { Menu, app } from "electron";
 import { Effect, Layer } from "effect";
+import { app, Menu } from "electron";
+import { RendererEventsService } from "../ipc/RendererEvents";
 import { LoggerService } from "../logging/Service";
 import { MediaService } from "../media/Service";
-import { RendererEventsService } from "../ipc/RendererEvents";
 import { WindowService } from "../windows/Service";
 
 export const MenuLayer = Layer.effectDiscard(
@@ -24,8 +24,8 @@ export const MenuLayer = Layer.effectDiscard(
           Effect.catch((error) => {
             logger.error("Menu action failed", error);
             return Effect.void;
-          })
-        )
+          }),
+        ),
       );
     };
 
@@ -41,14 +41,18 @@ export const MenuLayer = Layer.effectDiscard(
             runMenuEffect(
               Effect.gen(function* () {
                 const browserWindow = yield* windows.getOrCreateMainWindow;
-                yield* rendererEvents.emit(browserWindow.webContents, "openSettings", undefined);
-              })
+                yield* rendererEvents.emit(
+                  browserWindow.webContents,
+                  "openSettings",
+                  undefined,
+                );
+              }),
             );
-          }
+          },
         },
         { type: "separator" },
-        { type: "normal", label: "Quit", role: "quit" }
-      ]
+        { type: "normal", label: "Quit", role: "quit" },
+      ],
     };
 
     const fileMenu: Electron.MenuItemConstructorOptions = {
@@ -64,10 +68,14 @@ export const MenuLayer = Layer.effectDiscard(
                 if (!ret) return;
 
                 const browserWindow = yield* windows.getOrCreateMainWindow;
-                yield* rendererEvents.emit(browserWindow.webContents, "addFile", ret);
-              })
+                yield* rendererEvents.emit(
+                  browserWindow.webContents,
+                  "addFile",
+                  ret,
+                );
+              }),
             );
-          }
+          },
         },
         {
           label: "Open Folder",
@@ -79,13 +87,17 @@ export const MenuLayer = Layer.effectDiscard(
                 if (!ret) return;
 
                 const browserWindow = yield* windows.getOrCreateMainWindow;
-                yield* rendererEvents.emit(browserWindow.webContents, "addFolder", ret);
-              })
+                yield* rendererEvents.emit(
+                  browserWindow.webContents,
+                  "addFolder",
+                  ret,
+                );
+              }),
             );
-          }
+          },
         },
-        { type: "separator" }
-      ]
+        { type: "separator" },
+      ],
     };
 
     const template: Electron.MenuItemConstructorOptions[] = [
@@ -93,7 +105,7 @@ export const MenuLayer = Layer.effectDiscard(
       fileMenu,
       { role: "editMenu" },
       { role: "viewMenu" },
-      { role: "windowMenu" }
+      { role: "windowMenu" },
     ];
 
     const menu = Menu.buildFromTemplate(template);
@@ -102,7 +114,7 @@ export const MenuLayer = Layer.effectDiscard(
     yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
         Menu.setApplicationMenu(null);
-      })
+      }),
     );
-  })
+  }),
 );

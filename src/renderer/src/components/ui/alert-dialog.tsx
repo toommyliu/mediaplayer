@@ -1,7 +1,7 @@
 "use client";
 
+import type * as React from "react";
 import { AlertDialog as AlertDialogPrimitive } from "@base-ui/react/alert-dialog";
-import type React from "react";
 import { cn } from "@/lib/utils";
 
 export const AlertDialogCreateHandle: typeof AlertDialogPrimitive.createHandle =
@@ -159,7 +159,7 @@ export function AlertDialogClose(
 }
 
 export {
-  AlertDialogPrimitive,
-  AlertDialogBackdrop as AlertDialogOverlay,
   AlertDialogPopup as AlertDialogContent,
+  AlertDialogBackdrop as AlertDialogOverlay,
+  AlertDialogPrimitive,
 };

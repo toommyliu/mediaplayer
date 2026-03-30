@@ -9,7 +9,7 @@ Effect.runFork(
     Effect.catch((error) =>
       Effect.sync(() => {
         console.error("Main process crashed", error);
-      })
-    )
-  )
+      }),
+    ),
+  ),
 );

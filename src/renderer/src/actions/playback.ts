@@ -1,10 +1,12 @@
 import { enterFullscreen, exitFullscreen } from "@/lib/ipc";
 import { normalizeVideoPath, toFileUrl } from "@/lib/media-path";
-import { bindVideoElement, getVideoElement } from "@/video-element";
 import { usePlayerStore } from "@/stores/player";
 import { getCurrentQueueItemFromState, useQueueStore } from "@/stores/queue";
+import { bindVideoElement, getVideoElement } from "@/video-element";
 
-export function bindPlaybackVideoElement(element: HTMLVideoElement | null): void {
+export function bindPlaybackVideoElement(
+  element: HTMLVideoElement | null,
+): void {
   bindVideoElement(element);
 }
 
@@ -25,7 +27,7 @@ export function stopPlayback(clearCurrentVideo = false): void {
   player.setPlayerState({
     currentTime: 0,
     currentVideo: clearCurrentVideo ? null : player.currentVideo,
-    isPlaying: false
+    isPlaying: false,
   });
 }
 
@@ -33,7 +35,7 @@ export function playVideo(src: string): void {
   const normalized = normalizeVideoPath(src);
   const queue = useQueueStore.getState();
   const queueIndex = queue.items.findIndex(
-    (item) => normalizeVideoPath(item.path) === normalizeVideoPath(normalized)
+    (item) => normalizeVideoPath(item.path) === normalizeVideoPath(normalized),
   );
   if (queueIndex === -1) return;
 
@@ -42,7 +44,7 @@ export function playVideo(src: string): void {
     currentVideo: toFileUrl(normalized),
     error: null,
     isLoading: true,
-    isPlaying: true
+    isPlaying: true,
   });
   useQueueStore.getState().setQueueIndex(queueIndex);
 
@@ -75,7 +77,7 @@ export async function playNextVideo(): Promise<void> {
   const item = queue.items[nextIndex];
   usePlayerStore.getState().setPlayerState({
     currentTime: 0,
-    currentVideo: toFileUrl(item.path)
+    currentVideo: toFileUrl(item.path),
   });
   useQueueStore.getState().setQueueIndex(nextIndex);
 
@@ -105,7 +107,7 @@ export async function playPreviousVideo(): Promise<void> {
   const item = queue.items[nextIndex];
   usePlayerStore.getState().setPlayerState({
     currentTime: 0,
-    currentVideo: toFileUrl(item.path)
+    currentVideo: toFileUrl(item.path),
   });
   useQueueStore.getState().setQueueIndex(nextIndex);
 

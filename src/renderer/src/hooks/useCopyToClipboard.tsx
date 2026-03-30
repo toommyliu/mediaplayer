@@ -1,4 +1,4 @@
-import * as React from 'react'
+import * as React from "react";
 
 export function useCopyToClipboard({ timeout = 2000 } = {}) {
   const [copied, setCopied] = React.useState(false);
@@ -13,7 +13,7 @@ export function useCopyToClipboard({ timeout = 2000 } = {}) {
       try {
         await navigator.clipboard.writeText(text);
         setCopied(true);
-        setTimeout(() => setCopied(false), timeout);
+        setTimeout(setCopied, timeout, false);
         return true;
       } catch (err) {
         console.error("Failed to copy:", err);
@@ -21,7 +21,7 @@ export function useCopyToClipboard({ timeout = 2000 } = {}) {
         return false;
       }
     },
-    [timeout]
+    [timeout],
   );
 
   return { copy, copied };

@@ -1,6 +1,6 @@
+import type { HotkeyCategory } from "@/types";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { HotkeyCategory } from "@/types";
 
 export interface HotkeysState {
   bindings: Record<string, string[]>;
@@ -11,7 +11,11 @@ export interface HotkeysState {
 }
 
 export interface HotkeysActions {
-  setHotkeyCategories: (categories: HotkeyCategory[], modKey: string, initialized: boolean) => void;
+  setHotkeyCategories: (
+    categories: HotkeyCategory[],
+    modKey: string,
+    initialized: boolean,
+  ) => void;
   updateHotkeyInState: (actionId: string, newKeys: string[]) => boolean;
   clearStoredHotkeys: () => void;
   getStoredHotkeys: () => Record<string, string[]> | null;
@@ -34,7 +38,9 @@ export const useHotkeysStore = create<HotkeysStore>()(
         set({ categories, initialized, modKey }),
       updateHotkeyInState: (actionId, newKeys) => {
         const state = get();
-        const category = state.categories.find((cat) => cat.actions.some((a) => a.id === actionId));
+        const category = state.categories.find((cat) =>
+          cat.actions.some((a) => a.id === actionId),
+        );
         if (!category) return false;
 
         const action = category.actions.find((a) => a.id === actionId);
@@ -42,7 +48,9 @@ export const useHotkeysStore = create<HotkeysStore>()(
 
         const updatedCategories = state.categories.map((cat) => ({
           ...cat,
-          actions: cat.actions.map((a) => (a.id === actionId ? { ...a, keys: newKeys } : a))
+          actions: cat.actions.map((a) =>
+            a.id === actionId ? { ...a, keys: newKeys } : a,
+          ),
         }));
 
         set({ categories: updatedCategories });
@@ -61,15 +69,15 @@ export const useHotkeysStore = create<HotkeysStore>()(
         const bindings = get().bindings;
         return Object.keys(bindings).length > 0 ? bindings : null;
       },
-      setStoredHotkeys: (bindings) => set({ bindings })
+      setStoredHotkeys: (bindings) => set({ bindings }),
     }),
     {
       name: "hotkeys-store",
       partialize: (state): HotkeysPersisted => {
         return { bindings: state.bindings };
-      }
-    }
-  )
+      },
+    },
+  ),
 );
 
 export function getStoredHotkeys(): Record<string, string[]> | null {

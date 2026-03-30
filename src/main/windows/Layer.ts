@@ -1,11 +1,12 @@
+import type { WindowEventName } from "./Service";
 import { EventEmitter } from "node:events";
-import { is, platform } from "@electron-toolkit/utils";
-import { BrowserWindow, shell } from "electron";
-import { Effect, Layer } from "effect";
 import { join } from "node:path";
+import { is, platform } from "@electron-toolkit/utils";
+import { Effect, Layer } from "effect";
+import { BrowserWindow, shell } from "electron";
 import icon from "../../../resources/icon.png?asset";
 import { LoggerService } from "../logging/Service";
-import { WindowService, type WindowEventName } from "./Service";
+import { WindowService } from "./Service";
 
 export const WindowLayer = Layer.effect(
   WindowService,
@@ -56,8 +57,8 @@ export const WindowLayer = Layer.effect(
           preload: join(__dirname, "../preload/index.js"),
           sandbox: false,
           webSecurity: false,
-          contextIsolation: true
-        }
+          contextIsolation: true,
+        },
       });
 
       mainWindow = window;
@@ -147,9 +148,9 @@ export const WindowLayer = Layer.effect(
           return () => {
             emitter.off(event, listener);
           };
-        })
+        }),
     } satisfies WindowService["Service"];
 
     return service;
-  })
+  }),
 );

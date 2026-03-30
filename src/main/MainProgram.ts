@@ -1,6 +1,6 @@
-import { electronApp, platform, optimizer } from "@electron-toolkit/utils";
-import { app, BrowserWindow } from "electron";
+import { electronApp, optimizer, platform } from "@electron-toolkit/utils";
 import { Effect } from "effect";
+import { app, BrowserWindow } from "electron";
 import { LoggerService } from "./logging/Service";
 import { WindowService } from "./windows/Service";
 
@@ -14,7 +14,7 @@ export const MainProgram = Effect.gen(function* () {
     try: async () => {
       await app.whenReady();
     },
-    catch: (error) => error
+    catch: (error) => error,
   });
 
   electronApp.setAppUserModelId("com.electron");
@@ -22,7 +22,10 @@ export const MainProgram = Effect.gen(function* () {
 
   yield* windows.create;
 
-  const onBrowserWindowCreated = (_event: Electron.Event, window: BrowserWindow): void => {
+  const onBrowserWindowCreated = (
+    _event: Electron.Event,
+    window: BrowserWindow,
+  ): void => {
     optimizer.watchWindowShortcuts(window);
   };
 
@@ -39,8 +42,8 @@ export const MainProgram = Effect.gen(function* () {
           Effect.catch((error) => {
             logger.error("Failed to handle app activate", error);
             return Effect.void;
-          })
-        )
+          }),
+        ),
       );
     } else if (BrowserWindow.getAllWindows().length === 0) {
       Effect.runFork(
@@ -49,8 +52,8 @@ export const MainProgram = Effect.gen(function* () {
           Effect.catch((error) => {
             logger.error("Failed to create window on activate", error);
             return Effect.void;
-          })
-        )
+          }),
+        ),
       );
     }
   };
@@ -68,8 +71,8 @@ export const MainProgram = Effect.gen(function* () {
           Effect.catch((error) => {
             logger.error("Failed to destroy window before quit", error);
             return Effect.void;
-          })
-        )
+          }),
+        ),
       );
     }
   };
@@ -85,7 +88,7 @@ export const MainProgram = Effect.gen(function* () {
       app.off("activate", onActivate);
       app.off("window-all-closed", onWindowAllClosed);
       app.off("before-quit", onBeforeQuit);
-    })
+    }),
   );
 
   return yield* Effect.never;

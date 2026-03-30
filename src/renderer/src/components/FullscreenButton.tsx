@@ -1,8 +1,12 @@
-import * as React from "react";
 import { Maximize, Minimize } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import * as React from "react";
 import { setFullscreen } from "@/actions/playback";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { usePlayerStore } from "@/stores/player";
 
 const controlItemClass =
@@ -20,7 +24,11 @@ function FullscreenEnterButton() {
       type="button"
       variant="ghost"
     >
-      {isFullscreen ? <Minimize className="size-4" /> : <Maximize className="size-4" />}
+      {isFullscreen ? (
+        <Minimize className="size-4" />
+      ) : (
+        <Maximize className="size-4" />
+      )}
     </Button>
   );
 }
@@ -37,7 +45,11 @@ function FullscreenExitButton() {
       type="button"
       variant="ghost"
     >
-      {isFullscreen ? <Minimize className="size-4" /> : <Maximize className="size-4" />}
+      {isFullscreen ? (
+        <Minimize className="size-4" />
+      ) : (
+        <Maximize className="size-4" />
+      )}
     </Button>
   );
 }
@@ -45,7 +57,11 @@ function FullscreenExitButton() {
 export function FullscreenButton() {
   const isFullscreen = usePlayerStore((state) => state.isFullscreen);
 
-  const button = isFullscreen ? <FullscreenExitButton /> : <FullscreenEnterButton />;
+  const button = isFullscreen ? (
+    <FullscreenExitButton />
+  ) : (
+    <FullscreenEnterButton />
+  );
 
   return (
     <Tooltip>

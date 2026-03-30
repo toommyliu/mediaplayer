@@ -1,6 +1,10 @@
-import { Repeat1, Repeat } from "lucide-react";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { Repeat, Repeat1 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useQueueStore } from "@/stores/queue";
 
@@ -19,7 +23,7 @@ export function RepeatButton() {
               repeatMode === "off"
                 ? "border-sidebar-border/60 h-7 px-2 text-xs"
                 : "border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 h-7 px-2 text-xs",
-              "transition-colors"
+              "transition-colors",
             )}
             onClick={toggleRepeatMode}
             size="xs"
@@ -36,7 +40,11 @@ export function RepeatButton() {
       />
       <TooltipContent>
         <div className="w-16 text-center">
-          {repeatMode === "one" ? "Repeat one" : repeatMode === "all" ? "Repeat all" : "Repeat off"}
+          {repeatMode === "one"
+            ? "Repeat one"
+            : repeatMode === "all"
+              ? "Repeat all"
+              : "Repeat off"}
         </div>
       </TooltipContent>
     </Tooltip>

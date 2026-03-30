@@ -1,6 +1,6 @@
+import type { NotificationPosition } from "@/types";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { NotificationPosition } from "@/types";
 
 export interface NotificationsState {
   upNextEnabled: boolean;
@@ -20,15 +20,16 @@ export const useNotificationsStore = create<NotificationsStore>()(
       upNextEnabled: true,
       upNextPosition: "top-right",
       videoInfoEnabled: true,
-      setNotificationSettings: (patch) => set((state) => ({ ...state, ...patch }))
+      setNotificationSettings: (patch) =>
+        set((state) => ({ ...state, ...patch })),
     }),
     {
       name: "notifications-store",
       partialize: (state) => ({
         upNextEnabled: state.upNextEnabled,
         upNextPosition: state.upNextPosition,
-        videoInfoEnabled: state.videoInfoEnabled
-      })
-    }
-  )
+        videoInfoEnabled: state.videoInfoEnabled,
+      }),
+    },
+  ),
 );

@@ -1,20 +1,24 @@
-import { Checkbox } from "@/components/ui/checkbox";
 import type { NotificationPosition } from "@/types";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
+  SelectValue,
 } from "@/components/ui/select";
 import { useNotificationsStore } from "@/stores/notifications";
 
 export function UISection() {
   const upNextEnabled = useNotificationsStore((state) => state.upNextEnabled);
   const upNextPosition = useNotificationsStore((state) => state.upNextPosition);
-  const videoInfoEnabled = useNotificationsStore((state) => state.videoInfoEnabled);
-  const setNotificationSettings = useNotificationsStore((state) => state.setNotificationSettings);
+  const videoInfoEnabled = useNotificationsStore(
+    (state) => state.videoInfoEnabled,
+  );
+  const setNotificationSettings = useNotificationsStore(
+    (state) => state.setNotificationSettings,
+  );
 
   return (
     <div className="space-y-4">
@@ -26,7 +30,7 @@ export function UISection() {
               checked={upNextEnabled}
               onCheckedChange={(checked) =>
                 setNotificationSettings({
-                  upNextEnabled: checked === true
+                  upNextEnabled: checked === true,
                 })
               }
             />
@@ -37,7 +41,7 @@ export function UISection() {
               checked={videoInfoEnabled}
               onCheckedChange={(checked) =>
                 setNotificationSettings({
-                  videoInfoEnabled: checked === true
+                  videoInfoEnabled: checked === true,
                 })
               }
             />
@@ -47,12 +51,14 @@ export function UISection() {
       </div>
 
       <div>
-        <Label className="mb-1.5 block text-xs font-medium">Up Next Position</Label>
+        <Label className="mb-1.5 block text-xs font-medium">
+          Up Next Position
+        </Label>
         <Select
           value={upNextPosition}
           onValueChange={(value) =>
             setNotificationSettings({
-              upNextPosition: value as NotificationPosition
+              upNextPosition: value as NotificationPosition,
             })
           }
         >

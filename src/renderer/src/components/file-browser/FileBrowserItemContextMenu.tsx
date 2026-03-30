@@ -1,23 +1,27 @@
+import type { FileSystemItem } from "@/types";
+import {
+  CheckIcon,
+  CopyIcon,
+  ExternalLinkIcon,
+  FolderIcon,
+  FolderOpenIcon,
+  ListPlusIcon,
+  PlayIcon,
+  PlusIcon,
+} from "lucide-react";
+import {
+  navigateToDirectory,
+  revealItemInFolder,
+  toggleFolder,
+} from "@/actions/library";
+import { playVideo } from "@/actions/playback";
 import {
   ContextMenuContent,
   ContextMenuItem,
-  ContextMenuSeparator
+  ContextMenuSeparator,
 } from "@/components/ui/context-menu";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
-import type { FileSystemItem } from "@/types";
-import {
-  CopyIcon,
-  CheckIcon,
-  ExternalLinkIcon,
-  FolderOpenIcon,
-  FolderIcon,
-  PlayIcon,
-  PlusIcon,
-  ListPlusIcon
-} from "lucide-react";
 import { cn } from "@/lib/utils";
-import { navigateToDirectory, revealItemInFolder, toggleFolder } from "@/actions/library";
-import { playVideo } from "@/actions/playback";
 import { useQueueStore } from "@/stores/queue";
 
 interface CopyPathMenuItemProps {
@@ -38,7 +42,9 @@ function CopyPathMenuItem({ path }: CopyPathMenuItemProps) {
       <div
         className={cn(
           "flex items-center gap-2 transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)]",
-          copied ? "-translate-y-full opacity-0 blur-sm" : "blur-0 translate-y-0 opacity-100"
+          copied
+            ? "-translate-y-full opacity-0 blur-sm"
+            : "blur-0 translate-y-0 opacity-100",
         )}
       >
         <CopyIcon className="size-4" />
@@ -47,7 +53,9 @@ function CopyPathMenuItem({ path }: CopyPathMenuItemProps) {
       <div
         className={cn(
           "absolute inset-0 flex items-center gap-2 px-1.5 transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)]",
-          copied ? "blur-0 translate-y-0 opacity-100" : "translate-y-full opacity-0 blur-sm"
+          copied
+            ? "blur-0 translate-y-0 opacity-100"
+            : "translate-y-full opacity-0 blur-sm",
         )}
       >
         <CheckIcon className="text-primary size-4" />
@@ -81,7 +89,10 @@ export interface FileBrowserItemContextMenuProps {
 }
 
 // Folder
-function FolderItemContextMenu({ item, isExpanded }: FileBrowserItemContextMenuProps) {
+function FolderItemContextMenu({
+  item,
+  isExpanded,
+}: FileBrowserItemContextMenuProps) {
   return (
     <>
       <ContextMenuItem
@@ -125,7 +136,7 @@ function FileItemContextMenu({ item }: FileBrowserItemContextMenuProps) {
           addQueueItem({
             duration: item.duration,
             name: item.name,
-            path: item.path
+            path: item.path,
           });
         }}
       >
@@ -137,7 +148,7 @@ function FileItemContextMenu({ item }: FileBrowserItemContextMenuProps) {
           addQueueItemNext({
             duration: item.duration,
             name: item.name,
-            path: item.path
+            path: item.path,
           });
         }}
       >
@@ -148,7 +159,10 @@ function FileItemContextMenu({ item }: FileBrowserItemContextMenuProps) {
   );
 }
 
-export function FileBrowserItemContextMenu({ item, isExpanded }: FileBrowserItemContextMenuProps) {
+export function FileBrowserItemContextMenu({
+  item,
+  isExpanded,
+}: FileBrowserItemContextMenuProps) {
   const isFolder = item.type === "folder";
 
   return (

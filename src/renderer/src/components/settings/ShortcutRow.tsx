@@ -1,12 +1,17 @@
-import { useEffect } from "react";
-import { useHotkeyRecorder, formatForDisplay } from "@tanstack/react-hotkeys";
+import { formatForDisplay, useHotkeyRecorder } from "@tanstack/react-hotkeys";
 import { X } from "lucide-react";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
 import { useHotkeysStore } from "@/stores/hotkeys";
 
 interface ShortcutRowProps {
-  action: { id: string; description: string; keys: string[]; configurable?: boolean };
+  action: {
+    id: string;
+    description: string;
+    keys: string[];
+    configurable?: boolean;
+  };
   isRecording: boolean;
   editingAction: string | null;
   onEdit: (id: string) => void;
@@ -24,9 +29,11 @@ export function ShortcutRow({
   isRecording,
   editingAction,
   onEdit,
-  onCancel
+  onCancel,
 }: ShortcutRowProps) {
-  const updateHotkeyInState = useHotkeysStore((state) => state.updateHotkeyInState);
+  const updateHotkeyInState = useHotkeysStore(
+    (state) => state.updateHotkeyInState,
+  );
 
   const recorder = useHotkeyRecorder({
     onRecord: (hotkey) => {
@@ -35,7 +42,7 @@ export function ShortcutRow({
     },
     onCancel: () => {
       onCancel();
-    }
+    },
   });
 
   const isEditing = isRecording && editingAction === action.id;
@@ -50,7 +57,9 @@ export function ShortcutRow({
 
   return (
     <div className="border-border/50 flex items-center justify-between gap-4 border-b px-3 py-2 last:border-b-0">
-      <div className="text-muted-foreground text-xs leading-relaxed">{action.description}</div>
+      <div className="text-muted-foreground text-xs leading-relaxed">
+        {action.description}
+      </div>
       <div className="flex items-center gap-2">
         <Kbd className="h-5 min-w-5 px-1 text-[10px]">
           {isEditing

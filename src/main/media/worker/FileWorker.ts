@@ -1,22 +1,22 @@
-import ffprobeInstaller from "@ffprobe-installer/ffprobe";
 import { execFile } from "node:child_process";
-import { parentPort } from "node:worker_threads";
 import { promisify } from "node:util";
+import { parentPort } from "node:worker_threads";
+import ffprobeInstaller from "@ffprobe-installer/ffprobe";
 
 const execFileAsync = promisify(execFile);
 const FFPROBE_TIMEOUT_MS = 20_000;
 
-type WorkerMessage = {
+interface WorkerMessage {
   filePath: string;
   id: number;
-};
+}
 
-type WorkerResponse = {
+interface WorkerResponse {
   id: number;
   filePath: string;
   duration?: number;
   error?: string;
-};
+}
 
 async function getVideoDuration(filePath: string): Promise<number> {
   try {
@@ -27,12 +27,12 @@ async function getVideoDuration(filePath: string): Promise<number> {
       "format=duration",
       "-of",
       "default=noprint_wrappers=1:nokey=1",
-      filePath
+      filePath,
     ];
 
     const { stdout } = (await execFileAsync(ffprobeInstaller.path, args, {
       timeout: FFPROBE_TIMEOUT_MS,
-      maxBuffer: 128 * 1024
+      maxBuffer: 128 * 1024,
     })) as {
       stdout: string;
       stderr: string;
@@ -42,7 +42,7 @@ async function getVideoDuration(filePath: string): Promise<number> {
       return 0;
     }
 
-    const parsed = parseFloat(stdout.trim());
+    const parsed = Number.parseFloat(stdout.trim());
     return Number.isFinite(parsed) ? parsed : 0;
   } catch (error) {
     throw new Error(`Error getting ffprobe duration for ${filePath}: ${error}`);
@@ -53,7 +53,7 @@ if (parentPort) {
   parentPort.on("message", async (message: WorkerMessage) => {
     const response: WorkerResponse = {
       id: message.id,
-      filePath: message.filePath
+      filePath: message.filePath,
     };
 
     try {

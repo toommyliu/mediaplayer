@@ -1,9 +1,10 @@
 "use client";
 
+import type { VariantProps } from "class-variance-authority";
+import type * as React from "react";
 import { mergeProps } from "@base-ui/react/merge-props";
 import { useRender } from "@base-ui/react/use-render";
-import { cva, type VariantProps } from "class-variance-authority";
-import type * as React from "react";
+import { cva } from "class-variance-authority";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
@@ -87,6 +88,6 @@ export function GroupSeparator({
 
 export {
   Group as ButtonGroup,
-  GroupText as ButtonGroupText,
   GroupSeparator as ButtonGroupSeparator,
+  GroupText as ButtonGroupText,
 };

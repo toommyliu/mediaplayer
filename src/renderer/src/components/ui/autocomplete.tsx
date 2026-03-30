@@ -1,11 +1,11 @@
 "use client";
 
+import type * as React from "react";
 import { Autocomplete as AutocompletePrimitive } from "@base-ui/react/autocomplete";
 import { ChevronsUpDownIcon, XIcon } from "lucide-react";
-import type React from "react";
-import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 
 export const Autocomplete: typeof AutocompletePrimitive.Root =
   AutocompletePrimitive.Root;
@@ -229,7 +229,8 @@ export function AutocompleteValue({
   );
 }
 
-export interface AutocompleteListProps extends AutocompletePrimitive.List.Props {
+export interface AutocompleteListProps
+  extends AutocompletePrimitive.List.Props {
   viewportClassName?: string;
 }
 

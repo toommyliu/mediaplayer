@@ -1,5 +1,5 @@
-import { getPlatform } from "@/lib/ipc";
 import { initializeQueue } from "@/actions/library";
+import { getPlatform } from "@/lib/ipc";
 import { usePlatformStore } from "@/stores/platform";
 
 export async function loadPlatformInfo(): Promise<void> {
@@ -8,7 +8,7 @@ export async function loadPlatformInfo(): Promise<void> {
     isLinux: info.isLinux,
     isMac: info.isMacOS,
     isWindows: info.isWindows,
-    pathSep: info.pathSep
+    pathSep: info.pathSep,
   });
 }
 

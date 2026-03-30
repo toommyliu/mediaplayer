@@ -3,8 +3,8 @@
 import { NumberField as NumberFieldPrimitive } from "@base-ui/react/number-field";
 import { MinusIcon, PlusIcon } from "lucide-react";
 import * as React from "react";
-import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 export const NumberFieldContext: React.Context<{
   fieldId: string;
@@ -24,7 +24,7 @@ export function NumberField({
   const fieldId = id ?? generatedId;
 
   return (
-    <NumberFieldContext.Provider value={{ fieldId }}>
+    <NumberFieldContext value={{ fieldId }}>
       <NumberFieldPrimitive.Root
         className={cn("flex w-full flex-col items-start gap-2", className)}
         data-size={size}
@@ -32,7 +32,7 @@ export function NumberField({
         id={fieldId}
         {...props}
       />
-    </NumberFieldContext.Provider>
+    </NumberFieldContext>
   );
 }
 
@@ -111,7 +111,7 @@ export function NumberFieldScrubArea({
 }: NumberFieldPrimitive.ScrubArea.Props & {
   label: string;
 }): React.ReactElement {
-  const context = React.useContext(NumberFieldContext);
+  const context = React.use(NumberFieldContext);
 
   if (!context) {
     throw new Error(

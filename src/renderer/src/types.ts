@@ -3,44 +3,48 @@ import type { FileTreeItem } from "../../shared";
 export type SidebarTab = "file-browser" | "queue";
 export type RepeatMode = "all" | "off" | "one";
 export type SidebarPosition = "left" | "right";
-export type NotificationPosition = "top-left" | "top-right" | "bottom-left" | "bottom-right";
+export type NotificationPosition =
+  | "top-left"
+  | "top-right"
+  | "bottom-left"
+  | "bottom-right";
 export type AspectRatioMode = "contain" | "cover" | "fill";
 
-export type QueueItem = {
+export interface QueueItem {
   duration?: number;
   id: string;
   name: string;
   path: string;
-};
+}
 
 export type FileSystemItem = FileTreeItem;
 
-export type FileTree = {
+export interface FileTree {
   files: FileSystemItem[];
   rootPath: string;
-};
+}
 
-export type PlatformState = {
+export interface PlatformState {
   isLinux: boolean;
   isMac: boolean;
   isWindows: boolean;
   pathSep: string;
-};
+}
 
-export type HotkeyAction = {
+export interface HotkeyAction {
   configurable?: boolean;
   description: string;
   enabled?: boolean;
   id: string;
   keys: string[];
-};
+}
 
-export type HotkeyCategory = {
+export interface HotkeyCategory {
   actions: HotkeyAction[];
   name: string;
-};
+}
 
-export type AppState = {
+export interface AppState {
   fileBrowser: {
     currentPath: string | null;
     error: string | null;
@@ -103,4 +107,4 @@ export type AppState = {
     isMuted: boolean;
     value: number;
   };
-};
+}

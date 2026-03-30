@@ -12,5 +12,5 @@ export type SettingsStore = SettingsState & SettingsActions;
 
 export const useSettingsStore = create<SettingsStore>()((set) => ({
   showDialog: false,
-  setSettingsDialogOpen: (showDialog) => set({ showDialog })
+  setSettingsDialogOpen: (showDialog) => set({ showDialog }),
 }));

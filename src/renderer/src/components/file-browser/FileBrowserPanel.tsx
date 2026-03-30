@@ -1,9 +1,9 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import { useFileBrowserStore } from "@/stores/file-browser";
 import { sortFileTree } from "../../../../shared/file-tree-utils";
 import { FileBrowserEmptyState } from "./FileBrowserEmptyState";
-import { FileBrowserList } from "./FileBrowserList";
 import { FileBrowserHeader } from "./FileBrowserHeader";
-import { useFileBrowserStore } from "@/stores/file-browser";
+import { FileBrowserList } from "./FileBrowserList";
 
 export function FileBrowserPanel() {
   const fileTree = useFileBrowserStore((state) => state.fileTree);
@@ -13,7 +13,7 @@ export function FileBrowserPanel() {
 
   const fileSystem = sortFileTree(fileTree?.files ?? [], {
     sortBy,
-    sortDirection
+    sortDirection,
   });
 
   return (

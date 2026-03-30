@@ -1,8 +1,8 @@
 "use client";
 
+import type * as React from "react";
 import { Accordion as AccordionPrimitive } from "@base-ui/react/accordion";
 import { ChevronDownIcon } from "lucide-react";
-import type React from "react";
 import { cn } from "@/lib/utils";
 
 export function Accordion(
@@ -65,4 +65,4 @@ export function AccordionPanel({
   );
 }
 
-export { AccordionPrimitive, AccordionPanel as AccordionContent };
+export { AccordionPanel as AccordionContent, AccordionPrimitive };

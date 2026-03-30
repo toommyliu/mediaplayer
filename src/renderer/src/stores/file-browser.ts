@@ -1,7 +1,7 @@
+import type { DirectoryContents } from "@/lib/contracts";
+import type { AppState, FileSystemItem } from "@/types";
 import { create } from "zustand";
 import { sortFileTree } from "../../../shared";
-import type { AppState, FileSystemItem } from "@/types";
-import type { DirectoryContents } from "@/lib/contracts";
 
 export type FileBrowserState = AppState["fileBrowser"];
 
@@ -28,7 +28,7 @@ const initialFileBrowserState: FileBrowserState = {
   originalPath: null,
   scrollTop: 0,
   sortBy: "name",
-  sortDirection: "asc"
+  sortDirection: "asc",
 };
 
 export const useFileBrowserStore = create<FileBrowserStore>()((set) => ({
@@ -43,21 +43,25 @@ export const useFileBrowserStore = create<FileBrowserStore>()((set) => ({
       isAtRoot: false,
       isLoading: false,
       loadingFolders: new Set<string>(),
-      originalPath: null
+      originalPath: null,
     })),
   setFileBrowserScrollTop: (scrollTop) => set({ scrollTop }),
   setFileBrowserSort: (sortBy) =>
     set((state) => ({
       sortBy,
       sortDirection:
-        state.sortBy === sortBy ? (state.sortDirection === "asc" ? "desc" : "asc") : "asc"
+        state.sortBy === sortBy
+          ? state.sortDirection === "asc"
+            ? "desc"
+            : "asc"
+          : "asc",
     })),
-  setExpandedFolders: (expandedFolders) => set({ expandedFolders })
+  setExpandedFolders: (expandedFolders) => set({ expandedFolders }),
 }));
 
 export function findFolderInFileSystem(
   items: FileSystemItem[],
-  targetPath: string
+  targetPath: string,
 ): FileSystemItem | null {
   for (const item of items) {
     if (item.path === targetPath && item.files !== undefined) {
@@ -76,7 +80,7 @@ export function findFolderInFileSystem(
 export function transformDirectoryContents(
   directoryContents: DirectoryContents,
   sortBy: FileBrowserState["sortBy"],
-  sortDirection: FileBrowserState["sortDirection"]
+  sortDirection: FileBrowserState["sortDirection"],
 ): FileSystemItem[] {
   if (!directoryContents?.files) return [];
 
@@ -86,19 +90,19 @@ export function transformDirectoryContents(
       files: item.type === "folder" ? [] : undefined,
       name: item.name,
       path: item.path,
-      type: item.type
+      type: item.type,
     })),
     {
       sortBy,
-      sortDirection
-    }
+      sortDirection,
+    },
   );
 }
 
 export function updateFolderContents(
   items: FileSystemItem[],
   targetPath: string,
-  newContents: FileSystemItem[]
+  newContents: FileSystemItem[],
 ): FileSystemItem[] | null {
   for (let index = 0; index < items.length; index += 1) {
     const item = items[index];

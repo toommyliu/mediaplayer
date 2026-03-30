@@ -2,12 +2,10 @@
   "extends": "@electron-toolkit/tsconfig/tsconfig.web.json",
   "compilerOptions": {
     "composite": true,
-    "moduleResolution": "bundler",
     "jsx": "react-jsx",
+    "moduleResolution": "bundler",
     "paths": {
-      "@/*": [
-        "./src/renderer/src/*"
-      ],
+      "@/*": ["./src/renderer/src/*"]
     }
   },
   "include": [

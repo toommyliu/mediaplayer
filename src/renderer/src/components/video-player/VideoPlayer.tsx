@@ -1,14 +1,18 @@
-import { useCallback, useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
-import { VideoPlayerControls } from "./VideoPlayerControls";
-import { UpNextNotification } from "./UpNextNotification";
-import { VideoInfoOverlay } from "./VideoInfoOverlay";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { loadFileSystemStructure } from "@/actions/library";
-import { bindPlaybackVideoElement, playNextVideo, togglePlayPause } from "@/actions/playback";
-import { cn } from "@/lib/utils";
+import {
+  bindPlaybackVideoElement,
+  playNextVideo,
+  togglePlayPause,
+} from "@/actions/playback";
 import { toFileUrl } from "@/lib/media-path";
+import { cn } from "@/lib/utils";
 import { usePlayerStore } from "@/stores/player";
 import { useCurrentQueueItem, useQueueStore } from "@/stores/queue";
+import { UpNextNotification } from "./UpNextNotification";
+import { VideoInfoOverlay } from "./VideoInfoOverlay";
+import { VideoPlayerControls } from "./VideoPlayerControls";
 
 type HoldDirection = "left" | "right" | null;
 
@@ -195,7 +199,7 @@ export default function VideoPlayer() {
           onError={() => {
             setPlayerState({
               error: "Video format not supported or file could not be played.",
-              isLoading: false
+              isLoading: false,
             });
           }}
           onLoadedData={() => {
@@ -244,7 +248,7 @@ export default function VideoPlayer() {
           <div
             className={cn(
               "pointer-events-none absolute top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white backdrop-blur-sm",
-              holdDirection === "left" ? "left-8" : "right-8"
+              holdDirection === "left" ? "left-8" : "right-8",
             )}
           >
             {holdDirection === "left" ? "←" : "→"}

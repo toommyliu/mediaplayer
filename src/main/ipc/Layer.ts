@@ -1,5 +1,5 @@
-import { ipcMain } from "electron";
 import { Effect, Layer } from "effect";
+import { ipcMain } from "electron";
 import { IPC_EVENT_CHANNELS } from "../../shared/ipc";
 import { RendererEventsService } from "./RendererEvents";
 
@@ -7,7 +7,7 @@ export const RendererEventsLayer = Layer.succeed(RendererEventsService)({
   emit: (webContents, eventName, payload) =>
     Effect.sync(() => {
       webContents.send(IPC_EVENT_CHANNELS[eventName], payload);
-    })
+    }),
 });
 
 export const IpcMainResetLayer = Layer.effectDiscard(
@@ -22,8 +22,8 @@ export const IpcMainResetLayer = Layer.effectDiscard(
       Effect.addFinalizer(() =>
         Effect.sync(() => {
           cleanup();
-        })
-      )
-    )
-  )
+        }),
+      ),
+    ),
+  ),
 );

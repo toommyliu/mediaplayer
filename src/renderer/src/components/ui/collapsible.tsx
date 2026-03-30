@@ -1,7 +1,7 @@
 "use client";
 
+import type * as React from "react";
 import { Collapsible as CollapsiblePrimitive } from "@base-ui/react/collapsible";
-import type React from "react";
 import { cn } from "@/lib/utils";
 
 export function Collapsible({
@@ -39,4 +39,4 @@ export function CollapsiblePanel({
   );
 }
 
-export { CollapsiblePrimitive, CollapsiblePanel as CollapsibleContent };
+export { CollapsiblePanel as CollapsibleContent, CollapsiblePrimitive };

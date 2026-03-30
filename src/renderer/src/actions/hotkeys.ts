@@ -1,22 +1,22 @@
-import { FRAME_TIME_STEP, SEEK_TIME_STEP } from "@/lib/constants";
 import { navigateToParent } from "@/actions/library";
 import {
   playNextVideo,
   playPreviousVideo,
   setFullscreen,
-  togglePlayPause
+  togglePlayPause,
 } from "@/actions/playback";
 import {
   decreaseVolumeWithMediaSync,
   increaseVolumeWithMediaSync,
-  setMutedWithMediaSync
+  setMutedWithMediaSync,
 } from "@/actions/volume";
-import { getVideoElement } from "@/video-element";
+import { FRAME_TIME_STEP, SEEK_TIME_STEP } from "@/lib/constants";
 import { usePlayerStore } from "@/stores/player";
 import { getCurrentQueueItemFromState, useQueueStore } from "@/stores/queue";
 import { useSettingsStore } from "@/stores/settings";
 import { useSidebarStore } from "@/stores/sidebar";
 import { useVolumeStore } from "@/stores/volume";
+import { getVideoElement } from "@/video-element";
 
 export async function runHotkeyAction(actionId: string): Promise<void> {
   const queue = useQueueStore.getState();
@@ -43,7 +43,10 @@ export async function runHotkeyAction(actionId: string): Promise<void> {
       break;
     case "seekForward":
       if (currentItem && Number.isFinite(player.duration)) {
-        const nextTime = Math.min(player.duration, player.currentTime + SEEK_TIME_STEP);
+        const nextTime = Math.min(
+          player.duration,
+          player.currentTime + SEEK_TIME_STEP,
+        );
         usePlayerStore.getState().setCurrentTime(nextTime);
         if (video) video.currentTime = nextTime;
       }
@@ -57,7 +60,10 @@ export async function runHotkeyAction(actionId: string): Promise<void> {
       break;
     case "frameForward":
       if (currentItem && Number.isFinite(player.duration)) {
-        const nextTime = Math.min(player.duration, player.currentTime + FRAME_TIME_STEP);
+        const nextTime = Math.min(
+          player.duration,
+          player.currentTime + FRAME_TIME_STEP,
+        );
         usePlayerStore.getState().setCurrentTime(nextTime);
         if (video) video.currentTime = nextTime;
       }
@@ -90,7 +96,11 @@ export async function runHotkeyAction(actionId: string): Promise<void> {
       useSettingsStore.getState().setSettingsDialogOpen(true);
       break;
     default:
-      if (/^jump-\d$/.test(actionId) && currentItem && Number.isFinite(player.duration)) {
+      if (
+        /^jump-\d$/.test(actionId) &&
+        currentItem &&
+        Number.isFinite(player.duration)
+      ) {
         const percent = Number.parseInt(actionId.split("-")[1], 10) / 10;
         const nextTime = percent * player.duration;
         usePlayerStore.getState().setCurrentTime(nextTime);

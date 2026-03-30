@@ -14,11 +14,16 @@ const CoreLayer = Layer.mergeAll(
   LoggerLayer,
   WindowDomainLayer,
   MediaDomainLayer,
-  RendererEventsLayer
+  RendererEventsLayer,
 );
 
 const IpcLayer = IpcInvokeLayer.pipe(Layer.provide(CoreLayer));
 const AppMenuLayer = MenuLayer.pipe(Layer.provide(CoreLayer));
 const ShortcutsLayer = InputLayer.pipe(Layer.provide(CoreLayer));
 
-export const MainLayer = Layer.mergeAll(CoreLayer, IpcLayer, AppMenuLayer, ShortcutsLayer);
+export const MainLayer = Layer.mergeAll(
+  CoreLayer,
+  IpcLayer,
+  AppMenuLayer,
+  ShortcutsLayer,
+);

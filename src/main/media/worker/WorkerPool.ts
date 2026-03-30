@@ -1,25 +1,25 @@
 import { Worker } from "node:worker_threads";
 
-export type WorkerTask = {
+export interface WorkerTask {
   id: number;
   filePath: string;
   resolve: (duration: number) => void;
   reject: (error: Error) => void;
-};
+}
 
-type WorkerResponse = {
+interface WorkerResponse {
   id: number;
   duration?: number;
   error?: string;
-};
+}
 
 const DEFAULT_CACHE_MAX_ENTRIES = 10_000;
 const DEFAULT_CACHE_TTL_MS = 5 * 60 * 1000;
 
-type CacheEntry = {
+interface CacheEntry {
   duration: number;
   expiresAt: number;
-};
+}
 
 export class WorkerPool {
   private workers = new Set<Worker>();
@@ -43,11 +43,12 @@ export class WorkerPool {
     options?: {
       cacheMaxEntries?: number;
       cacheTtlMs?: number;
-    }
+    },
   ) {
     this.poolSize = poolSize;
     this.workerPath = workerPath;
-    this.cacheMaxEntries = options?.cacheMaxEntries ?? DEFAULT_CACHE_MAX_ENTRIES;
+    this.cacheMaxEntries =
+      options?.cacheMaxEntries ?? DEFAULT_CACHE_MAX_ENTRIES;
     this.cacheTtlMs = options?.cacheTtlMs ?? DEFAULT_CACHE_TTL_MS;
   }
 
@@ -79,7 +80,7 @@ export class WorkerPool {
         id: this.taskIdCounter++,
         filePath,
         resolve,
-        reject
+        reject,
       };
 
       this.taskById.set(task.id, task);
@@ -96,7 +97,7 @@ export class WorkerPool {
 
   async processFiles(
     filePaths: readonly string[],
-    onError?: (path: string, error: Error) => void
+    onError?: (path: string, error: Error) => void,
   ): Promise<Map<string, number>> {
     const uniquePaths = Array.from(new Set(filePaths));
     const results = await Promise.all(
@@ -105,11 +106,12 @@ export class WorkerPool {
           const duration = await this.processFile(filePath);
           return [filePath, duration] as const;
         } catch (error) {
-          const workerError = error instanceof Error ? error : new Error(String(error));
+          const workerError =
+            error instanceof Error ? error : new Error(String(error));
           onError?.(filePath, workerError);
           return [filePath, 0] as const;
         }
-      })
+      }),
     );
 
     return new Map(results);
@@ -119,8 +121,8 @@ export class WorkerPool {
     const worker = new Worker(this.workerPath, {
       resourceLimits: {
         maxOldGenerationSizeMb: 64,
-        maxYoungGenerationSizeMb: 16
-      }
+        maxYoungGenerationSizeMb: 16,
+      },
     });
 
     worker.on("message", (response: WorkerResponse) => {
@@ -157,7 +159,8 @@ export class WorkerPool {
       } catch (error) {
         this.activeTasks.delete(worker);
         this.availableWorkers.push(worker);
-        const workerError = error instanceof Error ? error : new Error(String(error));
+        const workerError =
+          error instanceof Error ? error : new Error(String(error));
         this.completeTask(task, undefined, workerError);
       }
     }
@@ -228,7 +231,7 @@ export class WorkerPool {
       this.completeTask(
         task,
         undefined,
-        new Error(`Worker exited before completing task (code ${code})`)
+        new Error(`Worker exited before completing task (code ${code})`),
       );
     }
 
@@ -245,7 +248,11 @@ export class WorkerPool {
     this.availableWorkers = this.availableWorkers.filter((w) => w !== worker);
   }
 
-  private completeTask(task: WorkerTask, duration?: number, error?: Error): void {
+  private completeTask(
+    task: WorkerTask,
+    duration?: number,
+    error?: Error,
+  ): void {
     this.taskById.delete(task.id);
 
     if (error) {
@@ -276,7 +283,7 @@ export class WorkerPool {
     this.cache.delete(filePath);
     this.cache.set(filePath, {
       duration,
-      expiresAt: Date.now() + this.cacheTtlMs
+      expiresAt: Date.now() + this.cacheTtlMs,
     });
 
     if (this.cache.size > this.cacheMaxEntries) {
@@ -302,7 +309,7 @@ export class WorkerPool {
     this.activeTasks.clear();
     this.inFlightByPath.clear();
 
-    await Promise.all([...this.workers].map((worker) => worker.terminate()));
+    await Promise.all(Array.from(this.workers, (worker) => worker.terminate()));
     this.workers.clear();
     this.availableWorkers = [];
     this.cache.clear();
