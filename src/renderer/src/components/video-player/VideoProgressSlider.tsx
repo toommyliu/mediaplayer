@@ -85,6 +85,12 @@ export function VideoProgressSlider() {
             }
           }}
           onPointerUp={async () => {
+            // Release Focus on whichever Slider element
+            // so hotkeys can still run without being intercepted
+            if (document.activeElement instanceof HTMLElement) {
+              document.activeElement.blur();
+            }
+
             if (isDragging) {
               setIsDragging(false);
               await togglePlayPause();
