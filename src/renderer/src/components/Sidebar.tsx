@@ -4,6 +4,7 @@ import { QueuePanel } from "./queue/QueuePanel";
 import { FileBrowserPanel } from "./file-browser/FileBrowserPanel";
 import { useSettingsStore } from "@/stores/settings";
 import { useSidebarStore } from "@/stores/sidebar";
+import type { SidebarTab } from "@/types";
 
 export function Sidebar() {
   const currentTab = useSidebarStore((state) => state.currentTab);
@@ -14,7 +15,7 @@ export function Sidebar() {
   return (
     <Tabs
       className="flex h-full flex-col overflow-hidden"
-      onValueChange={(value) => setSidebarTab(value as any)}
+      onValueChange={(value) => setSidebarTab(value as SidebarTab)}
       value={currentTab}
     >
       <div className="px-4 pt-4 pb-1">
