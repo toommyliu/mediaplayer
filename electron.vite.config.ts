@@ -1,52 +1,23 @@
 import { resolve } from "node:path";
-import { fileURLToPath } from "node:url";
-import { svelte } from "@sveltejs/vite-plugin-svelte";
-import { defineConfig, externalizeDepsPlugin } from "electron-vite";
-import Icons from "unplugin-icons/vite";
-
-const __dirname = fileURLToPath(new URL(".", import.meta.url));
+import babel from "@rolldown/plugin-babel";
+import tailwindcss from "@tailwindcss/vite";
+import react, { reactCompilerPreset } from "@vitejs/plugin-react";
+import { defineConfig } from "electron-vite";
 
 export default defineConfig({
-  main: {
-    plugins: [externalizeDepsPlugin()],
-    build: {
-      rollupOptions: {
-        input: {
-          index: resolve(__dirname, "src/main/index.ts"),
-          fileWorker: resolve(__dirname, "src/main/worker/fileWorker.ts")
-        },
-        output: {
-          entryFileNames: (chunkInfo) => {
-            if (chunkInfo.name === "fileWorker") {
-              return "worker/[name].js";
-            }
-            return "[name].js";
-          }
-        }
-      }
-    }
-  },
-  preload: {
-    plugins: [externalizeDepsPlugin()]
-  },
+  main: {},
+  preload: {},
   renderer: {
-    plugins: [
-      svelte(),
-      Icons({
-        compiler: "svelte"
-      })
-    ],
     resolve: {
       alias: {
-        $components: resolve("src/renderer/src/components/"),
-        $ui: resolve("src/renderer/src/components/ui/"),
-        $main: resolve("src/main/"),
-        $lib: resolve("src/renderer/src/lib/"),
-        $: resolve("src/renderer/src/"),
-        $hooks: resolve("src/renderer/src/hooks/"),
-        $shared: resolve("src/shared/")
-      }
+        "@": resolve("src/renderer/src"),
+        "@stores": resolve("src/renderer/stores"),
+      },
     },
-    publicDir: resolve(__dirname, "src/renderer/public"),
-  }
+    plugins: [
+      react({}),
+      babel({ presets: [reactCompilerPreset()] }),
+      tailwindcss(),
+    ],
+  },
 });

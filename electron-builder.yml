@@ -1,4 +1,4 @@
-appId: com.toommyliu.mediaplayer
+appId: com.app.mediaplayer
 productName: mediaplayer
 directories:
   buildResources: build
@@ -6,7 +6,6 @@ files:
   - "!**/.vscode/*"
   - "!src/*"
   - "!electron.vite.config.{js,ts,mjs,cjs}"
-  - "!svelte.config.mjs"
   - "!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}"
   - "!{.env,.env.*,.npmrc,pnpm-lock.yaml}"
   - "!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}"
@@ -37,7 +36,6 @@ linux:
   target:
     - AppImage
     - deb
-  maintainer: toommyliu
   category: AudioVideo
 appImage:
   artifactName: ${name}-${version}.${ext}
