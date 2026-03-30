@@ -7,7 +7,7 @@ import { cpus } from "node:os";
 import { dirname, extname, join, resolve } from "node:path";
 import { promisify } from "node:util";
 import { sortFileTree, type FileTreeItem, type SortOptions } from "../shared";
-import type { DirectoryContents, PickerResult, VideoFileItem } from "../common/contracts";
+import type { DirectoryContents, PickerResult, VideoFileItem } from "../shared/contracts";
 import { DEFAULT_SORT_OPTIONS, VIDEO_EXTENSIONS } from "../shared/constants";
 import { logger } from "./logger";
 import { WorkerPool } from "./worker/worker-pool";

@@ -7,7 +7,7 @@ import {
   type IpcInvokeRequestMap,
   type IpcInvokeResponseMap,
   type RendererEventPayloadMap
-} from "../common/ipc";
+} from "../shared/ipc";
 import { logger } from "./logger";
 import { getAllVideoFilesRecursive, loadDirectoryContents, showFilePicker } from "./utils";
 import { setFullScreen } from "./windowManager";
