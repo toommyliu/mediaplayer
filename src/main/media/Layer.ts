@@ -11,9 +11,10 @@ import { dirname, join, resolve } from "node:path";
 import ffmpegInstaller from "@ffmpeg-installer/ffmpeg";
 import ffprobeInstaller from "@ffprobe-installer/ffprobe";
 import { Effect, Layer } from "effect";
-import { app, BrowserWindow, dialog } from "electron";
+import { app, dialog } from "electron";
 import { DEFAULT_SORT_OPTIONS, VIDEO_EXTENSIONS } from "../../shared/constants";
 import { LoggerService } from "../logging/Service";
+import { WindowService } from "../windows/Service";
 import { FileTree } from "./FileTree";
 import { MediaService } from "./Service";
 import fileWorkerPath from "./worker/FileWorker?modulePath";
@@ -27,6 +28,7 @@ export const MediaLayer = Layer.effect(
   MediaService,
   Effect.gen(function* () {
     const logger = yield* LoggerService;
+    const windows = yield* WindowService;
 
     let previousPath: string | null = null;
     let isFfmpegInitialized = false;
@@ -421,13 +423,18 @@ export const MediaLayer = Layer.effect(
           ];
         }
 
-        const filePaths = dialog.showOpenDialogSync(
-          BrowserWindow.getFocusedWindow()!,
-          options,
-        );
-        if (!filePaths || filePaths.length === 0) {
+        const mainWindow = yield* windows.getOrCreateMainWindow;
+
+        const result = yield* Effect.tryPromise({
+          try: async () => await dialog.showOpenDialog(mainWindow, options),
+          catch: (error) => error,
+        });
+
+        if (result.canceled || result.filePaths.length === 0) {
           return null;
         }
+
+        const filePaths = result.filePaths;
 
         if (mode === "file") {
           previousPath = dirname(filePaths[0]);

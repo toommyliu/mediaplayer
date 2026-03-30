@@ -8,7 +8,10 @@ import { MenuLayer } from "./menu/Layer";
 import { WindowLayer } from "./windows/Layer";
 
 const WindowDomainLayer = WindowLayer.pipe(Layer.provide(LoggerLayer));
-const MediaDomainLayer = MediaLayer.pipe(Layer.provide(LoggerLayer));
+const MediaDomainLayer = MediaLayer.pipe(
+  Layer.provide(LoggerLayer),
+  Layer.provide(WindowLayer),
+);
 
 const CoreLayer = Layer.mergeAll(
   LoggerLayer,
