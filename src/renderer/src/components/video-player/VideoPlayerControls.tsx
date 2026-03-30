@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import { AspectRatioControl } from "../AspectRatioControl";
 import { FullscreenButton } from "../FullscreenButton";
 import { NextVideoButton } from "../NextVideoButton";
@@ -13,15 +14,22 @@ const controlSeparatorClass = "h-4 w-px bg-white/10 shrink-0";
 export interface VideoPlayerControlsProps {
   onControlsMouseEnter: () => void;
   onControlsMouseLeave: () => void;
+  visible: boolean;
 }
 
 export function VideoPlayerControls({
   onControlsMouseEnter,
   onControlsMouseLeave,
+  visible,
 }: VideoPlayerControlsProps) {
   return (
     <div
-      className="absolute inset-x-0 bottom-0 z-30 bg-linear-to-t from-black/90 via-black/60 to-transparent px-6 pb-4 pt-12"
+      className={cn(
+        "absolute inset-x-0 bottom-0 z-30 bg-linear-to-t from-black/70 via-black/20 to-transparent px-6 pb-6 pt-6 transition-all duration-400 ease-out will-change-[transform,opacity]",
+        visible
+          ? "translate-y-0 opacity-100"
+          : "pointer-events-none translate-y-6 opacity-0",
+      )}
       id="media-controls"
       onMouseEnter={onControlsMouseEnter}
       onMouseLeave={onControlsMouseLeave}

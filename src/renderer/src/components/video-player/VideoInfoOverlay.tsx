@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import { useNotificationsStore } from "@/stores/notifications";
 import { useQueueStore } from "@/stores/queue";
 
@@ -14,11 +15,24 @@ export function VideoInfoOverlay({ visible }: VideoInfoOverlayProps) {
   const currentItem = useQueueStore((state) =>
     state.items.length > 0 ? (state.items[state.index] ?? null) : null,
   );
+  const upNextPosition = useNotificationsStore((state) => state.upNextPosition);
 
-  if (!visible || !currentItem || !videoInfoEnabled) return null;
+  const isTop = upNextPosition.startsWith("top");
+
+  if (!currentItem || !videoInfoEnabled) return null;
 
   return (
-    <div className="pointer-events-none absolute top-0 left-0 z-10 w-full bg-linear-to-b from-black/70 via-black/40 to-transparent p-8 pb-16">
+    <div
+      className={cn(
+        "pointer-events-none absolute top-0 left-0 z-10 w-full bg-linear-to-b from-black/60 via-black/20 to-transparent p-8 pb-10 transition-all duration-400 ease-out will-change-[transform,opacity]",
+        visible
+          ? "translate-y-0 opacity-100"
+          : cn(
+              "opacity-0",
+              isTop ? "-translate-y-8" : "translate-y-8", // Usually top, but handle position
+            ),
+      )}
+    >
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl font-bold text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
           {currentItem.name}

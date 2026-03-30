@@ -33,7 +33,7 @@ export default function VideoPlayer() {
   const holdTimerRef = useRef<number | null>(null);
   const holdIntervalRef = useRef<number | null>(null);
   const [showControls, setShowControls] = useState(false);
-  const [isControlsHovered, setIsControlsHovered] = useState(false);
+  const isControlsHoveredRef = useRef(false);
   const [holdDirection, setHoldDirection] = useState<HoldDirection>(null);
 
   const setVideoElementRef = useCallback((element: HTMLVideoElement | null) => {
@@ -44,6 +44,36 @@ export default function VideoPlayer() {
   useEffect(() => {
     setPlayerState({ showControls });
   }, [setPlayerState, showControls]);
+
+  const stopHoldSeeking = useCallback(() => {
+    setHoldDirection(null);
+    setPlayerState({ isHolding: false });
+    if (holdTimerRef.current) {
+      window.clearTimeout(holdTimerRef.current);
+      holdTimerRef.current = null;
+    }
+    if (holdIntervalRef.current) {
+      window.clearInterval(holdIntervalRef.current);
+      holdIntervalRef.current = null;
+    }
+  }, [setPlayerState]);
+
+  const resetHideTimer = useCallback(() => {
+    if (hideTimerRef.current) {
+      window.clearTimeout(hideTimerRef.current);
+    }
+
+    setShowControls(true);
+    const isHovered = isControlsHoveredRef.current;
+
+    if (!isHovered && isPlaying) {
+      hideTimerRef.current = window.setTimeout(() => {
+        if (!isControlsHoveredRef.current) {
+          setShowControls(false);
+        }
+      }, 3000);
+    }
+  }, [isPlaying]);
 
   useEffect(() => {
     if (!isPlaying) {
@@ -60,42 +90,13 @@ export default function VideoPlayer() {
         window.clearTimeout(hideTimerRef.current);
       }
     };
-  }, [currentItem?.id, isPlaying]);
-
-  function resetHideTimer(): void {
-    if (hideTimerRef.current) {
-      window.clearTimeout(hideTimerRef.current);
-    }
-
-    setShowControls(true);
-
-    if (!isControlsHovered && isPlaying) {
-      hideTimerRef.current = window.setTimeout(() => {
-        if (!isControlsHovered) {
-          setShowControls(false);
-        }
-      }, 3000);
-    }
-  }
-
-  function stopHoldSeeking(): void {
-    setHoldDirection(null);
-    setPlayerState({ isHolding: false });
-    if (holdTimerRef.current) {
-      window.clearTimeout(holdTimerRef.current);
-      holdTimerRef.current = null;
-    }
-    if (holdIntervalRef.current) {
-      window.clearInterval(holdIntervalRef.current);
-      holdIntervalRef.current = null;
-    }
-  }
+  }, [currentItem?.id, isPlaying, resetHideTimer]);
 
   useEffect(() => {
     return () => {
       stopHoldSeeking();
     };
-  }, [setPlayerState]);
+  }, [stopHoldSeeking]);
 
   function startHoldSeeking(direction: HoldDirection): void {
     if (!videoRef.current || !direction) return;
@@ -169,7 +170,7 @@ export default function VideoPlayer() {
           if (hideTimerRef.current) {
             window.clearTimeout(hideTimerRef.current);
           }
-          if (isPlaying && !isControlsHovered) {
+          if (isPlaying && !isControlsHoveredRef.current) {
             setShowControls(false);
           }
         }}
@@ -255,22 +256,19 @@ export default function VideoPlayer() {
           </div>
         ) : null}
 
-        {showControls && (
-          <>
-            <VideoInfoOverlay visible={showControls} />
-            <UpNextNotification />
-            <VideoPlayerControls
-              onControlsMouseEnter={() => {
-                setIsControlsHovered(true);
-                setShowControls(true);
-              }}
-              onControlsMouseLeave={() => {
-                setIsControlsHovered(false);
-                resetHideTimer();
-              }}
-            />
-          </>
-        )}
+        <VideoInfoOverlay visible={showControls} />
+        <UpNextNotification />
+        <VideoPlayerControls
+          onControlsMouseEnter={() => {
+            isControlsHoveredRef.current = true;
+            setShowControls(true);
+          }}
+          onControlsMouseLeave={() => {
+            isControlsHoveredRef.current = false;
+            resetHideTimer();
+          }}
+          visible={showControls}
+        />
       </div>
     </div>
   );
