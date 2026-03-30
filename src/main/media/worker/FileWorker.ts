@@ -4,6 +4,7 @@ import { parentPort } from "node:worker_threads";
 import { promisify } from "node:util";
 
 const execFileAsync = promisify(execFile);
+const FFPROBE_TIMEOUT_MS = 20_000;
 
 type WorkerMessage = {
   filePath: string;
@@ -17,38 +18,35 @@ type WorkerResponse = {
   error?: string;
 };
 
-type FfmpegProbeMetadata = {
-  format?: {
-    duration?: string | number;
-    filename?: string;
-    [key: string]: unknown;
-  };
-  streams?: unknown[];
-  [key: string]: unknown;
-};
-
-async function getFfprobeMetadata(filePath: string): Promise<FfmpegProbeMetadata> {
+async function getVideoDuration(filePath: string): Promise<number> {
   try {
-    const args = ["-v", "error", "-show_format", "-print_format", "json", filePath];
-    const { stdout } = (await execFileAsync(ffprobeInstaller.path, args)) as {
+    const args = [
+      "-v",
+      "error",
+      "-show_entries",
+      "format=duration",
+      "-of",
+      "default=noprint_wrappers=1:nokey=1",
+      filePath
+    ];
+
+    const { stdout } = (await execFileAsync(ffprobeInstaller.path, args, {
+      timeout: FFPROBE_TIMEOUT_MS,
+      maxBuffer: 128 * 1024
+    })) as {
       stdout: string;
       stderr: string;
     };
-    if (!stdout) return {} as FfmpegProbeMetadata;
 
-    return JSON.parse(stdout) as FfmpegProbeMetadata;
+    if (!stdout) {
+      return 0;
+    }
+
+    const parsed = parseFloat(stdout.trim());
+    return Number.isFinite(parsed) ? parsed : 0;
   } catch (error) {
-    throw new Error(`Error getting ffprobe metadata: ${error}`);
+    throw new Error(`Error getting ffprobe duration for ${filePath}: ${error}`);
   }
-}
-
-async function getVideoDuration(filePath: string): Promise<number> {
-  const metadata = await getFfprobeMetadata(filePath);
-  const rawDuration = metadata?.format?.duration;
-  if (typeof rawDuration === "number") return rawDuration;
-
-  const parsed = parseFloat(String(rawDuration ?? "0"));
-  return Number.isFinite(parsed) ? parsed : 0;
 }
 
 if (parentPort) {
