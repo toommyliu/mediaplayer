@@ -15,7 +15,6 @@
     "src/renderer/src/**/*.ts",
     "src/renderer/src/stores/**/*",
     "src/shared/**/*",
-    "src/preload/*.d.ts",
-    "src/common/**/*"
+    "src/preload/*.d.ts"
   ]
 }

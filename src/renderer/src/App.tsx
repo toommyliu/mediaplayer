@@ -33,7 +33,8 @@ export default function App() {
   );
 
   const [isResizing, setIsResizing] = useState(false);
-  const [draftWidth, setDraftWidth] = useState(width);
+  const draftWidthRef = useRef(width);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [isPeeking, setIsPeeking] = useState(false);
   const [dropSide, setDropSide] = useState<"left" | "right" | null>(null);
   const [isCommitting, setIsCommitting] = useState(false);
@@ -52,9 +53,7 @@ export default function App() {
     };
   }, [position]);
 
-  const sidebarWidth = isResizing ? draftWidth : width;
   const isLeft = position === "left";
-  const openSidebarEdge = `${sidebarWidth}%`;
 
   const startPeek = useCallback(() => {
     if (isOpen) return;
@@ -72,26 +71,39 @@ export default function App() {
 
   useEffect(() => {
     if (!isResizing) return;
+
     const onMouseMove = (e: MouseEvent) => {
       const pct = isLeft
         ? (e.clientX / window.innerWidth) * 100
         : ((window.innerWidth - e.clientX) / window.innerWidth) * 100;
-      setDraftWidth(pct);
+
+      draftWidthRef.current = pct;
+
+      if (containerRef.current) {
+        containerRef.current.style.setProperty("--sidebar-width", `${pct}%`);
+      }
     };
+
     const onMouseUp = () => {
-      setSidebarWidth(draftWidth);
+      setSidebarWidth(draftWidthRef.current);
       setIsResizing(false);
     };
+
     window.addEventListener("mousemove", onMouseMove);
     window.addEventListener("mouseup", onMouseUp);
     return () => {
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("mouseup", onMouseUp);
     };
-  }, [isResizing, draftWidth, isLeft, setSidebarWidth]);
+  }, [isResizing, isLeft, setSidebarWidth]);
 
   useEffect(() => {
-    if (!isResizing) setDraftWidth(width);
+    if (!isResizing) {
+      draftWidthRef.current = width;
+      if (containerRef.current) {
+        containerRef.current.style.setProperty("--sidebar-width", `${width}%`);
+      }
+    }
   }, [isResizing, width]);
 
   useEffect(() => {
@@ -137,11 +149,19 @@ export default function App() {
     return () => {
       for (const dispose of disposers) dispose();
     };
-  }, []);
+  }, [setSettingsDialogOpen]);
 
   return (
     <Providers>
-      <div className="relative flex h-screen overflow-hidden">
+      <div
+        className="relative flex h-screen overflow-hidden"
+        ref={containerRef}
+        style={
+          {
+            "--sidebar-width": isOpen ? `${width}%` : PEEK_WIDTH,
+          } as React.CSSProperties
+        }
+      >
         {isDragging && (
           <div
             className="bg-background/20 pointer-events-none absolute inset-0 z-100 flex items-center justify-center backdrop-blur-sm animate-in fade-in duration-200"
@@ -272,7 +292,7 @@ export default function App() {
             isLeft ? "left-0" : "right-0",
             !isLeft && isOpen && "border-l border-r-0",
           )}
-          style={{ width: isOpen ? openSidebarEdge : PEEK_WIDTH }}
+          style={{ width: "var(--sidebar-width)" }}
           onMouseEnter={startPeek}
           onMouseLeave={endPeek}
         >
@@ -297,7 +317,7 @@ export default function App() {
               isLeft ? "-translate-x-1/2" : "translate-x-1/2",
               "transition-colors duration-300",
             )}
-            style={{ [isLeft ? "left" : "right"]: openSidebarEdge }}
+            style={{ [isLeft ? "left" : "right"]: "var(--sidebar-width)" }}
             onMouseDown={() => setIsResizing(true)}
           >
             <div
@@ -313,11 +333,11 @@ export default function App() {
         <div
           className={cn(
             "flex-1 min-w-0",
-            !isCommitting && "transition-[margin] duration-300",
+            !isCommitting && !isResizing && "transition-[margin] duration-300",
           )}
           style={{
             [isLeft ? "marginLeft" : "marginRight"]: isOpen
-              ? openSidebarEdge
+              ? "var(--sidebar-width)"
               : 0,
           }}
         >
