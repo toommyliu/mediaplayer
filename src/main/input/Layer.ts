@@ -92,7 +92,7 @@ export const InputLayer = Layer.effectDiscard(
             if (!ok) {
               logger.warn(`Global shortcut registration returned false for ${shortcut}`);
             } else {
-              logger.debug(`Registered global shortcut: ${shortcut}`);
+              // logger.debug(`Registered global shortcut: ${shortcut}`);
               ownedShortcuts.add(shortcut);
             }
           } catch (error) {
@@ -110,7 +110,7 @@ export const InputLayer = Layer.effectDiscard(
           try {
             if (globalShortcut.isRegistered(shortcut)) {
               globalShortcut.unregister(shortcut);
-              logger.debug(`Unregistered global shortcut: ${shortcut}`);
+              // logger.debug(`Unregistered global shortcut: ${shortcut}`);
             }
             ownedShortcuts.delete(shortcut);
           } catch (error) {

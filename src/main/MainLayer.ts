@@ -1,11 +1,11 @@
 import { Layer } from "effect";
-import { InputLayer } from "../input/Layer";
-import { IpcInvokeLayer } from "../ipc/InvokeLayer";
-import { RendererEventsLayer } from "../ipc/Layer";
-import { LoggerLayer } from "../logging/Layer";
-import { MediaLayer } from "../media/Layer";
-import { MenuLayer } from "../menu/Layer";
-import { WindowLayer } from "../windows/Layer";
+import { InputLayer } from "./input/Layer";
+import { IpcInvokeLayer } from "./ipc/InvokeLayer";
+import { RendererEventsLayer } from "./ipc/Layer";
+import { LoggerLayer } from "./logging/Layer";
+import { MediaLayer } from "./media/Layer";
+import { MenuLayer } from "./menu/Layer";
+import { WindowLayer } from "./windows/Layer";
 
 const WindowDomainLayer = WindowLayer.pipe(Layer.provide(LoggerLayer));
 const MediaDomainLayer = MediaLayer.pipe(Layer.provide(LoggerLayer));

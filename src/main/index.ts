@@ -1,6 +1,6 @@
 import { Effect } from "effect";
-import { MainLayer } from "./app/MainLayer";
-import { MainProgram } from "./app/MainProgram";
+import { MainLayer } from "./MainLayer";
+import { MainProgram } from "./MainProgram";
 
 const program = Effect.scoped(MainProgram.pipe(Effect.provide(MainLayer)));
 

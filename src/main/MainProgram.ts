@@ -1,8 +1,8 @@
 import { electronApp, platform, optimizer } from "@electron-toolkit/utils";
 import { app, BrowserWindow } from "electron";
 import { Effect } from "effect";
-import { LoggerService } from "../logging/Service";
-import { WindowService } from "../windows/Service";
+import { LoggerService } from "./logging/Service";
+import { WindowService } from "./windows/Service";
 
 export const MainProgram = Effect.gen(function* () {
   const logger = yield* LoggerService;
