@@ -31,7 +31,7 @@ export default function App() {
   const [isPeeking, setIsPeeking] = useState(false);
   const [dropSide, setDropSide] = useState<"left" | "right" | null>(null);
   const [isCommitting, setIsCommitting] = useState(false);
-  const peekTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const peekTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const lastPositionRef = useRef(position);
 
   useEffect(() => {
