@@ -43,7 +43,7 @@ export function Sidebar() {
         </TabsList>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-hidden px-4 pt-0">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 pt-0">
         <TabsContent
           className="flex min-h-0 flex-1 flex-col"
           value="file-browser"

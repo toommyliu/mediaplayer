@@ -58,7 +58,7 @@ export function EmptyMedia({
   VariantProps<typeof emptyMediaVariants>): React.ReactElement {
   return (
     <div
-      className={cn("relative mb-6", className)}
+      className={cn("relative", className)}
       data-slot="empty-media"
       data-variant={variant}
       {...props}
