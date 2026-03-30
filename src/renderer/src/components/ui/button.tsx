@@ -57,7 +57,7 @@ export function Button({
   type,
   variant,
   ...props
-}: ButtonProps & { ref?: React.RefObject<HTMLButtonElement | null> }) {
+}: ButtonProps & { ref?: React.Ref<HTMLButtonElement | null> }) {
   return (
     <button
       className={cn(buttonVariants({ className, size, variant }))}
