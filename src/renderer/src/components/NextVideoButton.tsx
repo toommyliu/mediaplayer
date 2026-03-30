@@ -1,7 +1,7 @@
 import { FastForward } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { playNextVideo } from "@/lib/controllers/playback-controller";
+import { playNextVideo } from "@/actions/playback";
 
 export function NextVideoButton() {
   return (

@@ -3,7 +3,7 @@ import {
   IPC_EVENT_CHANNELS,
   IPC_INVOKE_CHANNELS,
   type RendererEventPayloadMap
-} from "../../../common/ipc";
+} from "../../../shared/ipc";
 
 function onRendererEvent<K extends keyof RendererEventPayloadMap>(
   eventName: K,

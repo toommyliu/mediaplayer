@@ -2,7 +2,7 @@ import * as React from "react";
 import { Maximize, Minimize } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { setFullscreen } from "@/lib/controllers/playback-controller";
+import { setFullscreen } from "@/actions/playback";
 import { usePlayerStore } from "@/stores/player";
 
 const controlItemClass =

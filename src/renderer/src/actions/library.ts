@@ -1,7 +1,8 @@
-import { flattenVideoFiles } from "../../../../shared";
+import { flattenVideoFiles } from "../../../shared";
 import type { PickerResult } from "@/lib/contracts";
 import { getAllVideoFiles, readDirectory, selectFileOrFolder, showItemInFolder } from "@/lib/ipc";
-import { getVideoElement } from "@/lib/controllers/media-runtime";
+import { getVideoElement } from "@/video-element";
+import { playVideo } from "@/actions/playback";
 import {
   findFolderInFileSystem,
   transformDirectoryContents,
@@ -11,7 +12,6 @@ import {
 import { usePlayerStore } from "@/stores/player";
 import { getCurrentQueueItemFromState, useQueueStore } from "@/stores/queue";
 import { makeQueueId } from "@/stores/utils";
-import { playVideo } from "@/lib/controllers/playback-controller";
 
 export function initializeQueue(): void {
   useQueueStore.getState().resetQueue();

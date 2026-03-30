@@ -5,7 +5,7 @@ import { useState } from "react";
 import { makeTimeString } from "@/lib/make-time-string";
 import { cn } from "@/lib/utils";
 import type { QueueItem as QueueItemType } from "@/types";
-import { playVideo, stopPlayback } from "@/lib/controllers/playback-controller";
+import { playVideo, stopPlayback } from "@/actions/playback";
 import { useQueueStore, useCurrentQueueItem } from "@/stores/queue";
 
 export interface QueueItemProps {

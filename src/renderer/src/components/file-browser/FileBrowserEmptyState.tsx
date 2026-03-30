@@ -7,7 +7,7 @@ import {
   EmptyDescription
 } from "@/components/ui/empty";
 import { Folder } from "lucide-react";
-import { resetAndBrowseLibrary } from "@/lib/controllers/library-controller";
+import { resetAndBrowseLibrary } from "@/actions/library";
 
 export function FileBrowserEmptyState() {
   return (

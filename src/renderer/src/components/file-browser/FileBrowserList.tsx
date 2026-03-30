@@ -3,7 +3,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { FileBrowserItem } from "./FileBrowserItem";
-import { navigateToParent } from "@/lib/controllers/library-controller";
+import { navigateToParent } from "@/actions/library";
 import { sortFileTree } from "../../../../shared/file-tree-utils";
 import type { FileSystemItem } from "@/types";
 import { useFileBrowserStore } from "@/stores/file-browser";

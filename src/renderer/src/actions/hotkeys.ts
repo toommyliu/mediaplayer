@@ -1,17 +1,17 @@
 import { FRAME_TIME_STEP, SEEK_TIME_STEP } from "@/lib/constants";
-import { navigateToParent } from "@/lib/controllers/library-controller";
+import { navigateToParent } from "@/actions/library";
 import {
   playNextVideo,
   playPreviousVideo,
   setFullscreen,
   togglePlayPause
-} from "@/lib/controllers/playback-controller";
+} from "@/actions/playback";
 import {
   decreaseVolumeWithMediaSync,
   increaseVolumeWithMediaSync,
   setMutedWithMediaSync
-} from "@/lib/controllers/volume-controller";
-import { getVideoElement } from "@/lib/controllers/media-runtime";
+} from "@/actions/volume";
+import { getVideoElement } from "@/video-element";
 import { usePlayerStore } from "@/stores/player";
 import { getCurrentQueueItemFromState, useQueueStore } from "@/stores/queue";
 import { useSettingsStore } from "@/stores/settings";

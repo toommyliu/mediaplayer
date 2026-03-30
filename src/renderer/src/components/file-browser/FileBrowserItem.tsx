@@ -11,8 +11,8 @@ import { usePlatformStore } from "@/stores/platform";
 import { useSidebarStore } from "@/stores/sidebar";
 import { useFileBrowserStore } from "@/stores/file-browser";
 import { useCurrentQueueItem } from "@/stores/queue";
-import { playVideo } from "@/lib/controllers/playback-controller";
-import { navigateToDirectory, toggleFolder } from "@/lib/controllers/library-controller";
+import { playVideo } from "@/actions/playback";
+import { navigateToDirectory, toggleFolder } from "@/actions/library";
 import { usePlayerStore } from "@/stores/player";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 

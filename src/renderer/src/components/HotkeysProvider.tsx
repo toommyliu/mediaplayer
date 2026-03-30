@@ -1,7 +1,7 @@
 // import { TanStackDevtools } from "@tanstack/react-devtools";
 // import { hotkeysDevtoolsPlugin } from "@tanstack/react-hotkeys-devtools";
 import { HotkeysProvider as THotkeysProvider, useHotkey } from "@tanstack/react-hotkeys";
-import { runHotkeyAction } from "@/lib/controllers/hotkey-controller";
+import { runHotkeyAction } from "@/actions/hotkeys";
 import { useMemo } from "react";
 import type { HotkeyCategory } from "@/types";
 import type { RegisterableHotkey } from "@tanstack/react-hotkeys";

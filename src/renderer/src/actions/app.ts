@@ -1,5 +1,5 @@
 import { getPlatform } from "@/lib/ipc";
-import { initializeQueue } from "@/lib/controllers/library-controller";
+import { initializeQueue } from "@/actions/library";
 import { usePlatformStore } from "@/stores/platform";
 
 export async function loadPlatformInfo(): Promise<void> {

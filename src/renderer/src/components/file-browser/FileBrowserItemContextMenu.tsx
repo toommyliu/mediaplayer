@@ -16,12 +16,8 @@ import {
   ListPlusIcon
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-  navigateToDirectory,
-  revealItemInFolder,
-  toggleFolder
-} from "@/lib/controllers/library-controller";
-import { playVideo } from "@/lib/controllers/playback-controller";
+import { navigateToDirectory, revealItemInFolder, toggleFolder } from "@/actions/library";
+import { playVideo } from "@/actions/playback";
 import { useQueueStore } from "@/stores/queue";
 
 interface CopyPathMenuItemProps {

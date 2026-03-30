@@ -1,7 +1,7 @@
 import { Rewind } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { playPreviousVideo } from "@/lib/controllers/playback-controller";
+import { playPreviousVideo } from "@/actions/playback";
 
 export function PreviousVideoButton() {
   return (

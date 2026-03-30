@@ -1,4 +1,4 @@
-import { syncVolumeToVideoElement } from "@/lib/controllers/media-runtime";
+import { syncVolumeToVideoElement } from "@/video-element";
 import { useVolumeStore } from "@/stores/volume";
 
 export function setMutedWithMediaSync(isMuted: boolean): void {

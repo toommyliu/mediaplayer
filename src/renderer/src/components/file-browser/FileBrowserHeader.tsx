@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { ArrowDown01, ArrowDownAZ, ArrowUp01, ArrowUpAZ, FolderOpen } from "lucide-react";
-import { resetAndBrowseLibrary } from "@/lib/controllers/library-controller";
+import { resetAndBrowseLibrary } from "@/actions/library";
 import { useFileBrowserStore } from "@/stores/file-browser";
 
 export function FileBrowserHeader() {
