@@ -1,40 +1,26 @@
 import { flattenVideoFiles } from "../../../../shared";
 import type { PickerResult } from "@/lib/contracts";
-import {
-  getAllVideoFiles,
-  readDirectory,
-  selectFileOrFolder,
-  showItemInFolder
-} from "@/lib/ipc";
+import { getAllVideoFiles, readDirectory, selectFileOrFolder, showItemInFolder } from "@/lib/ipc";
 import { getVideoElement } from "@/lib/controllers/media-runtime";
 import {
   findFolderInFileSystem,
-  getFileBrowserState,
-  resetFileBrowser,
-  setExpandedFolders,
-  setFileBrowserState,
   transformDirectoryContents,
-  updateFolderContents
-} from "@/lib/state/file-browser";
-import { resetPlayer, setPlayerState } from "@/lib/state/player";
-import {
-  addQueueItem,
-  addQueueItems,
-  getCurrentQueueItemFromState,
-  getQueueState,
-  resetQueue,
-  setQueueItems
-} from "@/lib/state/queue";
-import { makeQueueId } from "@/lib/state/utils";
+  updateFolderContents,
+  useFileBrowserStore
+} from "@stores/file-browser";
+import { usePlayerStore } from "@stores/player";
+import { getCurrentQueueItemFromState, useQueueStore } from "@stores/queue";
+import { makeQueueId } from "@stores/utils";
 import { playVideo } from "@/lib/controllers/playback-controller";
 
 export function initializeQueue(): void {
-  resetQueue();
+  useQueueStore.getState().resetQueue();
 }
 
 export function updatePlayerQueueForced(preserveCurrentVideo = false): void {
-  const currentVideo = preserveCurrentVideo ? getCurrentQueueItemFromState(getQueueState()) : null;
-  const fileBrowser = getFileBrowserState();
+  const queue = useQueueStore.getState();
+  const currentVideo = preserveCurrentVideo ? getCurrentQueueItemFromState(queue) : null;
+  const fileBrowser = useFileBrowserStore.getState();
   const videoFiles = flattenVideoFiles(fileBrowser.fileTree?.files ?? []);
   const nextItems = videoFiles.map((video) => ({
     duration: video.duration ?? 0,
@@ -44,17 +30,21 @@ export function updatePlayerQueueForced(preserveCurrentVideo = false): void {
   }));
 
   const nextIndex = currentVideo
-    ? Math.max(0, nextItems.findIndex((item) => item.path === currentVideo.path))
+    ? Math.max(
+        0,
+        nextItems.findIndex((item) => item.path === currentVideo.path)
+      )
     : 0;
 
-  setQueueItems(nextItems, nextIndex);
+  useQueueStore.getState().setQueueItems(nextItems, nextIndex);
 }
 
 export async function handleAddFileEvent(result: PickerResult): Promise<void> {
   if (result.type !== "file") return;
 
-  resetQueue();
-  addQueueItem({
+  const queue = useQueueStore.getState();
+  queue.resetQueue();
+  queue.addQueueItem({
     name: result.path.split("/").pop() ?? "Video",
     path: result.path
   });
@@ -68,53 +58,53 @@ export async function handleAddFolderEvent(result: PickerResult): Promise<void> 
   }
 
   try {
-    setFileBrowserState({ error: null });
+    useFileBrowserStore.getState().setFileBrowserState({ error: null });
     await handlePickerResult(result);
   } catch {
-    setFileBrowserState({
+    useFileBrowserStore.getState().setFileBrowserState({
       error: "Failed to load file system. Please try again."
     });
-    resetFileBrowser();
+    useFileBrowserStore.getState().resetFileBrowser();
   }
 }
 
 export async function handlePickerResult(result: PickerResult): Promise<void> {
   if (result.type === "file") {
-    resetQueue();
-    addQueueItem({
+    const queue = useQueueStore.getState();
+    queue.resetQueue();
+    queue.addQueueItem({
       duration: 0,
       name: result.path.split("/").pop() ?? "Unknown Video",
       path: result.path
     });
     playVideo(result.path);
-    setFileBrowserState({ isLoading: false });
+    useFileBrowserStore.getState().setFileBrowserState({ isLoading: false });
     return;
   }
 
-  setFileBrowserState({
-    originalPath: result.rootPath
-  });
-  setPlayerState({
+  const fileBrowserStore = useFileBrowserStore.getState();
+  fileBrowserStore.setFileBrowserState({ originalPath: result.rootPath });
+  usePlayerStore.getState().setPlayerState({
     currentTime: 0,
     duration: 0,
     isPlaying: false
   });
 
-  resetQueue();
+  useQueueStore.getState().resetQueue();
   getVideoElement()?.pause();
 
-  const fileBrowser = getFileBrowserState();
   const dirResult = await readDirectory(result.rootPath);
+  const latestFileBrowser = useFileBrowserStore.getState();
   const nextFileTree = {
     files: transformDirectoryContents(
       dirResult,
-      fileBrowser.sortBy,
-      fileBrowser.sortDirection
+      latestFileBrowser.sortBy,
+      latestFileBrowser.sortDirection
     ),
     rootPath: dirResult.currentPath
   };
 
-  setFileBrowserState({
+  useFileBrowserStore.getState().setFileBrowserState({
     currentPath: dirResult.currentPath,
     fileTree: nextFileTree,
     isAtRoot: dirResult.isAtRoot,
@@ -123,13 +113,13 @@ export async function handlePickerResult(result: PickerResult): Promise<void> {
 
   const allVideoFiles = await getAllVideoFiles(result.rootPath);
   if (allVideoFiles.length > 0) {
-    addQueueItems(allVideoFiles);
+    useQueueStore.getState().addQueueItems(allVideoFiles);
     playVideo(allVideoFiles[0].path);
   }
 }
 
 export async function loadFileSystemStructure(): Promise<void> {
-  setFileBrowserState({
+  useFileBrowserStore.getState().setFileBrowserState({
     error: null,
     isLoading: true,
     loadingFolders: new Set<string>()
@@ -138,13 +128,13 @@ export async function loadFileSystemStructure(): Promise<void> {
   try {
     const result = await selectFileOrFolder();
     if (!result) {
-      setFileBrowserState({ isLoading: false });
+      useFileBrowserStore.getState().setFileBrowserState({ isLoading: false });
       return;
     }
 
     await handlePickerResult(result);
   } catch {
-    setFileBrowserState({
+    useFileBrowserStore.getState().setFileBrowserState({
       currentPath: null,
       error: "Failed to load file system. Please try again.",
       fileTree: null,
@@ -156,49 +146,47 @@ export async function loadFileSystemStructure(): Promise<void> {
 }
 
 export async function loadFolderContents(folderPath: string): Promise<void> {
-  const fileBrowser = getFileBrowserState();
+  const fileBrowser = useFileBrowserStore.getState();
   const fileSystem = fileBrowser.fileTree?.files ?? [];
   const folder = findFolderInFileSystem(fileSystem, folderPath);
   if (!folder || (folder.files && folder.files.length > 0)) return;
 
   const loadingFolders = new Set(fileBrowser.loadingFolders);
   loadingFolders.add(folderPath);
-  setFileBrowserState({ loadingFolders });
+  useFileBrowserStore.getState().setFileBrowserState({ loadingFolders });
 
   try {
     const result = await readDirectory(folderPath);
-    const latest = getFileBrowserState();
-    const folderContents = transformDirectoryContents(
-      result,
-      latest.sortBy,
-      latest.sortDirection
-    );
-    const updated = updateFolderContents(fileSystem, folderPath, folderContents);
+    const latest = useFileBrowserStore.getState();
+    const folderContents = transformDirectoryContents(result, latest.sortBy, latest.sortDirection);
+    const latestFileSystem = latest.fileTree?.files ?? [];
+    const updated = updateFolderContents(latestFileSystem, folderPath, folderContents);
 
-    if (updated && getFileBrowserState().fileTree) {
-      setFileBrowserState({
+    const tree = useFileBrowserStore.getState().fileTree;
+    if (updated && tree) {
+      useFileBrowserStore.getState().setFileBrowserState({
         fileTree: {
-          ...getFileBrowserState().fileTree!,
+          ...tree,
           files: updated
         }
       });
     }
   } finally {
-    const nextLoading = new Set(getFileBrowserState().loadingFolders);
+    const nextLoading = new Set(useFileBrowserStore.getState().loadingFolders);
     nextLoading.delete(folderPath);
-    setFileBrowserState({ loadingFolders: nextLoading });
+    useFileBrowserStore.getState().setFileBrowserState({ loadingFolders: nextLoading });
   }
 }
 
 export async function navigateToDirectory(dirPath: string): Promise<void> {
   try {
-    setFileBrowserState({
+    useFileBrowserStore.getState().setFileBrowserState({
       error: null,
       isLoading: true,
       loadingFolders: new Set<string>()
     });
 
-    const currentFileBrowser = getFileBrowserState();
+    const currentFileBrowser = useFileBrowserStore.getState();
     const result = await readDirectory(dirPath);
     const nextFileTree = {
       files: transformDirectoryContents(
@@ -209,7 +197,7 @@ export async function navigateToDirectory(dirPath: string): Promise<void> {
       rootPath: result.currentPath
     };
 
-    setFileBrowserState({
+    useFileBrowserStore.getState().setFileBrowserState({
       currentPath: result.currentPath,
       error: null,
       fileTree: nextFileTree,
@@ -220,10 +208,10 @@ export async function navigateToDirectory(dirPath: string): Promise<void> {
     updatePlayerQueueForced(true);
     const allVideoFiles = await getAllVideoFiles(dirPath);
     if (allVideoFiles.length > 0) {
-      addQueueItems(allVideoFiles);
+      useQueueStore.getState().addQueueItems(allVideoFiles);
     }
   } catch {
-    setFileBrowserState({
+    useFileBrowserStore.getState().setFileBrowserState({
       error: "Failed to load directory. Please try again.",
       isLoading: false
     });
@@ -231,17 +219,17 @@ export async function navigateToDirectory(dirPath: string): Promise<void> {
 }
 
 export async function navigateToParent(): Promise<void> {
-  const fileBrowser = getFileBrowserState();
+  const fileBrowser = useFileBrowserStore.getState();
   if (!fileBrowser.currentPath || fileBrowser.isAtRoot) return;
 
-  setFileBrowserState({ isLoading: true });
+  useFileBrowserStore.getState().setFileBrowserState({ isLoading: true });
   try {
     const result = await readDirectory(fileBrowser.currentPath);
     if (result.parentPath) {
       await navigateToDirectory(result.parentPath);
     }
   } catch {
-    setFileBrowserState({
+    useFileBrowserStore.getState().setFileBrowserState({
       error: "Failed to navigate to parent directory.",
       isLoading: false
     });
@@ -249,7 +237,7 @@ export async function navigateToParent(): Promise<void> {
 }
 
 export function toggleFolder(path: string): void {
-  const nextExpanded = new Set(getFileBrowserState().expandedFolders);
+  const nextExpanded = new Set(useFileBrowserStore.getState().expandedFolders);
   if (nextExpanded.has(path)) {
     nextExpanded.delete(path);
   } else {
@@ -257,13 +245,13 @@ export function toggleFolder(path: string): void {
     void loadFolderContents(path);
   }
 
-  setExpandedFolders(nextExpanded);
+  useFileBrowserStore.getState().setExpandedFolders(nextExpanded);
 }
 
 export function resetAndBrowseLibrary(): void {
-  resetFileBrowser();
-  resetQueue();
-  resetPlayer();
+  useFileBrowserStore.getState().resetFileBrowser();
+  useQueueStore.getState().resetQueue();
+  usePlayerStore.getState().resetPlayer();
   void loadFileSystemStructure();
 }
 

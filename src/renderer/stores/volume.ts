@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { clamp } from "@/lib/state/utils";
 import { VOLUME_STEP } from "@/lib/constants";
+import { clamp } from "@stores/utils";
 
 export interface VolumeState {
   isMuted: boolean;
@@ -17,13 +17,11 @@ export interface VolumeActions {
 
 export type VolumeStore = VolumeState & VolumeActions;
 
-const INITIAL_VOLUME = 1 as number;
-
 export const useVolumeStore = create<VolumeStore>()(
   persist(
     (set, get) => ({
-      isMuted: INITIAL_VOLUME === 0,
-      value: INITIAL_VOLUME,
+      isMuted: false,
+      value: 1.0,
       setMuted: (isMuted) => set({ isMuted }),
       setVolume: (value) => {
         const next = clamp(value, 0, 1);

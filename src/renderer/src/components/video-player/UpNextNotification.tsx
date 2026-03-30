@@ -1,19 +1,18 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
-
-import { usePlayerState } from "@/lib/state/player";
-import { useQueueState } from "@/lib/state/queue";
 import { cn } from "@/lib/utils";
 import { useNotificationsStore } from "@stores/notifications";
+import { usePlayerStore } from "@stores/player";
+import { useQueueStore } from "@stores/queue";
 
 export function UpNextNotification() {
-  const currentTime = usePlayerState((state) => state.currentTime);
-  const currentVideo = usePlayerState((state) => state.currentVideo);
-  const duration = usePlayerState((state) => state.duration);
-  const index = useQueueState((state) => state.index);
-  const items = useQueueState((state) => state.items);
-  const repeatMode = useQueueState((state) => state.repeatMode);
+  const currentTime = usePlayerStore((state) => state.currentTime);
+  const currentVideo = usePlayerStore((state) => state.currentVideo);
+  const duration = usePlayerStore((state) => state.duration);
+  const index = useQueueStore((state) => state.index);
+  const items = useQueueStore((state) => state.items);
+  const repeatMode = useQueueStore((state) => state.repeatMode);
   const upNextEnabled = useNotificationsStore((state) => state.upNextEnabled);
   const upNextPosition = useNotificationsStore((state) => state.upNextPosition);
   const [isDismissed, setIsDismissed] = useState(false);

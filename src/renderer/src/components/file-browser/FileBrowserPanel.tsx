@@ -1,18 +1,19 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { sortFileTree } from "../../../../shared/file-tree-utils";
-
-import {
-  useFileBrowserView,
-} from "@/lib/store";
 import { FileBrowserEmptyState } from "./FileBrowserEmptyState";
 import { FileBrowserList } from "./FileBrowserList";
 import { FileBrowserHeader } from "./FileBrowserHeader";
+import { useFileBrowserStore } from "@stores/file-browser";
 
 export function FileBrowserPanel() {
-  const fileBrowser = useFileBrowserView();
-  const fileSystem = sortFileTree(fileBrowser.fileTree?.files ?? [], {
-    sortBy: fileBrowser.sortBy,
-    sortDirection: fileBrowser.sortDirection
+  const fileTree = useFileBrowserStore((state) => state.fileTree);
+  const sortBy = useFileBrowserStore((state) => state.sortBy);
+  const sortDirection = useFileBrowserStore((state) => state.sortDirection);
+  const isLoading = useFileBrowserStore((state) => state.isLoading);
+
+  const fileSystem = sortFileTree(fileTree?.files ?? [], {
+    sortBy,
+    sortDirection
   });
 
   return (
@@ -20,7 +21,7 @@ export function FileBrowserPanel() {
       <FileBrowserHeader />
 
       <div className="relative flex min-h-0 flex-1 flex-col">
-        {fileBrowser.isLoading ? (
+        {isLoading ? (
           <div className="flex flex-col gap-1 p-1">
             {Array.from({ length: 24 }).map((_, i) => (
               <div

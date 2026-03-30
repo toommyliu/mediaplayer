@@ -1,19 +1,14 @@
 import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
-  libraryCommands,
-  fileBrowserCommands,
-  useFileBrowserView,
-} from "@/lib/store";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { ArrowDown01, ArrowDownAZ, ArrowUp01, ArrowUpAZ, FolderOpen } from "lucide-react";
+import { resetAndBrowseLibrary } from "@/lib/controllers/library-controller";
+import { useFileBrowserStore } from "@stores/file-browser";
 
 export function FileBrowserHeader() {
-  const fileBrowser = useFileBrowserView();
+  const sortBy = useFileBrowserStore((state) => state.sortBy);
+  const sortDirection = useFileBrowserStore((state) => state.sortDirection);
+  const setFileBrowserSort = useFileBrowserStore((state) => state.setFileBrowserSort);
 
   return (
     <div
@@ -27,17 +22,17 @@ export function FileBrowserHeader() {
               <Button
                 {...triggerProps}
                 className={cn(
-                  fileBrowser.sortBy === "name"
-                    ? "h-7 border-primary/20 bg-primary/5 px-2 text-xs text-primary hover:bg-primary/10"
+                  sortBy === "name"
+                    ? "border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 h-7 px-2 text-xs"
                     : "border-sidebar-border/60 h-7 px-2 text-xs",
                   "transition-colors"
                 )}
-                onClick={() => fileBrowserCommands.setFileBrowserSort("name")}
+                onClick={() => setFileBrowserSort("name")}
                 size="xs"
                 type="button"
-                variant={fileBrowser.sortBy === "name" ? "secondary" : "outline"}
+                variant={sortBy === "name" ? "secondary" : "outline"}
               >
-                {fileBrowser.sortBy === "name" && fileBrowser.sortDirection === "desc" ? (
+                {sortBy === "name" && sortDirection === "desc" ? (
                   <ArrowUpAZ className="size-3.5" />
                 ) : (
                   <ArrowDownAZ className="size-3.5" />
@@ -46,8 +41,8 @@ export function FileBrowserHeader() {
             )}
           />
           <TooltipContent>
-            {fileBrowser.sortBy === "name"
-              ? `Sorted by Name (${fileBrowser.sortDirection === 'asc' ? 'Ascending' : 'Descending'})`
+            {sortBy === "name"
+              ? `Sorted by Name (${sortDirection === "asc" ? "Ascending" : "Descending"})`
               : "Sort by Name"}
           </TooltipContent>
         </Tooltip>
@@ -58,17 +53,17 @@ export function FileBrowserHeader() {
               <Button
                 {...triggerProps}
                 className={cn(
-                  fileBrowser.sortBy === "duration"
-                    ? "h-7 border-primary/20 bg-primary/5 px-2 text-xs text-primary hover:bg-primary/10"
+                  sortBy === "duration"
+                    ? "border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 h-7 px-2 text-xs"
                     : "border-sidebar-border/60 h-7 px-2 text-xs",
                   "transition-colors"
                 )}
-                onClick={() => fileBrowserCommands.setFileBrowserSort("duration")}
+                onClick={() => setFileBrowserSort("duration")}
                 size="xs"
                 type="button"
-                variant={fileBrowser.sortBy === "duration" ? "secondary" : "outline"}
+                variant={sortBy === "duration" ? "secondary" : "outline"}
               >
-                {fileBrowser.sortBy === "duration" && fileBrowser.sortDirection === "desc" ? (
+                {sortBy === "duration" && sortDirection === "desc" ? (
                   <ArrowUp01 className="size-3.5" />
                 ) : (
                   <ArrowDown01 className="size-3.5" />
@@ -77,16 +72,16 @@ export function FileBrowserHeader() {
             )}
           />
           <TooltipContent>
-            {fileBrowser.sortBy === "duration"
-              ? `Sorted by Duration (${fileBrowser.sortDirection === 'asc' ? 'Ascending' : 'Descending'})`
+            {sortBy === "duration"
+              ? `Sorted by Duration (${sortDirection === "asc" ? "Ascending" : "Descending"})`
               : "Sort by Duration"}
           </TooltipContent>
         </Tooltip>
       </div>
 
       <Button
-        className={cn("h-7 gap-1.5 px-2 text-xs leading-relaxed border-sidebar-border/60")}
-        onClick={libraryCommands.resetAndBrowseLibrary}
+        className={cn("border-sidebar-border/60 h-7 gap-1.5 px-2 text-xs leading-relaxed")}
+        onClick={resetAndBrowseLibrary}
         size="xs"
         type="button"
         variant="outline"

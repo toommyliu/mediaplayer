@@ -12,16 +12,16 @@ import {
   setMutedWithMediaSync
 } from "@/lib/controllers/volume-controller";
 import { getVideoElement } from "@/lib/controllers/media-runtime";
-import { getPlayerState, setCurrentTime } from "@/lib/state/player";
-import { getCurrentQueueItemFromState, getQueueState } from "@/lib/state/queue";
+import { usePlayerStore } from "@stores/player";
+import { getCurrentQueueItemFromState, useQueueStore } from "@stores/queue";
 import { useSettingsStore } from "@stores/settings";
 import { useSidebarStore } from "@stores/sidebar";
 import { useVolumeStore } from "@stores/volume";
 
 export async function runHotkeyAction(actionId: string): Promise<void> {
-  const queue = getQueueState();
+  const queue = useQueueStore.getState();
   const currentItem = getCurrentQueueItemFromState(queue);
-  const player = getPlayerState();
+  const player = usePlayerStore.getState();
   const video = getVideoElement();
 
   switch (actionId) {
@@ -37,28 +37,28 @@ export async function runHotkeyAction(actionId: string): Promise<void> {
     case "seekBackward":
       if (currentItem) {
         const nextTime = Math.max(0, player.currentTime - SEEK_TIME_STEP);
-        setCurrentTime(nextTime);
+        usePlayerStore.getState().setCurrentTime(nextTime);
         if (video) video.currentTime = nextTime;
       }
       break;
     case "seekForward":
       if (currentItem && Number.isFinite(player.duration)) {
         const nextTime = Math.min(player.duration, player.currentTime + SEEK_TIME_STEP);
-        setCurrentTime(nextTime);
+        usePlayerStore.getState().setCurrentTime(nextTime);
         if (video) video.currentTime = nextTime;
       }
       break;
     case "frameBackward":
       if (currentItem) {
         const nextTime = Math.max(0, player.currentTime - FRAME_TIME_STEP);
-        setCurrentTime(nextTime);
+        usePlayerStore.getState().setCurrentTime(nextTime);
         if (video) video.currentTime = nextTime;
       }
       break;
     case "frameForward":
       if (currentItem && Number.isFinite(player.duration)) {
         const nextTime = Math.min(player.duration, player.currentTime + FRAME_TIME_STEP);
-        setCurrentTime(nextTime);
+        usePlayerStore.getState().setCurrentTime(nextTime);
         if (video) video.currentTime = nextTime;
       }
       break;
@@ -72,7 +72,7 @@ export async function runHotkeyAction(actionId: string): Promise<void> {
       setMutedWithMediaSync(!useVolumeStore.getState().isMuted);
       break;
     case "fullscreen":
-      await setFullscreen(!getPlayerState().isFullscreen);
+      await setFullscreen(!usePlayerStore.getState().isFullscreen);
       break;
     case "showFileBrowser":
       useSidebarStore.getState().setSidebarTab("file-browser");
@@ -93,7 +93,7 @@ export async function runHotkeyAction(actionId: string): Promise<void> {
       if (/^jump-\d$/.test(actionId) && currentItem && Number.isFinite(player.duration)) {
         const percent = Number.parseInt(actionId.split("-")[1], 10) / 10;
         const nextTime = percent * player.duration;
-        setCurrentTime(nextTime);
+        usePlayerStore.getState().setCurrentTime(nextTime);
         if (video) video.currentTime = nextTime;
       }
       break;

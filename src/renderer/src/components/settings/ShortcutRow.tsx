@@ -3,7 +3,7 @@ import { useHotkeyRecorder, formatForDisplay } from "@tanstack/react-hotkeys";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
-import { hotkeyCommands } from "@/lib/store";
+import { useHotkeysStore } from "@stores/hotkeys";
 
 interface ShortcutRowProps {
   action: { id: string; description: string; keys: string[]; configurable?: boolean };
@@ -26,9 +26,11 @@ export function ShortcutRow({
   onEdit,
   onCancel
 }: ShortcutRowProps) {
+  const updateHotkeyInState = useHotkeysStore((state) => state.updateHotkeyInState);
+
   const recorder = useHotkeyRecorder({
     onRecord: (hotkey) => {
-      hotkeyCommands.updateHotkey(action.id, [hotkey]);
+      updateHotkeyInState(action.id, [hotkey]);
       onCancel();
     },
     onCancel: () => {
@@ -47,7 +49,7 @@ export function ShortcutRow({
   }, [isEditing]);
 
   return (
-    <div className="flex items-center justify-between gap-4 border-b border-border/50 px-3 py-2 last:border-b-0">
+    <div className="border-border/50 flex items-center justify-between gap-4 border-b px-3 py-2 last:border-b-0">
       <div className="text-muted-foreground text-xs leading-relaxed">{action.description}</div>
       <div className="flex items-center gap-2">
         <Kbd className="h-5 min-w-5 px-1 text-[10px]">

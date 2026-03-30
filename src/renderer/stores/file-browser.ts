@@ -1,9 +1,19 @@
 import { create } from "zustand";
-import { sortFileTree } from "../../../../shared";
+import { sortFileTree } from "../../shared";
 import type { AppState, FileSystemItem } from "@/types";
 import type { DirectoryContents } from "@/lib/contracts";
 
-type FileBrowserState = AppState["fileBrowser"];
+export type FileBrowserState = AppState["fileBrowser"];
+
+export interface FileBrowserActions {
+  setFileBrowserState: (patch: Partial<FileBrowserState>) => void;
+  resetFileBrowser: () => void;
+  setFileBrowserScrollTop: (scrollTop: number) => void;
+  setFileBrowserSort: (sortBy: "duration" | "name") => void;
+  setExpandedFolders: (expandedFolders: Set<string>) => void;
+}
+
+export type FileBrowserStore = FileBrowserState & FileBrowserActions;
 
 const initialFileBrowserState: FileBrowserState = {
   currentPath: null,
@@ -21,58 +31,29 @@ const initialFileBrowserState: FileBrowserState = {
   sortDirection: "asc"
 };
 
-const useFileBrowserStoreBase = create<FileBrowserState>(() => initialFileBrowserState);
-
-export function useFileBrowserState<T>(selector: (state: FileBrowserState) => T): T {
-  return useFileBrowserStoreBase(selector);
-}
-
-export function getFileBrowserState(): FileBrowserState {
-  return useFileBrowserStoreBase.getState();
-}
-
-export function setFileBrowserState(patch: Partial<FileBrowserState>): void {
-  useFileBrowserStoreBase.setState((state) => ({
-    ...state,
-    ...patch
-  }));
-}
-
-export function resetFileBrowser(): void {
-  useFileBrowserStoreBase.setState((state) => ({
-    ...state,
-    currentPath: null,
-    expandedFolders: new Set<string>(),
-    fileTree: null,
-    isAtRoot: false,
-    isLoading: false,
-    loadingFolders: new Set<string>(),
-    originalPath: null
-  }));
-}
-
-export function setFileBrowserScrollTop(scrollTop: number): void {
-  useFileBrowserStoreBase.setState((state) => ({
-    ...state,
-    scrollTop
-  }));
-}
-
-export function setFileBrowserSort(sortBy: "duration" | "name"): void {
-  useFileBrowserStoreBase.setState((state) => ({
-    ...state,
-    sortBy,
-    sortDirection:
-      state.sortBy === sortBy ? (state.sortDirection === "asc" ? "desc" : "asc") : "asc"
-  }));
-}
-
-export function setExpandedFolders(expandedFolders: Set<string>): void {
-  useFileBrowserStoreBase.setState((state) => ({
-    ...state,
-    expandedFolders
-  }));
-}
+export const useFileBrowserStore = create<FileBrowserStore>()((set) => ({
+  ...initialFileBrowserState,
+  setFileBrowserState: (patch) => set((state) => ({ ...state, ...patch })),
+  resetFileBrowser: () =>
+    set((state) => ({
+      ...state,
+      currentPath: null,
+      expandedFolders: new Set<string>(),
+      fileTree: null,
+      isAtRoot: false,
+      isLoading: false,
+      loadingFolders: new Set<string>(),
+      originalPath: null
+    })),
+  setFileBrowserScrollTop: (scrollTop) => set({ scrollTop }),
+  setFileBrowserSort: (sortBy) =>
+    set((state) => ({
+      sortBy,
+      sortDirection:
+        state.sortBy === sortBy ? (state.sortDirection === "asc" ? "desc" : "asc") : "asc"
+    })),
+  setExpandedFolders: (expandedFolders) => set({ expandedFolders })
+}));
 
 export function findFolderInFileSystem(
   items: FileSystemItem[],
@@ -139,5 +120,3 @@ export function updateFolderContents(
 
   return null;
 }
-
-export type { FileBrowserState };

@@ -3,23 +3,29 @@ import { Loader2 } from "lucide-react";
 import { VideoPlayerControls } from "./VideoPlayerControls";
 import { UpNextNotification } from "./UpNextNotification";
 import { VideoInfoOverlay } from "./VideoInfoOverlay";
-
+import { loadFileSystemStructure } from "@/lib/controllers/library-controller";
 import {
-  libraryCommands,
-  playbackCommands,
-  playerCommands,
-  toFileUrl,
-  useCurrentQueueItem,
-  usePlayerView,
-  useQueueView
-} from "@/lib/store";
+  bindPlaybackVideoElement,
+  playNextVideo,
+  togglePlayPause
+} from "@/lib/controllers/playback-controller";
 import { cn } from "@/lib/utils";
+import { toFileUrl } from "@/lib/media-path";
+import { usePlayerStore } from "@stores/player";
+import { useCurrentQueueItem, useQueueStore } from "@stores/queue";
 
 type HoldDirection = "left" | "right" | null;
 
 export default function VideoPlayer() {
-  const player = usePlayerView();
-  const queue = useQueueView();
+  const aspectRatio = usePlayerStore((state) => state.aspectRatio);
+  const duration = usePlayerStore((state) => state.duration);
+  const error = usePlayerStore((state) => state.error);
+  const isLoading = usePlayerStore((state) => state.isLoading);
+  const isPlaying = usePlayerStore((state) => state.isPlaying);
+  const setCurrentTime = usePlayerStore((state) => state.setCurrentTime);
+  const setDuration = usePlayerStore((state) => state.setDuration);
+  const setPlayerState = usePlayerStore((state) => state.setPlayerState);
+  const repeatMode = useQueueStore((state) => state.repeatMode);
   const currentItem = useCurrentQueueItem();
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -32,15 +38,15 @@ export default function VideoPlayer() {
 
   const setVideoElementRef = useCallback((element: HTMLVideoElement | null) => {
     videoRef.current = element;
-    playbackCommands.bindVideoElement(element);
+    bindPlaybackVideoElement(element);
   }, []);
 
   useEffect(() => {
-    playerCommands.setPlayerState({ showControls });
-  }, [showControls]);
+    setPlayerState({ showControls });
+  }, [setPlayerState, showControls]);
 
   useEffect(() => {
-    if (!player.isPlaying) {
+    if (!isPlaying) {
       setShowControls(true);
       if (hideTimerRef.current) {
         window.clearTimeout(hideTimerRef.current);
@@ -54,7 +60,7 @@ export default function VideoPlayer() {
         window.clearTimeout(hideTimerRef.current);
       }
     };
-  }, [player.isPlaying, currentItem?.id]);
+  }, [currentItem?.id, isPlaying]);
 
   function resetHideTimer(): void {
     if (hideTimerRef.current) {
@@ -63,7 +69,7 @@ export default function VideoPlayer() {
 
     setShowControls(true);
 
-    if (!isControlsHovered && player.isPlaying) {
+    if (!isControlsHovered && isPlaying) {
       hideTimerRef.current = window.setTimeout(() => {
         if (!isControlsHovered) {
           setShowControls(false);
@@ -74,7 +80,7 @@ export default function VideoPlayer() {
 
   function stopHoldSeeking(): void {
     setHoldDirection(null);
-    playerCommands.setPlayerState({ isHolding: false });
+    setPlayerState({ isHolding: false });
     if (holdTimerRef.current) {
       window.clearTimeout(holdTimerRef.current);
       holdTimerRef.current = null;
@@ -89,11 +95,11 @@ export default function VideoPlayer() {
     return () => {
       stopHoldSeeking();
     };
-  }, []);
+  }, [setPlayerState]);
 
   function startHoldSeeking(direction: HoldDirection): void {
     if (!videoRef.current || !direction) return;
-    playerCommands.setPlayerState({ isHolding: true });
+    setPlayerState({ isHolding: true });
     setHoldDirection(direction);
 
     holdIntervalRef.current = window.setInterval(() => {
@@ -103,25 +109,25 @@ export default function VideoPlayer() {
       }
 
       const seekAmount = 0.3;
-      const duration = player.duration;
-      if (!Number.isFinite(duration)) return;
+      const currentDuration = duration;
+      if (!Number.isFinite(currentDuration)) return;
 
       const nextTime =
         direction === "right"
-          ? Math.min(videoRef.current.currentTime + seekAmount, duration)
+          ? Math.min(videoRef.current.currentTime + seekAmount, currentDuration)
           : Math.max(videoRef.current.currentTime - seekAmount, 0);
 
       videoRef.current.currentTime = nextTime;
-      playerCommands.setCurrentTime(nextTime);
+      setCurrentTime(nextTime);
     }, 100);
   }
 
   if (!currentItem) {
     return (
       <div
-        className="group flex h-full w-full items-center justify-center bg-black/90 text-center text-muted-foreground transition hover:bg-black/80"
+        className="group text-muted-foreground flex h-full w-full items-center justify-center bg-black/90 text-center transition hover:bg-black/80"
         onDoubleClick={() => {
-          void libraryCommands.loadFileSystemStructure();
+          void loadFileSystemStructure();
         }}
       />
     );
@@ -130,13 +136,14 @@ export default function VideoPlayer() {
   return (
     <div className="relative flex h-full w-full flex-col" id="video-player">
       <div
-        className={`relative flex min-h-0 flex-1 items-center justify-center bg-black ${showControls ? "" : "cursor-none"
-          }`}
+        className={`relative flex min-h-0 flex-1 items-center justify-center bg-black ${
+          showControls ? "" : "cursor-none"
+        }`}
         id="video-container"
         onDoubleClick={async (event) => {
           const target = event.target as HTMLElement | null;
           if (target?.closest("#media-controls")) return;
-          await playbackCommands.togglePlayPause();
+          await togglePlayPause();
         }}
         onMouseDown={(event) => {
           if (event.button !== 0 || !videoRef.current) return;
@@ -162,7 +169,7 @@ export default function VideoPlayer() {
           if (hideTimerRef.current) {
             window.clearTimeout(hideTimerRef.current);
           }
-          if (player.isPlaying && !isControlsHovered) {
+          if (isPlaying && !isControlsHovered) {
             setShowControls(false);
           }
         }}
@@ -170,53 +177,54 @@ export default function VideoPlayer() {
         ref={containerRef}
       >
         <video
-          className={`h-full w-full bg-black ${player.aspectRatio === "cover"
-            ? "object-cover"
-            : player.aspectRatio === "fill"
-              ? "object-fill"
-              : "object-contain"
-            }`}
+          className={`h-full w-full bg-black ${
+            aspectRatio === "cover"
+              ? "object-cover"
+              : aspectRatio === "fill"
+                ? "object-fill"
+                : "object-contain"
+          }`}
           controls={false}
           disablePictureInPicture
-          onCanPlay={() => playerCommands.setPlayerState({ isLoading: false })}
+          onCanPlay={() => setPlayerState({ isLoading: false })}
           onEnded={() => {
-            if (queue.repeatMode === "one" && videoRef.current) {
+            if (repeatMode === "one" && videoRef.current) {
               videoRef.current.currentTime = 0;
-              playerCommands.setCurrentTime(0);
+              setCurrentTime(0);
               void videoRef.current.play();
               return;
             }
-            void playbackCommands.playNextVideo();
+            void playNextVideo();
           }}
           onError={() => {
-            playerCommands.setPlayerState({
+            setPlayerState({
               error: "Video format not supported or file could not be played.",
               isLoading: false
             });
           }}
           onLoadedData={() => {
-            playerCommands.setPlayerState({ isLoading: false });
+            setPlayerState({ isLoading: false });
             if (videoRef.current) {
-              playerCommands.setDuration(videoRef.current.duration);
+              setDuration(videoRef.current.duration);
               void videoRef.current.play().catch(() => undefined);
             }
           }}
           onLoadedMetadata={() => {
             if (videoRef.current) {
-              playerCommands.setDuration(videoRef.current.duration);
+              setDuration(videoRef.current.duration);
             }
           }}
-          onLoadStart={() => playerCommands.setPlayerState({ isLoading: true })}
-          onPause={() => playerCommands.setPlayerState({ isPlaying: false })}
-          onPlay={() => playerCommands.setPlayerState({ isPlaying: true })}
+          onLoadStart={() => setPlayerState({ isLoading: true })}
+          onPause={() => setPlayerState({ isPlaying: false })}
+          onPlay={() => setPlayerState({ isPlaying: true })}
           onSeeked={() => {
             if (videoRef.current) {
-              playerCommands.setCurrentTime(videoRef.current.currentTime);
+              setCurrentTime(videoRef.current.currentTime);
             }
           }}
           onTimeUpdate={() => {
             if (videoRef.current) {
-              playerCommands.setCurrentTime(videoRef.current.currentTime);
+              setCurrentTime(videoRef.current.currentTime);
             }
           }}
           preload="metadata"
@@ -224,21 +232,22 @@ export default function VideoPlayer() {
           src={toFileUrl(currentItem.path)}
         />
 
-        {player.isLoading ? (
+        {isLoading ? (
           <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/40">
             <Loader2 className="h-8 w-8 animate-spin text-white" />
           </div>
         ) : null}
 
-        {player.error ? (
-          <div className="absolute top-6 left-1/2 z-30 -translate-x-1/2 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-2 text-sm text-destructive">
-            {player.error}
+        {error ? (
+          <div className="border-destructive/30 bg-destructive/10 text-destructive absolute top-6 left-1/2 z-30 -translate-x-1/2 rounded-lg border px-4 py-2 text-sm">
+            {error}
           </div>
         ) : null}
 
         {holdDirection ? (
           <div
-            className={cn("pointer-events-none absolute top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white backdrop-blur-sm",
+            className={cn(
+              "pointer-events-none absolute top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white backdrop-blur-sm",
               holdDirection === "left" ? "left-8" : "right-8"
             )}
           >

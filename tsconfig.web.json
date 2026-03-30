@@ -18,6 +18,8 @@
     "src/renderer/src/**/*",
     "src/renderer/src/**/*.tsx",
     "src/renderer/src/**/*.ts",
+    "src/renderer/stores/**/*",
+    "src/shared/**/*",
     "src/preload/*.d.ts",
     "src/common/**/*"
   ]

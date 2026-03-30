@@ -1,14 +1,12 @@
-
 import { ClearQueueButton } from "../ClearQueueButton";
 import { QueueEmptyState } from "./QueueEmptyState";
 import { RepeatButton } from "../RepeatButton";
 import { ShuffleButton } from "../ShuffleButton";
 import { QueueList } from "./QueueList";
-
-import { useQueueView } from "@/lib/store";
+import { useQueueStore } from "@stores/queue";
 
 export function QueuePanel() {
-  const queue = useQueueView();
+  const queueItemsLength = useQueueStore((state) => state.items.length);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-2.5 pt-1">
@@ -22,12 +20,8 @@ export function QueuePanel() {
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col">
-        {queue.items.length === 0 ? (
-          <QueueEmptyState />
-        ) : (
-          <QueueList />
-        )}
-      </div >
-    </div >
+        {queueItemsLength === 0 ? <QueueEmptyState /> : <QueueList />}
+      </div>
+    </div>
   );
 }

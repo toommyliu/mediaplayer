@@ -1,31 +1,31 @@
-import { useEffect, useRef, useMemo } from 'react';
-import { useVirtualizer } from '@tanstack/react-virtual';
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Button } from '@/components/ui/button'
+import { useEffect, useRef, useMemo } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
 import { FileBrowserItem } from "./FileBrowserItem";
+import { navigateToParent } from "@/lib/controllers/library-controller";
+import { sortFileTree } from "../../../../shared/file-tree-utils";
+import type { FileSystemItem } from "@/types";
+import { useFileBrowserStore } from "@stores/file-browser";
 
-import { fileBrowserCommands, libraryCommands, useFileBrowserView } from "@/lib/store";
-import { sortFileTree } from '../../../../shared/file-tree-utils';
-import type { FileSystemItem } from '@/types';
-
-type FlattenedItem =
-  | { type: 'back' }
-  | { type: 'item'; item: FileSystemItem; depth: number };
+type FlattenedItem = { type: "back" } | { type: "item"; item: FileSystemItem; depth: number };
 
 function flattenFileTree(
   items: FileSystemItem[],
   expandedFolders: Set<string>,
   depth = 0,
-  sortBy: 'name' | 'duration',
-  sortDirection: 'asc' | 'desc'
+  sortBy: "name" | "duration",
+  sortDirection: "asc" | "desc"
 ): { item: FileSystemItem; depth: number }[] {
   const flattened: { item: FileSystemItem; depth: number }[] = [];
   const sorted = sortFileTree(items, { sortBy, sortDirection });
 
   for (const item of sorted) {
     flattened.push({ item, depth });
-    if (item.type === 'folder' && expandedFolders.has(item.path) && item.files) {
-      flattened.push(...flattenFileTree(item.files, expandedFolders, depth + 1, sortBy, sortDirection));
+    if (item.type === "folder" && expandedFolders.has(item.path) && item.files) {
+      flattened.push(
+        ...flattenFileTree(item.files, expandedFolders, depth + 1, sortBy, sortDirection)
+      );
     }
   }
 
@@ -33,58 +33,50 @@ function flattenFileTree(
 }
 
 export function FileBrowserList() {
-  const fileBrowser = useFileBrowserView();
+  const fileTree = useFileBrowserStore((state) => state.fileTree);
+  const expandedFolders = useFileBrowserStore((state) => state.expandedFolders);
+  const sortBy = useFileBrowserStore((state) => state.sortBy);
+  const sortDirection = useFileBrowserStore((state) => state.sortDirection);
+  const isAtRoot = useFileBrowserStore((state) => state.isAtRoot);
+  const currentPath = useFileBrowserStore((state) => state.currentPath);
+  const scrollTop = useFileBrowserStore((state) => state.scrollTop);
+  const setFileBrowserScrollTop = useFileBrowserStore((state) => state.setFileBrowserScrollTop);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
 
   const flattenedItems = useMemo(() => {
-    const items = flattenFileTree(
-      fileBrowser.fileTree?.files ?? [],
-      fileBrowser.expandedFolders,
-      0,
-      fileBrowser.sortBy,
-      fileBrowser.sortDirection
-    );
+    const items = flattenFileTree(fileTree?.files ?? [], expandedFolders, 0, sortBy, sortDirection);
 
     const result: FlattenedItem[] = [];
 
-    if (!fileBrowser.isAtRoot && fileBrowser.currentPath) {
-      result.push({ type: 'back' });
+    if (!isAtRoot && currentPath) {
+      result.push({ type: "back" });
     }
 
     for (const item of items) {
-      result.push({ type: 'item', ...item });
+      result.push({ type: "item", ...item });
     }
 
     return result;
-  }, [
-    fileBrowser.fileTree,
-    fileBrowser.expandedFolders,
-    fileBrowser.sortBy,
-    fileBrowser.sortDirection,
-    fileBrowser.isAtRoot,
-    fileBrowser.currentPath
-  ]);
+  }, [fileTree, expandedFolders, sortBy, sortDirection, isAtRoot, currentPath]);
 
   const virtualizer = useVirtualizer({
     count: flattenedItems.length,
     getScrollElement: () => scrollContainerRef.current,
     estimateSize: () => 38,
-    overscan: 20,
+    overscan: 20
   });
 
   useEffect(() => {
-    if (scrollContainerRef.current && fileBrowser.scrollTop > 0) {
-      scrollContainerRef.current.scrollTop = fileBrowser.scrollTop;
+    if (scrollContainerRef.current && scrollTop > 0) {
+      scrollContainerRef.current.scrollTop = scrollTop;
     }
-  }, [fileBrowser.scrollTop, fileBrowser.fileTree]);
+  }, [scrollTop, fileTree]);
 
   return (
     <ScrollArea
       className="flex-1"
       onScroll={() => {
-        fileBrowserCommands.setFileBrowserScrollTop(
-          scrollContainerRef.current?.scrollTop ?? 0
-        );
+        setFileBrowserScrollTop(scrollContainerRef.current?.scrollTop ?? 0);
       }}
       scrollFade
       hideScrollbar
@@ -113,11 +105,11 @@ export function FileBrowserList() {
           if (!row) return null;
 
           const content =
-            row.type === 'back' ? (
+            row.type === "back" ? (
               <Button
-                className="w-full justify-start px-3 py-2 text-left text-sm text-muted-foreground hover:bg-muted/40"
+                className="text-muted-foreground hover:bg-muted/40 w-full justify-start px-3 py-2 text-left text-sm"
                 onClick={() => {
-                  void libraryCommands.navigateToParent();
+                  void navigateToParent();
                 }}
                 type="button"
                 variant="ghost"
@@ -135,11 +127,11 @@ export function FileBrowserList() {
               data-index={virtualRow.index}
               className="pb-1"
               style={{
-                position: 'absolute',
+                position: "absolute",
                 top: 0,
                 left: 0,
-                width: '100%',
-                transform: `translateY(${virtualRow.start}px)`,
+                width: "100%",
+                transform: `translateY(${virtualRow.start}px)`
               }}
             >
               {content}

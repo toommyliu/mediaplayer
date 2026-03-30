@@ -1,11 +1,11 @@
-import { TanStackDevtools } from "@tanstack/react-devtools";
-import { hotkeysDevtoolsPlugin } from "@tanstack/react-hotkeys-devtools";
+// import { TanStackDevtools } from "@tanstack/react-devtools";
+// import { hotkeysDevtoolsPlugin } from "@tanstack/react-hotkeys-devtools";
 import { HotkeysProvider as THotkeysProvider, useHotkey } from "@tanstack/react-hotkeys";
 import { runHotkeyAction } from "@/lib/controllers/hotkey-controller";
-import { getHotkeysState, getStoredHotkeys, setHotkeyCategories } from "@/lib/state/hotkeys";
 import { useMemo } from "react";
 import type { HotkeyCategory } from "@/types";
 import type { RegisterableHotkey } from "@tanstack/react-hotkeys";
+import { getStoredHotkeys, useHotkeysStore } from "@stores/hotkeys";
 import { usePlatformStore } from "@stores/platform";
 import { useSettingsStore } from "@stores/settings";
 
@@ -74,18 +74,20 @@ function cloneCategory(category: HotkeyCategory): HotkeyCategory {
 }
 
 function useHotkeysCategories(): HotkeyCategory[] {
+  const categories = useHotkeysStore((state) => state.categories);
+  const setHotkeyCategories = useHotkeysStore((state) => state.setHotkeyCategories);
+
   return useMemo(() => {
-    const state = getHotkeysState();
-    if (state.categories.length > 0) {
-      return state.categories;
+    if (categories.length > 0) {
+      return categories;
     }
 
     const modKey = usePlatformStore.getState().isMac ? "command" : "ctrl";
-    const categories = buildDefaultCategories(modKey);
+    const defaultCategories = buildDefaultCategories(modKey);
 
     const stored = getStoredHotkeys();
     if (stored) {
-      for (const category of categories) {
+      for (const category of defaultCategories) {
         for (const action of category.actions) {
           if (stored[action.id]) {
             action.keys = stored[action.id];
@@ -94,10 +96,10 @@ function useHotkeysCategories(): HotkeyCategory[] {
       }
     }
 
-    const cloned = categories.map(cloneCategory);
+    const cloned = defaultCategories.map(cloneCategory);
     setHotkeyCategories(cloned, modKey, true);
     return cloned;
-  }, []);
+  }, [categories, setHotkeyCategories]);
 }
 
 function HotkeysRegistrar() {
@@ -132,7 +134,7 @@ export function HotkeysProvider({ children }: { children: React.ReactNode }) {
       }}
     >
       <HotkeysRegistrar />
-      <TanStackDevtools plugins={[hotkeysDevtoolsPlugin()]} />
+      {/* <TanStackDevtools plugins={[hotkeysDevtoolsPlugin()]} /> */}
       {children}
     </THotkeysProvider>
   );

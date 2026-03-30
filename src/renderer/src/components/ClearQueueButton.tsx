@@ -1,9 +1,11 @@
-import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
-import { Button } from '@/components/ui/button'
-import { queueCommands } from '@/lib/store'
-import { cn } from '@/lib/utils'
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { useQueueStore } from "@stores/queue";
 
 export function ClearQueueButton() {
+  const resetQueue = useQueueStore((state) => state.resetQueue);
+
   return (
     <Tooltip>
       <TooltipTrigger
@@ -11,7 +13,7 @@ export function ClearQueueButton() {
           <Button
             {...props}
             className={cn("h-7 px-2 text-xs", "border-sidebar-border/60")}
-            onClick={() => queueCommands.resetQueue()}
+            onClick={resetQueue}
             size="xs"
             type="button"
             variant="outline"
@@ -20,9 +22,7 @@ export function ClearQueueButton() {
           </Button>
         )}
       />
-      <TooltipContent>
-        Clear queue
-      </TooltipContent>
+      <TooltipContent>Clear queue</TooltipContent>
     </Tooltip>
-  )
+  );
 }

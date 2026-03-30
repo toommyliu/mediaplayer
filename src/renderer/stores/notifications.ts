@@ -1,7 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { NotificationPosition } from "@/types";
-import { STORAGE_KEYS, readStorage } from "@/lib/state/persistence";
 
 export interface NotificationsState {
   upNextEnabled: boolean;
@@ -18,12 +17,9 @@ export type NotificationsStore = NotificationsState & NotificationsActions;
 export const useNotificationsStore = create<NotificationsStore>()(
   persist(
     (set) => ({
-      upNextEnabled: readStorage<boolean>(STORAGE_KEYS.notificationUpNextEnabled, true),
-      upNextPosition: readStorage<NotificationPosition>(
-        STORAGE_KEYS.notificationUpNextPosition,
-        "top-right"
-      ),
-      videoInfoEnabled: readStorage<boolean>(STORAGE_KEYS.notificationVideoInfoEnabled, true),
+      upNextEnabled: true,
+      upNextPosition: "top-right",
+      videoInfoEnabled: true,
       setNotificationSettings: (patch) => set((state) => ({ ...state, ...patch }))
     }),
     {

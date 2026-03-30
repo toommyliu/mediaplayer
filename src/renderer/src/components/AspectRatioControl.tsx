@@ -8,11 +8,12 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger
 } from "@/components/ui/menu";
-import { playerCommands, usePlayerView } from "@/lib/store";
 import { cn } from "@/lib/utils";
+import { usePlayerStore } from "@stores/player";
 
 export function AspectRatioControl() {
-  const player = usePlayerView();
+  const aspectRatio = usePlayerStore((state) => state.aspectRatio);
+  const setPlayerState = usePlayerStore((state) => state.setPlayerState);
 
   return (
     <DropdownMenu>
@@ -21,11 +22,14 @@ export function AspectRatioControl() {
           render={
             <DropdownMenuTrigger
               render={
-                <Button className={cn(
-                  "h-full border-0 bg-transparent px-2.5 text-white hover:bg-white/10 rounded-none shadow-none transition-colors",
-                  "focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/20"
-                )}
-                  size="icon" type="button" variant="ghost"
+                <Button
+                  className={cn(
+                    "h-full rounded-none border-0 bg-transparent px-2.5 text-white shadow-none transition-colors hover:bg-white/10",
+                    "focus-visible:ring-1 focus-visible:ring-white/20 focus-visible:ring-inset"
+                  )}
+                  size="icon"
+                  type="button"
+                  variant="ghost"
                 >
                   <Scaling className="size-4" />
                 </Button>
@@ -40,11 +44,11 @@ export function AspectRatioControl() {
       <DropdownMenuContent align="end" className="w-40" side="top">
         <DropdownMenuRadioGroup
           onValueChange={(nextValue) =>
-            playerCommands.setPlayerState({
+            setPlayerState({
               aspectRatio: nextValue as "contain" | "cover" | "fill"
             })
           }
-          value={player.aspectRatio}
+          value={aspectRatio}
         >
           <DropdownMenuRadioItem value="contain">
             <Shrink className="size-3.5" />

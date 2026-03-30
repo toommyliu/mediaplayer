@@ -1,7 +1,7 @@
 import { FastForward } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { playbackCommands } from "@/lib/store";
+import { playNextVideo } from "@/lib/controllers/playback-controller";
 
 export function NextVideoButton() {
   return (
@@ -10,9 +10,9 @@ export function NextVideoButton() {
         render={(props) => (
           <Button
             {...props}
-            className="h-full border-0 bg-transparent px-2.5 text-white hover:bg-white/10 rounded-none shadow-none transition-colors focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/20"
+            className="h-full rounded-none border-0 bg-transparent px-2.5 text-white shadow-none transition-colors hover:bg-white/10 focus-visible:ring-1 focus-visible:ring-white/20 focus-visible:ring-inset"
             onClick={() => {
-              void playbackCommands.playNextVideo();
+              void playNextVideo();
             }}
             size="icon"
             type="button"

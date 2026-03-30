@@ -1,8 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { SidebarPosition, SidebarTab } from "@/types";
-import { STORAGE_KEYS, readStorage } from "@/lib/state/persistence";
-import { clamp } from "@/lib/state/utils";
+import { clamp } from "@stores/utils";
 
 export interface SidebarState {
   currentTab: SidebarTab;
@@ -32,12 +31,8 @@ const DEFAULT_WIDTH = 20;
 const MIN_WIDTH = 15;
 const MAX_WIDTH = 40;
 
-const initialPosition = readStorage<SidebarPosition>(STORAGE_KEYS.sidebarPosition, "left");
-const initialWidth = clamp(
-  readStorage<number>(STORAGE_KEYS.sidebarWidth, DEFAULT_WIDTH),
-  MIN_WIDTH,
-  MAX_WIDTH
-);
+const INITIAL_POSITION = "left";
+const INITIAL_WIDTH = 20;
 
 export const useSidebarStore = create<SidebarStore>()(
   persist(
@@ -49,8 +44,8 @@ export const useSidebarStore = create<SidebarStore>()(
       isOpen: true,
       maxWidth: MAX_WIDTH,
       minWidth: MIN_WIDTH,
-      position: initialPosition,
-      width: initialWidth,
+      position: INITIAL_POSITION,
+      width: INITIAL_WIDTH,
       setSidebarTab: (currentTab) => set({ currentTab }),
       setSidebarOpen: (isOpen) => set({ isOpen }),
       toggleSidebar: () => set({ isOpen: !get().isOpen }),
@@ -73,7 +68,7 @@ export const useSidebarStore = create<SidebarStore>()(
         }))
     }),
     {
-      name: "sidebar-store",
+      name: "sidebar-storage",
       partialize: (state) => ({
         position: state.position,
         width: state.width

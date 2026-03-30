@@ -1,11 +1,12 @@
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { useState } from "react";
 
 import { makeTimeString } from "@/lib/make-time-string";
-import { useQueueView, useCurrentQueueItem, queueCommands, playbackCommands } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import type { QueueItem as QueueItemType } from "@/types";
+import { playVideo, stopPlayback } from "@/lib/controllers/playback-controller";
+import { useQueueStore, useCurrentQueueItem } from "@stores/queue";
 
 export interface QueueItemProps {
   index: number;
@@ -13,34 +14,36 @@ export interface QueueItemProps {
 }
 
 export function QueueItem({ index, item }: QueueItemProps) {
-  const queue = useQueueView();
+  const queueItems = useQueueStore((state) => state.items);
+  const moveQueueItem = useQueueStore((state) => state.moveQueueItem);
+  const removeQueueItem = useQueueStore((state) => state.removeQueueItem);
   const currentItem = useCurrentQueueItem();
   const [dropPosition, setDropPosition] = useState<"top" | "bottom" | null>(null);
 
   function removeItem(item: QueueItemType): void {
     const isCurrent = currentItem?.id === item.id;
     if (!isCurrent) {
-      queueCommands.removeFromQueue(item.id);
+      removeQueueItem(item.id);
       return;
     }
 
-    const currentIndex = queue.items.findIndex((queueItem) => queueItem.id === item.id);
+    const currentIndex = queueItems.findIndex((queueItem) => queueItem.id === item.id);
     let nextVideoToPlay: string | null = null;
 
-    if (queue.items.length > 1) {
-      if (currentIndex < queue.items.length - 1) {
-        nextVideoToPlay = queue.items[currentIndex + 1].path;
+    if (queueItems.length > 1) {
+      if (currentIndex < queueItems.length - 1) {
+        nextVideoToPlay = queueItems[currentIndex + 1].path;
       } else if (currentIndex > 0) {
-        nextVideoToPlay = queue.items[currentIndex - 1].path;
+        nextVideoToPlay = queueItems[currentIndex - 1].path;
       }
     }
 
-    queueCommands.removeFromQueue(item.id);
+    removeQueueItem(item.id);
 
     if (nextVideoToPlay) {
-      playbackCommands.playVideo(nextVideoToPlay);
+      playVideo(nextVideoToPlay);
     } else {
-      playbackCommands.stopPlayback(true);
+      stopPlayback(true);
     }
   }
 
@@ -50,14 +53,14 @@ export function QueueItem({ index, item }: QueueItemProps) {
       key={item.id}
       data-slot="queue-item"
       className={cn(
-        "group/queue-item relative flex items-center gap-2.5 rounded-lg ring-1 ring-foreground/10 px-3 py-1.5 text-xs transition-all duration-200 select-none",
+        "group/queue-item ring-foreground/10 relative flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-xs ring-1 transition-all duration-200 select-none",
         {
           "ring-primary/20 bg-primary/5 text-primary": isPlaying,
-          "ring-transparent hover:bg-muted/40": !isPlaying
+          "hover:bg-muted/40 ring-transparent": !isPlaying
         }
       )}
       draggable
-      onClick={() => playbackCommands.playVideo(item.path)}
+      onClick={() => playVideo(item.path)}
       onDragOver={(e) => {
         e.preventDefault();
         const rect = e.currentTarget.getBoundingClientRect();
@@ -71,10 +74,7 @@ export function QueueItem({ index, item }: QueueItemProps) {
       onDragEnd={() => setDropPosition(null)}
       onDrop={(event) => {
         event.preventDefault();
-        const fromIndex = Number.parseInt(
-          event.dataTransfer.getData("text/plain"),
-          10
-        );
+        const fromIndex = Number.parseInt(event.dataTransfer.getData("text/plain"), 10);
         if (!Number.isNaN(fromIndex)) {
           let targetIndex = index;
           if (dropPosition === "bottom") {
@@ -82,7 +82,7 @@ export function QueueItem({ index, item }: QueueItemProps) {
           }
 
           if (fromIndex !== targetIndex && fromIndex !== targetIndex - 1) {
-            queueCommands.moveQueueItem(fromIndex, targetIndex > fromIndex ? targetIndex - 1 : targetIndex);
+            moveQueueItem(fromIndex, targetIndex > fromIndex ? targetIndex - 1 : targetIndex);
           }
         }
         setDropPosition(null);
@@ -93,27 +93,27 @@ export function QueueItem({ index, item }: QueueItemProps) {
       {dropPosition && (
         <div
           className={cn(
-            "absolute left-0 right-0 h-0.5 bg-primary z-50 pointer-events-none",
+            "bg-primary pointer-events-none absolute right-0 left-0 z-50 h-0.5",
             dropPosition === "top" ? "-top-px" : "-bottom-px"
           )}
         />
       )}
 
-      <span className="w-4 text-center text-[0.625rem] font-medium text-muted-foreground/60 tabular-nums">
+      <span className="text-muted-foreground/60 w-4 text-center text-[0.625rem] font-medium tabular-nums">
         {index + 1}
       </span>
 
       <div className="min-w-0 flex-1">
-        <div className="truncate font-medium leading-tight">{item.name}</div>
+        <div className="truncate leading-tight font-medium">{item.name}</div>
         {item.duration ? (
-          <div className="mt-0.5 text-[0.625rem] text-muted-foreground/60">
+          <div className="text-muted-foreground/60 mt-0.5 text-[0.625rem]">
             {makeTimeString(item.duration)}
           </div>
         ) : null}
       </div>
 
       <Button
-        className="hidden size-5 p-0 text-muted-foreground/60 hover:bg-destructive/10 hover:text-destructive group-hover/queue-item:inline-flex"
+        className="text-muted-foreground/60 hover:bg-destructive/10 hover:text-destructive hidden size-5 p-0 group-hover/queue-item:inline-flex"
         data-slot="queue-item-remove"
         onClick={(event) => {
           event.stopPropagation();

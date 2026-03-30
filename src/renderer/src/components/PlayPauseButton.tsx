@@ -1,10 +1,11 @@
 import { PauseIcon, PlayIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { playbackCommands, usePlayerView } from "@/lib/store";
+import { togglePlayPause } from "@/lib/controllers/playback-controller";
+import { usePlayerStore } from "@stores/player";
 
 export function PlayPauseButton() {
-  const player = usePlayerView();
+  const isPlaying = usePlayerStore((state) => state.isPlaying);
 
   return (
     <Tooltip>
@@ -12,24 +13,20 @@ export function PlayPauseButton() {
         render={(props) => (
           <Button
             {...props}
-            className="h-full border-0 bg-transparent px-2.5 text-white hover:bg-white/10 rounded-none shadow-none transition-colors focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/20"
+            className="h-full rounded-none border-0 bg-transparent px-2.5 text-white shadow-none transition-colors hover:bg-white/10 focus-visible:ring-1 focus-visible:ring-white/20 focus-visible:ring-inset"
             onClick={() => {
-              void playbackCommands.togglePlayPause();
+              void togglePlayPause();
             }}
             size="icon"
             type="button"
             variant="ghost"
           >
-            {player.isPlaying ? (
-              <PauseIcon className="size-4" />
-            ) : (
-              <PlayIcon className="size-4" />
-            )}
+            {isPlaying ? <PauseIcon className="size-4" /> : <PlayIcon className="size-4" />}
           </Button>
         )}
       />
       <TooltipContent>
-        <p>{player.isPlaying ? "Pause" : "Play"}</p>
+        <p>{isPlaying ? "Pause" : "Play"}</p>
       </TooltipContent>
     </Tooltip>
   );

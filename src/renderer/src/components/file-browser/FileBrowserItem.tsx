@@ -3,20 +3,17 @@ import { ChevronDown, Dot, Loader } from "lucide-react";
 import { ContextMenu, ContextMenuTrigger } from "@/components/ui/context-menu";
 
 import { makeTimeString } from "@/lib/make-time-string";
-import {
-  fileBrowserCommands,
-  libraryCommands,
-  normalizeVideoPath,
-  playbackCommands,
-  useCurrentQueueItem,
-  useFileBrowserView,
-  usePlayerView
-} from "@/lib/store";
+import { normalizeVideoPath } from "@/lib/media-path";
 import { FileBrowserItemContextMenu } from "./FileBrowserItemContextMenu";
 import { cn } from "@/lib/utils";
 import type { FileSystemItem } from "@/types";
 import { usePlatformStore } from "@stores/platform";
 import { useSidebarStore } from "@stores/sidebar";
+import { useFileBrowserStore } from "@stores/file-browser";
+import { useCurrentQueueItem } from "@stores/queue";
+import { playVideo } from "@/lib/controllers/playback-controller";
+import { navigateToDirectory, toggleFolder } from "@/lib/controllers/library-controller";
+import { usePlayerStore } from "@stores/player";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 function isCurrentVideo(itemPath: string | undefined, currentVideo: string | null): boolean {
@@ -33,17 +30,20 @@ function hasCurrentVideoInFolder(
 }
 
 export function FileBrowserItem({ item, depth }: { depth: number; item: FileSystemItem }) {
-  const fileBrowser = useFileBrowserView();
-  const player = usePlayerView();
+  const expandedFolders = useFileBrowserStore((state) => state.expandedFolders);
+  const loadingFolders = useFileBrowserStore((state) => state.loadingFolders);
+  const isFileBrowserLoading = useFileBrowserStore((state) => state.isLoading);
+  const currentVideo = usePlayerStore((state) => state.currentVideo);
+  const setFileBrowserState = useFileBrowserStore((state) => state.setFileBrowserState);
   const isMac = usePlatformStore((state) => state.isMac);
   const currentItem = useCurrentQueueItem();
   const sidebarPosition = useSidebarStore((state) => state.position);
   const isFolder = item.type === "folder";
-  const isExpanded = isFolder && fileBrowser.expandedFolders.has(item.path);
-  const isLoading = fileBrowser.loadingFolders.has(item.path);
-  const isPlaying = isCurrentVideo(item.path, player.currentVideo);
+  const isExpanded = isFolder && expandedFolders.has(item.path);
+  const isLoading = loadingFolders.has(item.path);
+  const isPlaying = isCurrentVideo(item.path, currentVideo);
   const containsCurrent =
-    isFolder && !isExpanded && hasCurrentVideoInFolder(item.path, player.currentVideo);
+    isFolder && !isExpanded && hasCurrentVideoInFolder(item.path, currentVideo);
 
   function focusRelative(offset: number): void {
     const triggers = Array.from(
@@ -55,23 +55,23 @@ export function FileBrowserItem({ item, depth }: { depth: number; item: FileSyst
   }
 
   function handleItemClick(event: MouseEvent | KeyboardEvent): void {
-    if (fileBrowser.isLoading) return;
+    if (isFileBrowserLoading) return;
 
     if (isFolder) {
       const isModKeyPressed = "metaKey" in event ? (isMac ? event.metaKey : event.ctrlKey) : false;
 
       if (isModKeyPressed) {
         event.preventDefault();
-        void libraryCommands.navigateToDirectory(item.path);
+        void navigateToDirectory(item.path);
         return;
       }
 
-      libraryCommands.toggleFolder(item.path);
+      toggleFolder(item.path);
       return;
     }
 
     if (currentItem?.path === item.path) return;
-    playbackCommands.playVideo(item.path);
+    playVideo(item.path);
   }
 
   return (
@@ -106,9 +106,7 @@ export function FileBrowserItem({ item, depth }: { depth: number; item: FileSyst
                   data-item-trigger="true"
                   data-path={item.path}
                   onClick={handleItemClick}
-                  onFocus={() =>
-                    fileBrowserCommands.setFileBrowserState({ focusedItemPath: item.path })
-                  }
+                  onFocus={() => setFileBrowserState({ focusedItemPath: item.path })}
                   onKeyDown={(event) => {
                     if (event.key === "ArrowDown") {
                       event.preventDefault();
@@ -118,10 +116,10 @@ export function FileBrowserItem({ item, depth }: { depth: number; item: FileSyst
                       focusRelative(-1);
                     } else if (event.key === "ArrowRight" && isFolder && !isExpanded) {
                       event.preventDefault();
-                      libraryCommands.toggleFolder(item.path);
+                      toggleFolder(item.path);
                     } else if (event.key === "ArrowLeft" && isFolder && isExpanded) {
                       event.preventDefault();
-                      libraryCommands.toggleFolder(item.path);
+                      toggleFolder(item.path);
                     } else if (event.key === "Enter" || event.key === " ") {
                       event.preventDefault();
                       handleItemClick(event);

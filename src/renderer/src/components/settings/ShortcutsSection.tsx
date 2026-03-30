@@ -2,8 +2,8 @@ import { formatForDisplay } from "@tanstack/react-hotkeys";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { hotkeyCommands, useHotkeysView } from "@/lib/store";
 import { ShortcutRow } from "./ShortcutRow";
+import { useHotkeysStore } from "@stores/hotkeys";
 
 function formatHotkeyDisplay(keys: string[]): string {
   if (keys.length === 0) return "";
@@ -22,14 +22,15 @@ export function ShortcutsSection({
   searchTerm: string;
   setSearchTerm: (term: string) => void;
 }) {
-  const hotkeys = useHotkeysView();
+  const categories = useHotkeysStore((state) => state.categories);
+  const clearStoredHotkeys = useHotkeysStore((state) => state.clearStoredHotkeys);
 
   const handleResetDefaults = () => {
-    hotkeyCommands.clearStoredHotkeys();
+    clearStoredHotkeys();
     window.location.reload();
   };
 
-  const filteredCategories = hotkeys.categories
+  const filteredCategories = categories
     .map((category) => ({
       ...category,
       actions: category.actions.filter((action) => {
@@ -44,8 +45,8 @@ export function ShortcutsSection({
     .filter((category) => category.actions.length > 0);
 
   return (
-    <div className="flex flex-col h-full max-h-[calc(75vh-120px)]">
-      <div className="space-y-4 mb-4 pr-1">
+    <div className="flex h-full max-h-[calc(75vh-120px)] flex-col">
+      <div className="mb-4 space-y-4 pr-1">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h3 className="text-sm font-medium">Keyboard Shortcuts</h3>
           <Button
@@ -67,22 +68,22 @@ export function ShortcutsSection({
         />
       </div>
 
-      {hotkeys.categories.length === 0 ? (
+      {categories.length === 0 ? (
         <p className="text-muted-foreground text-xs">
           Shortcut bindings will appear here once the hotkey layer is wired.
         </p>
       ) : (
-        <ScrollArea className="flex-1 -mr-4 pr-4" scrollbarGutter>
+        <ScrollArea className="-mr-4 flex-1 pr-4" scrollbarGutter>
           <div className="space-y-3 px-1 pt-2 pb-4">
             {filteredCategories.map((category) => (
               <div
                 className="ring-foreground/10 overflow-hidden rounded-lg ring-1"
                 key={category.name}
               >
-                <div className="bg-muted/40 border-b border-border/50 px-3 py-1.5 text-xs font-medium">
+                <div className="bg-muted/40 border-border/50 border-b px-3 py-1.5 text-xs font-medium">
                   {category.name}
                 </div>
-                <div className="divide-y divide-border/50">
+                <div className="divide-border/50 divide-y">
                   {category.actions.map((action) => (
                     <ShortcutRow
                       action={action}

@@ -2,19 +2,19 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { useRef } from "react";
 
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useQueueView } from "@/lib/store";
 import { QueueItem } from "./QueueItem";
+import { useQueueStore } from "@stores/queue";
 
 export function QueueList() {
-  const queue = useQueueView();
+  const items = useQueueStore((state) => state.items);
   const parentRef = useRef<HTMLDivElement>(null);
 
   const virtualizer = useVirtualizer({
-    count: queue.items.length,
+    count: items.length,
     getScrollElement: () => parentRef.current,
     estimateSize: () => 40,
     overscan: 10,
-    getItemKey: (index) => queue.items[index]?.id || index,
+    getItemKey: (index) => items[index]?.id || index
   });
 
   return (
@@ -36,7 +36,7 @@ export function QueueList() {
                 transform: `translateY(${virtualItem.start}px)`
               }}
             >
-              <QueueItem index={virtualItem.index} item={queue.items[virtualItem.index]} />
+              <QueueItem index={virtualItem.index} item={items[virtualItem.index]} />
             </div>
           ))}
         </div>

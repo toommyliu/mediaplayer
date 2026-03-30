@@ -1,12 +1,8 @@
 import { enterFullscreen, exitFullscreen } from "@/lib/ipc";
 import { normalizeVideoPath, toFileUrl } from "@/lib/media-path";
 import { bindVideoElement, getVideoElement } from "@/lib/controllers/media-runtime";
-import {
-  getCurrentQueueItemFromState,
-  getQueueState,
-  setQueueIndex
-} from "@/lib/state/queue";
-import { getPlayerState, setCurrentTime, setPlayerState } from "@/lib/state/player";
+import { usePlayerStore } from "@stores/player";
+import { getCurrentQueueItemFromState, useQueueStore } from "@stores/queue";
 
 export function bindPlaybackVideoElement(element: HTMLVideoElement | null): void {
   bindVideoElement(element);
@@ -15,7 +11,7 @@ export function bindPlaybackVideoElement(element: HTMLVideoElement | null): void
 export function pausePlayback(): void {
   const videoElement = getVideoElement();
   videoElement?.pause();
-  setPlayerState({ isPlaying: false });
+  usePlayerStore.getState().setPlayerState({ isPlaying: false });
 }
 
 export function stopPlayback(clearCurrentVideo = false): void {
@@ -25,8 +21,8 @@ export function stopPlayback(clearCurrentVideo = false): void {
     videoElement.currentTime = 0;
   }
 
-  const player = getPlayerState();
-  setPlayerState({
+  const player = usePlayerStore.getState();
+  player.setPlayerState({
     currentTime: 0,
     currentVideo: clearCurrentVideo ? null : player.currentVideo,
     isPlaying: false
@@ -35,18 +31,20 @@ export function stopPlayback(clearCurrentVideo = false): void {
 
 export function playVideo(src: string): void {
   const normalized = normalizeVideoPath(src);
-  const queue = getQueueState();
-  const queueIndex = queue.items.findIndex((item) => item.path === normalized);
+  const queue = useQueueStore.getState();
+  const queueIndex = queue.items.findIndex(
+    (item) => normalizeVideoPath(item.path) === normalizeVideoPath(normalized)
+  );
   if (queueIndex === -1) return;
 
-  setPlayerState({
+  usePlayerStore.getState().setPlayerState({
     currentTime: 0,
     currentVideo: toFileUrl(normalized),
     error: null,
     isLoading: true,
     isPlaying: true
   });
-  setQueueIndex(queueIndex);
+  useQueueStore.getState().setQueueIndex(queueIndex);
 
   const videoElement = getVideoElement();
   if (videoElement) {
@@ -57,7 +55,7 @@ export function playVideo(src: string): void {
 
 export async function playNextVideo(): Promise<void> {
   const videoElement = getVideoElement();
-  const queue = getQueueState();
+  const queue = useQueueStore.getState();
   const currentItem = getCurrentQueueItemFromState(queue);
 
   if (!videoElement || !currentItem) return;
@@ -69,17 +67,17 @@ export async function playNextVideo(): Promise<void> {
       nextIndex = 0;
     } else {
       videoElement.pause();
-      setPlayerState({ isPlaying: false });
+      usePlayerStore.getState().setPlayerState({ isPlaying: false });
       return;
     }
   }
 
   const item = queue.items[nextIndex];
-  setPlayerState({
+  usePlayerStore.getState().setPlayerState({
     currentTime: 0,
     currentVideo: toFileUrl(item.path)
   });
-  setQueueIndex(nextIndex);
+  useQueueStore.getState().setQueueIndex(nextIndex);
 
   videoElement.currentTime = 0;
   videoElement.load();
@@ -87,7 +85,7 @@ export async function playNextVideo(): Promise<void> {
 
 export async function playPreviousVideo(): Promise<void> {
   const videoElement = getVideoElement();
-  const queue = getQueueState();
+  const queue = useQueueStore.getState();
   const currentItem = getCurrentQueueItemFromState(queue);
 
   if (!videoElement || !currentItem) return;
@@ -99,17 +97,17 @@ export async function playPreviousVideo(): Promise<void> {
       nextIndex = queue.items.length - 1;
     } else {
       videoElement.pause();
-      setPlayerState({ isPlaying: false });
+      usePlayerStore.getState().setPlayerState({ isPlaying: false });
       return;
     }
   }
 
   const item = queue.items[nextIndex];
-  setPlayerState({
+  usePlayerStore.getState().setPlayerState({
     currentTime: 0,
     currentVideo: toFileUrl(item.path)
   });
-  setQueueIndex(nextIndex);
+  useQueueStore.getState().setQueueIndex(nextIndex);
 
   videoElement.currentTime = 0;
   videoElement.load();
@@ -117,27 +115,27 @@ export async function playPreviousVideo(): Promise<void> {
 
 export async function togglePlayPause(): Promise<void> {
   const videoElement = getVideoElement();
-  const queue = getQueueState();
+  const queue = useQueueStore.getState();
   const currentItem = getCurrentQueueItemFromState(queue);
 
   if (!videoElement || !currentItem) return;
 
-  if (getPlayerState().isPlaying) {
+  if (usePlayerStore.getState().isPlaying) {
     videoElement.pause();
-    setPlayerState({ isPlaying: false });
+    usePlayerStore.getState().setPlayerState({ isPlaying: false });
     return;
   }
 
   try {
     await videoElement.play();
-    setPlayerState({ isPlaying: true });
+    usePlayerStore.getState().setPlayerState({ isPlaying: true });
   } catch {
     // Ignore autoplay failures.
   }
 }
 
 export async function setFullscreen(isFullscreen: boolean): Promise<void> {
-  setPlayerState({ isFullscreen });
+  usePlayerStore.getState().setPlayerState({ isFullscreen });
   if (isFullscreen) {
     await enterFullscreen();
   } else {
@@ -146,5 +144,5 @@ export async function setFullscreen(isFullscreen: boolean): Promise<void> {
 }
 
 export function setPlaybackCurrentTime(currentTime: number): void {
-  setCurrentTime(currentTime);
+  usePlayerStore.getState().setCurrentTime(currentTime);
 }
