@@ -40,6 +40,7 @@ export default function App() {
   const [isCommitting, setIsCommitting] = useState(false);
   const peekTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const lastPositionRef = useRef(position);
+  const sidebarContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -64,7 +65,12 @@ export default function App() {
   }, [isOpen]);
 
   const endPeek = useCallback(() => {
-    peekTimeoutRef.current = setTimeout(setIsPeeking, PEEK_DELAY_MS, false);
+    peekTimeoutRef.current = setTimeout(() => {
+      if (sidebarContainerRef.current?.matches(":hover")) {
+        return;
+      }
+      setIsPeeking(false);
+    }, PEEK_DELAY_MS);
   }, []);
 
   useEffect(() => {
@@ -281,6 +287,7 @@ export default function App() {
         )}
 
         <div
+          ref={sidebarContainerRef}
           className={cn(
             "absolute inset-y-0 z-20 flex flex-col",
             "bg-sidebar/95 border-sidebar-border",
