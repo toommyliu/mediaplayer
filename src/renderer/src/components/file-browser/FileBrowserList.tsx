@@ -4,7 +4,13 @@ import { useEffect, useMemo, useRef } from "react";
 import { navigateToParent, resetAndBrowseLibrary } from "@/actions/library";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useFileBrowserStore } from "@/stores/file-browser";
+import { useSidebarStore } from "@/stores/sidebar";
 import { sortFileTree } from "../../../../shared/file-tree-utils";
 import { FileBrowserItem } from "./FileBrowserItem";
 
@@ -53,8 +59,9 @@ export function FileBrowserList() {
   const currentPath = useFileBrowserStore(state => state.currentPath);
   const scrollTop = useFileBrowserStore(state => state.scrollTop);
   const setFileBrowserScrollTop = useFileBrowserStore(
-    state => state.setFileBrowserScrollTop,
+    (state) => state.setFileBrowserScrollTop,
   );
+  const sidebarPosition = useSidebarStore((state) => state.position);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
 
   const flattenedItems = useMemo(() => {
@@ -137,16 +144,30 @@ export function FileBrowserList() {
           const content
             = row.type === "back"
               ? (
-                  <Button
-                    className="text-muted-foreground hover:bg-muted/40 w-full justify-start px-3 py-2 text-left text-sm"
-                    onClick={() => {
-                      void navigateToParent();
-                    }}
-                    type="button"
-                    variant="ghost"
-                  >
-                    ../
-                  </Button>
+                  <Tooltip>
+                    <TooltipTrigger
+                      render={(triggerProps) => (
+                        <Button
+                          {...triggerProps}
+                          className="text-muted-foreground hover:bg-muted/40 focus-visible:ring-inset w-full justify-start px-3 text-left text-xs font-medium"
+                          data-item-trigger="true"
+                          onClick={() => {
+                            void navigateToParent();
+                          }}
+                          size="xs"
+                          variant="ghost"
+                        >
+                          ../
+                        </Button>
+                      )}
+                    />
+                    <TooltipContent
+                      align="start"
+                      side={sidebarPosition === "left" ? "right" : "left"}
+                    >
+                      Go back
+                    </TooltipContent>
+                  </Tooltip>
                 )
               : (
                   <FileBrowserItem item={row.item} depth={row.depth} />
