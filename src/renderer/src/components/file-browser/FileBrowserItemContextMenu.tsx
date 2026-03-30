@@ -22,7 +22,7 @@ import {
   toggleFolder
 } from "@/lib/controllers/library-controller";
 import { playVideo } from "@/lib/controllers/playback-controller";
-import { useQueueStore } from "@stores/queue";
+import { useQueueStore } from "@/stores/queue";
 
 interface CopyPathMenuItemProps {
   path: string;

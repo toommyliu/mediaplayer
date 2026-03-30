@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { VOLUME_STEP } from "@/lib/constants";
-import { clamp } from "@stores/utils";
+import { clamp } from "@/stores/utils";
 
 export interface VolumeState {
   isMuted: boolean;

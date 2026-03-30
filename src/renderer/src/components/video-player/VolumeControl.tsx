@@ -3,7 +3,7 @@ import { VolumeX, Volume, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { setMutedWithMediaSync, setVolumeWithMediaSync } from "@/lib/controllers/volume-controller";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { useVolumeStore } from "@stores/volume";
+import { useVolumeStore } from "@/stores/volume";
 
 function VolumeSlider({
   value,

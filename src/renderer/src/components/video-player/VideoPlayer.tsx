@@ -11,8 +11,8 @@ import {
 } from "@/lib/controllers/playback-controller";
 import { cn } from "@/lib/utils";
 import { toFileUrl } from "@/lib/media-path";
-import { usePlayerStore } from "@stores/player";
-import { useCurrentQueueItem, useQueueStore } from "@stores/queue";
+import { usePlayerStore } from "@/stores/player";
+import { useCurrentQueueItem, useQueueStore } from "@/stores/queue";
 
 type HoldDirection = "left" | "right" | null;
 
@@ -136,9 +136,8 @@ export default function VideoPlayer() {
   return (
     <div className="relative flex h-full w-full flex-col" id="video-player">
       <div
-        className={`relative flex min-h-0 flex-1 items-center justify-center bg-black ${
-          showControls ? "" : "cursor-none"
-        }`}
+        className={`relative flex min-h-0 flex-1 items-center justify-center bg-black ${showControls ? "" : "cursor-none"
+          }`}
         id="video-container"
         onDoubleClick={async (event) => {
           const target = event.target as HTMLElement | null;
@@ -177,13 +176,12 @@ export default function VideoPlayer() {
         ref={containerRef}
       >
         <video
-          className={`h-full w-full bg-black ${
-            aspectRatio === "cover"
+          className={`h-full w-full bg-black ${aspectRatio === "cover"
               ? "object-cover"
               : aspectRatio === "fill"
                 ? "object-fill"
                 : "object-contain"
-          }`}
+            }`}
           controls={false}
           disablePictureInPicture
           onCanPlay={() => setPlayerState({ isLoading: false })}

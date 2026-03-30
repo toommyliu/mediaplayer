@@ -1,7 +1,7 @@
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useQueueStore } from "@stores/queue";
+import { useQueueStore } from "@/stores/queue";
 
 export function ClearQueueButton() {
   const resetQueue = useQueueStore((state) => state.resetQueue);

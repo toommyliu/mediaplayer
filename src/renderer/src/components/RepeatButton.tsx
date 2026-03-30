@@ -2,7 +2,7 @@ import { Repeat1, Repeat } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useQueueStore } from "@stores/queue";
+import { useQueueStore } from "@/stores/queue";
 
 export function RepeatButton() {
   const repeatMode = useQueueStore((state) => state.repeatMode);

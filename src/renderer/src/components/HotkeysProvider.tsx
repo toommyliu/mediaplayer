@@ -5,9 +5,9 @@ import { runHotkeyAction } from "@/lib/controllers/hotkey-controller";
 import { useMemo } from "react";
 import type { HotkeyCategory } from "@/types";
 import type { RegisterableHotkey } from "@tanstack/react-hotkeys";
-import { getStoredHotkeys, useHotkeysStore } from "@stores/hotkeys";
-import { usePlatformStore } from "@stores/platform";
-import { useSettingsStore } from "@stores/settings";
+import { getStoredHotkeys, useHotkeysStore } from "@/stores/hotkeys";
+import { usePlatformStore } from "@/stores/platform";
+import { useSettingsStore } from "@/stores/settings";
 
 function convertHotkeyFormat(keys: string[]): string[] {
   return keys.map((key) => {

@@ -3,7 +3,7 @@ import { useRef } from "react";
 
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { QueueItem } from "./QueueItem";
-import { useQueueStore } from "@stores/queue";
+import { useQueueStore } from "@/stores/queue";
 
 export function QueueList() {
   const items = useQueueStore((state) => state.items);

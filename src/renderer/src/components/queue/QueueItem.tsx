@@ -6,7 +6,7 @@ import { makeTimeString } from "@/lib/make-time-string";
 import { cn } from "@/lib/utils";
 import type { QueueItem as QueueItemType } from "@/types";
 import { playVideo, stopPlayback } from "@/lib/controllers/playback-controller";
-import { useQueueStore, useCurrentQueueItem } from "@stores/queue";
+import { useQueueStore, useCurrentQueueItem } from "@/stores/queue";
 
 export interface QueueItemProps {
   index: number;

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogPanel, DialogTitle } from "@/components/ui/dialog";
-import { useSettingsStore } from "@stores/settings";
+import { useSettingsStore } from "@/stores/settings";
 import { GeneralSection } from "./GeneralSection";
 import { PlaybackSection } from "./PlaybackSection";
 import { UISection } from "./UISection";

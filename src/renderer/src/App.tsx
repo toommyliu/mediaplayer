@@ -10,8 +10,8 @@ import { bootstrapApp } from "@/lib/controllers/app-controller";
 import { handleAddFileEvent, handleAddFolderEvent } from "@/lib/controllers/library-controller";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "./lib/utils";
-import { useSettingsStore } from "@stores/settings";
-import { useSidebarStore } from "@stores/sidebar";
+import { useSettingsStore } from "@/stores/settings";
+import { useSidebarStore } from "@/stores/sidebar";
 
 export default function App() {
   const dropZoneActive = useSidebarStore((state) => state.dropZoneActive);

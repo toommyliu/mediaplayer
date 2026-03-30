@@ -3,7 +3,7 @@ import { sortFileTree } from "../../../../shared/file-tree-utils";
 import { FileBrowserEmptyState } from "./FileBrowserEmptyState";
 import { FileBrowserList } from "./FileBrowserList";
 import { FileBrowserHeader } from "./FileBrowserHeader";
-import { useFileBrowserStore } from "@stores/file-browser";
+import { useFileBrowserStore } from "@/stores/file-browser";
 
 export function FileBrowserPanel() {
   const fileTree = useFileBrowserStore((state) => state.fileTree);

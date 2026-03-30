@@ -1,8 +1,8 @@
 import { enterFullscreen, exitFullscreen } from "@/lib/ipc";
 import { normalizeVideoPath, toFileUrl } from "@/lib/media-path";
 import { bindVideoElement, getVideoElement } from "@/lib/controllers/media-runtime";
-import { usePlayerStore } from "@stores/player";
-import { getCurrentQueueItemFromState, useQueueStore } from "@stores/queue";
+import { usePlayerStore } from "@/stores/player";
+import { getCurrentQueueItemFromState, useQueueStore } from "@/stores/queue";
 
 export function bindPlaybackVideoElement(element: HTMLVideoElement | null): void {
   bindVideoElement(element);

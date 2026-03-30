@@ -7,13 +7,13 @@ import { normalizeVideoPath } from "@/lib/media-path";
 import { FileBrowserItemContextMenu } from "./FileBrowserItemContextMenu";
 import { cn } from "@/lib/utils";
 import type { FileSystemItem } from "@/types";
-import { usePlatformStore } from "@stores/platform";
-import { useSidebarStore } from "@stores/sidebar";
-import { useFileBrowserStore } from "@stores/file-browser";
-import { useCurrentQueueItem } from "@stores/queue";
+import { usePlatformStore } from "@/stores/platform";
+import { useSidebarStore } from "@/stores/sidebar";
+import { useFileBrowserStore } from "@/stores/file-browser";
+import { useCurrentQueueItem } from "@/stores/queue";
 import { playVideo } from "@/lib/controllers/playback-controller";
 import { navigateToDirectory, toggleFolder } from "@/lib/controllers/library-controller";
-import { usePlayerStore } from "@stores/player";
+import { usePlayerStore } from "@/stores/player";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 function isCurrentVideo(itemPath: string | undefined, currentVideo: string | null): boolean {

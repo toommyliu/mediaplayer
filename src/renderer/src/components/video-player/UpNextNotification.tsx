@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useNotificationsStore } from "@stores/notifications";
-import { usePlayerStore } from "@stores/player";
-import { useQueueStore } from "@stores/queue";
+import { useNotificationsStore } from "@/stores/notifications";
+import { usePlayerStore } from "@/stores/player";
+import { useQueueStore } from "@/stores/queue";
 
 export function UpNextNotification() {
   const currentTime = usePlayerStore((state) => state.currentTime);

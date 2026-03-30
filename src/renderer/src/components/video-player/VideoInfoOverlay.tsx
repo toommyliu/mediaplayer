@@ -1,5 +1,5 @@
-import { useNotificationsStore } from "@stores/notifications";
-import { useQueueStore } from "@stores/queue";
+import { useNotificationsStore } from "@/stores/notifications";
+import { useQueueStore } from "@/stores/queue";
 
 export interface VideoInfoOverlayProps {
   visible: boolean;

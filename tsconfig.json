@@ -4,9 +4,6 @@
     "paths": {
       "@/*": [
         "src/renderer/src/*"
-      ],
-      "@stores/*": [
-        "src/renderer/stores/*"
       ]
     }
   },

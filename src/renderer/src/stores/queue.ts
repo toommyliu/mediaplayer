@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import type { QueueItem, RepeatMode } from "@/types";
-import { clamp, makeQueueId } from "@stores/utils";
+import { clamp, makeQueueId } from "@/stores/utils";
 
 export type QueueInsertItem = Omit<QueueItem, "id">;
 

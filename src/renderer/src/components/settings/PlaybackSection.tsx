@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { useVolumeStore } from "@stores/volume";
+import { useVolumeStore } from "@/stores/volume";
 
 export function PlaybackSection() {
   const value = useVolumeStore((state) => state.value);

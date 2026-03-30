@@ -1,4 +1,4 @@
-import { useVolumeStore } from "@stores/volume";
+import { useVolumeStore } from "@/stores/volume";
 
 let videoElement: HTMLVideoElement | null = null;
 

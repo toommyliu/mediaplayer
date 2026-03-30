@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import { useNotificationsStore } from "@stores/notifications";
+import { useNotificationsStore } from "@/stores/notifications";
 
 export function UISection() {
   const upNextEnabled = useNotificationsStore((state) => state.upNextEnabled);

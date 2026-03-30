@@ -12,11 +12,11 @@ import {
   setMutedWithMediaSync
 } from "@/lib/controllers/volume-controller";
 import { getVideoElement } from "@/lib/controllers/media-runtime";
-import { usePlayerStore } from "@stores/player";
-import { getCurrentQueueItemFromState, useQueueStore } from "@stores/queue";
-import { useSettingsStore } from "@stores/settings";
-import { useSidebarStore } from "@stores/sidebar";
-import { useVolumeStore } from "@stores/volume";
+import { usePlayerStore } from "@/stores/player";
+import { getCurrentQueueItemFromState, useQueueStore } from "@/stores/queue";
+import { useSettingsStore } from "@/stores/settings";
+import { useSidebarStore } from "@/stores/sidebar";
+import { useVolumeStore } from "@/stores/volume";
 
 export async function runHotkeyAction(actionId: string): Promise<void> {
   const queue = useQueueStore.getState();

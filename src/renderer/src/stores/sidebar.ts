@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { SidebarPosition, SidebarTab } from "@/types";
-import { clamp } from "@stores/utils";
+import { clamp } from "@/stores/utils";
 
 export interface SidebarState {
   currentTab: SidebarTab;

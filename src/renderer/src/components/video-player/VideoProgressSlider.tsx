@@ -3,7 +3,7 @@ import { getVideoElement } from "@/lib/controllers/media-runtime";
 import { makeTimeString } from "@/lib/make-time-string";
 import { Slider } from "@/components/ui/slider";
 import { pausePlayback, togglePlayPause } from "@/lib/controllers/playback-controller";
-import { usePlayerStore } from "@stores/player";
+import { usePlayerStore } from "@/stores/player";
 
 export function VideoProgressSlider() {
   const currentTime = usePlayerStore((state) => state.currentTime);

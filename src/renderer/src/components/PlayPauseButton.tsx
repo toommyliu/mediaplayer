@@ -2,7 +2,7 @@ import { PauseIcon, PlayIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { togglePlayPause } from "@/lib/controllers/playback-controller";
-import { usePlayerStore } from "@stores/player";
+import { usePlayerStore } from "@/stores/player";
 
 export function PlayPauseButton() {
   const isPlaying = usePlayerStore((state) => state.isPlaying);

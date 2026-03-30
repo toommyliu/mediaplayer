@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/menu";
 import { cn } from "@/lib/utils";
-import { usePlayerStore } from "@stores/player";
+import { usePlayerStore } from "@/stores/player";
 
 export function AspectRatioControl() {
   const aspectRatio = usePlayerStore((state) => state.aspectRatio);

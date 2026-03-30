@@ -7,10 +7,10 @@ import {
   transformDirectoryContents,
   updateFolderContents,
   useFileBrowserStore
-} from "@stores/file-browser";
-import { usePlayerStore } from "@stores/player";
-import { getCurrentQueueItemFromState, useQueueStore } from "@stores/queue";
-import { makeQueueId } from "@stores/utils";
+} from "@/stores/file-browser";
+import { usePlayerStore } from "@/stores/player";
+import { getCurrentQueueItemFromState, useQueueStore } from "@/stores/queue";
+import { makeQueueId } from "@/stores/utils";
 import { playVideo } from "@/lib/controllers/playback-controller";
 
 export function initializeQueue(): void {

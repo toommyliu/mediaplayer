@@ -8,9 +8,6 @@
       "@/*": [
         "./src/renderer/src/*"
       ],
-      "@stores/*": [
-        "./src/renderer/stores/*"
-      ]
     }
   },
   "include": [
@@ -18,7 +15,7 @@
     "src/renderer/src/**/*",
     "src/renderer/src/**/*.tsx",
     "src/renderer/src/**/*.ts",
-    "src/renderer/stores/**/*",
+    "src/renderer/src/stores/**/*",
     "src/shared/**/*",
     "src/preload/*.d.ts",
     "src/common/**/*"

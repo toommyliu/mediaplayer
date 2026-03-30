@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { sortFileTree } from "../../shared";
+import { sortFileTree } from "../../../shared";
 import type { AppState, FileSystemItem } from "@/types";
 import type { DirectoryContents } from "@/lib/contracts";
 

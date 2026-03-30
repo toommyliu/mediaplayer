@@ -1,5 +1,5 @@
 import { syncVolumeToVideoElement } from "@/lib/controllers/media-runtime";
-import { useVolumeStore } from "@stores/volume";
+import { useVolumeStore } from "@/stores/volume";
 
 export function setMutedWithMediaSync(isMuted: boolean): void {
   useVolumeStore.getState().setMuted(isMuted);

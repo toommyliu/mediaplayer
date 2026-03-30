@@ -3,8 +3,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Settings } from "lucide-react";
 import { QueuePanel } from "./queue/QueuePanel";
 import { FileBrowserPanel } from "./file-browser/FileBrowserPanel";
-import { useSettingsStore } from "@stores/settings";
-import { useSidebarStore } from "@stores/sidebar";
+import { useSettingsStore } from "@/stores/settings";
+import { useSidebarStore } from "@/stores/sidebar";
 
 export default function SidebarPanel() {
   const currentTab = useSidebarStore((state) => state.currentTab);

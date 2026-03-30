@@ -6,7 +6,7 @@ import { FileBrowserItem } from "./FileBrowserItem";
 import { navigateToParent } from "@/lib/controllers/library-controller";
 import { sortFileTree } from "../../../../shared/file-tree-utils";
 import type { FileSystemItem } from "@/types";
-import { useFileBrowserStore } from "@stores/file-browser";
+import { useFileBrowserStore } from "@/stores/file-browser";
 
 type FlattenedItem = { type: "back" } | { type: "item"; item: FileSystemItem; depth: number };
 

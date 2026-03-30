@@ -3,7 +3,7 @@ import { useHotkeyRecorder, formatForDisplay } from "@tanstack/react-hotkeys";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
-import { useHotkeysStore } from "@stores/hotkeys";
+import { useHotkeysStore } from "@/stores/hotkeys";
 
 interface ShortcutRowProps {
   action: { id: string; description: string; keys: string[]; configurable?: boolean };
