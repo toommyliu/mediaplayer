@@ -17,19 +17,19 @@ const PEEK_DELAY_MS = 80;
 const EASE_OUT = "cubic-bezier(0.23, 1, 0.32, 1)";
 
 export default function App() {
-  const isOpen = useSidebarStore((state) => state.isOpen);
-  const position = useSidebarStore((state) => state.position);
-  const width = useSidebarStore((state) => state.width);
-  const isDragging = useSidebarStore((state) => state.isDragging);
-  const setSidebarWidth = useSidebarStore((state) => state.setSidebarWidth);
+  const isOpen = useSidebarStore(state => state.isOpen);
+  const position = useSidebarStore(state => state.position);
+  const width = useSidebarStore(state => state.width);
+  const isDragging = useSidebarStore(state => state.isDragging);
+  const setSidebarWidth = useSidebarStore(state => state.setSidebarWidth);
   const setSidebarPosition = useSidebarStore(
-    (state) => state.setSidebarPosition,
+    state => state.setSidebarPosition,
   );
   const setSidebarDragging = useSidebarStore(
-    (state) => state.setSidebarDragging,
+    state => state.setSidebarDragging,
   );
   const setSettingsDialogOpen = useSettingsStore(
-    (state) => state.setSettingsDialogOpen,
+    state => state.setSettingsDialogOpen,
   );
 
   const [isResizing, setIsResizing] = useState(false);
@@ -49,14 +49,16 @@ export default function App() {
       lastPositionRef.current = position;
     }
     return () => {
-      if (timer) clearTimeout(timer);
+      if (timer)
+        clearTimeout(timer);
     };
   }, [position]);
 
   const isLeft = position === "left";
 
   const startPeek = useCallback(() => {
-    if (isOpen) return;
+    if (isOpen)
+      return;
     clearTimeout(peekTimeoutRef.current);
     setIsPeeking(true);
   }, [isOpen]);
@@ -66,11 +68,13 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (isOpen) setIsPeeking(false);
+    if (isOpen)
+      setIsPeeking(false);
   }, [isOpen]);
 
   useEffect(() => {
-    if (!isResizing) return;
+    if (!isResizing)
+      return;
 
     const onMouseMove = (e: MouseEvent) => {
       const pct = isLeft
@@ -107,7 +111,8 @@ export default function App() {
   }, [isResizing, width]);
 
   useEffect(() => {
-    if (!isDragging) return;
+    if (!isDragging)
+      return;
     const onMouseMove = (e: MouseEvent) => {
       setDropSide(e.clientX < window.innerWidth / 2 ? "left" : "right");
     };
@@ -176,7 +181,7 @@ export default function App() {
                   className={cn(
                     "relative flex-1 rounded-2xl p-6 transition-all duration-300",
                     dropSide === "left"
-                      ? "bg-primary/5 shadow-inner"
+                      ? "bg-primary/5"
                       : "bg-transparent",
                   )}
                 >
@@ -193,7 +198,7 @@ export default function App() {
                       className={cn(
                         "flex h-12 w-12 items-center justify-center rounded-xl border transition-all duration-200",
                         dropSide === "left"
-                          ? "border-primary bg-primary/10 text-primary scale-[1.05] shadow-lg shadow-primary/20"
+                          ? "border-primary bg-primary/10 text-primary scale-[1.05]"
                           : "border-border bg-background/50 text-muted-foreground/50",
                       )}
                       style={{ transitionTimingFunction: EASE_OUT }}
@@ -219,7 +224,7 @@ export default function App() {
                   className={cn(
                     "relative flex-1 rounded-2xl p-6 transition-all duration-300",
                     dropSide === "right"
-                      ? "bg-primary/5 shadow-inner"
+                      ? "bg-primary/5"
                       : "bg-transparent",
                   )}
                 >
@@ -236,7 +241,7 @@ export default function App() {
                       className={cn(
                         "flex h-12 w-12 items-center justify-center rounded-xl border transition-all duration-200",
                         dropSide === "right"
-                          ? "border-primary bg-primary/10 text-primary scale-[1.05] shadow-lg shadow-primary/20"
+                          ? "border-primary bg-primary/10 text-primary scale-[1.05]"
                           : "border-border bg-background/50 text-muted-foreground/50",
                       )}
                       style={{ transitionTimingFunction: EASE_OUT }}
@@ -263,10 +268,12 @@ export default function App() {
                 className="flex items-center gap-2 text-[13px] font-medium text-foreground/70 animate-in fade-in slide-in-from-bottom-2 duration-300"
                 style={{ transitionTimingFunction: EASE_OUT }}
               >
-                Press{" "}
+                Press
+                {" "}
                 <Kbd className="h-6 min-w-8 font-bold shadow-sm uppercase tracking-tighter text-[11px] text-foreground bg-muted/80">
                   Esc
-                </Kbd>{" "}
+                </Kbd>
+                {" "}
                 to cancel
               </div>
             </div>

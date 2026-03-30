@@ -77,7 +77,7 @@ export function Sidebar() {
               setSidebarDragging(true);
             }}
           >
-            <div className="bg-border h-1 w-16 rounded-full opacity-60 transition-all group-hover:w-24 group-hover:opacity-100" />
+            <div className="bg-border h-1 w-16 rounded-full opacity-60 transition-all group-hover:bg-primary/50 group-hover:w-24 group-hover:opacity-100 group-active:bg-primary/80" />
           </div>
 
           <div className="flex items-center justify-end">
