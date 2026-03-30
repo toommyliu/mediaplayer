@@ -4,6 +4,11 @@ import { useState } from "react";
 
 import { playVideo, stopPlayback } from "@/actions/playback";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { makeTimeString } from "@/lib/make-time-string";
 import { cn } from "@/lib/utils";
 import { useCurrentQueueItem, useQueueStore } from "@/stores/queue";
@@ -14,9 +19,9 @@ export interface QueueItemProps {
 }
 
 export function QueueItem({ index, item }: QueueItemProps) {
-  const queueItems = useQueueStore((state) => state.items);
-  const moveQueueItem = useQueueStore((state) => state.moveQueueItem);
-  const removeQueueItem = useQueueStore((state) => state.removeQueueItem);
+  const queueItems = useQueueStore(state => state.items);
+  const moveQueueItem = useQueueStore(state => state.moveQueueItem);
+  const removeQueueItem = useQueueStore(state => state.removeQueueItem);
   const currentItem = useCurrentQueueItem();
   const [dropPosition, setDropPosition] = useState<"top" | "bottom" | null>(
     null,
@@ -30,14 +35,15 @@ export function QueueItem({ index, item }: QueueItemProps) {
     }
 
     const currentIndex = queueItems.findIndex(
-      (queueItem) => queueItem.id === item.id,
+      queueItem => queueItem.id === item.id,
     );
     let nextVideoToPlay: string | null = null;
 
     if (queueItems.length > 1) {
       if (currentIndex < queueItems.length - 1) {
         nextVideoToPlay = queueItems[currentIndex + 1].path;
-      } else if (currentIndex > 0) {
+      }
+      else if (currentIndex > 0) {
         nextVideoToPlay = queueItems[currentIndex - 1].path;
       }
     }
@@ -46,7 +52,8 @@ export function QueueItem({ index, item }: QueueItemProps) {
 
     if (nextVideoToPlay) {
       playVideo(nextVideoToPlay);
-    } else {
+    }
+    else {
       stopPlayback(true);
     }
   }
@@ -114,16 +121,29 @@ export function QueueItem({ index, item }: QueueItemProps) {
       </span>
 
       <div className="min-w-0 flex-1">
-        <div className="truncate leading-tight font-medium">{item.name}</div>
-        {item.duration ? (
-          <div className="text-muted-foreground/60 mt-0.5 text-[0.625rem]">
-            {makeTimeString(item.duration)}
-          </div>
-        ) : null}
+        <Tooltip>
+          <TooltipTrigger
+            render={props => (
+              <div {...props} className="truncate leading-tight font-medium">
+                {item.name}
+              </div>
+            )}
+          />
+          <TooltipContent side="right" sideOffset={10}>
+            {item.name}
+          </TooltipContent>
+        </Tooltip>
+        {item.duration
+          ? (
+              <div className="text-muted-foreground/60 mt-0.5 text-[0.625rem]">
+                {makeTimeString(item.duration)}
+              </div>
+            )
+          : null}
       </div>
 
       <Button
-        className="text-muted-foreground/60 hover:bg-destructive/10 hover:text-destructive hidden size-5 p-0 group-hover/queue-item:inline-flex"
+        className="text-muted-foreground/60 hover:bg-destructive/10 hover:text-destructive size-5 p-0 group-hover/queue-item:inline-flex hidden"
         data-slot="queue-item-remove"
         onClick={(event) => {
           event.stopPropagation();
