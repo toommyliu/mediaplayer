@@ -1,16 +1,16 @@
 import type { FileSystemItem } from "@/types";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useEffect, useMemo, useRef } from "react";
-import { navigateToParent } from "@/actions/library";
+import { navigateToParent, resetAndBrowseLibrary } from "@/actions/library";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useFileBrowserStore } from "@/stores/file-browser";
 import { sortFileTree } from "../../../../shared/file-tree-utils";
 import { FileBrowserItem } from "./FileBrowserItem";
 
-type FlattenedItem =
-  | { type: "back" }
-  | { type: "item"; item: FileSystemItem; depth: number };
+type FlattenedItem
+  = | { type: "back" }
+    | { type: "item"; item: FileSystemItem; depth: number };
 
 function flattenFileTree(
   items: FileSystemItem[],
@@ -25,9 +25,9 @@ function flattenFileTree(
   for (const item of sorted) {
     flattened.push({ item, depth });
     if (
-      item.type === "folder" &&
-      expandedFolders.has(item.path) &&
-      item.files
+      item.type === "folder"
+      && expandedFolders.has(item.path)
+      && item.files
     ) {
       flattened.push(
         ...flattenFileTree(
@@ -45,15 +45,15 @@ function flattenFileTree(
 }
 
 export function FileBrowserList() {
-  const fileTree = useFileBrowserStore((state) => state.fileTree);
-  const expandedFolders = useFileBrowserStore((state) => state.expandedFolders);
-  const sortBy = useFileBrowserStore((state) => state.sortBy);
-  const sortDirection = useFileBrowserStore((state) => state.sortDirection);
-  const isAtRoot = useFileBrowserStore((state) => state.isAtRoot);
-  const currentPath = useFileBrowserStore((state) => state.currentPath);
-  const scrollTop = useFileBrowserStore((state) => state.scrollTop);
+  const fileTree = useFileBrowserStore(state => state.fileTree);
+  const expandedFolders = useFileBrowserStore(state => state.expandedFolders);
+  const sortBy = useFileBrowserStore(state => state.sortBy);
+  const sortDirection = useFileBrowserStore(state => state.sortDirection);
+  const isAtRoot = useFileBrowserStore(state => state.isAtRoot);
+  const currentPath = useFileBrowserStore(state => state.currentPath);
+  const scrollTop = useFileBrowserStore(state => state.scrollTop);
   const setFileBrowserScrollTop = useFileBrowserStore(
-    (state) => state.setFileBrowserScrollTop,
+    state => state.setFileBrowserScrollTop,
   );
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
 
@@ -101,6 +101,11 @@ export function FileBrowserList() {
       scrollFade
       hideScrollbar
       viewportRef={scrollContainerRef}
+      onDoubleClick={(e) => {
+        if (e.target === e.currentTarget) {
+          void resetAndBrowseLibrary();
+        }
+      }}
     >
       <div
         className="relative w-full pr-1"
@@ -111,12 +116,14 @@ export function FileBrowserList() {
               "[data-item-trigger='true']",
             ),
           );
-          if (triggers.length === 0) return;
+          if (triggers.length === 0)
+            return;
 
           if (event.key === "Home") {
             event.preventDefault();
             triggers[0]?.focus();
-          } else if (event.key === "End") {
+          }
+          else if (event.key === "End") {
             event.preventDefault();
             triggers.at(-1)?.focus();
           }
@@ -124,23 +131,26 @@ export function FileBrowserList() {
       >
         {virtualizer.getVirtualItems().map((virtualRow) => {
           const row = flattenedItems[virtualRow.index];
-          if (!row) return null;
+          if (!row)
+            return null;
 
-          const content =
-            row.type === "back" ? (
-              <Button
-                className="text-muted-foreground hover:bg-muted/40 w-full justify-start px-3 py-2 text-left text-sm"
-                onClick={() => {
-                  void navigateToParent();
-                }}
-                type="button"
-                variant="ghost"
-              >
-                ../
-              </Button>
-            ) : (
-              <FileBrowserItem item={row.item} depth={row.depth} />
-            );
+          const content
+            = row.type === "back"
+              ? (
+                  <Button
+                    className="text-muted-foreground hover:bg-muted/40 w-full justify-start px-3 py-2 text-left text-sm"
+                    onClick={() => {
+                      void navigateToParent();
+                    }}
+                    type="button"
+                    variant="ghost"
+                  >
+                    ../
+                  </Button>
+                )
+              : (
+                  <FileBrowserItem item={row.item} depth={row.depth} />
+                );
 
           return (
             <div

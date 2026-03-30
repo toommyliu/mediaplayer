@@ -11,7 +11,10 @@ import {
 
 export function FileBrowserEmptyState() {
   return (
-    <Empty className="h-full py-0">
+    <Empty
+      className="h-full py-0"
+      onDoubleClick={() => void resetAndBrowseLibrary()}
+    >
       <EmptyMedia variant="icon">
         <Folder className="text-muted-foreground/60 size-6" />
       </EmptyMedia>
