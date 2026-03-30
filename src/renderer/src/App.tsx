@@ -346,7 +346,7 @@ export default function App() {
 
         <div
           className={cn(
-            "flex-1 min-w-0",
+            "relative flex-1 min-w-0 overflow-hidden",
             !isCommitting && !isResizing && "transition-[margin] duration-300",
           )}
           style={{

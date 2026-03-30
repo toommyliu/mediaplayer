@@ -134,7 +134,7 @@ export default function VideoPlayer() {
   }
 
   return (
-    <div className="relative flex h-full w-full flex-col" id="video-player">
+    <div className="relative flex h-full w-full flex-col overflow-hidden" id="video-player">
       <div
         className={`relative flex min-h-0 flex-1 items-center justify-center bg-black ${
           showControls ? "" : "cursor-none"
