@@ -247,13 +247,21 @@ export default function App() {
         {isOpen && (
           <div
             className={cn(
-              "absolute inset-y-0 z-30 w-1 cursor-col-resize",
-              "bg-sidebar-border hover:bg-primary/50 transition-colors",
-              isResizing && "bg-primary/50"
+              "absolute inset-y-0 z-30 w-4 cursor-col-resize",
+              isLeft ? "-translate-x-1/2" : "translate-x-1/2",
+              "transition-colors duration-300"
             )}
             style={{ [isLeft ? "left" : "right"]: openSidebarEdge }}
             onMouseDown={() => setIsResizing(true)}
-          />
+          >
+            <div
+              className={cn(
+                "absolute inset-y-0 w-px bg-sidebar-border transition-colors",
+                isLeft ? "left-1/2" : "right-1/2",
+                isResizing && "bg-primary"
+              )}
+            />
+          </div>
         )}
 
         <div
