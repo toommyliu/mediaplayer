@@ -78,7 +78,7 @@ export function BookmarkButton() {
         )}
       />
       <PopoverContent
-        className="w-64 shadow-xl *:data-[slot=popover-viewport]:p-2"
+        className="w-60 shadow-xl *:data-[slot=popover-viewport]:p-1.5"
         side="top"
       >
         <BookmarksPanel />

@@ -25,8 +25,8 @@ export function BookmarksPanel() {
   }
 
   return (
-    <div className="flex flex-col gap-1.5 pt-0.5">
-      <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border/40 pb-1.5">
+    <div className="flex flex-col gap-1 pt-0">
+      <div className="flex shrink-0 items-center justify-between gap-1.5 border-b border-border/40 pb-1">
         <h2 className="px-1 text-[12px] font-medium text-muted-foreground/60">
           Bookmarks
         </h2>
@@ -50,7 +50,7 @@ export function BookmarksPanel() {
             )
           : (
               <ScrollArea className="flex-1" hideScrollbar scrollFade>
-                <div className="flex flex-col gap-1 px-0.5 py-1">
+                <div className="flex flex-col gap-0.5 px-0.5 py-0.5">
                   {currentVideoBookmarks.map((bookmark, index) => (
                     <BookmarkItem
                       index={index}
