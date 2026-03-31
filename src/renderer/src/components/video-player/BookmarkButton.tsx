@@ -93,7 +93,7 @@ export function BookmarkButton() {
         </TooltipContent>
       </Tooltip>
       <PopoverContent
-        className="w-60 shadow-xl *:data-[slot=popover-viewport]:p-1.5"
+        className="w-52 shadow-xl *:data-[slot=popover-viewport]:p-1.5"
         side="top"
       >
         <BookmarksPanel />

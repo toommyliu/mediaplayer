@@ -32,12 +32,12 @@ export function BookmarksPanel() {
         </h2>
         {currentVideoBookmarks.length > 0 && (
           <Button
-            className="text-muted-foreground/60 hover:bg-destructive/10 hover:text-destructive h-6 px-2 text-[0.625rem]"
+            className="text-muted-foreground/60 hover:bg-destructive/10 hover:text-destructive h-5 px-1.5 text-[0.625rem]"
             onClick={clearAllBookmarks}
-            size="sm"
+            size="xs"
             variant="ghost"
           >
-            <Trash2 className="mr-1 size-3" />
+            <Trash2 className="mr-0.5 size-2.5" />
             Clear
           </Button>
         )}
@@ -50,10 +50,9 @@ export function BookmarksPanel() {
             )
           : (
               <ScrollArea className="flex-1" hideScrollbar scrollFade>
-                <div className="flex flex-col gap-0.5 px-0.5 py-0.5">
-                  {currentVideoBookmarks.map((bookmark, index) => (
+                <div className="grid grid-cols-3 gap-1 px-1 py-1">
+                  {currentVideoBookmarks.map(bookmark => (
                     <BookmarkItem
-                      index={index}
                       item={bookmark}
                       key={bookmark.id}
                     />
