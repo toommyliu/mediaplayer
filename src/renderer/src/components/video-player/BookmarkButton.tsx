@@ -1,4 +1,3 @@
-import { clsx } from "clsx";
 import { BookmarkIcon } from "lucide-react";
 import * as React from "react";
 import { Button } from "@/components/ui/button";
@@ -7,6 +6,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 import { useBookmarksStore } from "@/stores/bookmarks";
 import { usePlayerStore } from "@/stores/player";
 import { BookmarksPanel } from "./BookmarksPanel";
@@ -51,7 +51,7 @@ export function BookmarkButton() {
             variant="ghost"
           >
             <BookmarkIcon
-              className={clsx(
+              className={cn(
                 "size-4 transition-transform group-hover/bookmark-btn:scale-110",
                 isAnimating && "scale-125 duration-150!",
               )}
@@ -60,14 +60,14 @@ export function BookmarkButton() {
               }}
             />
             <div
-              className={clsx(
+              className={cn(
                 "absolute right-1.5 bottom-1.5 size-0.5 rounded-full bg-white/40 group-hover/bookmark-btn:bg-white/80",
                 "transition-[background-color,transform,opacity] duration-300",
                 isAnimating && "scale-[4] opacity-0 duration-150!",
               )}
             />
             <div
-              className={clsx(
+              className={cn(
                 "pointer-events-none absolute inset-0 flex items-center justify-center opacity-0",
                 isAnimating && "animate-ping-once opacity-100",
               )}
