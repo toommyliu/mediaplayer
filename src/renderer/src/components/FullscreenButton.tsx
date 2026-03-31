@@ -9,59 +9,65 @@ import {
 } from "@/components/ui/tooltip";
 import { usePlayerStore } from "@/stores/player";
 
-const controlItemClass =
-  "h-full border-0 bg-transparent px-2.5 text-white hover:bg-white/10 rounded-none shadow-none transition-colors focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/20";
+const controlItemClass
+  = "h-9 border-0 bg-transparent px-3 text-white hover:bg-white/10 rounded-md shadow-none transition-all duration-300 active:scale-90 focus-visible:ring-1 focus-visible:ring-white/20 sm:h-8";
 
 function FullscreenEnterButton() {
-  const isFullscreen = usePlayerStore((state) => state.isFullscreen);
+  const isFullscreen = usePlayerStore(state => state.isFullscreen);
   return (
     <Button
       className={controlItemClass}
       onClick={() => {
         void setFullscreen(!isFullscreen);
       }}
-      size="icon"
+      size="icon-sm"
       type="button"
       variant="ghost"
     >
-      {isFullscreen ? (
-        <Minimize className="size-4" />
-      ) : (
-        <Maximize className="size-4" />
-      )}
+      {isFullscreen
+        ? (
+            <Minimize className="size-4" />
+          )
+        : (
+            <Maximize className="size-4" />
+          )}
     </Button>
   );
 }
 
 function FullscreenExitButton() {
-  const isFullscreen = usePlayerStore((state) => state.isFullscreen);
+  const isFullscreen = usePlayerStore(state => state.isFullscreen);
   return (
     <Button
       className={controlItemClass}
       onClick={() => {
         void setFullscreen(!isFullscreen);
       }}
-      size="icon"
+      size="icon-sm"
       type="button"
       variant="ghost"
     >
-      {isFullscreen ? (
-        <Minimize className="size-4" />
-      ) : (
-        <Maximize className="size-4" />
-      )}
+      {isFullscreen
+        ? (
+            <Minimize className="size-4" />
+          )
+        : (
+            <Maximize className="size-4" />
+          )}
     </Button>
   );
 }
 
 export function FullscreenButton() {
-  const isFullscreen = usePlayerStore((state) => state.isFullscreen);
+  const isFullscreen = usePlayerStore(state => state.isFullscreen);
 
-  const button = isFullscreen ? (
-    <FullscreenExitButton />
-  ) : (
-    <FullscreenEnterButton />
-  );
+  const button = isFullscreen
+    ? (
+        <FullscreenExitButton />
+      )
+    : (
+        <FullscreenEnterButton />
+      );
 
   return (
     <Tooltip>

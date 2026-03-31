@@ -150,13 +150,13 @@ export function VolumeControl() {
   const value = useVolumeStore(state => state.value);
 
   return (
-    <div className="flex h-9 items-center rounded-lg border border-white/10 bg-white/10 text-white transition-colors focus-within:bg-white/15 hover:bg-white/15 sm:h-8">
+    <div className="group/volume flex h-9 items-center text-white sm:h-8">
       <Tooltip>
         <TooltipTrigger
           render={props => (
             <Button
               {...props}
-              className="size-8 shrink-0 border-0 bg-transparent p-0 text-white shadow-none hover:bg-white/10"
+              className="size-9 shrink-0 rounded-md border-0 bg-transparent p-0 text-white shadow-none transition-all hover:bg-white/10 active:scale-95 sm:size-8"
               onClick={() => setMuted(!isMuted)}
               size="icon-sm"
               type="button"
@@ -185,11 +185,9 @@ export function VolumeControl() {
         </TooltipContent>
       </Tooltip>
 
-      <div className="group/volume flex h-full items-center">
-        <div className="mx-1 h-3 w-px rounded-full bg-white/20 transition-all group-focus-within/volume:opacity-0 group-hover/volume:opacity-0" />
-
-        <div className="pointer-events-none w-0 overflow-hidden opacity-0 transition-[width,opacity] duration-200 ease-out group-focus-within/volume:pointer-events-auto group-focus-within/volume:w-28 group-focus-within/volume:opacity-100 group-hover/volume:pointer-events-auto group-hover/volume:w-28 group-hover/volume:opacity-100">
-          <div className="flex h-full w-28 items-center pr-2 pl-0">
+      <div className="flex h-full items-center">
+        <div className="pointer-events-none w-0 overflow-hidden opacity-0 transition-all duration-300 ease-out group-focus-within/volume:pointer-events-auto group-focus-within/volume:w-28 group-focus-within/volume:opacity-100 group-hover/volume:pointer-events-auto group-hover/volume:w-28 group-hover/volume:opacity-100">
+          <div className="flex h-full w-28 items-center pr-2 pl-2">
             <VolumeSlider
               value={value}
               isMuted={isMuted}

@@ -78,7 +78,7 @@ export function VideoProgressSlider() {
         <span>{duration ? makeTimeString(duration) : "0:00"}</span>
       </div>
 
-      <div className="relative mb-4">
+      <div className="relative mb-0">
         <Slider
           className="w-full"
           trackClassName="before:bg-white/20"

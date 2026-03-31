@@ -55,7 +55,7 @@ export function BookmarkButton() {
               render={popoverProps => (
                 <Button
                   {...mergeProps(tooltipProps, popoverProps)}
-                  className="group/bookmark-btn relative h-full rounded-none border-0 bg-transparent px-3 text-white shadow-none transition-[colors,transform] duration-200 hover:bg-white/10 active:scale-95 focus-visible:ring-1 focus-visible:ring-white/20 focus-visible:ring-inset"
+                  className="group/bookmark-btn relative h-9 rounded-md border-0 bg-transparent px-3 text-white shadow-none transition-all duration-300 hover:bg-white/10 active:scale-90 focus-visible:ring-1 focus-visible:ring-white/20 sm:h-8"
                   disabled={!currentVideo}
                   onClick={(e) => {
                     if (e.button === 0)
