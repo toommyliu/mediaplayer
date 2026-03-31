@@ -1,3 +1,4 @@
+import { mergeProps } from "@base-ui/react";
 import { BookmarkIcon } from "lucide-react";
 import * as React from "react";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,11 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useBookmarksStore } from "@/stores/bookmarks";
 import { usePlayerStore } from "@/stores/player";
@@ -29,54 +35,63 @@ export function BookmarkButton() {
 
   return (
     <Popover onOpenChange={setIsPanelOpen} open={isPanelOpen}>
-      <PopoverTrigger
-        render={props => (
-          <Button
-            {...props}
-            className="group/bookmark-btn relative h-full rounded-none border-0 bg-transparent px-3 text-white shadow-none transition-[colors,transform] duration-200 hover:bg-white/10 active:scale-95 focus-visible:ring-1 focus-visible:ring-white/20 focus-visible:ring-inset"
-            disabled={!currentVideo}
-            onClick={(e) => {
-              if (e.button === 0)
-                handleAddBookmark();
-            }}
-            onContextMenu={(e) => {
-              e.preventDefault();
-              setIsPanelOpen(true);
-            }}
-            size="icon"
-            style={{
-              transitionTimingFunction: "var(--ease-out)",
-            }}
-            type="button"
-            variant="ghost"
-          >
-            <BookmarkIcon
-              className={cn(
-                "size-4 transition-transform group-hover/bookmark-btn:scale-110",
-                isAnimating && "scale-125 duration-150!",
+      <Tooltip>
+        <TooltipTrigger
+          render={tooltipProps => (
+            <PopoverTrigger
+              render={popoverProps => (
+                <Button
+                  {...mergeProps(tooltipProps, popoverProps)}
+                  className="group/bookmark-btn relative h-full rounded-none border-0 bg-transparent px-3 text-white shadow-none transition-[colors,transform] duration-200 hover:bg-white/10 active:scale-95 focus-visible:ring-1 focus-visible:ring-white/20 focus-visible:ring-inset"
+                  disabled={!currentVideo}
+                  onClick={(e) => {
+                    if (e.button === 0)
+                      handleAddBookmark();
+                  }}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    setIsPanelOpen(true);
+                  }}
+                  size="icon"
+                  style={{
+                    transitionTimingFunction: "var(--ease-out)",
+                  }}
+                  type="button"
+                  variant="ghost"
+                >
+                  <BookmarkIcon
+                    className={cn(
+                      "size-4 transition-transform group-hover/bookmark-btn:scale-110",
+                      isAnimating && "scale-125 duration-150!",
+                    )}
+                    style={{
+                      transitionTimingFunction: "var(--ease-out)",
+                    }}
+                  />
+                  <div
+                    className={cn(
+                      "absolute right-1.5 bottom-1.5 size-0.5 rounded-full bg-white/40 group-hover/bookmark-btn:bg-white/80",
+                      "transition-[background-color,transform,opacity] duration-300",
+                      isAnimating && "scale-[4] opacity-0 duration-150!",
+                    )}
+                  />
+                  <div
+                    className={cn(
+                      "pointer-events-none absolute inset-0 flex items-center justify-center opacity-0",
+                      isAnimating && "animate-ping-once opacity-100",
+                    )}
+                  >
+                    <div className="size-4 rounded-full border border-white/40" />
+                  </div>
+                </Button>
               )}
-              style={{
-                transitionTimingFunction: "var(--ease-out)",
-              }}
             />
-            <div
-              className={cn(
-                "absolute right-1.5 bottom-1.5 size-0.5 rounded-full bg-white/40 group-hover/bookmark-btn:bg-white/80",
-                "transition-[background-color,transform,opacity] duration-300",
-                isAnimating && "scale-[4] opacity-0 duration-150!",
-              )}
-            />
-            <div
-              className={cn(
-                "pointer-events-none absolute inset-0 flex items-center justify-center opacity-0",
-                isAnimating && "animate-ping-once opacity-100",
-              )}
-            >
-              <div className="size-4 rounded-full border border-white/40" />
-            </div>
-          </Button>
-        )}
-      />
+          )}
+        />
+        <TooltipContent side="top">
+          Bookmark
+        </TooltipContent>
+      </Tooltip>
       <PopoverContent
         className="w-60 shadow-xl *:data-[slot=popover-viewport]:p-1.5"
         side="top"
