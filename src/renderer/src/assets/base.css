@@ -59,15 +59,31 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
 
-  --animate-ping-once: ping-once 0.4s var(--ease-out) forwards;
+  --animate-ping-once: ping-once 0.45s var(--ease-out) forwards;
+  --animate-recoil: recoil 0.35s var(--ease-out);
+  --animate-pop-spring: pop-spring 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+  @keyframes recoil {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-2.5px); }
+    50% { transform: translateX(1px); }
+    75% { transform: translateX(-0.5px); }
+  }
+
+  @keyframes pop-spring {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.18); }
+    70% { transform: scale(0.96); }
+    100% { transform: scale(1); }
+  }
 
   @keyframes ping-once {
     0% {
       transform: scale(1);
-      opacity: 1;
+      opacity: 0.8;
     }
     100% {
-      transform: scale(2);
+      transform: scale(2.4);
       opacity: 0;
     }
   }

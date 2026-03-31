@@ -1,5 +1,6 @@
+import type { BookmarksStore } from "@/stores/bookmarks";
 import { mergeProps } from "@base-ui/react";
-import { BookmarkIcon } from "lucide-react";
+import { BookmarkCheck, BookmarkIcon } from "lucide-react";
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,13 +24,25 @@ export function BookmarkButton() {
   const addBookmark = useBookmarksStore(state => state.addBookmark);
   const isPanelOpen = useBookmarksStore(state => state.isPanelOpen);
   const setIsPanelOpen = useBookmarksStore(state => state.setIsPanelOpen);
-  const [isAnimating, setIsAnimating] = React.useState(false);
+  const lastAction = useBookmarksStore((state: BookmarksStore) => state.lastAction);
+  const [animationStatus, setAnimationStatus] = React.useState<"new" | "duplicate" | null>(null);
+
+  React.useEffect(() => {
+    if (lastAction && Date.now() - lastAction.timestamp < 100) {
+      const type = lastAction.type;
+      const startTimer = setTimeout(setAnimationStatus, 0, type);
+      const endTimer = setTimeout(setAnimationStatus, 800, null);
+      return () => {
+        clearTimeout(startTimer);
+        clearTimeout(endTimer);
+      };
+    }
+    return undefined;
+  }, [lastAction]);
 
   const handleAddBookmark = () => {
     if (currentVideo) {
       addBookmark(currentVideo, currentTime);
-      setIsAnimating(true);
-      setTimeout(setIsAnimating, 400, false);
     }
   };
 
@@ -59,29 +72,47 @@ export function BookmarkButton() {
                   type="button"
                   variant="ghost"
                 >
-                  <BookmarkIcon
-                    className={cn(
-                      "size-4 transition-transform group-hover/bookmark-btn:scale-110",
-                      isAnimating && "scale-125 duration-150!",
-                    )}
-                    style={{
-                      transitionTimingFunction: "var(--ease-out)",
-                    }}
-                  />
+                  <div className="relative flex items-center justify-center">
+                    {animationStatus === "new"
+                      ? (
+                          <BookmarkCheck
+                            className="size-4 animate-pop-spring! text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]"
+                            style={{
+                              transitionTimingFunction: "var(--ease-out)",
+                            }}
+                          />
+                        )
+                      : (
+                          <BookmarkIcon
+                            className={cn(
+                              "size-4 transition-all duration-300 group-hover/bookmark-btn:scale-110",
+                              animationStatus === "duplicate" && "animate-recoil! text-amber-400",
+                            )}
+                            style={{
+                              transitionTimingFunction: "var(--ease-out)",
+                            }}
+                          />
+                        )}
+                  </div>
+
+                  {/* Feedback Dot */}
                   <div
                     className={cn(
-                      "absolute right-1.5 bottom-1.5 size-0.5 rounded-full bg-white/40 group-hover/bookmark-btn:bg-white/80",
-                      "transition-[background-color,transform,opacity] duration-300",
-                      isAnimating && "scale-[4] opacity-0 duration-150!",
+                      "absolute right-1.5 bottom-1.5 size-1 rounded-full bg-white/20 group-hover/bookmark-btn:bg-white/60",
+                      "transition-all duration-500 var(--ease-out)",
+                      animationStatus === "new" && "scale-[3] bg-emerald-400 opacity-0 duration-300!",
+                      animationStatus === "duplicate" && "scale-150 bg-amber-400 duration-200!",
                     )}
                   />
+
+                  {/* Ping Effect */}
                   <div
                     className={cn(
                       "pointer-events-none absolute inset-0 flex items-center justify-center opacity-0",
-                      isAnimating && "animate-ping-once opacity-100",
+                      animationStatus === "new" && "animate-ping-once opacity-100",
                     )}
                   >
-                    <div className="size-4 rounded-full border border-white/40" />
+                    <div className="size-5 rounded-full border border-emerald-400/40" />
                   </div>
                 </Button>
               )}

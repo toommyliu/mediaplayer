@@ -6,6 +6,10 @@ export interface BookmarksState {
   bookmarks: Bookmark[];
   lastAddedId: string | null;
   isPanelOpen: boolean;
+  lastAction: {
+    type: "new" | "duplicate";
+    timestamp: number;
+  } | null;
 }
 
 export interface BookmarksActions {
@@ -28,6 +32,7 @@ export const useBookmarksStore = create<BookmarksStore>()(
       bookmarks: [],
       lastAddedId: null,
       isPanelOpen: false,
+      lastAction: null,
       addBookmark: (videoPath, timestamp, label) => {
         // Prevent duplicate bookmarks within 0.1s of each other
         const existing = get()
@@ -38,7 +43,10 @@ export const useBookmarksStore = create<BookmarksStore>()(
           );
 
         if (existing) {
-          set({ lastAddedId: existing.id });
+          set({
+            lastAddedId: existing.id,
+            lastAction: { type: "duplicate", timestamp: Date.now() },
+          });
           return { bookmark: existing, isNew: false };
         }
 
@@ -52,6 +60,7 @@ export const useBookmarksStore = create<BookmarksStore>()(
         set(state => ({
           bookmarks: [...state.bookmarks, bookmark],
           lastAddedId: bookmark.id,
+          lastAction: { type: "new", timestamp: Date.now() },
         }));
         return { bookmark, isNew: true };
       },
@@ -77,6 +86,10 @@ export const useBookmarksStore = create<BookmarksStore>()(
     }),
     {
       name: "bookmarks-store",
+      partialize: (state) => {
+        const { lastAction, ...rest } = state;
+        return rest;
+      },
     },
   ),
 );
