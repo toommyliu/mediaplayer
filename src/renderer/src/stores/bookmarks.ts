@@ -13,7 +13,7 @@ export interface BookmarksActions {
     videoPath: string,
     timestamp: number,
     label?: string,
-  ) => Bookmark;
+  ) => { bookmark: Bookmark; isNew: boolean };
   deleteBookmark: (id: string) => void;
   updateBookmark: (id: string, patch: Partial<Bookmark>) => void;
   clearLastAddedId: () => void;
@@ -24,11 +24,24 @@ export type BookmarksStore = BookmarksState & BookmarksActions;
 
 export const useBookmarksStore = create<BookmarksStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       bookmarks: [],
       lastAddedId: null,
       isPanelOpen: false,
       addBookmark: (videoPath, timestamp, label) => {
+        // Prevent duplicate bookmarks within 0.1s of each other
+        const existing = get()
+          .bookmarks
+          .find(
+            b =>
+              b.videoPath === videoPath && Math.abs(b.timestamp - timestamp) < 0.1,
+          );
+
+        if (existing) {
+          set({ lastAddedId: existing.id });
+          return { bookmark: existing, isNew: false };
+        }
+
         const bookmark: Bookmark = {
           createdAt: Date.now(),
           id: crypto.randomUUID(),
@@ -36,21 +49,21 @@ export const useBookmarksStore = create<BookmarksStore>()(
           timestamp,
           videoPath,
         };
-        set((state) => ({
+        set(state => ({
           bookmarks: [...state.bookmarks, bookmark],
           lastAddedId: bookmark.id,
         }));
-        return bookmark;
+        return { bookmark, isNew: true };
       },
       deleteBookmark: (id) => {
-        set((state) => ({
-          bookmarks: state.bookmarks.filter((b) => b.id !== id),
+        set(state => ({
+          bookmarks: state.bookmarks.filter(b => b.id !== id),
           lastAddedId: state.lastAddedId === id ? null : state.lastAddedId,
         }));
       },
       updateBookmark: (id, patch) => {
-        set((state) => ({
-          bookmarks: state.bookmarks.map((b) =>
+        set(state => ({
+          bookmarks: state.bookmarks.map(b =>
             b.id === id ? { ...b, ...patch } : b,
           ),
         }));
