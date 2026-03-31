@@ -2,12 +2,20 @@
 
 import { Slider as SliderPrimitive } from "@base-ui/react/slider";
 import * as React from "react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { makeTimeString } from "@/lib/make-time-string";
 import { cn } from "@/lib/utils";
 
 export interface SliderProps extends SliderPrimitive.Root.Props {
-  trackClassName?: string;
   indicatorClassName?: string;
+  markers?: { timestamp: number; label?: string }[];
   thumbClassName?: string;
+  trackClassName?: string;
 }
 
 export function Slider({
@@ -20,6 +28,7 @@ export function Slider({
   value,
   min = 0,
   max = 100,
+  markers,
   ...props
 }: SliderProps): React.ReactElement {
   const _values = React.useMemo(() => {
@@ -54,6 +63,31 @@ export function Slider({
           )}
           data-slot="slider-track"
         >
+          <TooltipProvider>
+            {markers?.map((marker) => {
+              const timestamp =
+                typeof marker === "number" ? marker : marker.timestamp;
+              const label = typeof marker === "number" ? undefined : marker.label;
+              const position = ((timestamp - min) / (max - min)) * 100;
+
+              return (
+                <Tooltip key={timestamp}>
+                  <TooltipTrigger
+                    className="absolute top-1/2 z-10 h-2.5 w-0.5 -translate-y-1/2 rounded-full bg-white shadow-[0_0_3px_rgba(0,0,0,0.8)] outline-none transition-transform hover:scale-y-150 hover:bg-primary"
+                    style={{ left: `${position}%` }}
+                  />
+                  <TooltipContent side="top" sideOffset={8}>
+                    <div className="flex flex-col gap-0.5 px-1 py-0.5">
+                      {label && <span className="font-medium">{label}</span>}
+                      <span className="text-muted-foreground tabular-nums">
+                        {makeTimeString(timestamp)}
+                      </span>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              );
+            })}
+          </TooltipProvider>
           <SliderPrimitive.Indicator
             className={cn(
               "select-none rounded-full bg-primary data-[orientation=horizontal]:ms-0.5 data-[orientation=vertical]:mb-0.5",

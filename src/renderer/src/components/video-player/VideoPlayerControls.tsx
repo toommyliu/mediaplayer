@@ -4,6 +4,7 @@ import { FullscreenButton } from "../FullscreenButton";
 import { NextVideoButton } from "../NextVideoButton";
 import { PlayPauseButton } from "../PlayPauseButton";
 import { PreviousVideoButton } from "../PreviousVideoButton";
+import { BookmarkButton } from "./BookmarkButton";
 import { VideoProgressSlider } from "./VideoProgressSlider";
 import { VolumeControl } from "./VolumeControl";
 
@@ -43,6 +44,8 @@ export function VideoPlayerControls({
           <PlayPauseButton />
           <div className={controlSeparatorClass} />
           <NextVideoButton />
+          <div className={controlSeparatorClass} />
+          <BookmarkButton />
         </div>
 
         <div className="flex items-center gap-2">

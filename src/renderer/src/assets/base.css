@@ -59,6 +59,19 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
 
+  --animate-ping-once: ping-once 0.4s var(--ease-out) forwards;
+
+  @keyframes ping-once {
+    0% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(2);
+      opacity: 0;
+    }
+  }
+
   @keyframes skeleton {
     to {
       background-position: -200% 0;

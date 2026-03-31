@@ -1,4 +1,5 @@
 export type {
+  Bookmark,
   DirectoryContents,
   PickerResult,
   PlatformInfo,
