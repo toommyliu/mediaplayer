@@ -190,10 +190,38 @@ export const InputLayer = Layer.effectDiscard(
                 cleanupEventListeners();
               });
 
+              const onEnterFullscreenUnsub = yield* windows.on(
+                "enter-full-screen",
+                () => {
+                  runWithServices(
+                    rendererEvents.emit(
+                      mainWindow.webContents,
+                      "windowFullscreenEnter",
+                      undefined,
+                    ),
+                  );
+                },
+              );
+
+              const onLeaveFullscreenUnsub = yield* windows.on(
+                "leave-full-screen",
+                () => {
+                  runWithServices(
+                    rendererEvents.emit(
+                      mainWindow.webContents,
+                      "windowFullscreenExit",
+                      undefined,
+                    ),
+                  );
+                },
+              );
+
               windowUnsubscribers.push(
                 onFocusUnsub,
                 onBlurUnsub,
                 onClosedUnsub,
+                onEnterFullscreenUnsub,
+                onLeaveFullscreenUnsub,
               );
               eventListenersRegistered = true;
             });

@@ -2,13 +2,15 @@ import type { Effect } from "effect";
 import type { BrowserWindow } from "electron";
 import { ServiceMap } from "effect";
 
-export type WindowEventName =
-  | "ready-to-show"
-  | "show"
-  | "close"
-  | "closed"
-  | "focus"
-  | "blur";
+export type WindowEventName
+  = | "ready-to-show"
+    | "show"
+    | "close"
+    | "closed"
+    | "focus"
+    | "blur"
+    | "enter-full-screen"
+    | "leave-full-screen";
 
 export interface WindowServiceShape {
   create: Effect.Effect<BrowserWindow>;

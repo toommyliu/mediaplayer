@@ -31,6 +31,8 @@ export const WindowLayer = Layer.effect(
       window.on("closed", () => emitter.emit("closed"));
       window.on("focus", () => emitter.emit("focus"));
       window.on("blur", () => emitter.emit("blur"));
+      window.on("enter-full-screen", () => emitter.emit("enter-full-screen"));
+      window.on("leave-full-screen", () => emitter.emit("leave-full-screen"));
     };
 
     const detachWindowEventListeners = (window: BrowserWindow): void => {
@@ -40,6 +42,8 @@ export const WindowLayer = Layer.effect(
       window.removeAllListeners("closed");
       window.removeAllListeners("focus");
       window.removeAllListeners("blur");
+      window.removeAllListeners("enter-full-screen");
+      window.removeAllListeners("leave-full-screen");
     };
 
     const createMainWindow = (): BrowserWindow => {

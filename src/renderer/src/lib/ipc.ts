@@ -95,3 +95,11 @@ export function onMediaPreviousTrack(listener: () => void): () => void {
 export function onOpenSettings(listener: () => void): () => void {
   return onRendererEvent("openSettings", () => listener());
 }
+
+export function onWindowFullscreenEnter(listener: () => void): () => void {
+  return onRendererEvent("windowFullscreenEnter", () => listener());
+}
+
+export function onWindowFullscreenExit(listener: () => void): () => void {
+  return onRendererEvent("windowFullscreenExit", () => listener());
+}

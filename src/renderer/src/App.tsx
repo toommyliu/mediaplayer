@@ -7,8 +7,15 @@ import SettingsDialog from "@/components/settings/SettingsDialog";
 import { Sidebar } from "@/components/Sidebar";
 import { Kbd } from "@/components/ui/kbd";
 import VideoPlayer from "@/components/video-player/VideoPlayer";
-import { onAddFile, onAddFolder, onOpenSettings } from "@/lib/ipc";
+import {
+  onAddFile,
+  onAddFolder,
+  onOpenSettings,
+  onWindowFullscreenEnter,
+  onWindowFullscreenExit,
+} from "@/lib/ipc";
 import { cn } from "@/lib/utils";
+import { usePlayerStore } from "@/stores/player";
 import { useSettingsStore } from "@/stores/settings";
 import { useSidebarStore } from "@/stores/sidebar";
 
@@ -146,6 +153,8 @@ export default function App() {
 
   useEffect(() => {
     void bootstrapApp();
+    const setPlayerState = usePlayerStore.getState().setPlayerState;
+
     const disposers = [
       onAddFile((result) => {
         void handleAddFileEvent(result);
@@ -155,6 +164,12 @@ export default function App() {
       }),
       onOpenSettings(() => {
         setSettingsDialogOpen(true);
+      }),
+      onWindowFullscreenEnter(() => {
+        setPlayerState({ isFullscreen: true });
+      }),
+      onWindowFullscreenExit(() => {
+        setPlayerState({ isFullscreen: false });
       }),
     ];
     return () => {
