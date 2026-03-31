@@ -18,6 +18,8 @@ export interface BookmarkItemProps {
 export function BookmarkItem({ item }: BookmarkItemProps) {
   const deleteBookmark = useBookmarksStore(state => state.deleteBookmark);
   const setCurrentTime = usePlayerStore(state => state.setCurrentTime);
+  const currentTime = usePlayerStore(state => state.currentTime);
+  const isElapsed = currentTime >= item.timestamp;
 
   function jumpToBookmark() {
     setCurrentTime(item.timestamp);
@@ -35,12 +37,18 @@ export function BookmarkItem({ item }: BookmarkItemProps) {
             {...props}
             className={cn(
               "group/bookmark-item relative flex h-6 w-full items-center justify-between rounded-full bg-secondary pl-2.5 pr-1.5 text-[0.625rem] font-medium transition-all duration-200 select-none cursor-pointer ring-1 ring-inset ring-foreground/5 hover:bg-accent hover:text-foreground",
+              isElapsed && "opacity-60",
             )}
             onClick={jumpToBookmark}
             role="button"
             tabIndex={0}
           >
-            <span className="truncate tabular-nums text-left">
+            <span
+              className={cn(
+                "truncate tabular-nums text-left transition-colors duration-200",
+                isElapsed ? "text-muted-foreground/70" : "text-foreground/90",
+              )}
+            >
               {makeTimeString(item.timestamp)}
             </span>
 
