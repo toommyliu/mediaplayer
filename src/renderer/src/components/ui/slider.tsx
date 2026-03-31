@@ -2,12 +2,20 @@
 
 import { Slider as SliderPrimitive } from "@base-ui/react/slider";
 import * as React from "react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { makeTimeString } from "@/lib/make-time-string";
 import { cn } from "@/lib/utils";
 
 export interface SliderProps extends SliderPrimitive.Root.Props {
-  trackClassName?: string;
   indicatorClassName?: string;
+  markers?: { timestamp: number; label?: string }[];
   thumbClassName?: string;
+  trackClassName?: string;
 }
 
 export function Slider({
@@ -20,6 +28,7 @@ export function Slider({
   value,
   min = 0,
   max = 100,
+  markers,
   ...props
 }: SliderProps): React.ReactElement {
   const _values = React.useMemo(() => {
@@ -34,7 +43,7 @@ export function Slider({
 
   return (
     <SliderPrimitive.Root
-      className={cn("data-[orientation=horizontal]:w-full", className)}
+      className={cn("group/slider relative data-[orientation=horizontal]:w-full", className)}
       defaultValue={defaultValue}
       max={max}
       min={min}
@@ -61,6 +70,45 @@ export function Slider({
             )}
             data-slot="slider-indicator"
           />
+          {markers?.map((marker, index) => {
+            const timestamp
+              = typeof marker === "number" ? marker : marker.timestamp;
+            const _label = typeof marker === "number" ? undefined : marker.label;
+            const label = _label || `Bookmark ${index + 1}`;
+            const position = ((timestamp - min) / (max - min)) * 100;
+            const isPassed = timestamp <= _values[0];
+
+            return (
+              <Tooltip key={timestamp}>
+                <TooltipTrigger render={props => (
+                  <div
+                    className="absolute top-1/2 h-0 w-0 -translate-y-1/2"
+                    style={{ left: `${position}%` }}
+                    {...props}
+                  >
+                    <div
+                      className={cn(
+                        "absolute top-1/2 left-1/2 z-10 h-3 w-0.5 -translate-x-1/2 -translate-y-1/2 rounded-full ring-1 transition-all duration-300 ease-in-out hover:z-30 hover:h-5 hover:w-1 hover:bg-primary hover:ring-primary/20",
+                        isPassed
+                          ? "bg-foreground ring-white/10"
+                          : "bg-foreground/80 mix-blend-difference ring-black/10",
+                      )}
+                    >
+                    </div>
+                  </div>
+                )}
+                />
+                <TooltipContent side="top" sideOffset={12}>
+                  <div className="flex flex-col gap-0.5 px-1 py-0.5">
+                    <span className="font-medium text-[12px]">{label}</span>
+                    <span className="text-muted-foreground tabular-nums text-[10px]">
+                      {makeTimeString(timestamp)}
+                    </span>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            );
+          })}
           {Array.from({ length: _values.length }, (_, index) => (
             <SliderPrimitive.Thumb
               className={cn(

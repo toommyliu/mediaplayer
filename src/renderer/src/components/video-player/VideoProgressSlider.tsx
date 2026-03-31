@@ -1,12 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { pausePlayback, togglePlayPause } from "@/actions/playback";
 import { Slider } from "@/components/ui/slider";
 import { makeTimeString } from "@/lib/make-time-string";
+import { useBookmarksStore } from "@/stores/bookmarks";
 import { usePlayerStore } from "@/stores/player";
 import { getVideoElement } from "@/video-element";
 
 export function VideoProgressSlider() {
   const currentTime = usePlayerStore((state) => state.currentTime);
+  const currentVideo = usePlayerStore((state) => state.currentVideo);
   const duration = usePlayerStore((state) => state.duration);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
   const setCurrentTime = usePlayerStore((state) => state.setCurrentTime);
@@ -14,10 +16,17 @@ export function VideoProgressSlider() {
   const [isDragging, setIsDragging] = useState(false);
   const [localTime, setLocalTime] = useState<number | null>(null);
 
+  const bookmarks = useBookmarksStore((state) => state.bookmarks);
+  const currentVideoBookmarks = useMemo<{ timestamp: number; label?: string }[]>(() => {
+    if (!currentVideo) return [];
+    return bookmarks
+      .filter((b) => b.videoPath === currentVideo)
+      .map((b) => ({ timestamp: b.timestamp, label: b.label }));
+  }, [bookmarks, currentVideo]);
+
   // Smooth progress updates
   useEffect(() => {
     if (!isPlaying || isDragging) {
-      setLocalTime(null);
       return;
     }
 
@@ -31,7 +40,10 @@ export function VideoProgressSlider() {
     };
 
     frameId = requestAnimationFrame(updateTime);
-    return () => cancelAnimationFrame(frameId);
+    return () => {
+      cancelAnimationFrame(frameId);
+      setLocalTime(null);
+    };
   }, [isPlaying, isDragging]);
 
   const progressTime = dragTime ?? localTime ?? currentTime;
@@ -76,6 +88,7 @@ export function VideoProgressSlider() {
           max={duration || 100}
           step={0.01}
           value={[progressTime]}
+          markers={currentVideoBookmarks}
           onValueChange={handleValueChange}
           onValueCommitted={handleValueCommit}
           onPointerDown={async () => {

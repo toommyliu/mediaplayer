@@ -6,12 +6,15 @@ import {
   togglePlayPause,
 } from "@/actions/playback";
 import { FRAME_TIME_STEP, SEEK_TIME_STEP } from "@/lib/constants";
+import { useBookmarksStore } from "@/stores/bookmarks";
 import { usePlayerStore } from "@/stores/player";
 import { getCurrentQueueItemFromState, useQueueStore } from "@/stores/queue";
 import { useSettingsStore } from "@/stores/settings";
 import { useSidebarStore } from "@/stores/sidebar";
 import { useVolumeStore } from "@/stores/volume";
 import { getVideoElement } from "@/video-element";
+
+const JUMP_ACTION_REGEX = /^jump-\d$/;
 
 export async function runHotkeyAction(actionId: string): Promise<void> {
   const queue = useQueueStore.getState();
@@ -20,6 +23,11 @@ export async function runHotkeyAction(actionId: string): Promise<void> {
   const video = getVideoElement();
 
   switch (actionId) {
+    case "addBookmark":
+      if (player.currentVideo) {
+        useBookmarksStore.getState().addBookmark(player.currentVideo, player.currentTime);
+      }
+      break;
     case "playPause":
       await togglePlayPause();
       break;
@@ -96,7 +104,7 @@ export async function runHotkeyAction(actionId: string): Promise<void> {
       break;
     default:
       if (
-        /^jump-\d$/.test(actionId)
+        JUMP_ACTION_REGEX.test(actionId)
         && currentItem
         && Number.isFinite(player.duration)
       ) {

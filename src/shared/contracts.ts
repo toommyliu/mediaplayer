@@ -30,3 +30,11 @@ export interface VideoFileItem {
   name: string;
   path: string;
 }
+
+export interface Bookmark {
+  createdAt: number;
+  id: string;
+  label?: string;
+  timestamp: number;
+  videoPath: string;
+}
