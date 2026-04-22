@@ -1,5 +1,5 @@
 import { Volume, Volume2, VolumeX } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -19,6 +19,8 @@ function VolumeSlider({
   onChange: (v: number) => void;
 }) {
   const [isDragging, setIsDragging] = useState(false);
+  const [isScrolling, setIsScrolling] = useState(false);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const fillPercent = value * 100;
   const fillColor = isMuted
     ? "rgba(255,255,255,0.25)"
@@ -27,7 +29,7 @@ function VolumeSlider({
 
   return (
     <div className="relative flex h-full w-full items-center">
-      <Tooltip open={isDragging}>
+      <Tooltip open={isDragging || isScrolling}>
         <TooltipTrigger
           render={props => (
             <input
@@ -42,6 +44,17 @@ function VolumeSlider({
               onMouseUp={() => setIsDragging(false)}
               onTouchStart={() => setIsDragging(true)}
               onTouchEnd={() => setIsDragging(false)}
+              onWheel={(e) => {
+                e.preventDefault();
+                setIsScrolling(true);
+                const delta = -Math.sign(e.deltaY) * 0.01;
+                const newValue = Math.max(0, Math.min(1, value + delta));
+                onChange(newValue);
+                if (scrollTimeoutRef.current) {
+                  clearTimeout(scrollTimeoutRef.current);
+                }
+                scrollTimeoutRef.current = setTimeout(setIsScrolling, 500, false);
+              }}
               className="volume-slider w-full cursor-pointer appearance-none bg-transparent outline-none"
               style={
                 {
@@ -186,8 +199,8 @@ export function VolumeControl() {
       </Tooltip>
 
       <div className="flex h-full items-center">
-        <div className="pointer-events-none w-0 overflow-hidden opacity-0 transition-all duration-300 ease-out group-focus-within/volume:pointer-events-auto group-focus-within/volume:w-28 group-focus-within/volume:opacity-100 group-hover/volume:pointer-events-auto group-hover/volume:w-28 group-hover/volume:opacity-100">
-          <div className="flex h-full w-28 items-center pr-2 pl-2">
+        <div className="pointer-events-none w-0 overflow-visible opacity-0 transition-all duration-300 ease-out group-focus-within/volume:pointer-events-auto group-focus-within/volume:w-28 group-focus-within/volume:opacity-100 group-hover/volume:pointer-events-auto group-hover/volume:w-28 group-hover/volume:opacity-100">
+          <div className="flex h-full w-28 items-center pr-2 pl-2 py-1">
             <VolumeSlider
               value={value}
               isMuted={isMuted}
