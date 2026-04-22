@@ -10,6 +10,7 @@ import { toFileUrl } from "@/lib/media-path";
 import { cn } from "@/lib/utils";
 import { usePlayerStore } from "@/stores/player";
 import { useCurrentQueueItem, useQueueStore } from "@/stores/queue";
+import { BookmarkIndicator } from "./BookmarkIndicator";
 import { UpNextNotification } from "./UpNextNotification";
 import { VideoInfoOverlay } from "./VideoInfoOverlay";
 import { VideoPlayerControls } from "./VideoPlayerControls";
@@ -17,15 +18,15 @@ import { VideoPlayerControls } from "./VideoPlayerControls";
 type HoldDirection = "left" | "right" | null;
 
 export default function VideoPlayer() {
-  const aspectRatio = usePlayerStore((state) => state.aspectRatio);
-  const duration = usePlayerStore((state) => state.duration);
-  const error = usePlayerStore((state) => state.error);
-  const isLoading = usePlayerStore((state) => state.isLoading);
-  const isPlaying = usePlayerStore((state) => state.isPlaying);
-  const setCurrentTime = usePlayerStore((state) => state.setCurrentTime);
-  const setDuration = usePlayerStore((state) => state.setDuration);
-  const setPlayerState = usePlayerStore((state) => state.setPlayerState);
-  const repeatMode = useQueueStore((state) => state.repeatMode);
+  const aspectRatio = usePlayerStore(state => state.aspectRatio);
+  const duration = usePlayerStore(state => state.duration);
+  const error = usePlayerStore(state => state.error);
+  const isLoading = usePlayerStore(state => state.isLoading);
+  const isPlaying = usePlayerStore(state => state.isPlaying);
+  const setCurrentTime = usePlayerStore(state => state.setCurrentTime);
+  const setDuration = usePlayerStore(state => state.setDuration);
+  const setPlayerState = usePlayerStore(state => state.setPlayerState);
+  const repeatMode = useQueueStore(state => state.repeatMode);
   const currentItem = useCurrentQueueItem();
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -99,7 +100,8 @@ export default function VideoPlayer() {
   }, [stopHoldSeeking]);
 
   function startHoldSeeking(direction: HoldDirection): void {
-    if (!videoRef.current || !direction) return;
+    if (!videoRef.current || !direction)
+      return;
     setPlayerState({ isHolding: true });
     setHoldDirection(direction);
 
@@ -111,10 +113,11 @@ export default function VideoPlayer() {
 
       const seekAmount = 0.3;
       const currentDuration = duration;
-      if (!Number.isFinite(currentDuration)) return;
+      if (!Number.isFinite(currentDuration))
+        return;
 
-      const nextTime =
-        direction === "right"
+      const nextTime
+        = direction === "right"
           ? Math.min(videoRef.current.currentTime + seekAmount, currentDuration)
           : Math.max(videoRef.current.currentTime - seekAmount, 0);
 
@@ -143,19 +146,24 @@ export default function VideoPlayer() {
         id="video-container"
         onDoubleClick={async (event) => {
           const target = event.target as HTMLElement | null;
-          if (target?.closest("#media-controls")) return;
+          if (target?.closest("#media-controls"))
+            return;
           await togglePlayPause();
         }}
         onMouseDown={(event) => {
-          if (event.button !== 0 || !videoRef.current) return;
+          if (event.button !== 0 || !videoRef.current)
+            return;
           const target = event.target as HTMLElement | null;
-          if (target && !event.currentTarget.contains(target)) return;
-          if (target?.closest("#media-controls")) return;
+          if (target && !event.currentTarget.contains(target))
+            return;
+          if (target?.closest("#media-controls"))
+            return;
           const rect = containerRef.current?.getBoundingClientRect();
-          if (!rect) return;
+          if (!rect)
+            return;
 
-          const direction: HoldDirection =
-            event.clientX - rect.left < rect.width / 2 ? "left" : "right";
+          const direction: HoldDirection
+            = event.clientX - rect.left < rect.width / 2 ? "left" : "right";
           holdTimerRef.current = window.setTimeout(() => {
             startHoldSeeking(direction);
           }, 300);
@@ -233,31 +241,38 @@ export default function VideoPlayer() {
           src={toFileUrl(currentItem.path)}
         />
 
-        {isLoading ? (
-          <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/40">
-            <Loader2 className="h-8 w-8 animate-spin text-white" />
-          </div>
-        ) : null}
+        {isLoading
+          ? (
+              <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/40">
+                <Loader2 className="h-8 w-8 animate-spin text-white" />
+              </div>
+            )
+          : null}
 
-        {error ? (
-          <div className="border-destructive/30 bg-destructive/10 text-destructive absolute top-6 left-1/2 z-30 -translate-x-1/2 rounded-lg border px-4 py-2 text-sm">
-            {error}
-          </div>
-        ) : null}
+        {error
+          ? (
+              <div className="border-destructive/30 bg-destructive/10 text-destructive absolute top-6 left-1/2 z-30 -translate-x-1/2 rounded-lg border px-4 py-2 text-sm">
+                {error}
+              </div>
+            )
+          : null}
 
-        {holdDirection ? (
-          <div
-            className={cn(
-              "pointer-events-none absolute top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white backdrop-blur-sm",
-              holdDirection === "left" ? "left-8" : "right-8",
-            )}
-          >
-            {holdDirection === "left" ? "←" : "→"}
-          </div>
-        ) : null}
+        {holdDirection
+          ? (
+              <div
+                className={cn(
+                  "pointer-events-none absolute top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white backdrop-blur-sm",
+                  holdDirection === "left" ? "left-8" : "right-8",
+                )}
+              >
+                {holdDirection === "left" ? "←" : "→"}
+              </div>
+            )
+          : null}
 
         <VideoInfoOverlay visible={showControls} />
         <UpNextNotification />
+        <BookmarkIndicator />
         <VideoPlayerControls
           onControlsMouseEnter={() => {
             isControlsHoveredRef.current = true;
