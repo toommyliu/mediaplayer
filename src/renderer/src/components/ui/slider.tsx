@@ -5,7 +5,6 @@ import * as React from "react";
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { makeTimeString } from "@/lib/make-time-string";

@@ -57,6 +57,7 @@ export interface AppState {
     openContextMenu: string | null;
     originalPath: string | null;
     scrollTop: number;
+    searchQuery: string;
     sortBy: "duration" | "name";
     sortDirection: "asc" | "desc";
   };

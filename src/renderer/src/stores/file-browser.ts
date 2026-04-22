@@ -11,6 +11,7 @@ export interface FileBrowserActions {
   setFileBrowserScrollTop: (scrollTop: number) => void;
   setFileBrowserSort: (sortBy: "duration" | "name") => void;
   setExpandedFolders: (expandedFolders: Set<string>) => void;
+  setSearchQuery: (searchQuery: string) => void;
 }
 
 export type FileBrowserStore = FileBrowserState & FileBrowserActions;
@@ -27,6 +28,7 @@ const initialFileBrowserState: FileBrowserState = {
   openContextMenu: null,
   originalPath: null,
   scrollTop: 0,
+  searchQuery: "",
   sortBy: "name",
   sortDirection: "asc",
 };
@@ -44,6 +46,7 @@ export const useFileBrowserStore = create<FileBrowserStore>()((set) => ({
       isLoading: false,
       loadingFolders: new Set<string>(),
       originalPath: null,
+      searchQuery: "",
     })),
   setFileBrowserScrollTop: (scrollTop) => set({ scrollTop }),
   setFileBrowserSort: (sortBy) =>
@@ -57,6 +60,7 @@ export const useFileBrowserStore = create<FileBrowserStore>()((set) => ({
           : "asc",
     })),
   setExpandedFolders: (expandedFolders) => set({ expandedFolders }),
+  setSearchQuery: (searchQuery) => set({ searchQuery }),
 }));
 
 export function findFolderInFileSystem(

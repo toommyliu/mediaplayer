@@ -1,9 +1,11 @@
 import type { FileSystemItem } from "@/types";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { ChevronDown, ChevronUp } from "lucide-react";
-import { useEffect, useMemo, useRef } from "react";
-import { navigateToParent, resetAndBrowseLibrary } from "@/actions/library";
+import { ChevronDown, ChevronUp, Search, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { navigateToParent, resetAndBrowseLibrary, toggleFolder } from "@/actions/library";
+import { playVideo } from "@/actions/playback";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Tooltip,
@@ -28,26 +30,31 @@ function flattenFileTree(
   depth = 0,
   sortBy: "name" | "duration",
   sortDirection: "asc" | "desc",
+  searchQuery?: string,
 ): { item: FileSystemItem; depth: number }[] {
   const flattened: { item: FileSystemItem; depth: number }[] = [];
   const sorted = sortFileTree(items, { sortBy, sortDirection });
 
   for (const item of sorted) {
-    flattened.push({ item, depth });
+    const matchesSearch = !searchQuery || item.name.toLowerCase().includes(searchQuery.toLowerCase());
+    if (matchesSearch || searchQuery) {
+       flattened.push({ item, depth });
+    }
+
     if (
       item.type === "folder"
-      && expandedFolders.has(item.path)
+      && (expandedFolders.has(item.path) || searchQuery)
       && item.files
     ) {
-      flattened.push(
-        ...flattenFileTree(
-          item.files,
-          expandedFolders,
-          depth + 1,
-          sortBy,
-          sortDirection,
-        ),
+      const childItems = flattenFileTree(
+        item.files,
+        expandedFolders,
+        depth + 1,
+        sortBy,
+        sortDirection,
+        searchQuery,
       );
+      flattened.push(...childItems);
     }
   }
 
@@ -62,11 +69,31 @@ export function FileBrowserList() {
   const isAtRoot = useFileBrowserStore(state => state.isAtRoot);
   const currentPath = useFileBrowserStore(state => state.currentPath);
   const scrollTop = useFileBrowserStore(state => state.scrollTop);
+  const searchQuery = useFileBrowserStore(state => state.searchQuery);
+  const setSearchQuery = useFileBrowserStore(state => state.setSearchQuery);
   const setFileBrowserScrollTop = useFileBrowserStore(
     state => state.setFileBrowserScrollTop,
   );
   const sidebarPosition = useSidebarStore(state => state.position);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "/" && !isSearchFocused && document.activeElement?.tagName !== "INPUT") {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+      if (e.key === "Escape" && isSearchFocused) {
+        setSearchQuery("");
+        searchInputRef.current?.blur();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isSearchFocused, setSearchQuery]);
 
   const flattenedItems = useMemo(() => {
     const items = flattenFileTree(
@@ -79,16 +106,18 @@ export function FileBrowserList() {
 
     const result: FlattenedItem[] = [];
 
-    if (!isAtRoot && currentPath) {
+    if (!isAtRoot && currentPath && !searchQuery) {
       result.push({ type: "back" });
     }
 
     for (const item of items) {
-      result.push({ type: "item", ...item });
+      if (!searchQuery || item.item.name.toLowerCase().includes(searchQuery.toLowerCase())) {
+        result.push({ type: "item", ...item });
+      }
     }
 
     return result;
-  }, [fileTree, expandedFolders, sortBy, sortDirection, isAtRoot, currentPath]);
+  }, [fileTree, expandedFolders, sortBy, sortDirection, isAtRoot, currentPath, searchQuery]);
 
   const virtualizer = useVirtualizer({
     count: flattenedItems.length,
@@ -136,13 +165,56 @@ export function FileBrowserList() {
   ]);
 
   useEffect(() => {
-    if (scrollContainerRef.current && scrollTop > 0) {
+    if (scrollContainerRef.current && scrollTop > 0 && !searchQuery) {
       scrollContainerRef.current.scrollTop = scrollTop;
     }
-  }, [scrollTop, fileTree]);
+  }, [scrollTop, fileTree, searchQuery]);
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+      <div className="px-2 py-2">
+        <div className="relative group">
+          <Search className={cn(
+            "absolute left-2.5 top-1/2 -translate-y-1/2 size-3 text-muted-foreground transition-colors duration-200 z-10",
+            isSearchFocused ? "text-primary" : "text-muted-foreground"
+          )} />
+          <Input
+            ref={searchInputRef}
+            placeholder="Search..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            onFocus={() => setIsSearchFocused(true)}
+            onBlur={() => setIsSearchFocused(false)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && flattenedItems.length > 0) {
+                const firstItem = flattenedItems.find(item => item.type === "item") as { type: "item"; item: FileSystemItem } | undefined;
+                if (firstItem) {
+                  if (firstItem.item.type === "folder") {
+                    toggleFolder(firstItem.item.path);
+                  } else {
+                    playVideo(firstItem.item.path);
+                  }
+                }
+              }
+              if (e.key === "ArrowDown" && flattenedItems.length > 0) {
+                e.preventDefault();
+                const triggers = Array.from(document.querySelectorAll<HTMLElement>("[data-item-trigger='true']"));
+                triggers[0]?.focus();
+              }
+            }}
+            className="h-7 pl-7 pr-7 text-xs bg-muted/40 border-transparent hover:bg-muted/60 focus:bg-background focus:border-input transition-all duration-200 rounded-md"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 hover:bg-muted rounded-sm transition-colors z-10"
+            >
+              <X className="size-3 text-muted-foreground" />
+            </button>
+          )}
+        </div>
+      </div>
+
       <div
         className={cn(
           "flex justify-center border-b overflow-hidden transition-all duration-300 ease-in-out shrink-0",

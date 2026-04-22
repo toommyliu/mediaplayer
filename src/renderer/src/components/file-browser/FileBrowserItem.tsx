@@ -56,6 +56,7 @@ export function FileBrowserItem({
   const isMac = usePlatformStore(state => state.isMac);
   const currentItem = useCurrentQueueItem();
   const sidebarPosition = useSidebarStore(state => state.position);
+  const searchQuery = useFileBrowserStore(state => state.searchQuery);
   const isFolder = item.type === "folder";
   const isExpanded = isFolder && expandedFolders.has(item.path);
   const isLoading = loadingFolders.has(item.path);
@@ -164,15 +165,39 @@ export function FileBrowserItem({
                 >
                   <Tooltip>
                     <TooltipTrigger
-                      render={triggerProps => (
-                        <span
-                          {...triggerProps}
-                          className="min-w-0 flex-1 truncate text-xs/relaxed font-medium"
-                        >
-                          {item.name}
-                          {isFolder ? "/" : ""}
-                        </span>
-                      )}
+                      render={(triggerProps) => {
+                        if (!searchQuery) {
+                          return (
+                            <span
+                              {...triggerProps}
+                              className="min-w-0 flex-1 truncate text-xs/relaxed font-medium"
+                            >
+                              {item.name}
+                              {isFolder ? "/" : ""}
+                            </span>
+                          );
+                        }
+
+                        const parts = item.name.split(new RegExp(`(${searchQuery})`, "gi"));
+                        return (
+                          <span
+                            {...triggerProps}
+                            className="min-w-0 flex-1 truncate text-xs/relaxed font-medium"
+                          >
+                            {parts.map((part, i) => {
+                              const key = `part-${i}-${part}`;
+                              return part.toLowerCase() === searchQuery.toLowerCase() ? (
+                                <mark key={key} className="bg-primary/20 text-primary font-semibold rounded-sm px-0.5">
+                                  {part}
+                                </mark>
+                              ) : (
+                                <span key={key}>{part}</span>
+                              );
+                            })}
+                            {isFolder ? "/" : ""}
+                          </span>
+                        );
+                      }}
                     />
                     <TooltipContent
                       align="start"
