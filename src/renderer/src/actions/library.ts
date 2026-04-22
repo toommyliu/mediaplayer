@@ -1,7 +1,6 @@
 import type { PickerResult } from "@/lib/contracts";
 import { playVideo } from "@/actions/playback";
 import {
-  getAllVideoFiles,
   readDirectory,
   selectFileOrFolder,
   showItemInFolder,
@@ -122,10 +121,10 @@ export async function handlePickerResult(result: PickerResult): Promise<void> {
     isLoading: false,
   });
 
-  const allVideoFiles = await getAllVideoFiles(result.rootPath);
-  if (allVideoFiles.length > 0) {
-    useQueueStore.getState().addQueueItems(allVideoFiles);
-    playVideo(allVideoFiles[0].path);
+  const videoFiles = flattenVideoFiles(nextFileTree.files ?? []);
+  if (videoFiles.length > 0) {
+    useQueueStore.getState().addQueueItems(videoFiles);
+    playVideo(videoFiles[0].path);
   }
 }
 
@@ -230,10 +229,6 @@ export async function navigateToDirectory(dirPath: string): Promise<void> {
     });
 
     updatePlayerQueueForced(true);
-    const allVideoFiles = await getAllVideoFiles(dirPath);
-    if (allVideoFiles.length > 0) {
-      useQueueStore.getState().addQueueItems(allVideoFiles);
-    }
   }
   catch {
     useFileBrowserStore.getState().setFileBrowserState({
