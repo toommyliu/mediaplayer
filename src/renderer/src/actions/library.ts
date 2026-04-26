@@ -12,37 +12,12 @@ import {
   useFileBrowserStore,
 } from "@/stores/file-browser";
 import { usePlayerStore } from "@/stores/player";
-import { getCurrentQueueItemFromState, useQueueStore } from "@/stores/queue";
-import { makeQueueId } from "@/stores/utils";
+import { useQueueStore } from "@/stores/queue";
 import { getVideoElement } from "@/video-element";
 import { flattenVideoFiles } from "../../../shared";
 
 export function initializeQueue(): void {
   useQueueStore.getState().resetQueue();
-}
-
-export function updatePlayerQueueForced(preserveCurrentVideo = false): void {
-  const queue = useQueueStore.getState();
-  const currentVideo = preserveCurrentVideo
-    ? getCurrentQueueItemFromState(queue)
-    : null;
-  const fileBrowser = useFileBrowserStore.getState();
-  const videoFiles = flattenVideoFiles(fileBrowser.fileTree?.files ?? []);
-  const nextItems = videoFiles.map(video => ({
-    duration: video.duration ?? 0,
-    id: makeQueueId(video.path),
-    name: video.name,
-    path: video.path,
-  }));
-
-  const nextIndex = currentVideo
-    ? Math.max(
-        0,
-        nextItems.findIndex(item => item.path === currentVideo.path),
-      )
-    : 0;
-
-  useQueueStore.getState().setQueueItems(nextItems, nextIndex);
 }
 
 export async function handleAddFileEvent(result: PickerResult): Promise<void> {
@@ -227,8 +202,6 @@ export async function navigateToDirectory(dirPath: string): Promise<void> {
       isAtRoot: result.isAtRoot,
       isLoading: false,
     });
-
-    updatePlayerQueueForced(true);
   }
   catch {
     useFileBrowserStore.getState().setFileBrowserState({
