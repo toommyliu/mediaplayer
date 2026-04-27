@@ -5,6 +5,7 @@ import {
   selectFileOrFolder,
   showItemInFolder,
 } from "@/lib/ipc";
+import { normalizeVideoPath } from "@/lib/media-path";
 import {
   findFolderInFileSystem,
   transformDirectoryContents,
@@ -13,11 +14,40 @@ import {
 } from "@/stores/file-browser";
 import { usePlayerStore } from "@/stores/player";
 import { useQueueStore } from "@/stores/queue";
+import { makeQueueId } from "@/stores/utils";
 import { getVideoElement } from "@/video-element";
 import { flattenVideoFiles } from "../../../shared";
 
 export function initializeQueue(): void {
   useQueueStore.getState().resetQueue();
+}
+
+export function updatePlayerQueueForced(preserveCurrentVideo = false): void {
+  const currentVideo = preserveCurrentVideo
+    ? usePlayerStore.getState().currentVideo
+    : null;
+  const fileBrowser = useFileBrowserStore.getState();
+  const videoFiles = flattenVideoFiles(fileBrowser.fileTree?.files ?? []);
+  const nextItems = videoFiles.map(video => ({
+    duration: video.duration ?? 0,
+    id: makeQueueId(video.path),
+    name: video.name,
+    path: video.path,
+  }));
+
+  const normalizedCurrentVideo = currentVideo
+    ? normalizeVideoPath(currentVideo)
+    : null;
+  const nextIndex = currentVideo
+    ? Math.max(
+        0,
+        nextItems.findIndex(
+          item => normalizeVideoPath(item.path) === normalizedCurrentVideo,
+        ),
+      )
+    : 0;
+
+  useQueueStore.getState().setQueueItems(nextItems, nextIndex);
 }
 
 export async function handleAddFileEvent(result: PickerResult): Promise<void> {
@@ -165,6 +195,7 @@ export async function loadFolderContents(folderPath: string): Promise<void> {
           files: updated,
         },
       });
+      updatePlayerQueueForced(true);
     }
   }
   finally {
@@ -202,6 +233,8 @@ export async function navigateToDirectory(dirPath: string): Promise<void> {
       isAtRoot: result.isAtRoot,
       isLoading: false,
     });
+
+    updatePlayerQueueForced(true);
   }
   catch {
     useFileBrowserStore.getState().setFileBrowserState({

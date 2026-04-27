@@ -20,6 +20,8 @@ import { useSidebarStore } from "@/stores/sidebar";
 import { sortFileTree } from "../../../../shared/file-tree-utils";
 import { FileBrowserItem } from "./FileBrowserItem";
 
+const BACKSLASH_REGEX = /\\/g;
+
 type FlattenedItem
   = | { type: "back" }
     | { type: "item"; item: FileSystemItem; depth: number };
@@ -38,7 +40,7 @@ function flattenFileTree(
   for (const item of sorted) {
     const matchesSearch = !searchQuery || item.name.toLowerCase().includes(searchQuery.toLowerCase());
     if (matchesSearch || searchQuery) {
-       flattened.push({ item, depth });
+      flattened.push({ item, depth });
     }
 
     if (
@@ -130,39 +132,37 @@ export function FileBrowserList() {
   const currentVideoIndex = useMemo(() => {
     if (!currentVideo)
       return -1;
-    const normalized = normalizeVideoPath(currentVideo).replace(/\\/g, "/");
+    const normalized = normalizeVideoPath(currentVideo).replace(BACKSLASH_REGEX, "/");
     return flattenedItems.findIndex(
       row => row.type === "item" && row.item.path === normalized,
     );
   }, [flattenedItems, currentVideo]);
 
   const virtualItems = virtualizer.getVirtualItems();
+  const scrollOffset = virtualizer.scrollOffset ?? 0;
+  const scrollElementSize = virtualizer.scrollRect?.height ?? 0;
 
   const isAbove = useMemo(() => {
     if (currentVideoIndex === -1 || virtualItems.length === 0)
       return false;
     const item = virtualItems.find(vi => vi.index === currentVideoIndex);
     if (!item)
-      return currentVideoIndex < virtualItems[0].index;
-    return item.start < virtualizer.scrollOffset - 4;
-  }, [currentVideoIndex, virtualItems, virtualizer.scrollOffset]);
+      return currentVideoIndex < virtualItems[0]!.index;
+    return item.start < scrollOffset - 4;
+  }, [currentVideoIndex, scrollOffset, virtualItems]);
 
   const isBelow = useMemo(() => {
     if (currentVideoIndex === -1 || virtualItems.length === 0)
       return false;
     const item = virtualItems.find(vi => vi.index === currentVideoIndex);
+    const lastItem = virtualItems.at(-1)!;
     if (!item)
-      return currentVideoIndex > virtualItems.at(-1).index;
+      return currentVideoIndex > lastItem.index;
     return (
       item.start + item.size
-      > virtualizer.scrollOffset + virtualizer.scrollElementSize + 4
+      > scrollOffset + scrollElementSize + 4
     );
-  }, [
-    currentVideoIndex,
-    virtualItems,
-    virtualizer.scrollOffset,
-    virtualizer.scrollElementSize,
-  ]);
+  }, [currentVideoIndex, scrollElementSize, scrollOffset, virtualItems]);
 
   useEffect(() => {
     if (scrollContainerRef.current && scrollTop > 0 && !searchQuery) {
@@ -177,7 +177,8 @@ export function FileBrowserList() {
           <Search className={cn(
             "absolute left-2.5 top-1/2 -translate-y-1/2 size-3 text-muted-foreground transition-colors duration-200 z-10",
             isSearchFocused ? "text-primary" : "text-muted-foreground"
-          )} />
+          )}
+          />
           <Input
             ref={searchInputRef}
             placeholder="Search..."
@@ -191,7 +192,8 @@ export function FileBrowserList() {
                 if (firstItem) {
                   if (firstItem.item.type === "folder") {
                     toggleFolder(firstItem.item.path);
-                  } else {
+                  }
+                  else {
                     playVideo(firstItem.item.path);
                   }
                 }
@@ -292,7 +294,7 @@ export function FileBrowserList() {
                 ? (
                     <Tooltip>
                       <TooltipTrigger
-                        render={(triggerProps) => (
+                        render={triggerProps => (
                           <Button
                             {...triggerProps}
                             className="text-muted-foreground hover:bg-muted/40 focus-visible:ring-inset w-full justify-start px-3 text-left text-xs font-medium"
@@ -347,7 +349,7 @@ export function FileBrowserList() {
             ? "h-8 opacity-100"
             : "h-0 opacity-0 pointer-events-none border-none",
         )}
-       >
+      >
         <Tooltip>
           <TooltipTrigger
             render={triggerProps => (

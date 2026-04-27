@@ -16,7 +16,6 @@ import { cn } from "@/lib/utils";
 import { useFileBrowserStore } from "@/stores/file-browser";
 import { usePlatformStore } from "@/stores/platform";
 import { usePlayerStore } from "@/stores/player";
-import { useCurrentQueueItem } from "@/stores/queue";
 import { useSidebarStore } from "@/stores/sidebar";
 import { FileBrowserItemContextMenu } from "./FileBrowserItemContextMenu";
 
@@ -54,7 +53,6 @@ export function FileBrowserItem({
     state => state.setFileBrowserState,
   );
   const isMac = usePlatformStore(state => state.isMac);
-  const currentItem = useCurrentQueueItem();
   const sidebarPosition = useSidebarStore(state => state.position);
   const searchQuery = useFileBrowserStore(state => state.searchQuery);
   const isFolder = item.type === "folder";
@@ -93,7 +91,7 @@ export function FileBrowserItem({
       return;
     }
 
-    if (currentItem?.path === item.path)
+    if (isCurrentVideo(item.path, currentVideo))
       return;
     playVideo(item.path);
   }
@@ -186,13 +184,15 @@ export function FileBrowserItem({
                           >
                             {parts.map((part, i) => {
                               const key = `part-${i}-${part}`;
-                              return part.toLowerCase() === searchQuery.toLowerCase() ? (
-                                <mark key={key} className="bg-primary/20 text-primary font-semibold rounded-sm px-0.5">
-                                  {part}
-                                </mark>
-                              ) : (
-                                <span key={key}>{part}</span>
-                              );
+                              return part.toLowerCase() === searchQuery.toLowerCase()
+                                ? (
+                                    <mark key={key} className="bg-primary/20 text-primary font-semibold rounded-sm px-0.5">
+                                      {part}
+                                    </mark>
+                                  )
+                                : (
+                                    <span key={key}>{part}</span>
+                                  );
                             })}
                             {isFolder ? "/" : ""}
                           </span>
