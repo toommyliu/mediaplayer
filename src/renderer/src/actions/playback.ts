@@ -28,6 +28,7 @@ export function stopPlayback(clearCurrentVideo = false): void {
     currentTime: 0,
     currentVideo: clearCurrentVideo ? null : player.currentVideo,
     isPlaying: false,
+    seekUndoStack: [],
   });
 }
 
@@ -45,6 +46,7 @@ export function playVideo(src: string): void {
     error: null,
     isLoading: true,
     isPlaying: true,
+    seekUndoStack: [],
   });
   useQueueStore.getState().setQueueIndex(queueIndex);
 
@@ -69,7 +71,10 @@ export async function playNextVideo(): Promise<void> {
       nextIndex = 0;
     } else {
       videoElement.pause();
-      usePlayerStore.getState().setPlayerState({ isPlaying: false });
+      usePlayerStore.getState().setPlayerState({
+        isPlaying: false,
+        seekUndoStack: [],
+      });
       return;
     }
   }
@@ -78,6 +83,7 @@ export async function playNextVideo(): Promise<void> {
   usePlayerStore.getState().setPlayerState({
     currentTime: 0,
     currentVideo: toFileUrl(item.path),
+    seekUndoStack: [],
   });
   useQueueStore.getState().setQueueIndex(nextIndex);
 
@@ -99,7 +105,10 @@ export async function playPreviousVideo(): Promise<void> {
       nextIndex = queue.items.length - 1;
     } else {
       videoElement.pause();
-      usePlayerStore.getState().setPlayerState({ isPlaying: false });
+      usePlayerStore.getState().setPlayerState({
+        isPlaying: false,
+        seekUndoStack: [],
+      });
       return;
     }
   }
@@ -108,6 +117,7 @@ export async function playPreviousVideo(): Promise<void> {
   usePlayerStore.getState().setPlayerState({
     currentTime: 0,
     currentVideo: toFileUrl(item.path),
+    seekUndoStack: [],
   });
   useQueueStore.getState().setQueueIndex(nextIndex);
 

@@ -15,12 +15,45 @@ import { useVolumeStore } from "@/stores/volume";
 import { getVideoElement } from "@/video-element";
 
 const JUMP_ACTION_REGEX = /^jump-\d$/;
+const SEEK_UNDO_EPSILON_SECONDS = 0.001;
+
+function getCurrentPlaybackTime(fallbackTime: number): number {
+  const video = getVideoElement();
+  return video && Number.isFinite(video.currentTime)
+    ? video.currentTime
+    : fallbackTime;
+}
+
+function setVideoTime(nextTime: number): void {
+  if (!Number.isFinite(nextTime))
+    return;
+
+  usePlayerStore.getState().setCurrentTime(nextTime);
+
+  const video = getVideoElement();
+  if (video)
+    video.currentTime = nextTime;
+}
+
+function runUndoableSeek(nextTime: number): void {
+  if (!Number.isFinite(nextTime))
+    return;
+
+  const player = usePlayerStore.getState();
+  const currentTime = getCurrentPlaybackTime(player.currentTime);
+
+  if (Math.abs(currentTime - nextTime) < SEEK_UNDO_EPSILON_SECONDS)
+    return;
+
+  player.pushSeekUndoTime(currentTime, player.currentVideo);
+  setVideoTime(nextTime);
+}
 
 export async function runHotkeyAction(actionId: string): Promise<void> {
   const queue = useQueueStore.getState();
   const currentItem = getCurrentQueueItemFromState(queue);
   const player = usePlayerStore.getState();
-  const video = getVideoElement();
+  const currentTime = getCurrentPlaybackTime(player.currentTime);
 
   switch (actionId) {
     case "addBookmark":
@@ -39,40 +72,41 @@ export async function runHotkeyAction(actionId: string): Promise<void> {
       break;
     case "seekBackward":
       if (currentItem) {
-        const nextTime = Math.max(0, player.currentTime - SEEK_TIME_STEP);
-        usePlayerStore.getState().setCurrentTime(nextTime);
-        if (video)
-          video.currentTime = nextTime;
+        const nextTime = Math.max(0, currentTime - SEEK_TIME_STEP);
+        runUndoableSeek(nextTime);
       }
       break;
     case "seekForward":
       if (currentItem && Number.isFinite(player.duration)) {
         const nextTime = Math.min(
           player.duration,
-          player.currentTime + SEEK_TIME_STEP,
+          currentTime + SEEK_TIME_STEP,
         );
-        usePlayerStore.getState().setCurrentTime(nextTime);
-        if (video)
-          video.currentTime = nextTime;
+        runUndoableSeek(nextTime);
       }
       break;
     case "frameBackward":
       if (currentItem) {
-        const nextTime = Math.max(0, player.currentTime - FRAME_TIME_STEP);
-        usePlayerStore.getState().setCurrentTime(nextTime);
-        if (video)
-          video.currentTime = nextTime;
+        const nextTime = Math.max(0, currentTime - FRAME_TIME_STEP);
+        runUndoableSeek(nextTime);
       }
       break;
     case "frameForward":
       if (currentItem && Number.isFinite(player.duration)) {
         const nextTime = Math.min(
           player.duration,
-          player.currentTime + FRAME_TIME_STEP,
+          currentTime + FRAME_TIME_STEP,
         );
-        usePlayerStore.getState().setCurrentTime(nextTime);
-        if (video)
-          video.currentTime = nextTime;
+        runUndoableSeek(nextTime);
+      }
+      break;
+    case "undoSeek":
+      if (currentItem && player.currentVideo) {
+        const undoTime = usePlayerStore
+          .getState()
+          .popSeekUndoTime(player.currentVideo);
+        if (undoTime !== null)
+          setVideoTime(undoTime);
       }
       break;
     case "volumeUp":
@@ -110,9 +144,7 @@ export async function runHotkeyAction(actionId: string): Promise<void> {
       ) {
         const percent = Number.parseInt(actionId.split("-")[1], 10) / 10;
         const nextTime = percent * player.duration;
-        usePlayerStore.getState().setCurrentTime(nextTime);
-        if (video)
-          video.currentTime = nextTime;
+        runUndoableSeek(nextTime);
       }
       break;
   }

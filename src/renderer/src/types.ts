@@ -83,6 +83,7 @@ export interface AppState {
     isHolding: boolean;
     isLoading: boolean;
     isPlaying: boolean;
+    seekUndoStack: Array<{ time: number; video: string | null }>;
     showControls: boolean;
   };
   queue: {

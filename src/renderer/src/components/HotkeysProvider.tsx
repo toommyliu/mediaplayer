@@ -43,6 +43,7 @@ function buildDefaultCategories(modKey: string): HotkeyCategory[] {
         { description: "Seek forward", id: "seekForward", keys: ["right"] },
         { description: "Frame backward", id: "frameBackward", keys: [","] },
         { description: "Frame forward", id: "frameForward", keys: ["."] },
+        { description: "Undo seek", id: "undoSeek", keys: [`${modKey}+z`] },
         { description: "Volume up", id: "volumeUp", keys: ["up"] },
         { description: "Volume down", id: "volumeDown", keys: ["down"] },
         { description: "Toggle mute", id: "mute", keys: ["m"] },
