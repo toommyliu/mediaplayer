@@ -5,7 +5,7 @@ import {
   selectFileOrFolder,
   showItemInFolder,
 } from "@/lib/ipc";
-import { normalizeVideoPath } from "@/lib/media-path";
+import { normalizeVideoPath, toFileUrl } from "@/lib/media-path";
 import {
   findFolderInFileSystem,
   transformDirectoryContents,
@@ -38,16 +38,28 @@ export function updatePlayerQueueForced(preserveCurrentVideo = false): void {
   const normalizedCurrentVideo = currentVideo
     ? normalizeVideoPath(currentVideo)
     : null;
-  const nextIndex = currentVideo
-    ? Math.max(
-        0,
-        nextItems.findIndex(
-          item => normalizeVideoPath(item.path) === normalizedCurrentVideo,
-        ),
+  const preservedIndex = normalizedCurrentVideo
+    ? nextItems.findIndex(
+        item => normalizeVideoPath(item.path) === normalizedCurrentVideo,
       )
+    : -1;
+  const nextIndex = currentVideo
+    ? Math.max(0, preservedIndex)
     : 0;
 
   useQueueStore.getState().setQueueItems(nextItems, nextIndex);
+
+  const selectedItem = nextItems[nextIndex];
+  if (preserveCurrentVideo && currentVideo && preservedIndex === -1 && selectedItem) {
+    usePlayerStore.getState().setPlayerState({
+      currentTime: 0,
+      currentVideo: toFileUrl(selectedItem.path),
+      duration: selectedItem.duration ?? 0,
+      error: null,
+      isLoading: true,
+      isPlaying: true,
+    });
+  }
 }
 
 export async function handleAddFileEvent(result: PickerResult): Promise<void> {
