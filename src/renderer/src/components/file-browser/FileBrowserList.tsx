@@ -2,8 +2,12 @@ import type { FileSystemItem } from "@/types";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { ChevronDown, ChevronUp, Search, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { navigateToParent, resetAndBrowseLibrary, toggleFolder } from "@/actions/library";
-import { playVideo } from "@/actions/playback";
+import {
+  navigateToParent,
+  playFileBrowserVideo,
+  resetAndBrowseLibrary,
+  toggleFolder,
+} from "@/actions/library";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -194,7 +198,7 @@ export function FileBrowserList() {
                     toggleFolder(firstItem.item.path);
                   }
                   else {
-                    playVideo(firstItem.item.path);
+                    playFileBrowserVideo(firstItem.item);
                   }
                 }
               }

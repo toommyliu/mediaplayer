@@ -11,10 +11,10 @@ import {
 } from "lucide-react";
 import {
   navigateToDirectory,
+  playFileBrowserVideo,
   revealItemInFolder,
   toggleFolder,
 } from "@/actions/library";
-import { playVideo } from "@/actions/playback";
 import {
   ContextMenuContent,
   ContextMenuItem,
@@ -117,14 +117,14 @@ function FolderItemContextMenu({
 
 // File
 function FileItemContextMenu({ item }: FileBrowserItemContextMenuProps) {
-  const addQueueItem = useQueueStore((state) => state.addQueueItem);
-  const addQueueItemNext = useQueueStore((state) => state.addQueueItemNext);
+  const addQueueItem = useQueueStore(state => state.addQueueItem);
+  const addQueueItemNext = useQueueStore(state => state.addQueueItemNext);
 
   return (
     <>
       <ContextMenuItem
         onClick={() => {
-          playVideo(item.path);
+          playFileBrowserVideo(item);
         }}
       >
         <PlayIcon className="size-4" />
@@ -167,11 +167,13 @@ export function FileBrowserItemContextMenu({
 
   return (
     <ContextMenuContent className="min-w-48">
-      {isFolder ? (
-        <FolderItemContextMenu item={item} isExpanded={isExpanded} />
-      ) : (
-        <FileItemContextMenu item={item} isExpanded={isExpanded} />
-      )}
+      {isFolder
+        ? (
+            <FolderItemContextMenu item={item} isExpanded={isExpanded} />
+          )
+        : (
+            <FileItemContextMenu item={item} isExpanded={isExpanded} />
+          )}
 
       <ContextMenuSeparator />
       <RevealInFinderMenuItem path={item.path} />

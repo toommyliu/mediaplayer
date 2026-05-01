@@ -2,8 +2,11 @@ import type { ComponentProps, KeyboardEvent, MouseEvent } from "react";
 import type { FileSystemItem } from "@/types";
 import { ChevronDown, Dot, Loader2 } from "lucide-react";
 
-import { navigateToDirectory, toggleFolder } from "@/actions/library";
-import { playVideo } from "@/actions/playback";
+import {
+  navigateToDirectory,
+  playFileBrowserVideo,
+  toggleFolder,
+} from "@/actions/library";
 import { ContextMenu, ContextMenuTrigger } from "@/components/ui/context-menu";
 import {
   Tooltip,
@@ -91,9 +94,7 @@ export function FileBrowserItem({
       return;
     }
 
-    if (isCurrentVideo(item.path, currentVideo))
-      return;
-    playVideo(item.path);
+    playFileBrowserVideo(item);
   }
 
   return (

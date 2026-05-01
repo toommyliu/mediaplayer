@@ -1,4 +1,6 @@
 import type { PickerResult } from "@/lib/contracts";
+import type { QueueInsertItem } from "@/stores/queue";
+import type { FileSystemItem, QueueItem } from "@/types";
 import { playVideo } from "@/actions/playback";
 import {
   readDirectory,
@@ -22,18 +24,22 @@ export function initializeQueue(): void {
   useQueueStore.getState().resetQueue();
 }
 
+function toQueueItems(videos: QueueInsertItem[]): QueueItem[] {
+  return videos.map(video => ({
+    duration: video.duration ?? 0,
+    id: makeQueueId(video.path),
+    name: video.name,
+    path: video.path,
+  }));
+}
+
 export function updatePlayerQueueForced(preserveCurrentVideo = false): void {
   const currentVideo = preserveCurrentVideo
     ? usePlayerStore.getState().currentVideo
     : null;
   const fileBrowser = useFileBrowserStore.getState();
   const videoFiles = flattenVideoFiles(fileBrowser.fileTree?.files ?? []);
-  const nextItems = videoFiles.map(video => ({
-    duration: video.duration ?? 0,
-    id: makeQueueId(video.path),
-    name: video.name,
-    path: video.path,
-  }));
+  const nextItems = toQueueItems(videoFiles);
 
   const normalizedCurrentVideo = currentVideo
     ? normalizeVideoPath(currentVideo)
@@ -59,6 +65,57 @@ export function updatePlayerQueueForced(preserveCurrentVideo = false): void {
       isLoading: true,
       isPlaying: true,
     });
+  }
+}
+
+export function playFileBrowserVideo(item: FileSystemItem): void {
+  if (item.type !== "video")
+    return;
+
+  const currentVideo = usePlayerStore.getState().currentVideo;
+  const normalizedItemPath = normalizeVideoPath(item.path);
+  const normalizedCurrentVideo = currentVideo
+    ? normalizeVideoPath(currentVideo)
+    : null;
+  const isCurrentVideo = normalizedCurrentVideo === normalizedItemPath;
+  const queue = useQueueStore.getState();
+  const queueIndex = queue.items.findIndex(
+    queueItem => normalizeVideoPath(queueItem.path) === normalizedItemPath,
+  );
+
+  if (queueIndex !== -1) {
+    if (isCurrentVideo) {
+      queue.setQueueIndex(queueIndex);
+      return;
+    }
+
+    playVideo(item.path);
+    return;
+  }
+
+  const fileBrowser = useFileBrowserStore.getState();
+  let nextItems = toQueueItems(
+    flattenVideoFiles(fileBrowser.fileTree?.files ?? []),
+  );
+  let nextIndex = nextItems.findIndex(
+    queueItem => normalizeVideoPath(queueItem.path) === normalizedItemPath,
+  );
+
+  if (nextIndex === -1) {
+    nextItems = toQueueItems([
+      {
+        duration: item.duration ?? 0,
+        name: item.name,
+        path: item.path,
+      },
+    ]);
+    nextIndex = 0;
+  }
+
+  queue.setQueueItems(nextItems, nextIndex);
+
+  if (!isCurrentVideo) {
+    playVideo(item.path);
   }
 }
 
