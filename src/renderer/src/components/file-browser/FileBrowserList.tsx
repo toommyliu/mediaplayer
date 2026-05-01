@@ -172,7 +172,7 @@ export function FileBrowserList() {
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
-      <div className="px-2 py-2">
+      <div className="py-2">
         <div className="relative group">
           <Search className={cn(
             "absolute left-2.5 top-1/2 -translate-y-1/2 size-3 text-muted-foreground transition-colors duration-200 z-10",
@@ -204,7 +204,7 @@ export function FileBrowserList() {
                 triggers[0]?.focus();
               }
             }}
-            className="h-7 pl-7 pr-7 text-xs bg-muted/40 border-transparent hover:bg-muted/60 focus:bg-background focus:border-input transition-all duration-200 rounded-md"
+            className="h-7 rounded-md border-transparent bg-muted/40 pl-7 pr-7 text-xs ring-inset transition-all duration-200 hover:bg-muted/60 focus:border-input focus:bg-background"
           />
           {searchQuery && (
             <button
@@ -219,10 +219,10 @@ export function FileBrowserList() {
 
       <div
         className={cn(
-          "flex justify-center border-b overflow-hidden transition-all duration-300 ease-in-out shrink-0",
+          "flex shrink-0 items-center justify-center border-b transition-all duration-300 ease-in-out",
           isAbove
-            ? "h-8 opacity-100"
-            : "h-0 opacity-0 pointer-events-none border-none",
+            ? "h-8 overflow-visible opacity-100"
+            : "h-0 overflow-hidden opacity-0 pointer-events-none border-none",
         )}
       >
         <Tooltip>
@@ -231,12 +231,14 @@ export function FileBrowserList() {
               <Button
                 {...triggerProps}
                 variant="ghost"
-                size="icon"
-                className="size-7 text-muted-foreground hover:text-foreground h-full w-full rounded-none"
+                size="icon-xs"
+                className="size-7 rounded-md text-muted-foreground hover:text-foreground before:rounded-[calc(var(--radius-md)-1px)] sm:size-7"
+                aria-hidden={!isAbove}
                 onClick={() =>
                   virtualizer.scrollToIndex(currentVideoIndex, {
                     align: "center",
                   })}
+                tabIndex={isAbove ? undefined : -1}
               >
                 <ChevronUp className="size-4" />
               </Button>
@@ -344,10 +346,10 @@ export function FileBrowserList() {
 
       <div
         className={cn(
-          "flex justify-center border-t overflow-hidden transition-all duration-300 ease-in-out shrink-0",
+          "flex shrink-0 items-center justify-center border-t transition-all duration-300 ease-in-out",
           isBelow
-            ? "h-8 opacity-100"
-            : "h-0 opacity-0 pointer-events-none border-none",
+            ? "h-8 overflow-visible opacity-100"
+            : "h-0 overflow-hidden opacity-0 pointer-events-none border-none",
         )}
       >
         <Tooltip>
@@ -356,12 +358,14 @@ export function FileBrowserList() {
               <Button
                 {...triggerProps}
                 variant="ghost"
-                size="icon"
-                className="size-7 text-muted-foreground hover:text-foreground h-full w-full rounded-none"
+                size="icon-xs"
+                className="size-7 rounded-md text-muted-foreground hover:text-foreground before:rounded-[calc(var(--radius-md)-1px)] sm:size-7"
+                aria-hidden={!isBelow}
                 onClick={() =>
                   virtualizer.scrollToIndex(currentVideoIndex, {
                     align: "center",
                   })}
+                tabIndex={isBelow ? undefined : -1}
               >
                 <ChevronDown className="size-4" />
               </Button>
