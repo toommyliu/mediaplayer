@@ -1,3 +1,4 @@
+import type { WheelEvent } from "react";
 import { Loader2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { loadFileSystemStructure } from "@/actions/library";
@@ -6,10 +7,18 @@ import {
   playNextVideo,
   togglePlayPause,
 } from "@/actions/playback";
+import { clamp } from "@/lib/clamp";
+import {
+  TRACKPAD_GESTURE_AXIS_RATIO,
+  TRACKPAD_GESTURE_THRESHOLD,
+  TRACKPAD_SEEK_TIME_STEP,
+  TRACKPAD_VOLUME_STEP,
+} from "@/lib/constants";
 import { toFileUrl } from "@/lib/media-path";
 import { cn } from "@/lib/utils";
 import { usePlayerStore } from "@/stores/player";
 import { useCurrentQueueItem, useQueueStore } from "@/stores/queue";
+import { useVolumeStore } from "@/stores/volume";
 import { BookmarkIndicator } from "./BookmarkIndicator";
 import { UpNextNotification } from "./UpNextNotification";
 import { VideoInfoOverlay } from "./VideoInfoOverlay";
@@ -30,6 +39,9 @@ export default function VideoPlayer() {
   const currentItem = useCurrentQueueItem();
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const gestureDeltaXRef = useRef(0);
+  const gestureDeltaYRef = useRef(0);
+  const gestureResetTimerRef = useRef<number | null>(null);
   const hideTimerRef = useRef<number | null>(null);
   const holdTimerRef = useRef<number | null>(null);
   const holdIntervalRef = useRef<number | null>(null);
@@ -96,8 +108,115 @@ export default function VideoPlayer() {
   useEffect(() => {
     return () => {
       stopHoldSeeking();
+      if (gestureResetTimerRef.current) {
+        window.clearTimeout(gestureResetTimerRef.current);
+        gestureResetTimerRef.current = null;
+      }
     };
   }, [stopHoldSeeking]);
+
+  const shouldIgnoreGestureTarget = useCallback((target: EventTarget | null): boolean => {
+    if (!(target instanceof HTMLElement))
+      return true;
+
+    return Boolean(
+      target.closest(
+        "#media-controls, button, input, textarea, select, [role='slider'], [role='button'], [data-slot]",
+      ),
+    );
+  }, []);
+
+  const seekByGestureStep = useCallback((direction: "backward" | "forward", steps: number): void => {
+    const video = videoRef.current;
+    if (!video || !Number.isFinite(duration))
+      return;
+
+    const delta = TRACKPAD_SEEK_TIME_STEP * steps;
+    const nextTime = direction === "forward"
+      ? Math.min(duration, video.currentTime + delta)
+      : Math.max(0, video.currentTime - delta);
+
+    video.currentTime = nextTime;
+    setCurrentTime(nextTime);
+  }, [duration, setCurrentTime]);
+
+  const adjustVolumeByGestureStep = useCallback((direction: "down" | "up", steps: number): void => {
+    const volumeStore = useVolumeStore.getState();
+    const delta = TRACKPAD_VOLUME_STEP * steps;
+    const nextVolume = direction === "up"
+      ? clamp(volumeStore.value + delta, 0, 1)
+      : clamp(volumeStore.value - delta, 0, 1);
+
+    volumeStore.setVolume(nextVolume);
+    volumeStore.setMuted(nextVolume === 0);
+    if (nextVolume > 0)
+      volumeStore.setMuted(false);
+  }, []);
+
+  const handleWheelGesture = useCallback((event: WheelEvent<HTMLDivElement>) => {
+    if (!videoRef.current || shouldIgnoreGestureTarget(event.target))
+      return;
+
+    const absX = Math.abs(event.deltaX);
+    const absY = Math.abs(event.deltaY);
+
+    if (absX === 0 && absY === 0)
+      return;
+
+    const horizontal = absX > absY * TRACKPAD_GESTURE_AXIS_RATIO;
+    const vertical = absY > absX * TRACKPAD_GESTURE_AXIS_RATIO;
+
+    if (!horizontal && !vertical)
+      return;
+
+    event.preventDefault();
+    resetHideTimer();
+
+    if (gestureResetTimerRef.current)
+      window.clearTimeout(gestureResetTimerRef.current);
+
+    gestureResetTimerRef.current = window.setTimeout(() => {
+      gestureDeltaXRef.current = 0;
+      gestureDeltaYRef.current = 0;
+      gestureResetTimerRef.current = null;
+    }, 160);
+
+    if (horizontal) {
+      gestureDeltaXRef.current += event.deltaX;
+      gestureDeltaYRef.current = 0;
+
+      const steps = Math.trunc(
+        Math.abs(gestureDeltaXRef.current) / TRACKPAD_GESTURE_THRESHOLD,
+      );
+      if (steps === 0)
+        return;
+
+      const direction = gestureDeltaXRef.current > 0 ? "forward" : "backward";
+      seekByGestureStep(direction, steps);
+      gestureDeltaXRef.current
+        -= Math.sign(gestureDeltaXRef.current) * steps * TRACKPAD_GESTURE_THRESHOLD;
+      return;
+    }
+
+    gestureDeltaYRef.current += event.deltaY;
+    gestureDeltaXRef.current = 0;
+
+    const steps = Math.trunc(
+      Math.abs(gestureDeltaYRef.current) / TRACKPAD_GESTURE_THRESHOLD,
+    );
+    if (steps === 0)
+      return;
+
+    const direction = gestureDeltaYRef.current < 0 ? "up" : "down";
+    adjustVolumeByGestureStep(direction, steps);
+    gestureDeltaYRef.current
+      -= Math.sign(gestureDeltaYRef.current) * steps * TRACKPAD_GESTURE_THRESHOLD;
+  }, [
+    adjustVolumeByGestureStep,
+    resetHideTimer,
+    seekByGestureStep,
+    shouldIgnoreGestureTarget,
+  ]);
 
   function startHoldSeeking(direction: HoldDirection): void {
     if (!videoRef.current || !direction)
@@ -183,6 +302,7 @@ export default function VideoPlayer() {
           }
         }}
         onMouseMove={() => resetHideTimer()}
+        onWheel={handleWheelGesture}
         ref={containerRef}
       >
         <video
@@ -195,7 +315,7 @@ export default function VideoPlayer() {
           }`}
           controls={false}
           disablePictureInPicture
-          onCanPlay={() => setPlayerState({ isLoading: false })}
+          onCanPlay={() => setPlayerState({ error: null, isLoading: false })}
           onEnded={() => {
             if (repeatMode === "one" && videoRef.current) {
               videoRef.current.currentTime = 0;
@@ -212,7 +332,7 @@ export default function VideoPlayer() {
             });
           }}
           onLoadedData={() => {
-            setPlayerState({ isLoading: false });
+            setPlayerState({ error: null, isLoading: false });
             if (videoRef.current) {
               setDuration(videoRef.current.duration);
               void videoRef.current.play().catch(() => undefined);
@@ -223,7 +343,7 @@ export default function VideoPlayer() {
               setDuration(videoRef.current.duration);
             }
           }}
-          onLoadStart={() => setPlayerState({ isLoading: true })}
+          onLoadStart={() => setPlayerState({ error: null, isLoading: true })}
           onPause={() => setPlayerState({ isPlaying: false })}
           onPlay={() => setPlayerState({ isPlaying: true })}
           onSeeked={() => {
