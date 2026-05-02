@@ -63,6 +63,7 @@ export default function App() {
   }, [position]);
 
   const isLeft = position === "left";
+  const isSidebarInteractive = isOpen || isPeeking;
 
   const startPeek = useCallback(() => {
     if (isOpen)
@@ -84,6 +85,19 @@ export default function App() {
     if (isOpen)
       setIsPeeking(false);
   }, [isOpen]);
+
+  useEffect(() => {
+    if (isSidebarInteractive)
+      return;
+
+    const activeElement = document.activeElement;
+    if (
+      activeElement instanceof HTMLElement
+      && sidebarContainerRef.current?.contains(activeElement)
+    ) {
+      activeElement.blur();
+    }
+  }, [isSidebarInteractive]);
 
   useEffect(() => {
     if (!isResizing)
@@ -303,6 +317,8 @@ export default function App() {
 
         <div
           ref={sidebarContainerRef}
+          aria-hidden={!isSidebarInteractive}
+          inert={!isSidebarInteractive ? true : undefined}
           className={cn(
             "absolute inset-y-0 flex flex-col",
             isOpen ? "z-20" : "z-40",
