@@ -51,6 +51,8 @@ export const usePlayerStore = create<PlayerStore>()((set, get) => ({
       ...state,
       currentTime: 0,
       duration: 0,
+      error: null,
+      isLoading: false,
       isPlaying: false,
       seekUndoStack: [],
     })),

@@ -27,6 +27,8 @@ export function stopPlayback(clearCurrentVideo = false): void {
   player.setPlayerState({
     currentTime: 0,
     currentVideo: clearCurrentVideo ? null : player.currentVideo,
+    error: null,
+    isLoading: false,
     isPlaying: false,
     seekUndoStack: [],
   });
@@ -83,6 +85,8 @@ export async function playNextVideo(): Promise<void> {
   usePlayerStore.getState().setPlayerState({
     currentTime: 0,
     currentVideo: toFileUrl(item.path),
+    error: null,
+    isLoading: true,
     seekUndoStack: [],
   });
   useQueueStore.getState().setQueueIndex(nextIndex);
@@ -117,6 +121,8 @@ export async function playPreviousVideo(): Promise<void> {
   usePlayerStore.getState().setPlayerState({
     currentTime: 0,
     currentVideo: toFileUrl(item.path),
+    error: null,
+    isLoading: true,
     seekUndoStack: [],
   });
   useQueueStore.getState().setQueueIndex(nextIndex);
