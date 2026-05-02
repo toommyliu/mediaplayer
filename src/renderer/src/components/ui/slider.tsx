@@ -74,23 +74,36 @@ export function Slider({
               = typeof marker === "number" ? marker : marker.timestamp;
             const _label = typeof marker === "number" ? undefined : marker.label;
             const label = _label || `Bookmark ${index + 1}`;
-            const position = ((timestamp - min) / (max - min)) * 100;
+
+            if (
+              max <= min
+              || timestamp < min
+              || timestamp > max
+              || !Number.isFinite(timestamp)
+            ) {
+              return null;
+            }
+
+            const position = Math.min(
+              100,
+              Math.max(0, ((timestamp - min) / (max - min)) * 100),
+            );
             const isPassed = timestamp <= _values[0];
 
             return (
               <Tooltip key={timestamp}>
                 <TooltipTrigger render={props => (
                   <div
-                    className="absolute top-1/2 h-0 w-0 -translate-y-1/2"
+                    className="group/marker absolute top-1/2 z-10 h-6 w-4 -translate-x-1/2 -translate-y-1/2 cursor-default"
                     style={{ left: `${position}%` }}
                     {...props}
                   >
                     <div
                       className={cn(
-                        "absolute top-1/2 left-1/2 z-10 h-3 w-0.5 -translate-x-1/2 -translate-y-1/2 rounded-full ring-1 transition-all duration-300 ease-in-out hover:z-30 hover:h-5 hover:w-1 hover:bg-primary hover:ring-primary/20",
+                        "absolute top-1/2 left-1/2 h-4 w-1 -translate-x-1/2 -translate-y-1/2 rounded-full transition-[height,width,background-color,box-shadow] duration-300 ease-in-out before:absolute before:top-0 before:left-1/2 before:h-1.5 before:w-2 before:-translate-x-1/2 before:-translate-y-1/2 before:rounded-full before:transition-colors before:duration-300 group-hover/marker:h-5 group-hover/marker:w-1.5 group-hover/marker:bg-white group-focus-visible/marker:h-5 group-focus-visible/marker:w-1.5 group-focus-visible/marker:bg-white",
                         isPassed
-                          ? "bg-foreground ring-white/10"
-                          : "bg-foreground/80 mix-blend-difference ring-black/10",
+                          ? "bg-white shadow-[0_0_0_1px_rgba(0,0,0,0.45),0_1px_5px_rgba(0,0,0,0.55),0_0_8px_rgba(255,255,255,0.18)] before:bg-white group-hover/marker:shadow-[0_0_0_1px_rgba(0,0,0,0.5),0_2px_7px_rgba(0,0,0,0.65),0_0_10px_rgba(255,255,255,0.28)] group-focus-visible/marker:shadow-[0_0_0_1px_rgba(0,0,0,0.5),0_2px_7px_rgba(0,0,0,0.65),0_0_10px_rgba(255,255,255,0.28)]"
+                          : "bg-white/70 shadow-[0_0_0_1px_rgba(0,0,0,0.55),0_1px_4px_rgba(0,0,0,0.7)] before:bg-white/80 group-hover/marker:shadow-[0_0_0_1px_rgba(0,0,0,0.5),0_2px_7px_rgba(0,0,0,0.7),0_0_9px_rgba(255,255,255,0.2)] group-focus-visible/marker:shadow-[0_0_0_1px_rgba(0,0,0,0.5),0_2px_7px_rgba(0,0,0,0.7),0_0_9px_rgba(255,255,255,0.2)]",
                       )}
                     >
                     </div>
