@@ -26,9 +26,11 @@ import { FileBrowserItem } from "./FileBrowserItem";
 
 const BACKSLASH_REGEX = /\\/g;
 
-type FlattenedItem
-  = | { type: "back" }
-    | { type: "item"; item: FileSystemItem; depth: number };
+interface FlattenedItem {
+  depth: number;
+  item: FileSystemItem;
+  type: "item";
+}
 
 function flattenFileTree(
   items: FileSystemItem[],
@@ -112,10 +114,6 @@ export function FileBrowserList() {
 
     const result: FlattenedItem[] = [];
 
-    if (!isAtRoot && currentPath && !searchQuery) {
-      result.push({ type: "back" });
-    }
-
     for (const item of items) {
       if (!searchQuery || item.item.name.toLowerCase().includes(searchQuery.toLowerCase())) {
         result.push({ type: "item", ...item });
@@ -123,7 +121,9 @@ export function FileBrowserList() {
     }
 
     return result;
-  }, [fileTree, expandedFolders, sortBy, sortDirection, isAtRoot, currentPath, searchQuery]);
+  }, [fileTree, expandedFolders, sortBy, sortDirection, searchQuery]);
+
+  const showBackButton = !isAtRoot && currentPath && !searchQuery;
 
   const virtualizer = useVirtualizer({
     count: flattenedItems.length,
@@ -254,6 +254,57 @@ export function FileBrowserList() {
         </Tooltip>
       </div>
 
+      {showBackButton
+        ? (
+            <div className="shrink-0 pr-1 pb-1">
+              <Tooltip>
+                <TooltipTrigger
+                  render={triggerProps => (
+                    <Button
+                      {...triggerProps}
+                      className="h-7 w-full justify-start px-3 text-left text-xs font-medium text-muted-foreground hover:bg-muted/40 focus-visible:ring-inset sm:h-7"
+                      data-item-trigger="true"
+                      onClick={() => {
+                        void navigateToParent();
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key === "ArrowDown") {
+                          event.preventDefault();
+                          const triggers = Array.from(
+                            document.querySelectorAll<HTMLElement>(
+                              "[data-item-trigger='true']",
+                            ),
+                          );
+                          triggers[1]?.focus();
+                        }
+                        else if (event.key === "End") {
+                          event.preventDefault();
+                          const triggers = Array.from(
+                            document.querySelectorAll<HTMLElement>(
+                              "[data-item-trigger='true']",
+                            ),
+                          );
+                          triggers.at(-1)?.focus();
+                        }
+                      }}
+                      size="xs"
+                      variant="ghost"
+                    >
+                      ../
+                    </Button>
+                  )}
+                />
+                <TooltipContent
+                  align="start"
+                  side={sidebarPosition === "left" ? "right" : "left"}
+                >
+                  Go back
+                </TooltipContent>
+              </Tooltip>
+            </div>
+          )
+        : null}
+
       <ScrollArea
         className="flex-1"
         onScroll={() => {
@@ -295,38 +346,6 @@ export function FileBrowserList() {
             if (!row)
               return null;
 
-            const content
-              = row.type === "back"
-                ? (
-                    <Tooltip>
-                      <TooltipTrigger
-                        render={triggerProps => (
-                          <Button
-                            {...triggerProps}
-                            className="h-7 w-full justify-start px-3 text-left text-xs font-medium text-muted-foreground hover:bg-muted/40 focus-visible:ring-inset sm:h-7"
-                            data-item-trigger="true"
-                            onClick={() => {
-                              void navigateToParent();
-                            }}
-                            size="xs"
-                            variant="ghost"
-                          >
-                            ../
-                          </Button>
-                        )}
-                      />
-                      <TooltipContent
-                        align="start"
-                        side={sidebarPosition === "left" ? "right" : "left"}
-                      >
-                        Go back
-                      </TooltipContent>
-                    </Tooltip>
-                  )
-                : (
-                    <FileBrowserItem item={row.item} depth={row.depth} />
-                  );
-
             return (
               <div
                 key={virtualRow.key}
@@ -341,7 +360,7 @@ export function FileBrowserList() {
                   transform: `translateY(${virtualRow.start}px)`,
                 }}
               >
-                {content}
+                <FileBrowserItem item={row.item} depth={row.depth} />
               </div>
             );
           })}
