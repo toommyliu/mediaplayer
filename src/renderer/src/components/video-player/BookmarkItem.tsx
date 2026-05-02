@@ -1,3 +1,4 @@
+import type { KeyboardEvent } from "react";
 import type { Bookmark } from "@/lib/contracts";
 import { X } from "lucide-react";
 import {
@@ -29,6 +30,14 @@ export function BookmarkItem({ item }: BookmarkItemProps) {
     }
   }
 
+  function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.key !== "Enter" && event.key !== " ")
+      return;
+
+    event.preventDefault();
+    jumpToBookmark();
+  }
+
   return (
     <Tooltip>
       <TooltipTrigger
@@ -39,6 +48,7 @@ export function BookmarkItem({ item }: BookmarkItemProps) {
               "group/bookmark-item relative flex h-6 w-full items-center justify-between rounded-full bg-secondary pl-2.5 pr-1.5 text-[0.625rem] font-medium transition-all duration-200 select-none cursor-pointer ring-1 ring-inset ring-foreground/5 hover:bg-accent hover:text-foreground",
               isElapsed && "opacity-60",
             )}
+            onKeyDown={handleKeyDown}
             onClick={jumpToBookmark}
             role="button"
             tabIndex={0}

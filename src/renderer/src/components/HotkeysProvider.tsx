@@ -74,7 +74,18 @@ function buildDefaultCategories(modKey: string): HotkeyCategory[] {
       name: "Navigation",
     },
     {
-      actions: [],
+      actions: [
+        {
+          description: "Previous bookmark",
+          id: "jumpToPreviousBookmark",
+          keys: ["["],
+        },
+        {
+          description: "Next bookmark",
+          id: "jumpToNextBookmark",
+          keys: ["]"],
+        },
+      ],
       name: "Time Navigation",
     },
     {

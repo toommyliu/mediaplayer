@@ -15,6 +15,7 @@ import { useVolumeStore } from "@/stores/volume";
 import { getVideoElement } from "@/video-element";
 
 const JUMP_ACTION_REGEX = /^jump-\d$/;
+const BOOKMARK_JUMP_EPSILON_SECONDS = 0.1;
 const SEEK_UNDO_EPSILON_SECONDS = 0.001;
 
 function getCurrentPlaybackTime(fallbackTime: number): number {
@@ -47,6 +48,34 @@ function runUndoableSeek(nextTime: number): void {
 
   player.pushSeekUndoTime(currentTime, player.currentVideo);
   setVideoTime(nextTime);
+}
+
+function jumpToBookmark(direction: "next" | "previous", currentTime: number): void {
+  const player = usePlayerStore.getState();
+  if (!player.currentVideo)
+    return;
+
+  const bookmarks = useBookmarksStore
+    .getState()
+    .bookmarks
+    .filter(bookmark => bookmark.videoPath === player.currentVideo)
+    .sort((a, b) => a.timestamp - b.timestamp);
+
+  if (bookmarks.length === 0)
+    return;
+
+  const target = direction === "next"
+    ? bookmarks.find(
+      bookmark =>
+        bookmark.timestamp > currentTime + BOOKMARK_JUMP_EPSILON_SECONDS,
+    ) ?? bookmarks[0]
+    : bookmarks.findLast(
+      bookmark =>
+        bookmark.timestamp < currentTime - BOOKMARK_JUMP_EPSILON_SECONDS,
+    ) ?? bookmarks.at(-1);
+
+  if (target)
+    runUndoableSeek(target.timestamp);
 }
 
 export async function runHotkeyAction(actionId: string): Promise<void> {
@@ -108,6 +137,14 @@ export async function runHotkeyAction(actionId: string): Promise<void> {
         if (undoTime !== null)
           setVideoTime(undoTime);
       }
+      break;
+    case "jumpToPreviousBookmark":
+      if (currentItem)
+        jumpToBookmark("previous", currentTime);
+      break;
+    case "jumpToNextBookmark":
+      if (currentItem)
+        jumpToBookmark("next", currentTime);
       break;
     case "volumeUp":
       useVolumeStore.getState().increaseVolume();
