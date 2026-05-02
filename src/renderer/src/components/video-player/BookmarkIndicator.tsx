@@ -11,13 +11,21 @@ export function BookmarkIndicator() {
   const [type, setType] = useState<"new" | "duplicate" | null>(null);
 
   useEffect(() => {
-    if (lastAction && !showControls && Date.now() - lastAction.timestamp < 150) {
-      setType(lastAction.type);
-      setIsVisible(true);
-      const timer = setTimeout(setIsVisible, 1500, false);
-      return () => clearTimeout(timer);
+    if (!lastAction || showControls || Date.now() - lastAction.timestamp >= 150) {
+      const hideTimer = window.setTimeout(setIsVisible, 0, false);
+      return () => window.clearTimeout(hideTimer);
     }
-    return undefined;
+
+    const type = lastAction.type;
+    const showTimer = window.setTimeout(() => {
+      setType(type);
+      setIsVisible(true);
+    }, 0);
+    const hideTimer = window.setTimeout(setIsVisible, 1500, false);
+    return () => {
+      window.clearTimeout(showTimer);
+      window.clearTimeout(hideTimer);
+    };
   }, [lastAction, showControls]);
 
   return (
