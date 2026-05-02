@@ -303,7 +303,7 @@ export function FileBrowserList() {
                         render={triggerProps => (
                           <Button
                             {...triggerProps}
-                            className="text-muted-foreground hover:bg-muted/40 focus-visible:ring-inset w-full justify-start px-3 text-left text-xs font-medium"
+                            className="h-7 w-full justify-start px-3 text-left text-xs font-medium text-muted-foreground hover:bg-muted/40 focus-visible:ring-inset sm:h-7"
                             data-item-trigger="true"
                             onClick={() => {
                               void navigateToParent();
