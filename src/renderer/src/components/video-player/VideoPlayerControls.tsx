@@ -22,8 +22,8 @@ export function VideoPlayerControls({
   return (
     <div
       className={cn(
-        "absolute inset-x-0 bottom-0 z-30 px-6 pb-6 pt-12 transition-all duration-500 ease-out will-change-[transform,opacity]",
-        "bg-linear-to-t from-black/60 via-black/20 to-transparent backdrop-blur-[2px]",
+        "absolute inset-x-0 bottom-0 z-30 px-6 pb-6 pt-10 transition-[opacity,transform] duration-500 ease-out will-change-[transform,opacity]",
+        "bg-linear-to-t from-black/70 via-black/25 via-55% to-transparent drop-shadow-[0_2px_10px_rgba(0,0,0,0.65)]",
         visible
           ? "translate-y-0 opacity-100"
           : "pointer-events-none translate-y-4 opacity-0",
