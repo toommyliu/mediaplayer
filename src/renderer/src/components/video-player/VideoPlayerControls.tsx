@@ -5,6 +5,7 @@ import { NextVideoButton } from "../NextVideoButton";
 import { PlayPauseButton } from "../PlayPauseButton";
 import { PreviousVideoButton } from "../PreviousVideoButton";
 import { BookmarkButton } from "./BookmarkButton";
+import { PlaybackSpeedControl } from "./PlaybackSpeedControl";
 import { VideoProgressSlider } from "./VideoProgressSlider";
 import { VolumeControl } from "./VolumeControl";
 
@@ -48,6 +49,7 @@ export function VideoPlayerControls({
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1">
             <BookmarkButton />
+            <PlaybackSpeedControl />
             <AspectRatioControl />
             <FullscreenButton />
           </div>

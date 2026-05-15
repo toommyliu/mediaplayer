@@ -47,6 +47,16 @@ function buildDefaultCategories(modKey: string): HotkeyCategory[] {
         { description: "Volume up", id: "volumeUp", keys: ["up"] },
         { description: "Volume down", id: "volumeDown", keys: ["down"] },
         { description: "Toggle mute", id: "mute", keys: ["m"] },
+        {
+          description: "Decrease playback speed",
+          id: "decreasePlaybackSpeed",
+          keys: ["-"],
+        },
+        {
+          description: "Increase playback speed",
+          id: "increasePlaybackSpeed",
+          keys: ["="],
+        },
         { description: "Toggle fullscreen", id: "fullscreen", keys: ["f"] },
         { description: "Add bookmark", id: "addBookmark", keys: ["b"] },
       ],

@@ -32,6 +32,7 @@ export default function VideoPlayer() {
   const error = usePlayerStore(state => state.error);
   const isLoading = usePlayerStore(state => state.isLoading);
   const isPlaying = usePlayerStore(state => state.isPlaying);
+  const playbackRate = usePlayerStore(state => state.playbackRate);
   const setCurrentTime = usePlayerStore(state => state.setCurrentTime);
   const setDuration = usePlayerStore(state => state.setDuration);
   const setPlayerState = usePlayerStore(state => state.setPlayerState);
@@ -51,12 +52,21 @@ export default function VideoPlayer() {
 
   const setVideoElementRef = useCallback((element: HTMLVideoElement | null) => {
     videoRef.current = element;
+    if (element) {
+      element.playbackRate = playbackRate;
+    }
     bindPlaybackVideoElement(element);
-  }, []);
+  }, [playbackRate]);
 
   useEffect(() => {
     setPlayerState({ showControls });
   }, [setPlayerState, showControls]);
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.playbackRate = playbackRate;
+    }
+  }, [playbackRate]);
 
   const stopHoldSeeking = useCallback(() => {
     setHoldDirection(null);
@@ -334,6 +344,7 @@ export default function VideoPlayer() {
           onLoadedData={() => {
             setPlayerState({ error: null, isLoading: false });
             if (videoRef.current) {
+              videoRef.current.playbackRate = playbackRate;
               setDuration(videoRef.current.duration);
               void videoRef.current.play().catch(() => undefined);
             }

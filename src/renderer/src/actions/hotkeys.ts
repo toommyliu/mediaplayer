@@ -155,6 +155,12 @@ export async function runHotkeyAction(actionId: string): Promise<void> {
     case "mute":
       useVolumeStore.getState().setMuted(!useVolumeStore.getState().isMuted);
       break;
+    case "decreasePlaybackSpeed":
+      usePlayerStore.getState().decreasePlaybackRate();
+      break;
+    case "increasePlaybackSpeed":
+      usePlayerStore.getState().increasePlaybackRate();
+      break;
     case "fullscreen":
       await setFullscreen(!usePlayerStore.getState().isFullscreen);
       break;
