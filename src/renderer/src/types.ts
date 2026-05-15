@@ -107,6 +107,7 @@ export interface AppState {
     width: number;
   };
   volume: {
+    boost: number;
     isMuted: boolean;
     value: number;
   };

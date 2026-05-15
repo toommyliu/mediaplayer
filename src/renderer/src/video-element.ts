@@ -1,3 +1,4 @@
+import { bindAudioOutput } from "@/audio-output";
 import { useVolumeStore } from "@/stores/volume";
 
 let videoElement: HTMLVideoElement | null = null;
@@ -13,6 +14,7 @@ useVolumeStore.subscribe(sync);
 
 export function bindVideoElement(element: HTMLVideoElement | null): void {
   videoElement = element;
+  bindAudioOutput(element);
   sync();
 }
 

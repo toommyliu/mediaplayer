@@ -1,3 +1,4 @@
+import { resumeAudioOutput } from "@/audio-output";
 import { enterFullscreen, exitFullscreen } from "@/lib/ipc";
 import { normalizeVideoPath, toFileUrl } from "@/lib/media-path";
 import { usePlayerStore } from "@/stores/player";
@@ -132,6 +133,7 @@ export async function playPreviousVideo(): Promise<void> {
 }
 
 export async function togglePlayPause(): Promise<void> {
+  await resumeAudioOutput();
   const videoElement = getVideoElement();
   const queue = useQueueStore.getState();
   const currentItem = getCurrentQueueItemFromState(queue);

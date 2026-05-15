@@ -4,6 +4,7 @@ import { FullscreenButton } from "../FullscreenButton";
 import { NextVideoButton } from "../NextVideoButton";
 import { PlayPauseButton } from "../PlayPauseButton";
 import { PreviousVideoButton } from "../PreviousVideoButton";
+import { AudioBoostControl } from "./AudioBoostControl";
 import { BookmarkButton } from "./BookmarkButton";
 import { PlaybackSpeedControl } from "./PlaybackSpeedControl";
 import { VideoProgressSlider } from "./VideoProgressSlider";
@@ -44,6 +45,7 @@ export function VideoPlayerControls({
           <NextVideoButton />
           <div className="mx-1 h-4 w-px bg-white/5" />
           <VolumeControl />
+          <AudioBoostControl />
         </div>
 
         <div className="flex items-center gap-4">
