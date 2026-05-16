@@ -2,6 +2,7 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { bootstrapApp } from "@/actions/app";
 import { handleAddFileEvent, handleAddFolderEvent } from "@/actions/library";
+import { pausePlayback } from "@/actions/playback";
 import { Providers } from "@/components/Providers";
 import SettingsDialog from "@/components/settings/SettingsDialog";
 import { Sidebar } from "@/components/Sidebar";
@@ -11,6 +12,8 @@ import {
   onAddFile,
   onAddFolder,
   onOpenSettings,
+  onWindowBlur,
+  onWindowFocus,
   onWindowFullscreenEnter,
   onWindowFullscreenExit,
 } from "@/lib/ipc";
@@ -18,6 +21,7 @@ import { cn } from "@/lib/utils";
 import { usePlayerStore } from "@/stores/player";
 import { useSettingsStore } from "@/stores/settings";
 import { useSidebarStore } from "@/stores/sidebar";
+import { useVolumeStore } from "@/stores/volume";
 
 const PEEK_WIDTH = "18rem";
 const PEEK_DELAY_MS = 80;
@@ -35,9 +39,11 @@ export default function App() {
   const setSidebarDragging = useSidebarStore(
     state => state.setSidebarDragging,
   );
+  const windowBlurAction = useSettingsStore(state => state.windowBlurAction);
   const setSettingsDialogOpen = useSettingsStore(
     state => state.setSettingsDialogOpen,
   );
+  const setMuted = useVolumeStore(state => state.setMuted);
 
   const [isResizing, setIsResizing] = useState(false);
   const draftWidthRef = useRef(width);
@@ -48,6 +54,37 @@ export default function App() {
   const peekTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const lastPositionRef = useRef(position);
   const sidebarContainerRef = useRef<HTMLDivElement>(null);
+  const mutedBeforeBlurRef = useRef<boolean | null>(null);
+
+  useEffect(() => {
+    function handleWindowBlur(): void {
+      if (windowBlurAction === "pause") {
+        pausePlayback();
+        return;
+      }
+
+      if (windowBlurAction === "mute") {
+        mutedBeforeBlurRef.current = useVolumeStore.getState().isMuted;
+        setMuted(true);
+      }
+    }
+
+    function handleWindowFocus(): void {
+      if (mutedBeforeBlurRef.current === null)
+        return;
+
+      setMuted(mutedBeforeBlurRef.current);
+      mutedBeforeBlurRef.current = null;
+    }
+
+    const offWindowBlur = onWindowBlur(handleWindowBlur);
+    const offWindowFocus = onWindowFocus(handleWindowFocus);
+
+    return () => {
+      offWindowBlur();
+      offWindowFocus();
+    };
+  }, [setMuted, windowBlurAction]);
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined;

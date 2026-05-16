@@ -177,6 +177,13 @@ export const InputLayer = Layer.effectDiscard(
                   "mainWindow focused, registering global shortcuts",
                 );
                 registerGlobalShortcuts();
+                runWithServices(
+                  rendererEvents.emit(
+                    mainWindow.webContents,
+                    "windowFocus",
+                    undefined,
+                  ),
+                );
               });
 
               const onBlurUnsub = yield* windows.on("blur", () => {
@@ -184,6 +191,13 @@ export const InputLayer = Layer.effectDiscard(
                   "mainWindow blurred, unregistering global shortcuts",
                 );
                 unregisterGlobalShortcuts();
+                runWithServices(
+                  rendererEvents.emit(
+                    mainWindow.webContents,
+                    "windowBlur",
+                    undefined,
+                  ),
+                );
               });
 
               const onClosedUnsub = yield* windows.on("closed", () => {

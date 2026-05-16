@@ -36,6 +36,8 @@ export interface RendererEventPayloadMap {
   mediaPlayPause: undefined;
   mediaPreviousTrack: undefined;
   openSettings: undefined;
+  windowBlur: undefined;
+  windowFocus: undefined;
   windowFullscreenEnter: undefined;
   windowFullscreenExit: undefined;
 }
@@ -59,6 +61,8 @@ export const IPC_EVENT_CHANNELS = {
   mediaPlayPause: "mediaplayer:event:mediaPlayPause",
   mediaPreviousTrack: "mediaplayer:event:mediaPreviousTrack",
   openSettings: "mediaplayer:event:openSettings",
+  windowBlur: "mediaplayer:event:windowBlur",
+  windowFocus: "mediaplayer:event:windowFocus",
   windowFullscreenEnter: "mediaplayer:event:windowFullscreenEnter",
   windowFullscreenExit: "mediaplayer:event:windowFullscreenExit",
 } as const satisfies Record<keyof RendererEventPayloadMap, string>;

@@ -96,6 +96,14 @@ export function onOpenSettings(listener: () => void): () => void {
   return onRendererEvent("openSettings", () => listener());
 }
 
+export function onWindowBlur(listener: () => void): () => void {
+  return onRendererEvent("windowBlur", () => listener());
+}
+
+export function onWindowFocus(listener: () => void): () => void {
+  return onRendererEvent("windowFocus", () => listener());
+}
+
 export function onWindowFullscreenEnter(listener: () => void): () => void {
   return onRendererEvent("windowFullscreenEnter", () => listener());
 }

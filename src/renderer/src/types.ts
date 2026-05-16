@@ -2,6 +2,7 @@ import type { FileTreeItem } from "../../shared";
 
 export type SidebarTab = "file-browser" | "queue";
 export type RepeatMode = "all" | "off" | "one";
+export type WindowBlurAction = "mute" | "none" | "pause";
 export type SidebarPosition = "left" | "right";
 export type NotificationPosition =
   | "top-left"
@@ -95,6 +96,7 @@ export interface AppState {
   };
   settings: {
     showDialog: boolean;
+    windowBlurAction: WindowBlurAction;
   };
   sidebar: {
     currentTab: SidebarTab;

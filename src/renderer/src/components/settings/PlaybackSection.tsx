@@ -1,16 +1,29 @@
 import { useState } from "react";
+import type { WindowBlurAction } from "@/types";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useSettingsStore } from "@/stores/settings";
 import { useVolumeStore } from "@/stores/volume";
 
 export function PlaybackSection() {
   const value = useVolumeStore((state) => state.value);
+  const windowBlurAction = useSettingsStore(state => state.windowBlurAction);
   const setMuted = useVolumeStore((state) => state.setMuted);
+  const setWindowBlurAction = useSettingsStore(
+    state => state.setWindowBlurAction,
+  );
   const setVolume = useVolumeStore((state) => state.setVolume);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -23,6 +36,36 @@ export function PlaybackSection() {
           folder is opened.
         </p>
       </div>
+      <div>
+        <Label className="mb-1.5 block text-xs font-medium">
+          When Window Loses Focus
+        </Label>
+        <Select
+          value={windowBlurAction}
+          onValueChange={value =>
+            setWindowBlurAction(value as WindowBlurAction)}
+        >
+          <SelectTrigger className="h-7 w-44 text-xs">
+            <SelectValue>
+              {windowBlurAction === "pause"
+                ? "Pause video"
+                : windowBlurAction === "mute"
+                  ? "Mute audio"
+                  : "Keep playing"}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent side="bottom" sideOffset={4}>
+            <SelectItem value="none">Keep playing</SelectItem>
+            <SelectItem value="pause">Pause video</SelectItem>
+            <SelectItem value="mute">Mute audio</SelectItem>
+          </SelectContent>
+        </Select>
+        <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
+          Muting is temporary and restores your previous mute state when the
+          window is focused again.
+        </p>
+      </div>
+
       <div>
         <Label className="mb-2 block text-xs font-medium">Volume</Label>
         <div className="flex h-8 items-center px-1 pt-1.5">
