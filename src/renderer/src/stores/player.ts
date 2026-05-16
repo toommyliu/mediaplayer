@@ -12,6 +12,7 @@ export interface PlayerState {
   isHolding: boolean;
   isLoading: boolean;
   isPlaying: boolean;
+  isQuickJumpOpen: boolean;
   playbackRate: number;
   seekUndoStack: Array<{ time: number; video: string | null }>;
   showControls: boolean;
@@ -42,6 +43,7 @@ const initialPlayerState: PlayerState = {
   isHolding: false,
   isLoading: false,
   isPlaying: false,
+  isQuickJumpOpen: false,
   playbackRate: 1,
   seekUndoStack: [],
   showControls: true,

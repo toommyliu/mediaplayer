@@ -99,6 +99,11 @@ export async function runHotkeyAction(actionId: string): Promise<void> {
     case "nextTrack":
       await playNextVideo();
       break;
+    case "quickJump":
+      if (currentItem) {
+        usePlayerStore.getState().setPlayerState({ isQuickJumpOpen: true });
+      }
+      break;
     case "seekBackward":
       if (currentItem) {
         const nextTime = Math.max(0, currentTime - SEEK_TIME_STEP);

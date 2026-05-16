@@ -20,6 +20,7 @@ import { usePlayerStore } from "@/stores/player";
 import { useCurrentQueueItem, useQueueStore } from "@/stores/queue";
 import { useVolumeStore } from "@/stores/volume";
 import { BookmarkIndicator } from "./BookmarkIndicator";
+import { QuickJumpDialog } from "./QuickJumpDialog";
 import { UpNextNotification } from "./UpNextNotification";
 import { VideoInfoOverlay } from "./VideoInfoOverlay";
 import { VideoPlayerControls } from "./VideoPlayerControls";
@@ -32,6 +33,7 @@ export default function VideoPlayer() {
   const error = usePlayerStore(state => state.error);
   const isLoading = usePlayerStore(state => state.isLoading);
   const isPlaying = usePlayerStore(state => state.isPlaying);
+  const isQuickJumpOpen = usePlayerStore(state => state.isQuickJumpOpen);
   const playbackRate = usePlayerStore(state => state.playbackRate);
   const setCurrentTime = usePlayerStore(state => state.setCurrentTime);
   const setDuration = usePlayerStore(state => state.setDuration);
@@ -404,6 +406,16 @@ export default function VideoPlayer() {
         <VideoInfoOverlay visible={showControls} />
         <UpNextNotification />
         <BookmarkIndicator />
+        {isQuickJumpOpen
+          ? (
+              <QuickJumpDialog
+                onOpenChange={(open) => {
+                  setPlayerState({ isQuickJumpOpen: open });
+                }}
+                open={isQuickJumpOpen}
+              />
+            )
+          : null}
         <VideoPlayerControls
           onControlsMouseEnter={() => {
             isControlsHoveredRef.current = true;

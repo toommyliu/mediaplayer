@@ -39,6 +39,11 @@ function buildDefaultCategories(modKey: string): HotkeyCategory[] {
           id: "nextTrack",
           keys: [`${modKey}+right`],
         },
+        {
+          description: "Jump to video",
+          id: "quickJump",
+          keys: [`${modKey}+k`],
+        },
         { description: "Seek backward", id: "seekBackward", keys: ["left"] },
         { description: "Seek forward", id: "seekForward", keys: ["right"] },
         { description: "Frame backward", id: "frameBackward", keys: [","] },
