@@ -129,6 +129,7 @@ export function FileBrowserList() {
     count: flattenedItems.length,
     getScrollElement: () => scrollContainerRef.current,
     estimateSize: () => 38,
+    getItemKey: index => flattenedItems[index]?.item.path ?? index,
     overscan: 20,
   });
 

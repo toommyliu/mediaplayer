@@ -113,7 +113,7 @@ export function FileBrowserItem({
                 {...triggerProps}
                 data-slot="file-browser-item"
                 className={cn(
-                  "group relative flex h-7 items-center rounded-md border px-2 transition-all duration-100 focus-within:ring-2 focus-within:ring-ring focus-within:ring-inset",
+                  "group relative flex h-7 items-center rounded-md border px-2 transition-[background-color,border-color,color,box-shadow] duration-100 focus-within:ring-2 focus-within:ring-ring focus-within:ring-inset",
                   isPlaying
                     ? "border-primary/20 bg-primary/10 text-primary"
                     : "hover:bg-muted/50 hover:text-foreground border-transparent",
