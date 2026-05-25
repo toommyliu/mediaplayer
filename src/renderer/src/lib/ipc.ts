@@ -47,10 +47,24 @@ export function getPlatform(): Promise<PlatformInfo> {
   );
 }
 
+export function readPersistedStore(name: string): Promise<string | null> {
+  return window.electron.ipcRenderer.invoke(
+    IPC_INVOKE_CHANNELS.readPersistedStore,
+    name,
+  );
+}
+
 export function readDirectory(path: string): Promise<DirectoryContents> {
   return window.electron.ipcRenderer.invoke(
     IPC_INVOKE_CHANNELS.readDirectory,
     path,
+  );
+}
+
+export function removePersistedStore(name: string): Promise<void> {
+  return window.electron.ipcRenderer.invoke(
+    IPC_INVOKE_CHANNELS.removePersistedStore,
+    name,
   );
 }
 
@@ -65,6 +79,13 @@ export function showItemInFolder(path: string): Promise<void> {
   return window.electron.ipcRenderer.invoke(
     IPC_INVOKE_CHANNELS.showItemInFolder,
     path,
+  );
+}
+
+export function writePersistedStore(name: string, value: string): Promise<void> {
+  return window.electron.ipcRenderer.invoke(
+    IPC_INVOKE_CHANNELS.writePersistedStore,
+    { name, value },
   );
 }
 

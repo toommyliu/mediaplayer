@@ -1,6 +1,7 @@
 import type { Bookmark } from "@/lib/contracts";
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
+import { createUserDataStateStorage } from "@/stores/user-data-storage";
 
 export interface BookmarksState {
   bookmarks: Bookmark[];
@@ -25,6 +26,35 @@ export interface BookmarksActions {
 }
 
 export type BookmarksStore = BookmarksState & BookmarksActions;
+
+type BookmarksPersisted = Pick<BookmarksState, "bookmarks">;
+
+function isBookmark(value: unknown): value is Bookmark {
+  if (!value || typeof value !== "object")
+    return false;
+
+  const candidate = value as Partial<Bookmark>;
+  return (
+    typeof candidate.createdAt === "number"
+    && Number.isFinite(candidate.createdAt)
+    && typeof candidate.id === "string"
+    && (candidate.label === undefined || typeof candidate.label === "string")
+    && typeof candidate.timestamp === "number"
+    && Number.isFinite(candidate.timestamp)
+    && typeof candidate.videoPath === "string"
+  );
+}
+
+function migrateBookmarksState(persistedState: unknown): BookmarksPersisted {
+  if (!persistedState || typeof persistedState !== "object") {
+    return { bookmarks: [] };
+  }
+
+  const { bookmarks } = persistedState as Partial<BookmarksPersisted>;
+  return {
+    bookmarks: Array.isArray(bookmarks) ? bookmarks.filter(isBookmark) : [],
+  };
+}
 
 export const useBookmarksStore = create<BookmarksStore>()(
   persist(
@@ -86,10 +116,12 @@ export const useBookmarksStore = create<BookmarksStore>()(
     }),
     {
       name: "bookmarks-store",
-      partialize: (state) => {
-        const { lastAction, ...rest } = state;
-        return rest;
-      },
+      storage: createJSONStorage<BookmarksPersisted>(
+        () => createUserDataStateStorage(),
+      ),
+      version: 1,
+      migrate: migrateBookmarksState,
+      partialize: state => ({ bookmarks: state.bookmarks }),
     },
   ),
 );

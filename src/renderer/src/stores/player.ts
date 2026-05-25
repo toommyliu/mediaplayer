@@ -1,6 +1,7 @@
 import type { AspectRatioMode } from "@/types";
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
+import { createUserDataStateStorage } from "@/stores/user-data-storage";
 
 export interface PlayerState {
   aspectRatio: AspectRatioMode;
@@ -33,6 +34,8 @@ export interface PlayerActions {
 
 export type PlayerStore = PlayerState & PlayerActions;
 
+type PlayerPersisted = Pick<PlayerState, "aspectRatio" | "playbackRate">;
+
 const initialPlayerState: PlayerState = {
   aspectRatio: "contain",
   currentTime: 0,
@@ -53,6 +56,12 @@ export const PLAYBACK_RATES = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2] as const;
 
 const SEEK_UNDO_STACK_LIMIT = 50;
 
+const ASPECT_RATIO_MODES = new Set<AspectRatioMode>([
+  "contain",
+  "cover",
+  "fill",
+]);
+
 function getPlaybackRateIndex(playbackRate: number): number {
   const exactIndex = PLAYBACK_RATES.indexOf(
     playbackRate as (typeof PLAYBACK_RATES)[number],
@@ -67,6 +76,28 @@ function getPlaybackRateIndex(playbackRate: number): number {
       ? index
       : closestIndex;
   }, 0);
+}
+
+function migratePlayerState(persistedState: unknown): PlayerPersisted {
+  if (!persistedState || typeof persistedState !== "object") {
+    return {
+      aspectRatio: initialPlayerState.aspectRatio,
+      playbackRate: initialPlayerState.playbackRate,
+    };
+  }
+
+  const state = persistedState as Partial<PlayerPersisted>;
+  const playbackRate
+    = typeof state.playbackRate === "number" && Number.isFinite(state.playbackRate)
+      ? PLAYBACK_RATES[getPlaybackRateIndex(state.playbackRate)]
+      : initialPlayerState.playbackRate;
+
+  return {
+    aspectRatio: ASPECT_RATIO_MODES.has(state.aspectRatio as AspectRatioMode)
+      ? (state.aspectRatio as AspectRatioMode)
+      : initialPlayerState.aspectRatio,
+    playbackRate,
+  };
 }
 
 export const usePlayerStore = create<PlayerStore>()(
@@ -131,7 +162,15 @@ export const usePlayerStore = create<PlayerStore>()(
     }),
     {
       name: "player-store",
-      partialize: state => ({ playbackRate: state.playbackRate }),
+      storage: createJSONStorage<PlayerPersisted>(
+        () => createUserDataStateStorage(),
+      ),
+      version: 1,
+      migrate: migratePlayerState,
+      partialize: state => ({
+        aspectRatio: state.aspectRatio,
+        playbackRate: state.playbackRate,
+      }),
     },
   ),
 );

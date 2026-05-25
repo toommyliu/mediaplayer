@@ -49,7 +49,6 @@ export default function VideoPlayer() {
   const holdTimerRef = useRef<number | null>(null);
   const holdIntervalRef = useRef<number | null>(null);
   const [showControls, setShowControls] = useState(false);
-  const isControlsHoveredRef = useRef(false);
   const [holdDirection, setHoldDirection] = useState<HoldDirection>(null);
 
   const setVideoElementRef = useCallback((element: HTMLVideoElement | null) => {
@@ -89,13 +88,10 @@ export default function VideoPlayer() {
     }
 
     setShowControls(true);
-    const isHovered = isControlsHoveredRef.current;
 
-    if (!isHovered && isPlaying) {
+    if (isPlaying) {
       hideTimerRef.current = window.setTimeout(() => {
-        if (!isControlsHoveredRef.current) {
-          setShowControls(false);
-        }
+        setShowControls(false);
       }, 3000);
     }
   }, [isPlaying]);
@@ -309,7 +305,7 @@ export default function VideoPlayer() {
           if (hideTimerRef.current) {
             window.clearTimeout(hideTimerRef.current);
           }
-          if (isPlaying && !isControlsHoveredRef.current) {
+          if (isPlaying) {
             setShowControls(false);
           }
         }}
@@ -418,11 +414,9 @@ export default function VideoPlayer() {
           : null}
         <VideoPlayerControls
           onControlsMouseEnter={() => {
-            isControlsHoveredRef.current = true;
-            setShowControls(true);
+            resetHideTimer();
           }}
           onControlsMouseLeave={() => {
-            isControlsHoveredRef.current = false;
             resetHideTimer();
           }}
           visible={showControls}

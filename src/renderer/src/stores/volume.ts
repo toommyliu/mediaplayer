@@ -1,7 +1,8 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
 import { clamp } from "@/lib/clamp";
 import { VOLUME_STEP } from "@/lib/constants";
+import { createUserDataStateStorage } from "@/stores/user-data-storage";
 
 export interface VolumeState {
   boost: number;
@@ -18,6 +19,31 @@ export interface VolumeActions {
 }
 
 export type VolumeStore = VolumeState & VolumeActions;
+
+type VolumePersisted = VolumeState;
+
+function migrateVolumeState(persistedState: unknown): VolumePersisted {
+  if (!persistedState || typeof persistedState !== "object") {
+    return {
+      boost: 1,
+      isMuted: false,
+      value: 1,
+    };
+  }
+
+  const state = persistedState as Partial<VolumePersisted>;
+  return {
+    boost:
+      typeof state.boost === "number" && Number.isFinite(state.boost)
+        ? clamp(state.boost, 1, 3)
+        : 1,
+    isMuted: typeof state.isMuted === "boolean" ? state.isMuted : false,
+    value:
+      typeof state.value === "number" && Number.isFinite(state.value)
+        ? clamp(state.value, 0, 1)
+        : 1,
+  };
+}
 
 export const useVolumeStore = create<VolumeStore>()(
   persist(
@@ -49,6 +75,11 @@ export const useVolumeStore = create<VolumeStore>()(
     }),
     {
       name: "volume-store",
+      storage: createJSONStorage<VolumePersisted>(
+        () => createUserDataStateStorage(),
+      ),
+      version: 1,
+      migrate: migrateVolumeState,
       partialize: state => ({
         boost: state.boost,
         isMuted: state.isMuted,

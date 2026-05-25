@@ -1,6 +1,7 @@
 import type { HotkeyCategory } from "@/types";
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
+import { createUserDataStateStorage } from "@/stores/user-data-storage";
 
 export interface HotkeysState {
   bindings: Record<string, string[]>;
@@ -26,6 +27,26 @@ export type HotkeysStore = HotkeysState & HotkeysActions;
 
 type HotkeysPersisted = Pick<HotkeysState, "bindings">;
 
+function migrateHotkeysState(persistedState: unknown): HotkeysPersisted {
+  if (!persistedState || typeof persistedState !== "object") {
+    return { bindings: {} };
+  }
+
+  const { bindings } = persistedState as Partial<HotkeysPersisted>;
+  if (!bindings || typeof bindings !== "object" || Array.isArray(bindings)) {
+    return { bindings: {} };
+  }
+
+  const nextBindings: Record<string, string[]> = {};
+  for (const [actionId, keys] of Object.entries(bindings)) {
+    if (Array.isArray(keys) && keys.every(key => typeof key === "string")) {
+      nextBindings[actionId] = keys;
+    }
+  }
+
+  return { bindings: nextBindings };
+}
+
 export const useHotkeysStore = create<HotkeysStore>()(
   persist(
     (set, get) => ({
@@ -38,17 +59,19 @@ export const useHotkeysStore = create<HotkeysStore>()(
         set({ categories, initialized, modKey }),
       updateHotkeyInState: (actionId, newKeys) => {
         const state = get();
-        const category = state.categories.find((cat) =>
-          cat.actions.some((a) => a.id === actionId),
+        const category = state.categories.find(cat =>
+          cat.actions.some(a => a.id === actionId),
         );
-        if (!category) return false;
+        if (!category)
+          return false;
 
-        const action = category.actions.find((a) => a.id === actionId);
-        if (!action || action.configurable === false) return false;
+        const action = category.actions.find(a => a.id === actionId);
+        if (!action || action.configurable === false)
+          return false;
 
-        const updatedCategories = state.categories.map((cat) => ({
+        const updatedCategories = state.categories.map(cat => ({
           ...cat,
-          actions: cat.actions.map((a) =>
+          actions: cat.actions.map(a =>
             a.id === actionId ? { ...a, keys: newKeys } : a,
           ),
         }));
@@ -69,10 +92,15 @@ export const useHotkeysStore = create<HotkeysStore>()(
         const bindings = get().bindings;
         return Object.keys(bindings).length > 0 ? bindings : null;
       },
-      setStoredHotkeys: (bindings) => set({ bindings }),
+      setStoredHotkeys: bindings => set({ bindings }),
     }),
     {
       name: "hotkeys-store",
+      storage: createJSONStorage<HotkeysPersisted>(
+        () => createUserDataStateStorage(),
+      ),
+      version: 1,
+      migrate: migrateHotkeysState,
       partialize: (state): HotkeysPersisted => {
         return { bindings: state.bindings };
       },

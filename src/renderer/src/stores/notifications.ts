@@ -1,6 +1,7 @@
 import type { NotificationPosition } from "@/types";
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
+import { createUserDataStateStorage } from "@/stores/user-data-storage";
 
 export interface NotificationsState {
   upNextEnabled: boolean;
@@ -14,18 +15,59 @@ export interface NotificationsActions {
 
 export type NotificationsStore = NotificationsState & NotificationsActions;
 
-export const useNotificationsStore = create<NotificationsStore>()(
-  persist(
-    (set) => ({
+type NotificationsPersisted = NotificationsState;
+
+const NOTIFICATION_POSITIONS = new Set<NotificationPosition>([
+  "top-left",
+  "top-right",
+  "bottom-left",
+  "bottom-right",
+]);
+
+function migrateNotificationsState(
+  persistedState: unknown,
+): NotificationsPersisted {
+  if (!persistedState || typeof persistedState !== "object") {
+    return {
       upNextEnabled: true,
       upNextPosition: "top-right",
       videoInfoEnabled: true,
-      setNotificationSettings: (patch) =>
-        set((state) => ({ ...state, ...patch })),
+    };
+  }
+
+  const state = persistedState as Partial<NotificationsPersisted>;
+  return {
+    upNextEnabled:
+      typeof state.upNextEnabled === "boolean" ? state.upNextEnabled : true,
+    upNextPosition: NOTIFICATION_POSITIONS.has(
+      state.upNextPosition as NotificationPosition,
+    )
+      ? (state.upNextPosition as NotificationPosition)
+      : "top-right",
+    videoInfoEnabled:
+      typeof state.videoInfoEnabled === "boolean"
+        ? state.videoInfoEnabled
+        : true,
+  };
+}
+
+export const useNotificationsStore = create<NotificationsStore>()(
+  persist(
+    set => ({
+      upNextEnabled: true,
+      upNextPosition: "top-right",
+      videoInfoEnabled: true,
+      setNotificationSettings: patch =>
+        set(state => ({ ...state, ...patch })),
     }),
     {
       name: "notifications-store",
-      partialize: (state) => ({
+      storage: createJSONStorage<NotificationsPersisted>(
+        () => createUserDataStateStorage(),
+      ),
+      version: 1,
+      migrate: migrateNotificationsState,
+      partialize: state => ({
         upNextEnabled: state.upNextEnabled,
         upNextPosition: state.upNextPosition,
         videoInfoEnabled: state.videoInfoEnabled,

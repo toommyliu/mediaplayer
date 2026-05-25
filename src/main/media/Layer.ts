@@ -14,6 +14,7 @@ import { Effect, Layer } from "effect";
 import { app, dialog } from "electron";
 import { DEFAULT_SORT_OPTIONS, VIDEO_EXTENSIONS } from "../../shared/constants";
 import { LoggerService } from "../logging/Service";
+import { UserDataService } from "../user-data/Service";
 import { WindowService } from "../windows/Service";
 import { FileTree } from "./FileTree";
 import { MediaService } from "./Service";
@@ -23,15 +24,60 @@ import { WorkerPool } from "./worker/WorkerPool";
 const CPU_COUNT = cpus().length;
 const WORKER_POOL_SIZE = Math.max(2, Math.min(8, CPU_COUNT));
 const DIRECTORY_SCAN_CONCURRENCY = Math.max(2, Math.min(16, CPU_COUNT * 2));
+const PREVIOUS_OPEN_DIRECTORY_STORE = "previous-open-directory";
 
 export const MediaLayer = Layer.effect(
   MediaService,
   Effect.gen(function* () {
     const logger = yield* LoggerService;
+    const userData = yield* UserDataService;
     const windows = yield* WindowService;
 
     let previousPath: string | null = null;
     let isFfmpegInitialized = false;
+
+    const parsePreviousPath = (value: string | null): string | null => {
+      if (!value)
+        return null;
+
+      try {
+        const parsed: unknown = JSON.parse(value);
+        if (
+          parsed
+          && typeof parsed === "object"
+          && "path" in parsed
+          && typeof parsed.path === "string"
+        ) {
+          return parsed.path;
+        }
+      }
+      catch {
+        return value;
+      }
+
+      return null;
+    };
+
+    const loadPreviousPath = Effect.gen(function* () {
+      if (previousPath)
+        return previousPath;
+
+      const storedPath = yield* userData.readPersistedStore(
+        PREVIOUS_OPEN_DIRECTORY_STORE,
+      );
+      previousPath = parsePreviousPath(storedPath);
+      return previousPath;
+    });
+
+    const setPreviousPath = (path: string): Effect.Effect<void> =>
+      Effect.gen(function* () {
+        previousPath = FileTree.normalizePath(path);
+        logger.debug(`previousPath set to: ${previousPath}`);
+        yield* userData.writePersistedStore({
+          name: PREVIOUS_OPEN_DIRECTORY_STORE,
+          value: JSON.stringify({ path: previousPath }),
+        });
+      });
 
     const workerPool = yield* Effect.acquireRelease(
       Effect.tryPromise({
@@ -394,6 +440,8 @@ export const MediaLayer = Layer.effect(
       mode: "both" | "file" | "folder",
     ): Effect.Effect<PickerResult | null, unknown> =>
       Effect.gen(function* () {
+        const defaultPath
+          = (yield* loadPreviousPath) ?? app.getPath("downloads");
         const properties: (
           | "createDirectory"
           | "multiSelections"
@@ -410,7 +458,7 @@ export const MediaLayer = Layer.effect(
         }
 
         const options: OpenDialogOptions = {
-          defaultPath: previousPath ?? app.getPath("downloads"),
+          defaultPath,
           properties,
           title: `Select ${mode === "file" ? "File" : mode === "folder" ? "Folder" : "File or Folder"}`,
           message: `Select ${mode === "file" ? "a file" : mode === "folder" ? "a folder" : "a file or folder"} to open`,
@@ -437,8 +485,7 @@ export const MediaLayer = Layer.effect(
         const filePaths = result.filePaths;
 
         if (mode === "file") {
-          previousPath = dirname(filePaths[0]);
-          logger.debug(`previousPath set to: ${previousPath}`);
+          yield* setPreviousPath(dirname(filePaths[0]));
           return {
             type: "file",
             path: FileTree.normalizePath(filePaths[0]),
@@ -452,8 +499,7 @@ export const MediaLayer = Layer.effect(
         });
 
         if (fileStats.isFile()) {
-          previousPath = dirname(selectedPath);
-          logger.debug(`previousPath set to: ${previousPath}`);
+          yield* setPreviousPath(dirname(selectedPath));
           return {
             type: "file",
             path: FileTree.normalizePath(selectedPath),
@@ -461,8 +507,7 @@ export const MediaLayer = Layer.effect(
         }
 
         if (fileStats.isDirectory()) {
-          previousPath = selectedPath;
-          logger.debug(`previousPath set to: ${previousPath}`);
+          yield* setPreviousPath(selectedPath);
           return yield* buildFileTree(selectedPath);
         }
 

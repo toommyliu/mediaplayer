@@ -10,11 +10,17 @@ export interface IpcInvokeRequestMap {
   exitFullscreen: undefined;
   getAllVideoFiles: string;
   getPlatform: undefined;
+  readPersistedStore: string;
   readDirectory: string;
+  removePersistedStore: string;
   selectFile: undefined;
   selectFileOrFolder: undefined;
   selectFolder: undefined;
   showItemInFolder: string;
+  writePersistedStore: {
+    name: string;
+    value: string;
+  };
 }
 
 export interface IpcInvokeResponseMap {
@@ -22,11 +28,14 @@ export interface IpcInvokeResponseMap {
   exitFullscreen: void;
   getAllVideoFiles: VideoFileItem[];
   getPlatform: PlatformInfo;
+  readPersistedStore: string | null;
   readDirectory: DirectoryContents;
+  removePersistedStore: void;
   selectFile: PickerResult | null;
   selectFileOrFolder: PickerResult | null;
   selectFolder: PickerResult | null;
   showItemInFolder: void;
+  writePersistedStore: void;
 }
 
 export interface RendererEventPayloadMap {
@@ -47,11 +56,14 @@ export const IPC_INVOKE_CHANNELS = {
   exitFullscreen: "mediaplayer:invoke:exitFullscreen",
   getAllVideoFiles: "mediaplayer:invoke:getAllVideoFiles",
   getPlatform: "mediaplayer:invoke:getPlatform",
+  readPersistedStore: "mediaplayer:invoke:readPersistedStore",
   readDirectory: "mediaplayer:invoke:readDirectory",
+  removePersistedStore: "mediaplayer:invoke:removePersistedStore",
   selectFile: "mediaplayer:invoke:selectFile",
   selectFileOrFolder: "mediaplayer:invoke:selectFileOrFolder",
   selectFolder: "mediaplayer:invoke:selectFolder",
   showItemInFolder: "mediaplayer:invoke:showItemInFolder",
+  writePersistedStore: "mediaplayer:invoke:writePersistedStore",
 } as const satisfies Record<keyof IpcInvokeRequestMap, string>;
 
 export const IPC_EVENT_CHANNELS = {

@@ -5,18 +5,22 @@ import { RendererEventsLayer } from "./ipc/Layer";
 import { LoggerLayer } from "./logging/Layer";
 import { MediaLayer } from "./media/Layer";
 import { MenuLayer } from "./menu/Layer";
+import { UserDataLayer } from "./user-data/Layer";
 import { WindowLayer } from "./windows/Layer";
 
 const WindowDomainLayer = WindowLayer.pipe(Layer.provide(LoggerLayer));
+const UserDataDomainLayer = UserDataLayer.pipe(Layer.provide(LoggerLayer));
 const MediaDomainLayer = MediaLayer.pipe(
   Layer.provide(LoggerLayer),
   Layer.provide(WindowDomainLayer),
+  Layer.provide(UserDataDomainLayer),
 );
 
 const CoreLayer = Layer.mergeAll(
   LoggerLayer,
   WindowDomainLayer,
   MediaDomainLayer,
+  UserDataDomainLayer,
   RendererEventsLayer,
 );
 
