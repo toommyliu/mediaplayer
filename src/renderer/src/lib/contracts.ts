@@ -3,5 +3,8 @@ export type {
   DirectoryContents,
   PickerResult,
   PlatformInfo,
+  RenameFileSystemItemInput,
+  RenameFileSystemItemResult,
   VideoFileItem,
+  VideoMetadata,
 } from "../../../shared/contracts";

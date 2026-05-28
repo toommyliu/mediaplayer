@@ -7,6 +7,7 @@ import { PreviousVideoButton } from "../PreviousVideoButton";
 import { AudioBoostControl } from "./AudioBoostControl";
 import { BookmarkButton } from "./BookmarkButton";
 import { PlaybackSpeedControl } from "./PlaybackSpeedControl";
+import { VideoMetadataButton } from "./VideoMetadataButton";
 import { VideoProgressSlider } from "./VideoProgressSlider";
 import { VolumeControl } from "./VolumeControl";
 
@@ -53,6 +54,7 @@ export function VideoPlayerControls({
             <BookmarkButton />
             <PlaybackSpeedControl />
             <AspectRatioControl />
+            <VideoMetadataButton />
             <FullscreenButton />
           </div>
         </div>

@@ -39,7 +39,9 @@ export const IpcInvokeLayer = Layer.effectDiscard(
       readPersistedStore: name => userData.readPersistedStore(name),
       readDirectory: path => media.loadDirectoryContents(path),
       removePersistedStore: name => userData.removePersistedStore(name),
+      renameFileSystemItem: input => media.renameFileSystemItem(input),
       getAllVideoFiles: path => media.getAllVideoFilesRecursive(path),
+      getVideoMetadata: path => media.getVideoMetadata(path),
       showItemInFolder: path =>
         Effect.sync(() => {
           shell.showItemInFolder(path);
@@ -86,7 +88,9 @@ export const IpcInvokeLayer = Layer.effectDiscard(
     registerHandler("readPersistedStore", handlers.readPersistedStore);
     registerHandler("readDirectory", handlers.readDirectory);
     registerHandler("removePersistedStore", handlers.removePersistedStore);
+    registerHandler("renameFileSystemItem", handlers.renameFileSystemItem);
     registerHandler("getAllVideoFiles", handlers.getAllVideoFiles);
+    registerHandler("getVideoMetadata", handlers.getVideoMetadata);
     registerHandler("showItemInFolder", handlers.showItemInFolder);
     registerHandler("getPlatform", handlers.getPlatform);
     registerHandler("writePersistedStore", handlers.writePersistedStore);

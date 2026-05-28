@@ -4,6 +4,7 @@ import type { FileSystemItem, QueueItem } from "@/types";
 import { playVideo } from "@/actions/playback";
 import {
   readDirectory,
+  renameFileSystemItem,
   selectFileOrFolder,
   showItemInFolder,
 } from "@/lib/ipc";
@@ -355,4 +356,135 @@ export function resetAndBrowseLibrary(): void {
 
 export async function revealItemInFolder(path: string): Promise<void> {
   await showItemInFolder(path);
+}
+
+function updateItemPath(
+  items: FileSystemItem[],
+  oldPath: string,
+  newPath: string,
+  newName: string,
+): FileSystemItem[] {
+  return items.map((item) => {
+    const path = item.path === oldPath
+      ? newPath
+      : item.path.startsWith(`${oldPath}/`)
+        ? `${newPath}${item.path.slice(oldPath.length)}`
+        : item.path;
+
+    return {
+      ...item,
+      files: item.files
+        ? updateItemPath(item.files, oldPath, newPath, newName)
+        : undefined,
+      name: item.path === oldPath ? newName : item.name,
+      path,
+    };
+  });
+}
+
+function updatePathSet(
+  paths: Set<string>,
+  oldPath: string,
+  newPath: string,
+): Set<string> {
+  const next = new Set<string>();
+  for (const path of paths) {
+    if (path === oldPath) {
+      next.add(newPath);
+    }
+    else if (path.startsWith(`${oldPath}/`)) {
+      next.add(`${newPath}${path.slice(oldPath.length)}`);
+    }
+    else {
+      next.add(path);
+    }
+  }
+  return next;
+}
+
+function renamePath(path: string, oldPath: string, newPath: string): string {
+  if (path === oldPath)
+    return newPath;
+
+  if (path.startsWith(`${oldPath}/`))
+    return `${newPath}${path.slice(oldPath.length)}`;
+
+  return path;
+}
+
+export async function renameFileBrowserItem(
+  item: FileSystemItem,
+  newName: string,
+): Promise<void> {
+  const result = await renameFileSystemItem({
+    newName,
+    path: item.path,
+  });
+
+  const fileBrowser = useFileBrowserStore.getState();
+  const fileTree = fileBrowser.fileTree
+    ? {
+        ...fileBrowser.fileTree,
+        files: updateItemPath(
+          fileBrowser.fileTree.files,
+          result.oldPath,
+          result.newPath,
+          result.name,
+        ),
+        rootPath: renamePath(
+          fileBrowser.fileTree.rootPath,
+          result.oldPath,
+          result.newPath,
+        ),
+      }
+    : null;
+
+  useFileBrowserStore.getState().setFileBrowserState({
+    currentPath: fileBrowser.currentPath
+      ? renamePath(fileBrowser.currentPath, result.oldPath, result.newPath)
+      : null,
+    error: null,
+    expandedFolders: updatePathSet(
+      fileBrowser.expandedFolders,
+      result.oldPath,
+      result.newPath,
+    ),
+    fileTree,
+    focusedItemPath: result.newPath,
+    loadingFolders: updatePathSet(
+      fileBrowser.loadingFolders,
+      result.oldPath,
+      result.newPath,
+    ),
+    originalPath: fileBrowser.originalPath
+      ? renamePath(fileBrowser.originalPath, result.oldPath, result.newPath)
+      : null,
+  });
+
+  const queue = useQueueStore.getState();
+  queue.setQueueItems(
+    queue.items.map((queueItem) => {
+      const nextPath = renamePath(queueItem.path, result.oldPath, result.newPath);
+      return {
+        ...queueItem,
+        id: nextPath !== queueItem.path ? makeQueueId(nextPath) : queueItem.id,
+        name: queueItem.path === result.oldPath ? result.name : queueItem.name,
+        path: nextPath,
+      };
+    }),
+    queue.index,
+  );
+
+  const currentVideo = usePlayerStore.getState().currentVideo;
+  const normalizedCurrentVideo = currentVideo
+    ? normalizeVideoPath(currentVideo)
+    : null;
+  const renamedCurrentVideo = normalizedCurrentVideo
+    ? renamePath(normalizedCurrentVideo, result.oldPath, result.newPath)
+    : null;
+  if (renamedCurrentVideo && renamedCurrentVideo !== normalizedCurrentVideo) {
+    usePlayerStore.getState().setPlayerState({
+      currentVideo: toFileUrl(renamedCurrentVideo),
+    });
+  }
 }

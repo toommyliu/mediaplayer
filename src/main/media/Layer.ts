@@ -3,11 +3,16 @@ import type { FileTreeItem, SortOptions } from "../../shared";
 import type {
   DirectoryContents,
   PickerResult,
+  RenameFileSystemItemInput,
+  RenameFileSystemItemResult,
   VideoFileItem,
+  VideoMetadata,
 } from "../../shared/contracts";
-import { chmod, readdir, stat } from "node:fs/promises";
+import { execFile } from "node:child_process";
+import { chmod, readdir, rename, stat } from "node:fs/promises";
 import { cpus } from "node:os";
-import { dirname, join, resolve } from "node:path";
+import { basename, dirname, extname, join, resolve } from "node:path";
+import { promisify } from "node:util";
 import ffmpegInstaller from "@ffmpeg-installer/ffmpeg";
 import ffprobeInstaller from "@ffprobe-installer/ffprobe";
 import { Effect, Layer } from "effect";
@@ -25,6 +30,63 @@ const CPU_COUNT = cpus().length;
 const WORKER_POOL_SIZE = Math.max(2, Math.min(8, CPU_COUNT));
 const DIRECTORY_SCAN_CONCURRENCY = Math.max(2, Math.min(16, CPU_COUNT * 2));
 const PREVIOUS_OPEN_DIRECTORY_STORE = "previous-open-directory";
+const FFPROBE_TIMEOUT_MS = 20_000;
+
+const execFileAsync = promisify(execFile);
+
+type FfprobeRecord = Record<string, unknown>;
+
+function isRecord(value: unknown): value is FfprobeRecord {
+  return Boolean(value && typeof value === "object" && !Array.isArray(value));
+}
+
+function getString(record: FfprobeRecord | undefined, key: string): string | undefined {
+  const value = record?.[key];
+  return typeof value === "string" && value.length > 0 ? value : undefined;
+}
+
+function getNumber(record: FfprobeRecord | undefined, key: string): number | undefined {
+  const value = record?.[key];
+  const parsed = typeof value === "number"
+    ? value
+    : typeof value === "string"
+      ? Number.parseFloat(value)
+      : Number.NaN;
+
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
+}
+
+function parseFrameRate(value: string | undefined): number | undefined {
+  if (!value || value === "0/0")
+    return undefined;
+
+  const [numerator, denominator] = value.split("/").map(Number);
+  const parsed = denominator
+    ? numerator / denominator
+    : Number.parseFloat(value);
+
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
+}
+
+function getStream(
+  streams: unknown,
+  codecType: "audio" | "video",
+): FfprobeRecord | undefined {
+  if (!Array.isArray(streams))
+    return undefined;
+
+  return streams.find(stream =>
+    isRecord(stream) && stream.codec_type === codecType,
+  ) as FfprobeRecord | undefined;
+}
+
+function parseProbeOutput(stdout: string): FfprobeRecord {
+  const parsed: unknown = JSON.parse(stdout);
+  if (!isRecord(parsed))
+    throw new Error("ffprobe returned invalid metadata");
+
+  return parsed;
+}
 
 export const MediaLayer = Layer.effect(
   MediaService,
@@ -436,6 +498,112 @@ export const MediaLayer = Layer.effect(
         }));
       });
 
+    const getVideoMetadata = (
+      filePath: string,
+    ): Effect.Effect<VideoMetadata, unknown> =>
+      Effect.gen(function* () {
+        yield* doFfmpegInit;
+
+        const resolvedPath = FileTree.normalizePath(resolve(filePath));
+        const fileStats = yield* Effect.tryPromise({
+          try: async () => await stat(resolvedPath),
+          catch: (error) => error,
+        });
+
+        const metadata: VideoMetadata = {
+          file: {
+            extension: extname(resolvedPath).replace(".", ""),
+            modifiedAtMs: fileStats.mtimeMs,
+            name: basename(resolvedPath),
+            path: resolvedPath,
+            sizeBytes: fileStats.size,
+          },
+        };
+
+        const probeResult = yield* Effect.tryPromise({
+          try: async () => {
+            const { stdout } = (await execFileAsync(
+              ffprobeInstaller.path,
+              [
+                "-v",
+                "error",
+                "-show_format",
+                "-show_streams",
+                "-of",
+                "json",
+                resolvedPath,
+              ],
+              {
+                timeout: FFPROBE_TIMEOUT_MS,
+                maxBuffer: 1024 * 1024,
+              },
+            )) as { stdout: string; stderr: string };
+
+            return parseProbeOutput(stdout);
+          },
+          catch: (error) => error,
+        }).pipe(
+          Effect.map(probe => ({ probe, success: true }) as const),
+          Effect.catch((error) => {
+            logger.error(`Error getting metadata for ${resolvedPath}`, error);
+            return Effect.succeed({ error, success: false } as const);
+          }),
+        );
+
+        if (!probeResult.success) {
+          return {
+            ...metadata,
+            probeError: probeResult.error instanceof Error
+              ? probeResult.error.message
+              : String(probeResult.error),
+          };
+        }
+
+        const format = isRecord(probeResult.probe.format)
+          ? probeResult.probe.format
+          : undefined;
+        const videoStream = getStream(probeResult.probe.streams, "video");
+        const audioStream = getStream(probeResult.probe.streams, "audio");
+
+        const durationSeconds = getNumber(format, "duration");
+        const formatBitrate = getNumber(format, "bit_rate");
+        if (format || durationSeconds || formatBitrate) {
+          metadata.format = {
+            bitrateBitsPerSecond: formatBitrate,
+            durationSeconds,
+            formatName: getString(format, "format_name"),
+          };
+        }
+
+        if (videoStream) {
+          metadata.video = {
+            bitrateBitsPerSecond: getNumber(videoStream, "bit_rate"),
+            codecLongName: getString(videoStream, "codec_long_name"),
+            codecName: getString(videoStream, "codec_name"),
+            displayAspectRatio: getString(videoStream, "display_aspect_ratio"),
+            frameRate: parseFrameRate(
+              getString(videoStream, "avg_frame_rate")
+              ?? getString(videoStream, "r_frame_rate"),
+            ),
+            height: getNumber(videoStream, "height"),
+            width: getNumber(videoStream, "width"),
+          };
+        }
+
+        if (audioStream) {
+          metadata.audio = {
+            bitrateBitsPerSecond: getNumber(audioStream, "bit_rate"),
+            channelLayout: getString(audioStream, "channel_layout"),
+            channels: getNumber(audioStream, "channels"),
+            codecLongName: getString(audioStream, "codec_long_name"),
+            codecName: getString(audioStream, "codec_name"),
+            sampleRateHz: getNumber(audioStream, "sample_rate"),
+          };
+        }
+
+        return metadata;
+      });
+
     const showFilePicker = (
       mode: "both" | "file" | "folder",
     ): Effect.Effect<PickerResult | null, unknown> =>
@@ -519,10 +687,48 @@ export const MediaLayer = Layer.effect(
         }),
       );
 
+    const renameFileSystemItem = ({
+      newName,
+      path,
+    }: RenameFileSystemItemInput): Effect.Effect<RenameFileSystemItemResult, unknown> =>
+      Effect.tryPromise({
+        try: async () => {
+          const trimmedName = newName.trim();
+          if (!trimmedName) {
+            throw new Error("Name is required");
+          }
+
+          if (basename(trimmedName) !== trimmedName) {
+            throw new Error("Name cannot include path separators");
+          }
+
+          const oldPath = FileTree.normalizePath(resolve(path));
+          const newPath = FileTree.normalizePath(join(dirname(oldPath), trimmedName));
+
+          if (newPath !== oldPath) {
+            await rename(oldPath, newPath);
+          }
+
+          return {
+            name: trimmedName,
+            newPath,
+            oldPath,
+          };
+        },
+        catch: error => error,
+      }).pipe(
+        Effect.catch((error) => {
+          logger.error("Error renaming file system item", error);
+          return Effect.fail(error);
+        }),
+      );
+
     return {
       showFilePicker,
       loadDirectoryContents,
       getAllVideoFilesRecursive,
+      getVideoMetadata,
+      renameFileSystemItem,
     } satisfies MediaService["Service"];
   }),
 );

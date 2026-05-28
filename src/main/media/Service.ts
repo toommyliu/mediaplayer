@@ -3,7 +3,10 @@ import type { SortOptions } from "../../shared";
 import type {
   DirectoryContents,
   PickerResult,
+  RenameFileSystemItemInput,
+  RenameFileSystemItemResult,
   VideoFileItem,
+  VideoMetadata,
 } from "../../shared/contracts";
 import { ServiceMap } from "effect";
 
@@ -18,6 +21,10 @@ export interface MediaServiceShape {
   getAllVideoFilesRecursive: (
     folderPath: string,
   ) => Effect.Effect<VideoFileItem[], unknown>;
+  getVideoMetadata: (filePath: string) => Effect.Effect<VideoMetadata, unknown>;
+  renameFileSystemItem: (
+    input: RenameFileSystemItemInput,
+  ) => Effect.Effect<RenameFileSystemItemResult, unknown>;
 }
 
 export class MediaService extends ServiceMap.Service<

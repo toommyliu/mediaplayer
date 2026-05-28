@@ -1,3 +1,4 @@
+import type { FormEvent } from "react";
 import type { FileSystemItem } from "@/types";
 import {
   CheckIcon,
@@ -8,18 +9,32 @@ import {
   ListPlusIcon,
   PlayIcon,
   PlusIcon,
+  TextCursorInputIcon,
 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import {
   navigateToDirectory,
   playFileBrowserVideo,
+  renameFileBrowserItem,
   revealItemInFolder,
   toggleFolder,
 } from "@/actions/library";
+import { Button } from "@/components/ui/button";
 import {
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuSeparator,
 } from "@/components/ui/context-menu";
+import {
+  Dialog,
+  DialogClose,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogPopup,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 import { cn } from "@/lib/utils";
 import { useQueueStore } from "@/stores/queue";
@@ -80,6 +95,119 @@ function RevealInFinderMenuItem({ path }: RevealInFinderMenuItemProps) {
       {/* TODO: detect OS and change label */}
       Reveal in Finder
     </ContextMenuItem>
+  );
+}
+
+interface RenameMenuItemProps {
+  item: FileSystemItem;
+  onRename: () => void;
+}
+
+function RenameMenuItem({ onRename }: RenameMenuItemProps) {
+  return (
+    <ContextMenuItem
+      onClick={() => {
+        onRename();
+      }}
+    >
+      <TextCursorInputIcon className="size-4" />
+      Rename
+    </ContextMenuItem>
+  );
+}
+
+interface RenameDialogProps {
+  item: FileSystemItem;
+  onOpenChange: (open: boolean) => void;
+  open: boolean;
+}
+
+function RenameDialog({
+  item,
+  onOpenChange,
+  open,
+}: RenameDialogProps) {
+  const [name, setName] = useState(item.name);
+  const [error, setError] = useState<string | null>(null);
+  const [isRenaming, setIsRenaming] = useState(false);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (!open)
+      return;
+
+    setName(item.name);
+    setError(null);
+    setIsRenaming(false);
+    const focusTimer = window.setTimeout(() => {
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    });
+    return () => window.clearTimeout(focusTimer);
+  }, [item.name, open]);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      setError("Name is required.");
+      return;
+    }
+
+    if (trimmedName === item.name) {
+      onOpenChange(false);
+      return;
+    }
+
+    setError(null);
+    setIsRenaming(true);
+    try {
+      await renameFileBrowserItem(item, trimmedName);
+      onOpenChange(false);
+    }
+    catch (error) {
+      setError(error instanceof Error ? error.message : "Rename failed.");
+    }
+    finally {
+      setIsRenaming(false);
+    }
+  }
+
+  return (
+    <Dialog onOpenChange={onOpenChange} open={open}>
+      <DialogPopup className="max-w-sm p-0" showCloseButton={!isRenaming}>
+        <form className="flex flex-col" onSubmit={handleSubmit}>
+          <DialogHeader>
+            <DialogTitle>Rename</DialogTitle>
+            <DialogDescription>
+              Enter a new name for this item.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 px-6 pb-6 pt-1">
+            <Input
+              aria-invalid={error ? true : undefined}
+              disabled={isRenaming}
+              nativeInput
+              onChange={event => setName(event.target.value)}
+              ref={inputRef}
+              value={name}
+            />
+            {error
+              ? <p className="text-destructive text-sm">{error}</p>
+              : null}
+          </div>
+          <DialogFooter>
+            <DialogClose render={<Button disabled={isRenaming} variant="outline" />}>
+              Cancel
+            </DialogClose>
+            <Button disabled={isRenaming} type="submit">
+              {isRenaming ? "Renaming..." : "Rename"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogPopup>
+    </Dialog>
   );
 }
 
@@ -164,20 +292,32 @@ export function FileBrowserItemContextMenu({
   isExpanded,
 }: FileBrowserItemContextMenuProps) {
   const isFolder = item.type === "folder";
+  const [isRenameOpen, setIsRenameOpen] = useState(false);
 
   return (
-    <ContextMenuContent className="min-w-48">
-      {isFolder
-        ? (
-            <FolderItemContextMenu item={item} isExpanded={isExpanded} />
-          )
-        : (
-            <FileItemContextMenu item={item} isExpanded={isExpanded} />
-          )}
+    <>
+      <ContextMenuContent className="min-w-48">
+        {isFolder
+          ? (
+              <FolderItemContextMenu item={item} isExpanded={isExpanded} />
+            )
+          : (
+              <FileItemContextMenu item={item} isExpanded={isExpanded} />
+            )}
 
-      <ContextMenuSeparator />
-      <RevealInFinderMenuItem path={item.path} />
-      <CopyPathMenuItem path={item.path} />
-    </ContextMenuContent>
+        <ContextMenuSeparator />
+        <RenameMenuItem
+          item={item}
+          onRename={() => setIsRenameOpen(true)}
+        />
+        <RevealInFinderMenuItem path={item.path} />
+        <CopyPathMenuItem path={item.path} />
+      </ContextMenuContent>
+      <RenameDialog
+        item={item}
+        onOpenChange={setIsRenameOpen}
+        open={isRenameOpen}
+      />
+    </>
   );
 }

@@ -3,7 +3,10 @@ import type {
   DirectoryContents,
   PickerResult,
   PlatformInfo,
+  RenameFileSystemItemInput,
+  RenameFileSystemItemResult,
   VideoFileItem,
+  VideoMetadata,
 } from "@/lib/contracts";
 import { IPC_EVENT_CHANNELS, IPC_INVOKE_CHANNELS } from "../../../shared/ipc";
 
@@ -47,6 +50,13 @@ export function getPlatform(): Promise<PlatformInfo> {
   );
 }
 
+export function getVideoMetadata(path: string): Promise<VideoMetadata> {
+  return window.electron.ipcRenderer.invoke(
+    IPC_INVOKE_CHANNELS.getVideoMetadata,
+    path,
+  );
+}
+
 export function readPersistedStore(name: string): Promise<string | null> {
   return window.electron.ipcRenderer.invoke(
     IPC_INVOKE_CHANNELS.readPersistedStore,
@@ -65,6 +75,15 @@ export function removePersistedStore(name: string): Promise<void> {
   return window.electron.ipcRenderer.invoke(
     IPC_INVOKE_CHANNELS.removePersistedStore,
     name,
+  );
+}
+
+export function renameFileSystemItem(
+  input: RenameFileSystemItemInput,
+): Promise<RenameFileSystemItemResult> {
+  return window.electron.ipcRenderer.invoke(
+    IPC_INVOKE_CHANNELS.renameFileSystemItem,
+    input,
   );
 }
 

@@ -2,7 +2,10 @@ import type {
   DirectoryContents,
   PickerResult,
   PlatformInfo,
+  RenameFileSystemItemInput,
+  RenameFileSystemItemResult,
   VideoFileItem,
+  VideoMetadata,
 } from "./contracts";
 
 export interface IpcInvokeRequestMap {
@@ -10,9 +13,11 @@ export interface IpcInvokeRequestMap {
   exitFullscreen: undefined;
   getAllVideoFiles: string;
   getPlatform: undefined;
+  getVideoMetadata: string;
   readPersistedStore: string;
   readDirectory: string;
   removePersistedStore: string;
+  renameFileSystemItem: RenameFileSystemItemInput;
   selectFile: undefined;
   selectFileOrFolder: undefined;
   selectFolder: undefined;
@@ -28,9 +33,11 @@ export interface IpcInvokeResponseMap {
   exitFullscreen: void;
   getAllVideoFiles: VideoFileItem[];
   getPlatform: PlatformInfo;
+  getVideoMetadata: VideoMetadata;
   readPersistedStore: string | null;
   readDirectory: DirectoryContents;
   removePersistedStore: void;
+  renameFileSystemItem: RenameFileSystemItemResult;
   selectFile: PickerResult | null;
   selectFileOrFolder: PickerResult | null;
   selectFolder: PickerResult | null;
@@ -56,9 +63,11 @@ export const IPC_INVOKE_CHANNELS = {
   exitFullscreen: "mediaplayer:invoke:exitFullscreen",
   getAllVideoFiles: "mediaplayer:invoke:getAllVideoFiles",
   getPlatform: "mediaplayer:invoke:getPlatform",
+  getVideoMetadata: "mediaplayer:invoke:getVideoMetadata",
   readPersistedStore: "mediaplayer:invoke:readPersistedStore",
   readDirectory: "mediaplayer:invoke:readDirectory",
   removePersistedStore: "mediaplayer:invoke:removePersistedStore",
+  renameFileSystemItem: "mediaplayer:invoke:renameFileSystemItem",
   selectFile: "mediaplayer:invoke:selectFile",
   selectFileOrFolder: "mediaplayer:invoke:selectFileOrFolder",
   selectFolder: "mediaplayer:invoke:selectFolder",
