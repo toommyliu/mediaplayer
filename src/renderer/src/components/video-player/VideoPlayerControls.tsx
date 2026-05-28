@@ -2,6 +2,7 @@ import { cn } from "@/lib/utils";
 import { AspectRatioControl } from "../AspectRatioControl";
 import { FullscreenButton } from "../FullscreenButton";
 import { NextVideoButton } from "../NextVideoButton";
+import { PictureInPictureButton } from "../PictureInPictureButton";
 import { PlayPauseButton } from "../PlayPauseButton";
 import { PreviousVideoButton } from "../PreviousVideoButton";
 import { AudioBoostControl } from "./AudioBoostControl";
@@ -55,6 +56,7 @@ export function VideoPlayerControls({
             <PlaybackSpeedControl />
             <AspectRatioControl />
             <VideoMetadataButton />
+            <PictureInPictureButton />
             <FullscreenButton />
           </div>
         </div>

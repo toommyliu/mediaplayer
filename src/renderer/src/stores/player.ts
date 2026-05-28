@@ -12,6 +12,8 @@ export interface PlayerState {
   isFullscreen: boolean;
   isHolding: boolean;
   isLoading: boolean;
+  isPictureInPicture: boolean;
+  isPictureInPictureSupported: boolean;
   isPlaying: boolean;
   isQuickJumpOpen: boolean;
   playbackRate: number;
@@ -45,6 +47,8 @@ const initialPlayerState: PlayerState = {
   isFullscreen: false,
   isHolding: false,
   isLoading: false,
+  isPictureInPicture: false,
+  isPictureInPictureSupported: false,
   isPlaying: false,
   isQuickJumpOpen: false,
   playbackRate: 1,
@@ -112,6 +116,7 @@ export const usePlayerStore = create<PlayerStore>()(
           duration: 0,
           error: null,
           isLoading: false,
+          isPictureInPicture: false,
           isPlaying: false,
           seekUndoStack: [],
         })),

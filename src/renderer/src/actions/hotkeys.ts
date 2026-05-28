@@ -3,6 +3,7 @@ import {
   playNextVideo,
   playPreviousVideo,
   setFullscreen,
+  togglePictureInPicture,
   togglePlayPause,
 } from "@/actions/playback";
 import { FRAME_TIME_STEP, SEEK_TIME_STEP } from "@/lib/constants";
@@ -168,6 +169,9 @@ export async function runHotkeyAction(actionId: string): Promise<void> {
       break;
     case "fullscreen":
       await setFullscreen(!usePlayerStore.getState().isFullscreen);
+      break;
+    case "pictureInPicture":
+      await togglePictureInPicture();
       break;
     case "showFileBrowser":
       useSidebarStore.getState().setSidebarTab("file-browser");

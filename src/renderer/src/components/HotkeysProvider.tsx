@@ -63,6 +63,11 @@ function buildDefaultCategories(modKey: string): HotkeyCategory[] {
           keys: ["="],
         },
         { description: "Toggle fullscreen", id: "fullscreen", keys: ["f"] },
+        {
+          description: "Toggle picture in picture",
+          id: "pictureInPicture",
+          keys: ["p"],
+        },
         { description: "Add bookmark", id: "addBookmark", keys: ["b"] },
       ],
       name: "Playback",

@@ -5,6 +5,7 @@ import { loadFileSystemStructure } from "@/actions/library";
 import {
   bindPlaybackVideoElement,
   playNextVideo,
+  refreshPictureInPictureState,
   togglePlayPause,
 } from "@/actions/playback";
 import { clamp } from "@/lib/clamp";
@@ -32,6 +33,7 @@ export default function VideoPlayer() {
   const duration = usePlayerStore(state => state.duration);
   const error = usePlayerStore(state => state.error);
   const isLoading = usePlayerStore(state => state.isLoading);
+  const isPictureInPicture = usePlayerStore(state => state.isPictureInPicture);
   const isPlaying = usePlayerStore(state => state.isPlaying);
   const isQuickJumpOpen = usePlayerStore(state => state.isQuickJumpOpen);
   const playbackRate = usePlayerStore(state => state.playbackRate);
@@ -51,13 +53,37 @@ export default function VideoPlayer() {
   const [showControls, setShowControls] = useState(false);
   const [holdDirection, setHoldDirection] = useState<HoldDirection>(null);
 
+  const syncPictureInPictureState = useCallback(() => {
+    refreshPictureInPictureState();
+  }, []);
+
   const setVideoElementRef = useCallback((element: HTMLVideoElement | null) => {
+    if (videoRef.current) {
+      videoRef.current.removeEventListener(
+        "enterpictureinpicture",
+        syncPictureInPictureState,
+      );
+      videoRef.current.removeEventListener(
+        "leavepictureinpicture",
+        syncPictureInPictureState,
+      );
+    }
+
     videoRef.current = element;
     if (element) {
       element.playbackRate = playbackRate;
+      element.addEventListener(
+        "enterpictureinpicture",
+        syncPictureInPictureState,
+      );
+      element.addEventListener(
+        "leavepictureinpicture",
+        syncPictureInPictureState,
+      );
     }
     bindPlaybackVideoElement(element);
-  }, [playbackRate]);
+    refreshPictureInPictureState();
+  }, [playbackRate, syncPictureInPictureState]);
 
   useEffect(() => {
     setPlayerState({ showControls });
@@ -314,15 +340,16 @@ export default function VideoPlayer() {
         ref={containerRef}
       >
         <video
-          className={`h-full w-full bg-black ${
+          className={cn(
+            "h-full w-full bg-black",
+            isPictureInPicture ? "opacity-0" : "opacity-100",
             aspectRatio === "cover"
               ? "object-cover"
               : aspectRatio === "fill"
                 ? "object-fill"
-                : "object-contain"
-          }`}
+                : "object-contain",
+          )}
           controls={false}
-          disablePictureInPicture
           onCanPlay={() => setPlayerState({ error: null, isLoading: false })}
           onEnded={() => {
             if (repeatMode === "one" && videoRef.current) {
@@ -351,6 +378,7 @@ export default function VideoPlayer() {
             if (videoRef.current) {
               setDuration(videoRef.current.duration);
             }
+            refreshPictureInPictureState();
           }}
           onLoadStart={() => setPlayerState({ error: null, isLoading: true })}
           onPause={() => setPlayerState({ isPlaying: false })}

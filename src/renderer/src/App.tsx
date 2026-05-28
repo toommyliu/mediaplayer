@@ -58,6 +58,9 @@ export default function App() {
 
   useEffect(() => {
     function handleWindowBlur(): void {
+      if (usePlayerStore.getState().isPictureInPicture)
+        return;
+
       if (windowBlurAction === "pause") {
         pausePlayback();
         return;

@@ -30,9 +30,55 @@ export function stopPlayback(clearCurrentVideo = false): void {
     currentVideo: clearCurrentVideo ? null : player.currentVideo,
     error: null,
     isLoading: false,
+    isPictureInPicture: false,
     isPlaying: false,
     seekUndoStack: [],
   });
+}
+
+function isPictureInPictureAvailable(
+  videoElement: HTMLVideoElement | null | undefined,
+): videoElement is HTMLVideoElement {
+  return Boolean(
+    videoElement
+    && document.pictureInPictureEnabled
+    && typeof videoElement.requestPictureInPicture === "function"
+    && !videoElement.disablePictureInPicture,
+  );
+}
+
+export function refreshPictureInPictureState(): void {
+  const videoElement = getVideoElement();
+  usePlayerStore.getState().setPlayerState({
+    isPictureInPicture: Boolean(
+      videoElement && document.pictureInPictureElement === videoElement,
+    ),
+    isPictureInPictureSupported: isPictureInPictureAvailable(videoElement),
+  });
+}
+
+export async function togglePictureInPicture(): Promise<void> {
+  const videoElement = getVideoElement();
+
+  if (!isPictureInPictureAvailable(videoElement)) {
+    refreshPictureInPictureState();
+    return;
+  }
+
+  try {
+    if (document.pictureInPictureElement === videoElement) {
+      await document.exitPictureInPicture();
+    } else {
+      if (document.pictureInPictureElement) {
+        await document.exitPictureInPicture();
+      }
+      await videoElement.requestPictureInPicture();
+    }
+  } catch {
+    // The browser can reject PiP until video metadata is ready.
+  } finally {
+    refreshPictureInPictureState();
+  }
 }
 
 export function playVideo(src: string): void {

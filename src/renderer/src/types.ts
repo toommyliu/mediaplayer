@@ -83,6 +83,8 @@ export interface AppState {
     isFullscreen: boolean;
     isHolding: boolean;
     isLoading: boolean;
+    isPictureInPicture: boolean;
+    isPictureInPictureSupported: boolean;
     isPlaying: boolean;
     isQuickJumpOpen: boolean;
     playbackRate: number;
