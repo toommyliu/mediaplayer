@@ -10,15 +10,26 @@ import {
   PlayIcon,
   PlusIcon,
   TextCursorInputIcon,
+  Trash2Icon,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import {
+  deleteFileBrowserItem,
   navigateToDirectory,
   playFileBrowserVideo,
   renameFileBrowserItem,
   revealItemInFolder,
   toggleFolder,
 } from "@/actions/library";
+import {
+  AlertDialog,
+  AlertDialogClose,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogPopup,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   ContextMenuContent,
@@ -112,6 +123,24 @@ function RenameMenuItem({ onRename }: RenameMenuItemProps) {
     >
       <TextCursorInputIcon className="size-4" />
       Rename
+    </ContextMenuItem>
+  );
+}
+
+interface DeleteMenuItemProps {
+  onDelete: () => void;
+}
+
+function DeleteMenuItem({ onDelete }: DeleteMenuItemProps) {
+  return (
+    <ContextMenuItem
+      onClick={() => {
+        onDelete();
+      }}
+      variant="destructive"
+    >
+      <Trash2Icon className="size-4" />
+      Move to Trash
     </ContextMenuItem>
   );
 }
@@ -211,6 +240,76 @@ function RenameDialog({
   );
 }
 
+interface DeleteDialogProps {
+  item: FileSystemItem;
+  onOpenChange: (open: boolean) => void;
+  open: boolean;
+}
+
+function DeleteDialog({
+  item,
+  onOpenChange,
+  open,
+}: DeleteDialogProps) {
+  const [error, setError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    if (!open)
+      return;
+
+    setError(null);
+    setIsDeleting(false);
+  }, [open]);
+
+  async function handleDelete() {
+    setError(null);
+    setIsDeleting(true);
+    try {
+      await deleteFileBrowserItem(item);
+      onOpenChange(false);
+    }
+    catch (error) {
+      setError(error instanceof Error ? error.message : "Delete failed.");
+    }
+    finally {
+      setIsDeleting(false);
+    }
+  }
+
+  return (
+    <AlertDialog onOpenChange={onOpenChange} open={open}>
+      <AlertDialogPopup className="max-w-sm">
+        <AlertDialogHeader>
+          <AlertDialogTitle>Move to Trash?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This will move &quot;
+            {item.name}
+            &quot; to the Trash and remove it from the library and queue.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        {error
+          ? <p className="text-destructive px-6 pb-4 text-sm">{error}</p>
+          : null}
+        <AlertDialogFooter>
+          <AlertDialogClose render={<Button disabled={isDeleting} variant="outline" />}>
+            Cancel
+          </AlertDialogClose>
+          <Button
+            disabled={isDeleting}
+            onClick={() => {
+              void handleDelete();
+            }}
+            variant="destructive"
+          >
+            {isDeleting ? "Moving..." : "Move to Trash"}
+          </Button>
+        </AlertDialogFooter>
+      </AlertDialogPopup>
+    </AlertDialog>
+  );
+}
+
 export interface FileBrowserItemContextMenuProps {
   item: FileSystemItem;
   isExpanded: boolean;
@@ -293,6 +392,7 @@ export function FileBrowserItemContextMenu({
 }: FileBrowserItemContextMenuProps) {
   const isFolder = item.type === "folder";
   const [isRenameOpen, setIsRenameOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
   return (
     <>
@@ -310,6 +410,7 @@ export function FileBrowserItemContextMenu({
           item={item}
           onRename={() => setIsRenameOpen(true)}
         />
+        <DeleteMenuItem onDelete={() => setIsDeleteOpen(true)} />
         <RevealInFinderMenuItem path={item.path} />
         <CopyPathMenuItem path={item.path} />
       </ContextMenuContent>
@@ -317,6 +418,11 @@ export function FileBrowserItemContextMenu({
         item={item}
         onOpenChange={setIsRenameOpen}
         open={isRenameOpen}
+      />
+      <DeleteDialog
+        item={item}
+        onOpenChange={setIsDeleteOpen}
+        open={isDeleteOpen}
       />
     </>
   );

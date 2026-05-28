@@ -3,6 +3,7 @@ import type { QueueInsertItem } from "@/stores/queue";
 import type { FileSystemItem, QueueItem } from "@/types";
 import { playVideo } from "@/actions/playback";
 import {
+  deleteFileSystemItem,
   readDirectory,
   renameFileSystemItem,
   selectFileOrFolder,
@@ -358,6 +359,42 @@ export async function revealItemInFolder(path: string): Promise<void> {
   await showItemInFolder(path);
 }
 
+function isPathWithin(path: string, parentPath: string): boolean {
+  return path === parentPath || path.startsWith(`${parentPath}/`);
+}
+
+function removeItemPath(
+  items: FileSystemItem[],
+  deletedPath: string,
+): FileSystemItem[] {
+  return items.flatMap((item) => {
+    if (item.path === deletedPath)
+      return [];
+
+    return {
+      ...item,
+      files: item.files ? removeItemPath(item.files, deletedPath) : undefined,
+    };
+  });
+}
+
+function removePathSet(paths: Set<string>, deletedPath: string): Set<string> {
+  const next = new Set<string>();
+  for (const path of paths) {
+    if (!isPathWithin(path, deletedPath)) {
+      next.add(path);
+    }
+  }
+  return next;
+}
+
+function clearDeletedPath(
+  path: string | null,
+  deletedPath: string,
+): string | null {
+  return path && isPathWithin(path, deletedPath) ? null : path;
+}
+
 function updateItemPath(
   items: FileSystemItem[],
   oldPath: string,
@@ -410,6 +447,67 @@ function renamePath(path: string, oldPath: string, newPath: string): string {
     return `${newPath}${path.slice(oldPath.length)}`;
 
   return path;
+}
+
+export async function deleteFileBrowserItem(
+  item: FileSystemItem,
+): Promise<void> {
+  await deleteFileSystemItem(item.path);
+
+  const fileBrowser = useFileBrowserStore.getState();
+  const fileTree = fileBrowser.fileTree
+    ? isPathWithin(fileBrowser.fileTree.rootPath, item.path)
+      ? null
+      : {
+          ...fileBrowser.fileTree,
+          files: removeItemPath(fileBrowser.fileTree.files, item.path),
+        }
+    : null;
+
+  useFileBrowserStore.getState().setFileBrowserState({
+    currentPath: clearDeletedPath(fileBrowser.currentPath, item.path),
+    error: null,
+    expandedFolders: removePathSet(fileBrowser.expandedFolders, item.path),
+    fileTree,
+    focusedItemPath: null,
+    loadingFolders: removePathSet(fileBrowser.loadingFolders, item.path),
+    originalPath: clearDeletedPath(fileBrowser.originalPath, item.path),
+  });
+
+  const queue = useQueueStore.getState();
+  const previousCurrentItem = queue.items[queue.index] ?? null;
+  const nextItems = queue.items.filter(
+    queueItem => !isPathWithin(normalizeVideoPath(queueItem.path), item.path),
+  );
+  const preservedIndex = previousCurrentItem
+    ? nextItems.findIndex(queueItem => queueItem.id === previousCurrentItem.id)
+    : -1;
+  const nextIndex = preservedIndex === -1
+    ? Math.min(queue.index, Math.max(0, nextItems.length - 1))
+    : preservedIndex;
+
+  queue.setQueueItems(nextItems, nextIndex);
+
+  const currentVideo = usePlayerStore.getState().currentVideo;
+  const normalizedCurrentVideo = currentVideo
+    ? normalizeVideoPath(currentVideo)
+    : null;
+  if (normalizedCurrentVideo && isPathWithin(normalizedCurrentVideo, item.path)) {
+    const nextItem = nextItems[nextIndex];
+    usePlayerStore.getState().setPlayerState({
+      currentTime: 0,
+      currentVideo: nextItem ? toFileUrl(nextItem.path) : null,
+      duration: 0,
+      error: null,
+      isLoading: Boolean(nextItem),
+      isPlaying: Boolean(nextItem),
+      seekUndoStack: [],
+    });
+
+    if (!nextItem) {
+      getVideoElement()?.pause();
+    }
+  }
 }
 
 export async function renameFileBrowserItem(

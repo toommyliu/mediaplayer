@@ -16,6 +16,7 @@ export interface IpcInvokeRequestMap {
   getVideoMetadata: string;
   readPersistedStore: string;
   readDirectory: string;
+  deleteFileSystemItem: string;
   removePersistedStore: string;
   renameFileSystemItem: RenameFileSystemItemInput;
   selectFile: undefined;
@@ -36,6 +37,7 @@ export interface IpcInvokeResponseMap {
   getVideoMetadata: VideoMetadata;
   readPersistedStore: string | null;
   readDirectory: DirectoryContents;
+  deleteFileSystemItem: void;
   removePersistedStore: void;
   renameFileSystemItem: RenameFileSystemItemResult;
   selectFile: PickerResult | null;
@@ -66,6 +68,7 @@ export const IPC_INVOKE_CHANNELS = {
   getVideoMetadata: "mediaplayer:invoke:getVideoMetadata",
   readPersistedStore: "mediaplayer:invoke:readPersistedStore",
   readDirectory: "mediaplayer:invoke:readDirectory",
+  deleteFileSystemItem: "mediaplayer:invoke:deleteFileSystemItem",
   removePersistedStore: "mediaplayer:invoke:removePersistedStore",
   renameFileSystemItem: "mediaplayer:invoke:renameFileSystemItem",
   selectFile: "mediaplayer:invoke:selectFile",

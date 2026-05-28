@@ -42,6 +42,18 @@ export const IpcInvokeLayer = Layer.effectDiscard(
       renameFileSystemItem: input => media.renameFileSystemItem(input),
       getAllVideoFiles: path => media.getAllVideoFilesRecursive(path),
       getVideoMetadata: path => media.getVideoMetadata(path),
+      deleteFileSystemItem: path =>
+        Effect.tryPromise({
+          try: async () => {
+            await shell.trashItem(path);
+          },
+          catch: error => error,
+        }).pipe(
+          Effect.catch((error) => {
+            logger.error("Error deleting file system item", error);
+            return Effect.fail(error);
+          }),
+        ),
       showItemInFolder: path =>
         Effect.sync(() => {
           shell.showItemInFolder(path);
@@ -87,6 +99,7 @@ export const IpcInvokeLayer = Layer.effectDiscard(
     registerHandler("selectFileOrFolder", handlers.selectFileOrFolder);
     registerHandler("readPersistedStore", handlers.readPersistedStore);
     registerHandler("readDirectory", handlers.readDirectory);
+    registerHandler("deleteFileSystemItem", handlers.deleteFileSystemItem);
     registerHandler("removePersistedStore", handlers.removePersistedStore);
     registerHandler("renameFileSystemItem", handlers.renameFileSystemItem);
     registerHandler("getAllVideoFiles", handlers.getAllVideoFiles);

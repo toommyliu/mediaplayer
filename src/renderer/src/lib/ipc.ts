@@ -71,6 +71,13 @@ export function readDirectory(path: string): Promise<DirectoryContents> {
   );
 }
 
+export function deleteFileSystemItem(path: string): Promise<void> {
+  return window.electron.ipcRenderer.invoke(
+    IPC_INVOKE_CHANNELS.deleteFileSystemItem,
+    path,
+  );
+}
+
 export function removePersistedStore(name: string): Promise<void> {
   return window.electron.ipcRenderer.invoke(
     IPC_INVOKE_CHANNELS.removePersistedStore,
