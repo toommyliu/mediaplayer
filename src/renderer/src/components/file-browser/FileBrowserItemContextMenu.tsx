@@ -282,9 +282,11 @@ function DeleteDialog({
       <AlertDialogPopup className="max-w-sm">
         <AlertDialogHeader>
           <AlertDialogTitle>Move to Trash?</AlertDialogTitle>
-          <AlertDialogDescription>
+          <AlertDialogDescription className="break-words">
             This will move &quot;
-            {item.name}
+            <span className="font-semibold text-foreground break-all">
+              {item.name}
+            </span>
             &quot; to the Trash and remove it from the library and queue.
           </AlertDialogDescription>
         </AlertDialogHeader>

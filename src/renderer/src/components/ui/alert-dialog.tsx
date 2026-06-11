@@ -143,7 +143,7 @@ export function AlertDialogDescription({
 }: AlertDialogPrimitive.Description.Props): React.ReactElement {
   return (
     <AlertDialogPrimitive.Description
-      className={cn("text-muted-foreground text-sm", className)}
+      className={cn("text-muted-foreground text-sm break-words", className)}
       data-slot="alert-dialog-description"
       {...props}
     />

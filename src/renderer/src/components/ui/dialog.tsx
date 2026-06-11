@@ -177,7 +177,7 @@ export function DialogDescription({
 }: DialogPrimitive.Description.Props): React.ReactElement {
   return (
     <DialogPrimitive.Description
-      className={cn("text-muted-foreground text-sm", className)}
+      className={cn("text-muted-foreground text-sm break-words", className)}
       data-slot="dialog-description"
       {...props}
     />
