@@ -1,7 +1,10 @@
 import type { Bookmark } from "@/lib/contracts";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { createUserDataStateStorage } from "@/stores/user-data-storage";
+import {
+  createUserDataStateStorage,
+  registerPersistedStoreRehydration,
+} from "@/stores/user-data-storage";
 
 export interface BookmarksState {
   bookmarks: Bookmark[];
@@ -117,3 +120,5 @@ export const useBookmarksStore = create<BookmarksStore>()(
     },
   ),
 );
+
+registerPersistedStoreRehydration("bookmarks-store", () => useBookmarksStore.persist.rehydrate());

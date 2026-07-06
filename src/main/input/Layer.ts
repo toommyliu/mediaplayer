@@ -35,9 +35,11 @@ export const InputLayer = Layer.effectDiscard(
 
     const invokeRendererHandler = (handler: MediaHandlerName): Effect.Effect<void> =>
       Effect.gen(function* () {
-        const window = yield* windows.getMainWindow;
+        const focusedWindow = yield* windows.getFocusedWindow;
+        const lastFocusedWindow = yield* windows.getLastFocusedWindow;
+        const window = focusedWindow ?? lastFocusedWindow;
         if (!window || window.isDestroyed()) {
-          logger.debug("No valid main window available for media key handler");
+          logger.debug("No valid window available for media key handler");
           return;
         }
 
@@ -139,53 +141,75 @@ export const InputLayer = Layer.effectDiscard(
       if (eventListenersRegistered) return;
 
       runWithServices(
-        windows.getMainWindow.pipe(
-          Effect.flatMap((mainWindow) => {
-            if (!mainWindow) return Effect.void;
+        Effect.gen(function* () {
+          const onFocusUnsub = yield* windows.on("focus", (window) => {
+            logger.debug("Window focused, registering global shortcuts");
+            registerGlobalShortcuts();
+            runWithServices(rendererEvents.emit(window.webContents, "windowFocus", undefined));
+          });
 
-            return Effect.gen(function* () {
-              const onFocusUnsub = yield* windows.on("focus", () => {
-                logger.debug("mainWindow focused, registering global shortcuts");
-                registerGlobalShortcuts();
-                runWithServices(
-                  rendererEvents.emit(mainWindow.webContents, "windowFocus", undefined),
-                );
-              });
+          const onBlurUnsub = yield* windows.on("blur", (window) => {
+            logger.debug("Window blurred");
+            runWithServices(rendererEvents.emit(window.webContents, "windowBlur", undefined));
 
-              const onBlurUnsub = yield* windows.on("blur", () => {
-                logger.debug("mainWindow blurred, unregistering global shortcuts");
-                unregisterGlobalShortcuts();
-                runWithServices(
-                  rendererEvents.emit(mainWindow.webContents, "windowBlur", undefined),
-                );
-              });
-
-              const onClosedUnsub = yield* windows.on("closed", () => {
-                cleanupEventListeners();
-              });
-
-              const onEnterFullscreenUnsub = yield* windows.on("enter-full-screen", () => {
-                runWithServices(
-                  rendererEvents.emit(mainWindow.webContents, "windowFullscreenEnter", undefined),
-                );
-              });
-
-              const onLeaveFullscreenUnsub = yield* windows.on("leave-full-screen", () => {
-                runWithServices(
-                  rendererEvents.emit(mainWindow.webContents, "windowFullscreenExit", undefined),
-                );
-              });
-
-              windowUnsubscribers.push(
-                onFocusUnsub,
-                onBlurUnsub,
-                onClosedUnsub,
-                onEnterFullscreenUnsub,
-                onLeaveFullscreenUnsub,
+            setTimeout(() => {
+              runWithServices(
+                windows.getFocusedWindow.pipe(
+                  Effect.flatMap((focusedWindow) =>
+                    Effect.sync(() => {
+                      if (!focusedWindow) {
+                        unregisterGlobalShortcuts();
+                      }
+                    }),
+                  ),
+                  Effect.catch((error) => {
+                    logger.error("Failed to handle window blur", error);
+                    return Effect.void;
+                  }),
+                ),
               );
-              eventListenersRegistered = true;
-            });
-          }),
+            }, 0);
+          });
+
+          const onClosedUnsub = yield* windows.on("closed", () => {
+            runWithServices(
+              windows.hasWindows.pipe(
+                Effect.flatMap((hasWindows) =>
+                  Effect.sync(() => {
+                    if (!hasWindows) {
+                      unregisterGlobalShortcuts();
+                    }
+                  }),
+                ),
+                Effect.catch((error) => {
+                  logger.error("Failed to handle window closed", error);
+                  return Effect.void;
+                }),
+              ),
+            );
+          });
+
+          const onEnterFullscreenUnsub = yield* windows.on("enter-full-screen", (window) => {
+            runWithServices(
+              rendererEvents.emit(window.webContents, "windowFullscreenEnter", undefined),
+            );
+          });
+
+          const onLeaveFullscreenUnsub = yield* windows.on("leave-full-screen", (window) => {
+            runWithServices(
+              rendererEvents.emit(window.webContents, "windowFullscreenExit", undefined),
+            );
+          });
+
+          windowUnsubscribers.push(
+            onFocusUnsub,
+            onBlurUnsub,
+            onClosedUnsub,
+            onEnterFullscreenUnsub,
+            onLeaveFullscreenUnsub,
+          );
+          eventListenersRegistered = true;
+        }).pipe(
           Effect.catch((error) => {
             logger.error("Failed to setup window event listeners", error);
             return Effect.void;
@@ -201,21 +225,19 @@ export const InputLayer = Layer.effectDiscard(
           logger.warn("accessibility permissions not granted, global shortcuts will not work");
         }
 
-        runWithServices(
-          windows.isCreated.pipe(
-            Effect.flatMap((isCreated) => {
-              if (isCreated) {
-                return Effect.sync(setupWindowEventListeners);
-              }
+        setupWindowEventListeners();
 
-              return windows
-                .once("show", () => {
-                  setupWindowEventListeners();
-                })
-                .pipe(Effect.asVoid);
-            }),
+        runWithServices(
+          windows.getFocusedWindow.pipe(
+            Effect.flatMap((focusedWindow) =>
+              Effect.sync(() => {
+                if (focusedWindow) {
+                  registerGlobalShortcuts();
+                }
+              }),
+            ),
             Effect.catch((error) => {
-              logger.error("Error while waiting for window visibility", error);
+              logger.error("Error while checking focused window", error);
               return Effect.void;
             }),
           ),
@@ -229,11 +251,14 @@ export const InputLayer = Layer.effectDiscard(
       };
 
       const onWindowAllClosed = (): void => {
-        cleanupEventListeners();
         unregisterGlobalShortcuts();
       };
 
-      app.on("ready", onReady);
+      if (app.isReady()) {
+        onReady();
+      } else {
+        app.on("ready", onReady);
+      }
       app.on("before-quit", onBeforeQuit);
       app.on("window-all-closed", onWindowAllClosed);
 

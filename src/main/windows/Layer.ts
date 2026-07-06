@@ -1,4 +1,5 @@
-import type { WindowEventName } from "./Service";
+import type { WindowEventMap, WindowEventName } from "./Service";
+import type { WebContents } from "electron";
 import { EventEmitter } from "node:events";
 import { join } from "node:path";
 import { is, platform } from "@electron-toolkit/utils";
@@ -14,43 +15,70 @@ export const WindowLayer = Layer.effect(
     const logger = yield* LoggerService;
 
     const emitter = new EventEmitter();
-    let mainWindow: BrowserWindow | null = null;
+    const windows = new Set<BrowserWindow>();
+    let lastFocusedWindow: BrowserWindow | null = null;
+
+    const isManagedWindow = (window: BrowserWindow | null | undefined): window is BrowserWindow =>
+      Boolean(window && windows.has(window) && !window.isDestroyed());
+
+    const getAllWindows = (): BrowserWindow[] => {
+      const validWindows = Array.from(windows).filter((window) => !window.isDestroyed());
+
+      for (const window of Array.from(windows)) {
+        if (window.isDestroyed()) {
+          windows.delete(window);
+        }
+      }
+
+      return validWindows;
+    };
+
+    const getFocusedWindow = (): BrowserWindow | null => {
+      const focusedWindow = BrowserWindow.getFocusedWindow();
+      return isManagedWindow(focusedWindow) ? focusedWindow : null;
+    };
+
+    const getLastFocusedWindow = (): BrowserWindow | null => {
+      if (isManagedWindow(lastFocusedWindow)) return lastFocusedWindow;
+
+      lastFocusedWindow = null;
+      return null;
+    };
+
+    const getPreferredWindow = (): BrowserWindow | null =>
+      getFocusedWindow() ?? getLastFocusedWindow() ?? getAllWindows()[0] ?? null;
+
+    const showWindow = (window: BrowserWindow): void => {
+      if (window.isMinimized()) {
+        window.restore();
+      }
+      window.show();
+      window.focus();
+    };
 
     const attachWindowEventListeners = (window: BrowserWindow): void => {
       window.on("ready-to-show", () => emitter.emit("ready-to-show", window));
       window.on("show", () => emitter.emit("show", window));
       window.on("close", (event) => {
-        if (platform.isMacOS) {
-          event.preventDefault();
-          window.hide();
-          return;
-        }
-
         emitter.emit("close", event, window);
       });
-      window.on("closed", () => emitter.emit("closed"));
-      window.on("focus", () => emitter.emit("focus"));
-      window.on("blur", () => emitter.emit("blur"));
-      window.on("enter-full-screen", () => emitter.emit("enter-full-screen"));
-      window.on("leave-full-screen", () => emitter.emit("leave-full-screen"));
+      window.on("closed", () => {
+        windows.delete(window);
+        if (lastFocusedWindow === window) {
+          lastFocusedWindow = getAllWindows()[0] ?? null;
+        }
+        emitter.emit("closed", window);
+      });
+      window.on("focus", () => {
+        lastFocusedWindow = window;
+        emitter.emit("focus", window);
+      });
+      window.on("blur", () => emitter.emit("blur", window));
+      window.on("enter-full-screen", () => emitter.emit("enter-full-screen", window));
+      window.on("leave-full-screen", () => emitter.emit("leave-full-screen", window));
     };
 
-    const detachWindowEventListeners = (window: BrowserWindow): void => {
-      window.removeAllListeners("ready-to-show");
-      window.removeAllListeners("show");
-      window.removeAllListeners("close");
-      window.removeAllListeners("closed");
-      window.removeAllListeners("focus");
-      window.removeAllListeners("blur");
-      window.removeAllListeners("enter-full-screen");
-      window.removeAllListeners("leave-full-screen");
-    };
-
-    const createMainWindow = (): BrowserWindow => {
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        return mainWindow;
-      }
-
+    const createWindow = (): BrowserWindow => {
       const window = new BrowserWindow({
         width: 900,
         height: 670,
@@ -65,7 +93,7 @@ export const WindowLayer = Layer.effect(
         },
       });
 
-      mainWindow = window;
+      windows.add(window);
       attachWindowEventListeners(window);
 
       window.on("ready-to-show", () => {
@@ -75,11 +103,6 @@ export const WindowLayer = Layer.effect(
         if (is.dev) {
           window.webContents.openDevTools({ mode: "right" });
         }
-      });
-
-      window.on("closed", () => {
-        detachWindowEventListeners(window);
-        mainWindow = null;
       });
 
       window.webContents.setWindowOpenHandler((details) => {
@@ -96,61 +119,74 @@ export const WindowLayer = Layer.effect(
       return window;
     };
 
-    const destroyMainWindow = (): void => {
-      if (!mainWindow) return;
-      try {
-        detachWindowEventListeners(mainWindow);
-        mainWindow.removeAllListeners("close");
-        if (!mainWindow.isDestroyed()) mainWindow.destroy();
-      } catch (error) {
-        logger.error("Error destroying main window", error);
-      } finally {
-        mainWindow = null;
-      }
+    const getByWebContents = (webContents: WebContents): BrowserWindow | null => {
+      const window = BrowserWindow.fromWebContents(webContents);
+      return isManagedWindow(window) ? window : null;
     };
 
-    yield* Effect.addFinalizer(() => Effect.sync(destroyMainWindow));
+    const destroyAllWindows = (): void => {
+      const currentWindows = getAllWindows();
+      for (const window of currentWindows) {
+        try {
+          if (!window.isDestroyed()) window.destroy();
+        } catch (error) {
+          logger.error("Error destroying window", error);
+        }
+      }
+
+      windows.clear();
+      lastFocusedWindow = null;
+    };
+
+    yield* Effect.addFinalizer(() => Effect.sync(destroyAllWindows));
 
     const service = {
-      create: Effect.sync(createMainWindow),
-      getMainWindow: Effect.sync(() => mainWindow),
-      getOrCreateMainWindow: Effect.sync(() => {
-        if (mainWindow && !mainWindow.isDestroyed()) {
-          if (platform.isMacOS && !mainWindow.isVisible()) {
-            mainWindow.show();
+      create: Effect.sync(createWindow),
+      destroyAll: Effect.sync(destroyAllWindows),
+      getAll: Effect.sync(getAllWindows),
+      getByWebContents: (webContents: WebContents) =>
+        Effect.sync(() => getByWebContents(webContents)),
+      getFocusedWindow: Effect.sync(getFocusedWindow),
+      getLastFocusedWindow: Effect.sync(getLastFocusedWindow),
+      getOrCreateFocusedWindow: Effect.sync(() => {
+        const window = getPreferredWindow();
+        if (window) {
+          if (platform.isMacOS && !window.isVisible()) {
+            showWindow(window);
           }
-          return mainWindow;
+          return window;
         }
 
-        return createMainWindow();
+        return createWindow();
       }),
-      setFullScreen: (flag: boolean) =>
+      hasWindows: Effect.sync(() => getAllWindows().length > 0),
+      setFullScreen: (window: BrowserWindow | null, flag: boolean) =>
         Effect.sync(() => {
-          if (!mainWindow || mainWindow.isDestroyed()) return;
-          mainWindow.setFullScreen(flag);
+          if (!isManagedWindow(window)) return;
+          window.setFullScreen(flag);
         }),
-      show: Effect.sync(() => {
-        if (!mainWindow || mainWindow.isDestroyed()) return;
-        mainWindow.show();
-      }),
-      hide: Effect.sync(() => {
-        if (!mainWindow || mainWindow.isDestroyed()) return;
-        mainWindow.hide();
-      }),
-      destroy: Effect.sync(destroyMainWindow),
-      isCreated: Effect.sync(() => !!mainWindow && !mainWindow.isDestroyed()),
-      on: (event: WindowEventName, listener: (...args: any[]) => void) =>
+      show: (window: BrowserWindow | null) =>
         Effect.sync(() => {
-          emitter.on(event, listener);
+          if (!isManagedWindow(window)) return;
+          showWindow(window);
+        }),
+      showLastFocused: Effect.sync(() => {
+        const window = getPreferredWindow();
+        if (!window) return;
+        showWindow(window);
+      }),
+      on: <K extends WindowEventName>(event: K, listener: (...args: WindowEventMap[K]) => void) =>
+        Effect.sync(() => {
+          emitter.on(event, listener as (...args: unknown[]) => void);
           return () => {
-            emitter.off(event, listener);
+            emitter.off(event, listener as (...args: unknown[]) => void);
           };
         }),
-      once: (event: WindowEventName, listener: (...args: any[]) => void) =>
+      once: <K extends WindowEventName>(event: K, listener: (...args: WindowEventMap[K]) => void) =>
         Effect.sync(() => {
-          emitter.once(event, listener);
+          emitter.once(event, listener as (...args: unknown[]) => void);
           return () => {
-            emitter.off(event, listener);
+            emitter.off(event, listener as (...args: unknown[]) => void);
           };
         }),
     } satisfies WindowService["Service"];

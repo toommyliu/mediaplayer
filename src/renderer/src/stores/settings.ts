@@ -1,7 +1,10 @@
 import type { WindowBlurAction } from "@/types";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { createUserDataStateStorage } from "@/stores/user-data-storage";
+import {
+  createUserDataStateStorage,
+  registerPersistedStoreRehydration,
+} from "@/stores/user-data-storage";
 
 export interface SettingsState {
   showDialog: boolean;
@@ -49,3 +52,5 @@ export const useSettingsStore = create<SettingsStore>()(
     },
   ),
 );
+
+registerPersistedStoreRehydration("settings-store", () => useSettingsStore.persist.rehydrate());

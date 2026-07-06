@@ -1,7 +1,10 @@
 import type { AspectRatioMode } from "@/types";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { createUserDataStateStorage } from "@/stores/user-data-storage";
+import {
+  createUserDataStateStorage,
+  registerPersistedStoreRehydration,
+} from "@/stores/user-data-storage";
 
 export interface PlayerState {
   aspectRatio: AspectRatioMode;
@@ -166,3 +169,5 @@ export const usePlayerStore = create<PlayerStore>()(
     },
   ),
 );
+
+registerPersistedStoreRehydration("player-store", () => usePlayerStore.persist.rehydrate());

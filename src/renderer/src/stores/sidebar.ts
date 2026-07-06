@@ -2,7 +2,10 @@ import type { SidebarPosition, SidebarTab } from "@/types";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { clamp } from "@/lib/clamp";
-import { createUserDataStateStorage } from "@/stores/user-data-storage";
+import {
+  createUserDataStateStorage,
+  registerPersistedStoreRehydration,
+} from "@/stores/user-data-storage";
 
 export interface SidebarState {
   currentTab: SidebarTab;
@@ -104,3 +107,5 @@ export const useSidebarStore = create<SidebarStore>()(
     },
   ),
 );
+
+registerPersistedStoreRehydration("sidebar-storage", () => useSidebarStore.persist.rehydrate());

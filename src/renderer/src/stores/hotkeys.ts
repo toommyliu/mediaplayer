@@ -1,7 +1,10 @@
 import type { HotkeyCategory } from "@/types";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { createUserDataStateStorage } from "@/stores/user-data-storage";
+import {
+  createUserDataStateStorage,
+  registerPersistedStoreRehydration,
+} from "@/stores/user-data-storage";
 
 export interface HotkeysState {
   bindings: Record<string, string[]>;
@@ -41,6 +44,29 @@ function migrateHotkeysState(persistedState: unknown): HotkeysPersisted {
   }
 
   return { bindings: nextBindings };
+}
+
+function applyBindingsToCategories(
+  categories: HotkeyCategory[],
+  bindings: Record<string, string[]>,
+): HotkeyCategory[] {
+  return categories.map((category) => ({
+    ...category,
+    actions: category.actions.map((action) => ({
+      ...action,
+      keys: bindings[action.id] ?? action.keys,
+    })),
+  }));
+}
+
+function mergeHotkeysState(persistedState: unknown, currentState: HotkeysStore): HotkeysStore {
+  const { bindings } = migrateHotkeysState(persistedState);
+
+  return {
+    ...currentState,
+    bindings,
+    categories: applyBindingsToCategories(currentState.categories, bindings),
+  };
 }
 
 export const useHotkeysStore = create<HotkeysStore>()(
@@ -89,12 +115,15 @@ export const useHotkeysStore = create<HotkeysStore>()(
       storage: createJSONStorage<HotkeysPersisted>(() => createUserDataStateStorage()),
       version: 1,
       migrate: migrateHotkeysState,
+      merge: mergeHotkeysState,
       partialize: (state): HotkeysPersisted => {
         return { bindings: state.bindings };
       },
     },
   ),
 );
+
+registerPersistedStoreRehydration("hotkeys-store", () => useHotkeysStore.persist.rehydrate());
 
 export function getStoredHotkeys(): Record<string, string[]> | null {
   return useHotkeysStore.getState().getStoredHotkeys();

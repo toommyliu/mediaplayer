@@ -40,7 +40,7 @@ export const MenuLayer = Layer.effectDiscard(
           click: () => {
             runMenuEffect(
               Effect.gen(function* () {
-                const browserWindow = yield* windows.getOrCreateMainWindow;
+                const browserWindow = yield* windows.getOrCreateFocusedWindow;
                 yield* rendererEvents.emit(browserWindow.webContents, "openSettings", undefined);
               }),
             );
@@ -55,15 +55,23 @@ export const MenuLayer = Layer.effectDiscard(
       label: "File",
       submenu: [
         {
+          label: "New Window",
+          accelerator: "CmdOrCtrl+N",
+          click: () => {
+            runMenuEffect(windows.create.pipe(Effect.asVoid));
+          },
+        },
+        { type: "separator" },
+        {
           label: "Open File",
           accelerator: "CmdOrCtrl+O",
           click: () => {
             runMenuEffect(
               Effect.gen(function* () {
-                const ret = yield* media.showFilePicker("file");
+                const browserWindow = yield* windows.getOrCreateFocusedWindow;
+                const ret = yield* media.showFilePicker("file", browserWindow);
                 if (!ret) return;
 
-                const browserWindow = yield* windows.getOrCreateMainWindow;
                 yield* rendererEvents.emit(browserWindow.webContents, "addFile", ret);
               }),
             );
@@ -75,10 +83,10 @@ export const MenuLayer = Layer.effectDiscard(
           click: () => {
             runMenuEffect(
               Effect.gen(function* () {
-                const ret = yield* media.showFilePicker("folder");
+                const browserWindow = yield* windows.getOrCreateFocusedWindow;
+                const ret = yield* media.showFilePicker("folder", browserWindow);
                 if (!ret) return;
 
-                const browserWindow = yield* windows.getOrCreateMainWindow;
                 yield* rendererEvents.emit(browserWindow.webContents, "addFolder", ret);
               }),
             );

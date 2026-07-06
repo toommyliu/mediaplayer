@@ -2,7 +2,10 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { clamp } from "@/lib/clamp";
 import { VOLUME_STEP } from "@/lib/constants";
-import { createUserDataStateStorage } from "@/stores/user-data-storage";
+import {
+  createUserDataStateStorage,
+  registerPersistedStoreRehydration,
+} from "@/stores/user-data-storage";
 
 export interface VolumeState {
   boost: number;
@@ -86,3 +89,5 @@ export const useVolumeStore = create<VolumeStore>()(
     },
   ),
 );
+
+registerPersistedStoreRehydration("volume-store", () => useVolumeStore.persist.rehydrate());

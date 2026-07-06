@@ -1,4 +1,5 @@
 import type { Effect } from "effect";
+import type { BrowserWindow } from "electron";
 import type { SortOptions } from "../../shared";
 import type {
   DirectoryContents,
@@ -11,7 +12,10 @@ import type {
 import { ServiceMap } from "effect";
 
 export interface MediaServiceShape {
-  showFilePicker: (mode: "both" | "file" | "folder") => Effect.Effect<PickerResult | null, unknown>;
+  showFilePicker: (
+    mode: "both" | "file" | "folder",
+    ownerWindow?: BrowserWindow | null,
+  ) => Effect.Effect<PickerResult | null, unknown>;
   loadDirectoryContents: (
     dirPath: string,
     sortOptions?: SortOptions,

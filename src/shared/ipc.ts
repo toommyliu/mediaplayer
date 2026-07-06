@@ -54,6 +54,10 @@ export interface RendererEventPayloadMap {
   mediaPlayPause: undefined;
   mediaPreviousTrack: undefined;
   openSettings: undefined;
+  persistedStoreChanged: {
+    name: string;
+    value: string | null;
+  };
   windowBlur: undefined;
   windowFocus: undefined;
   windowFullscreenEnter: undefined;
@@ -85,6 +89,7 @@ export const IPC_EVENT_CHANNELS = {
   mediaPlayPause: "mediaplayer:event:mediaPlayPause",
   mediaPreviousTrack: "mediaplayer:event:mediaPreviousTrack",
   openSettings: "mediaplayer:event:openSettings",
+  persistedStoreChanged: "mediaplayer:event:persistedStoreChanged",
   windowBlur: "mediaplayer:event:windowBlur",
   windowFocus: "mediaplayer:event:windowFocus",
   windowFullscreenEnter: "mediaplayer:event:windowFullscreenEnter",

@@ -1,4 +1,4 @@
-import type { OpenDialogOptions } from "electron";
+import type { BrowserWindow, OpenDialogOptions } from "electron";
 import type { FileTreeItem, SortOptions } from "../../shared";
 import type {
   DirectoryContents,
@@ -618,6 +618,7 @@ export const MediaLayer = Layer.effect(
 
     const showFilePicker = (
       mode: "both" | "file" | "folder",
+      ownerWindow?: BrowserWindow | null,
     ): Effect.Effect<PickerResult | null, unknown> =>
       Effect.gen(function* () {
         const defaultPath = (yield* loadPreviousPath) ?? app.getPath("downloads");
@@ -646,10 +647,13 @@ export const MediaLayer = Layer.effect(
           ];
         }
 
-        const mainWindow = yield* windows.getOrCreateMainWindow;
+        const browserWindow =
+          ownerWindow && !ownerWindow.isDestroyed()
+            ? ownerWindow
+            : yield* windows.getOrCreateFocusedWindow;
 
         const result = yield* Effect.tryPromise({
-          try: async () => await dialog.showOpenDialog(mainWindow, options),
+          try: async () => await dialog.showOpenDialog(browserWindow, options),
           catch: (error) => error,
         });
 

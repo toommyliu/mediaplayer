@@ -29,12 +29,12 @@ export const MainProgram = Effect.gen(function* () {
   const onActivate = (): void => {
     if (platform.isMacOS) {
       Effect.runFork(
-        windows.isCreated.pipe(
-          Effect.flatMap((isCreated) => {
-            if (!isCreated) {
+        windows.hasWindows.pipe(
+          Effect.flatMap((hasWindows) => {
+            if (!hasWindows) {
               return windows.create.pipe(Effect.asVoid);
             }
-            return windows.show;
+            return windows.showLastFocused;
           }),
           Effect.catch((error) => {
             logger.error("Failed to handle app activate", error);
@@ -64,9 +64,9 @@ export const MainProgram = Effect.gen(function* () {
   const onBeforeQuit = (): void => {
     if (platform.isMacOS) {
       Effect.runFork(
-        windows.destroy.pipe(
+        windows.destroyAll.pipe(
           Effect.catch((error) => {
-            logger.error("Failed to destroy window before quit", error);
+            logger.error("Failed to destroy windows before quit", error);
             return Effect.void;
           }),
         ),

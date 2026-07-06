@@ -4,34 +4,91 @@ import { platform } from "@electron-toolkit/utils";
 import { Effect, Layer } from "effect";
 import { ipcMain, shell } from "electron";
 import { IPC_INVOKE_CHANNELS } from "../../shared/ipc";
+import { RendererEventsService } from "./RendererEvents";
 import { LoggerService } from "../logging/Service";
 import { MediaService } from "../media/Service";
 import { UserDataService } from "../user-data/Service";
 import { WindowService } from "../windows/Service";
 
 type IpcInvokeName = keyof IpcInvokeRequestMap;
-type IpcInvokeEnvironment = LoggerService | MediaService | UserDataService | WindowService;
+type IpcInvokeEnvironment =
+  | LoggerService
+  | MediaService
+  | RendererEventsService
+  | UserDataService
+  | WindowService;
 
 export const IpcInvokeLayer = Layer.effectDiscard(
   Effect.gen(function* () {
     const logger = yield* LoggerService;
     const media = yield* MediaService;
+    const rendererEvents = yield* RendererEventsService;
     const userData = yield* UserDataService;
     const windows = yield* WindowService;
+
+    const getEventWindow = (event: Electron.IpcMainInvokeEvent) =>
+      windows.getByWebContents(event.sender);
+
+    const broadcastPersistedStoreChanged = (
+      event: Electron.IpcMainInvokeEvent,
+      name: string,
+      value: string | null,
+    ): Effect.Effect<void> =>
+      Effect.gen(function* () {
+        const browserWindows = yield* windows.getAll;
+        for (const browserWindow of browserWindows) {
+          if (browserWindow.webContents.id === event.sender.id) continue;
+          yield* rendererEvents
+            .emit(browserWindow.webContents, "persistedStoreChanged", {
+              name,
+              value,
+            })
+            .pipe(
+              Effect.catch((error) => {
+                logger.error(`Failed to broadcast persisted store change: ${name}`, error);
+                return Effect.void;
+              }),
+            );
+        }
+      });
 
     const handlers: {
       [K in IpcInvokeName]: (
         payload: IpcInvokeRequestMap[K],
+        event: Electron.IpcMainInvokeEvent,
       ) => Effect.Effect<IpcInvokeResponseMap[K], unknown, never>;
     } = {
-      enterFullscreen: () => windows.setFullScreen(true),
-      exitFullscreen: () => windows.setFullScreen(false),
-      selectFile: () => media.showFilePicker("file"),
-      selectFolder: () => media.showFilePicker("folder"),
-      selectFileOrFolder: () => media.showFilePicker("both"),
+      enterFullscreen: (_payload, event) =>
+        Effect.gen(function* () {
+          const browserWindow = yield* getEventWindow(event);
+          yield* windows.setFullScreen(browserWindow, true);
+        }),
+      exitFullscreen: (_payload, event) =>
+        Effect.gen(function* () {
+          const browserWindow = yield* getEventWindow(event);
+          yield* windows.setFullScreen(browserWindow, false);
+        }),
+      selectFile: (_payload, event) =>
+        Effect.gen(function* () {
+          const browserWindow = yield* getEventWindow(event);
+          return yield* media.showFilePicker("file", browserWindow);
+        }),
+      selectFolder: (_payload, event) =>
+        Effect.gen(function* () {
+          const browserWindow = yield* getEventWindow(event);
+          return yield* media.showFilePicker("folder", browserWindow);
+        }),
+      selectFileOrFolder: (_payload, event) =>
+        Effect.gen(function* () {
+          const browserWindow = yield* getEventWindow(event);
+          return yield* media.showFilePicker("both", browserWindow);
+        }),
       readPersistedStore: (name) => userData.readPersistedStore(name),
       readDirectory: (path) => media.loadDirectoryContents(path),
-      removePersistedStore: (name) => userData.removePersistedStore(name),
+      removePersistedStore: (name, event) =>
+        userData
+          .removePersistedStore(name)
+          .pipe(Effect.flatMap(() => broadcastPersistedStoreChanged(event, name, null))),
       renameFileSystemItem: (input) => media.renameFileSystemItem(input),
       getAllVideoFiles: (path) => media.getAllVideoFilesRecursive(path),
       getVideoMetadata: (path) => media.getVideoMetadata(path),
@@ -63,7 +120,12 @@ export const IpcInvokeLayer = Layer.effectDiscard(
           isLinux: platform.isLinux,
           pathSep: sep,
         }),
-      writePersistedStore: (input) => userData.writePersistedStore(input),
+      writePersistedStore: (input, event) =>
+        userData
+          .writePersistedStore(input)
+          .pipe(
+            Effect.flatMap(() => broadcastPersistedStoreChanged(event, input.name, input.value)),
+          ),
     };
 
     const services = yield* Effect.services<IpcInvokeEnvironment>();
@@ -73,12 +135,13 @@ export const IpcInvokeLayer = Layer.effectDiscard(
       name: K,
       handler: (
         payload: IpcInvokeRequestMap[K],
+        event: Electron.IpcMainInvokeEvent,
       ) => Effect.Effect<IpcInvokeResponseMap[K], unknown, never>,
     ): void => {
       const channel = IPC_INVOKE_CHANNELS[name];
       ipcMain.removeHandler(channel);
-      ipcMain.handle(channel, async (_event, payload: IpcInvokeRequestMap[K]) => {
-        return await runWithServices(handler(payload));
+      ipcMain.handle(channel, async (event, payload: IpcInvokeRequestMap[K]) => {
+        return await runWithServices(handler(payload, event));
       });
     };
 

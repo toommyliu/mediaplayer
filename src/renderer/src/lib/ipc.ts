@@ -100,6 +100,12 @@ export function onOpenSettings(listener: () => void): () => void {
   return onRendererEvent("openSettings", () => listener());
 }
 
+export function onPersistedStoreChanged(
+  listener: (payload: RendererEventPayloadMap["persistedStoreChanged"]) => void,
+): () => void {
+  return onRendererEvent("persistedStoreChanged", listener);
+}
+
 export function onWindowBlur(listener: () => void): () => void {
   return onRendererEvent("windowBlur", () => listener());
 }

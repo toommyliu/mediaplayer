@@ -1,7 +1,10 @@
 import type { NotificationPosition } from "@/types";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { createUserDataStateStorage } from "@/stores/user-data-storage";
+import {
+  createUserDataStateStorage,
+  registerPersistedStoreRehydration,
+} from "@/stores/user-data-storage";
 
 export interface NotificationsState {
   upNextEnabled: boolean;
@@ -63,4 +66,8 @@ export const useNotificationsStore = create<NotificationsStore>()(
       }),
     },
   ),
+);
+
+registerPersistedStoreRehydration("notifications-store", () =>
+  useNotificationsStore.persist.rehydrate(),
 );

@@ -2,7 +2,10 @@ import type { Playlist, QueueItem } from "@/types";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { normalizeVideoPath } from "@/lib/media-path";
-import { createUserDataStateStorage } from "@/stores/user-data-storage";
+import {
+  createUserDataStateStorage,
+  registerPersistedStoreRehydration,
+} from "@/stores/user-data-storage";
 
 export interface PlaylistsState {
   playlists: Playlist[];
@@ -236,3 +239,5 @@ export const usePlaylistsStore = create<PlaylistsStore>()(
     },
   ),
 );
+
+registerPersistedStoreRehydration("playlists-store", () => usePlaylistsStore.persist.rehydrate());
