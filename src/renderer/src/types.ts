@@ -1,4 +1,4 @@
-import type { FileTreeItem } from "../../shared";
+import type { FileTreeItem, SortBy } from "../../shared";
 
 export type SidebarTab = "file-browser" | "playlists" | "queue";
 export type RepeatMode = "all" | "off" | "one";
@@ -67,7 +67,7 @@ export interface AppState {
     searchQuery: string;
     selectedItemPaths: Set<string>;
     selectionAnchorPath: string | null;
-    sortBy: "duration" | "name";
+    sortBy: SortBy;
     sortDirection: "asc" | "desc";
   };
   hotkeys: {

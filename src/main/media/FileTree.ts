@@ -19,6 +19,7 @@ function createFileTreeItem(
   path: string,
   type: "folder" | "video",
   duration?: number,
+  modifiedAtMs?: number,
   files?: FileTreeItem[],
 ): FileTreeItem {
   const item: FileTreeItem = {
@@ -26,6 +27,10 @@ function createFileTreeItem(
     path: normalizePath(path),
     type,
   };
+
+  if (modifiedAtMs !== undefined) {
+    item.modifiedAtMs = modifiedAtMs;
+  }
 
   if (type === "video" && duration !== undefined) {
     item.duration = duration;
@@ -44,11 +49,13 @@ function buildSortedFileTree(
     path: string;
     type: "folder" | "video";
     duration?: number;
+    modifiedAtMs?: number;
     files?: Array<{
       name: string;
       path: string;
       type: "folder" | "video";
       duration?: number;
+      modifiedAtMs?: number;
     }>;
   }>,
   sortOptions: SortOptions,
@@ -59,6 +66,7 @@ function buildSortedFileTree(
       entry.path,
       entry.type,
       entry.duration,
+      entry.modifiedAtMs,
       entry.files ? buildSortedFileTree(entry.files, sortOptions) : undefined,
     ),
   );

@@ -4,10 +4,13 @@ export interface FileTreeItem {
   type: "folder" | "video";
   duration?: number;
   files?: FileTreeItem[];
+  modifiedAtMs?: number;
 }
 
+export type SortBy = "name" | "duration" | "date";
+
 export interface SortOptions {
-  sortBy: "name" | "duration";
+  sortBy: SortBy;
   sortDirection: "asc" | "desc";
 }
 
@@ -15,7 +18,7 @@ export interface SortOptions {
  * Extracts a date prefix from a filename (YYYY/MM/DD, YYYY-MM-DD, or YYYY.MM.DD)
  */
 function extractDatePrefix(name: string): Date | null {
-  const dateMatch = /^(\d{4})[./\-](\d{1,2})[./\-](\d{1,2})/.exec(name);
+  const dateMatch = /^(\d{4})[./-](\d{1,2})[./-](\d{1,2})/.exec(name);
   if (dateMatch) {
     const [, year, month, day] = dateMatch;
     const date = new Date(
@@ -82,8 +85,8 @@ function smartNameCompare(a: string, b: string): number {
     }
 
     // Fallback: compare by the remaining filename
-    const restA = a.replace(/^(\d{4})[./\-](\d{1,2})[./\-](\d{1,2})\s*/, "");
-    const restB = b.replace(/^(\d{4})[./\-](\d{1,2})[./\-](\d{1,2})\s*/, "");
+    const restA = a.replace(/^(\d{4})[./-](\d{1,2})[./-](\d{1,2})\s*/, "");
+    const restB = b.replace(/^(\d{4})[./-](\d{1,2})[./-](\d{1,2})\s*/, "");
     return naturalCompare(restA, restB);
   }
 
@@ -110,6 +113,14 @@ export function sortFileTree(items: FileTreeItem[], sortOptions: SortOptions): F
       const aDuration = a.duration ?? 0;
       const bDuration = b.duration ?? 0;
       comparison = aDuration - bDuration;
+    } else if (sortOptions.sortBy === "date") {
+      const aDate = a.modifiedAtMs ?? 0;
+      const bDate = b.modifiedAtMs ?? 0;
+      comparison = aDate - bDate;
+
+      if (comparison === 0) {
+        comparison = smartNameCompare(a.name, b.name);
+      }
     } else {
       comparison = smartNameCompare(a.name, b.name);
     }

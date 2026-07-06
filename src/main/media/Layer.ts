@@ -36,6 +36,16 @@ const execFileAsync = promisify(execFile);
 
 type FfprobeRecord = Record<string, unknown>;
 
+interface IndexedPath {
+  index: number;
+  path: string;
+}
+
+interface IndexedModifiedTime {
+  index: number;
+  modifiedAtMs: number | undefined;
+}
+
 function isRecord(value: unknown): value is FfprobeRecord {
   return Boolean(value && typeof value === "object" && !Array.isArray(value));
 }
@@ -129,6 +139,37 @@ export const MediaLayer = Layer.effect(
         });
       });
 
+    const getModifiedAtMs = (path: string) =>
+      Effect.tryPromise({
+        try: async () => {
+          const fileStats = await stat(path);
+          return fileStats.mtimeMs;
+        },
+        catch: (error) => error,
+      }).pipe(
+        Effect.catch((error) => {
+          logger.error(`Error reading modified time for ${path}`, error);
+          return Effect.succeed(undefined);
+        }),
+      );
+
+    const readModifiedTimes = (tasks: IndexedPath[]) =>
+      tasks.length > 0
+        ? Effect.all(
+            tasks.map((task) =>
+              getModifiedAtMs(task.path).pipe(
+                Effect.map(
+                  (modifiedAtMs): IndexedModifiedTime => ({
+                    index: task.index,
+                    modifiedAtMs,
+                  }),
+                ),
+              ),
+            ),
+            { concurrency: DIRECTORY_SCAN_CONCURRENCY },
+          )
+        : Effect.succeed([] as IndexedModifiedTime[]);
+
     const workerPool = yield* Effect.acquireRelease(
       Effect.tryPromise({
         try: async () => {
@@ -203,12 +244,14 @@ export const MediaLayer = Layer.effect(
         const entries: {
           duration?: number;
           files?: FileTreeItem[];
+          modifiedAtMs?: number;
           name: string;
           path: string;
           type: "folder" | "video";
         }[] = [];
 
-        const videoFileTasks: { path: string; index: number }[] = [];
+        const modifiedTimeTasks: IndexedPath[] = [];
+        const videoFileTasks: IndexedPath[] = [];
         const subdirectoryTasks: {
           path: string;
           index: number;
@@ -228,11 +271,12 @@ export const MediaLayer = Layer.effect(
             const index = entries.length;
 
             entries.push({
-              path: subDirPath,
-              name: entry.name,
-              type: "folder",
               files: [],
+              name: entry.name,
+              path: subDirPath,
+              type: "folder",
             });
+            modifiedTimeTasks.push({ path: subDirPath, index });
 
             subdirectoryTasks.push({
               path: subDirPath,
@@ -244,16 +288,18 @@ export const MediaLayer = Layer.effect(
             if (FileTree.isVideoFile(entry.name)) {
               const index = entries.length;
               entries.push({
-                path: filePath,
                 name: entry.name,
+                path: filePath,
                 type: "video",
               });
+              modifiedTimeTasks.push({ path: filePath, index });
               videoFileTasks.push({ path: filePath, index });
             }
           }
         }
 
-        const { subdirectoryResults, durationMap } = yield* Effect.all({
+        const { modifiedTimeResults, subdirectoryResults, durationMap } = yield* Effect.all({
+          modifiedTimeResults: readModifiedTimes(modifiedTimeTasks),
           subdirectoryResults: Effect.all(
             subdirectoryTasks.map((task) =>
               task.effect.pipe(
@@ -289,6 +335,10 @@ export const MediaLayer = Layer.effect(
               : Effect.succeed(new Map<string, number>()),
         });
 
+        for (const result of modifiedTimeResults) {
+          entries[result.index].modifiedAtMs = result.modifiedAtMs;
+        }
+
         for (let i = 0; i < subdirectoryTasks.length; i++) {
           const result = subdirectoryResults[i];
           entries[subdirectoryTasks[i].index].files = result.type === "folder" ? result.tree : [];
@@ -320,12 +370,14 @@ export const MediaLayer = Layer.effect(
         const rawEntries: {
           duration?: number;
           files?: FileTreeItem[];
+          modifiedAtMs?: number;
           name: string;
           path: string;
           type: "folder" | "video";
         }[] = [];
 
-        const videoFileTasks: { path: string; index: number }[] = [];
+        const modifiedTimeTasks: IndexedPath[] = [];
+        const videoFileTasks: IndexedPath[] = [];
 
         for (const entry of entries) {
           if (FileTree.isHidden(entry.name)) continue;
@@ -333,12 +385,14 @@ export const MediaLayer = Layer.effect(
           const fullPath = FileTree.normalizePath(join(resolvedPath, entry.name));
 
           if (entry.isDirectory()) {
+            const index = rawEntries.length;
             rawEntries.push({
+              files: [],
               name: entry.name,
               path: fullPath,
               type: "folder",
-              files: [],
             });
+            modifiedTimeTasks.push({ path: fullPath, index });
           } else if (FileTree.isVideoFile(entry.name)) {
             const index = rawEntries.length;
             rawEntries.push({
@@ -346,31 +400,40 @@ export const MediaLayer = Layer.effect(
               path: fullPath,
               type: "video",
             });
+            modifiedTimeTasks.push({ path: fullPath, index });
             videoFileTasks.push({ path: fullPath, index });
           }
         }
 
-        if (videoFileTasks.length > 0) {
-          const durationMap = yield* Effect.tryPromise({
-            try: async () =>
-              await workerPool.processFiles(
-                videoFileTasks.map((task) => task.path),
-                (filePath, error) => {
-                  logger.error(`Error getting duration for ${filePath}`, error);
-                },
-              ),
-            catch: (error) => error,
-          }).pipe(
-            Effect.catch((error) => {
-              logger.error("Error while processing directory video durations", error);
-              return Effect.succeed(new Map<string, number>());
-            }),
-          );
+        const { modifiedTimeResults, durationMap } = yield* Effect.all({
+          modifiedTimeResults: readModifiedTimes(modifiedTimeTasks),
+          durationMap:
+            videoFileTasks.length > 0
+              ? Effect.tryPromise({
+                  try: async () =>
+                    await workerPool.processFiles(
+                      videoFileTasks.map((task) => task.path),
+                      (filePath, error) => {
+                        logger.error(`Error getting duration for ${filePath}`, error);
+                      },
+                    ),
+                  catch: (error) => error,
+                }).pipe(
+                  Effect.catch((error) => {
+                    logger.error("Error while processing directory video durations", error);
+                    return Effect.succeed(new Map<string, number>());
+                  }),
+                )
+              : Effect.succeed(new Map<string, number>()),
+        });
 
-          for (let i = 0; i < videoFileTasks.length; i++) {
-            rawEntries[videoFileTasks[i].index].duration =
-              durationMap.get(videoFileTasks[i].path) ?? 0;
-          }
+        for (const result of modifiedTimeResults) {
+          rawEntries[result.index].modifiedAtMs = result.modifiedAtMs;
+        }
+
+        for (let i = 0; i < videoFileTasks.length; i++) {
+          rawEntries[videoFileTasks[i].index].duration =
+            durationMap.get(videoFileTasks[i].path) ?? 0;
         }
 
         return {

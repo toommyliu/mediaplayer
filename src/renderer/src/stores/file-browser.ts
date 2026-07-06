@@ -9,7 +9,7 @@ export interface FileBrowserActions {
   setFileBrowserState: (patch: Partial<FileBrowserState>) => void;
   resetFileBrowser: () => void;
   setFileBrowserScrollTop: (scrollTop: number) => void;
-  setFileBrowserSort: (sortBy: "duration" | "name") => void;
+  setFileBrowserSort: (sortBy: FileBrowserState["sortBy"]) => void;
   setExpandedFolders: (expandedFolders: Set<string>) => void;
   setSearchQuery: (searchQuery: string) => void;
 }
@@ -59,7 +59,13 @@ export const useFileBrowserStore = create<FileBrowserStore>()((set) => ({
     set((state) => ({
       sortBy,
       sortDirection:
-        state.sortBy === sortBy ? (state.sortDirection === "asc" ? "desc" : "asc") : "asc",
+        state.sortBy === sortBy
+          ? state.sortDirection === "asc"
+            ? "desc"
+            : "asc"
+          : sortBy === "date"
+            ? "desc"
+            : "asc",
     })),
   setExpandedFolders: (expandedFolders) => set({ expandedFolders }),
   setSearchQuery: (searchQuery) => set({ searchQuery }),
@@ -94,6 +100,7 @@ export function transformDirectoryContents(
     directoryContents.files.map((item) => ({
       duration: item.duration ?? 0,
       files: item.type === "folder" ? [] : undefined,
+      modifiedAtMs: item.modifiedAtMs,
       name: item.name,
       path: item.path,
       type: item.type,

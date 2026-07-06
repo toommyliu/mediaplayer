@@ -1,4 +1,5 @@
 import type { FileSystemItem } from "@/types";
+import type { FileBrowserState } from "@/stores/file-browser";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { ChevronDown, ChevronUp, Search, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -32,7 +33,7 @@ function flattenFileTree(
   items: FileSystemItem[],
   expandedFolders: Set<string>,
   depth = 0,
-  sortBy: "name" | "duration",
+  sortBy: FileBrowserState["sortBy"],
   sortDirection: "asc" | "desc",
   searchQuery?: string,
 ): { item: FileSystemItem; depth: number }[] {

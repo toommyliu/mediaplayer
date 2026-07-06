@@ -1,4 +1,12 @@
-import { ArrowDown01, ArrowDownAZ, ArrowUp01, ArrowUpAZ, FolderOpen } from "lucide-react";
+import {
+  ArrowDown01,
+  ArrowDownAZ,
+  ArrowUp01,
+  ArrowUpAZ,
+  CalendarArrowDown,
+  CalendarArrowUp,
+  FolderOpen,
+} from "lucide-react";
 import { resetAndBrowseLibrary } from "@/actions/library";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -75,6 +83,37 @@ export function FileBrowserHeader() {
             {sortBy === "duration"
               ? `Sorted by Duration (${sortDirection === "asc" ? "Ascending" : "Descending"})`
               : "Sort by Duration"}
+          </TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger
+            render={(triggerProps) => (
+              <Button
+                {...triggerProps}
+                className={cn(
+                  sortBy === "date"
+                    ? "border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 h-7 px-2 text-xs"
+                    : "border-sidebar-border/60 h-7 px-2 text-xs",
+                  "transition-colors",
+                )}
+                onClick={() => setFileBrowserSort("date")}
+                size="xs"
+                type="button"
+                variant={sortBy === "date" ? "secondary" : "outline"}
+              >
+                {sortBy === "date" && sortDirection === "desc" ? (
+                  <CalendarArrowUp className="size-3.5" />
+                ) : (
+                  <CalendarArrowDown className="size-3.5" />
+                )}
+              </Button>
+            )}
+          />
+          <TooltipContent>
+            {sortBy === "date"
+              ? `Sorted by Date (${sortDirection === "asc" ? "Ascending" : "Descending"})`
+              : "Sort by Date"}
           </TooltipContent>
         </Tooltip>
       </div>
