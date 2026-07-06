@@ -154,6 +154,9 @@ export async function runHotkeyAction(actionId: string): Promise<void> {
     case "showFileBrowser":
       useSidebarStore.getState().setSidebarTab("file-browser");
       break;
+    case "showPlaylists":
+      useSidebarStore.getState().setSidebarTab("playlists");
+      break;
     case "showQueue":
       useSidebarStore.getState().setSidebarTab("queue");
       break;

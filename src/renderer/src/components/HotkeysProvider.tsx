@@ -76,7 +76,12 @@ function buildDefaultCategories(modKey: string): HotkeyCategory[] {
           id: "showFileBrowser",
           keys: [`${modKey}+1`],
         },
-        { description: "Show queue", id: "showQueue", keys: [`${modKey}+2`] },
+        {
+          description: "Show playlists",
+          id: "showPlaylists",
+          keys: [`${modKey}+2`],
+        },
+        { description: "Show queue", id: "showQueue", keys: [`${modKey}+3`] },
         {
           description: "Toggle sidebar",
           id: "toggleSidebar",
@@ -143,8 +148,19 @@ function useHotkeysCategories(): HotkeyCategory[] {
 
     const stored = getStoredHotkeys();
     if (stored) {
+      const oldQueueDefaultKeys = [`${modKey}+2`];
+
       for (const category of defaultCategories) {
         for (const action of category.actions) {
+          if (
+            action.id === "showQueue" &&
+            !stored.showPlaylists &&
+            stored.showQueue?.length === oldQueueDefaultKeys.length &&
+            stored.showQueue.every((key, index) => key === oldQueueDefaultKeys[index])
+          ) {
+            continue;
+          }
+
           if (stored[action.id]) {
             action.keys = stored[action.id];
           }
