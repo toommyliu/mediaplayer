@@ -36,11 +36,11 @@ const initialFileBrowserState: FileBrowserState = {
   sortDirection: "asc",
 };
 
-export const useFileBrowserStore = create<FileBrowserStore>()(set => ({
+export const useFileBrowserStore = create<FileBrowserStore>()((set) => ({
   ...initialFileBrowserState,
-  setFileBrowserState: patch => set(state => ({ ...state, ...patch })),
+  setFileBrowserState: (patch) => set((state) => ({ ...state, ...patch })),
   resetFileBrowser: () =>
-    set(state => ({
+    set((state) => ({
       ...state,
       currentPath: null,
       contextMenuItemPaths: new Set<string>(),
@@ -54,19 +54,15 @@ export const useFileBrowserStore = create<FileBrowserStore>()(set => ({
       selectedItemPaths: new Set<string>(),
       selectionAnchorPath: null,
     })),
-  setFileBrowserScrollTop: scrollTop => set({ scrollTop }),
-  setFileBrowserSort: sortBy =>
-    set(state => ({
+  setFileBrowserScrollTop: (scrollTop) => set({ scrollTop }),
+  setFileBrowserSort: (sortBy) =>
+    set((state) => ({
       sortBy,
       sortDirection:
-        state.sortBy === sortBy
-          ? state.sortDirection === "asc"
-            ? "desc"
-            : "asc"
-          : "asc",
+        state.sortBy === sortBy ? (state.sortDirection === "asc" ? "desc" : "asc") : "asc",
     })),
-  setExpandedFolders: expandedFolders => set({ expandedFolders }),
-  setSearchQuery: searchQuery => set({ searchQuery }),
+  setExpandedFolders: (expandedFolders) => set({ expandedFolders }),
+  setSearchQuery: (searchQuery) => set({ searchQuery }),
 }));
 
 export function findFolderInFileSystem(
@@ -80,8 +76,7 @@ export function findFolderInFileSystem(
 
     if (item.files) {
       const found = findFolderInFileSystem(item.files, targetPath);
-      if (found)
-        return found;
+      if (found) return found;
     }
   }
 
@@ -93,11 +88,10 @@ export function transformDirectoryContents(
   sortBy: FileBrowserState["sortBy"],
   sortDirection: FileBrowserState["sortDirection"],
 ): FileSystemItem[] {
-  if (!directoryContents?.files)
-    return [];
+  if (!directoryContents?.files) return [];
 
   return sortFileTree(
-    directoryContents.files.map(item => ({
+    directoryContents.files.map((item) => ({
       duration: item.duration ?? 0,
       files: item.type === "folder" ? [] : undefined,
       name: item.name,

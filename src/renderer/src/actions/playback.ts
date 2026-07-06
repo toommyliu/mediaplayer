@@ -5,9 +5,7 @@ import { usePlayerStore } from "@/stores/player";
 import { getCurrentQueueItemFromState, useQueueStore } from "@/stores/queue";
 import { bindVideoElement, getVideoElement } from "@/video-element";
 
-export function bindPlaybackVideoElement(
-  element: HTMLVideoElement | null,
-): void {
+export function bindPlaybackVideoElement(element: HTMLVideoElement | null): void {
   bindVideoElement(element);
 }
 
@@ -40,19 +38,17 @@ function isPictureInPictureAvailable(
   videoElement: HTMLVideoElement | null | undefined,
 ): videoElement is HTMLVideoElement {
   return Boolean(
-    videoElement
-    && document.pictureInPictureEnabled
-    && typeof videoElement.requestPictureInPicture === "function"
-    && !videoElement.disablePictureInPicture,
+    videoElement &&
+    document.pictureInPictureEnabled &&
+    typeof videoElement.requestPictureInPicture === "function" &&
+    !videoElement.disablePictureInPicture,
   );
 }
 
 export function refreshPictureInPictureState(): void {
   const videoElement = getVideoElement();
   usePlayerStore.getState().setPlayerState({
-    isPictureInPicture: Boolean(
-      videoElement && document.pictureInPictureElement === videoElement,
-    ),
+    isPictureInPicture: Boolean(videoElement && document.pictureInPictureElement === videoElement),
     isPictureInPictureSupported: isPictureInPictureAvailable(videoElement),
   });
 }

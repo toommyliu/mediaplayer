@@ -11,11 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { normalizeVideoPath } from "@/lib/media-path";
 import { cn } from "@/lib/utils";
 import { useFileBrowserStore } from "@/stores/file-browser";
@@ -44,16 +40,13 @@ function flattenFileTree(
   const sorted = sortFileTree(items, { sortBy, sortDirection });
 
   for (const item of sorted) {
-    const matchesSearch = !searchQuery || item.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch =
+      !searchQuery || item.name.toLowerCase().includes(searchQuery.toLowerCase());
     if (matchesSearch || searchQuery) {
       flattened.push({ item, depth });
     }
 
-    if (
-      item.type === "folder"
-      && (expandedFolders.has(item.path) || searchQuery)
-      && item.files
-    ) {
+    if (item.type === "folder" && (expandedFolders.has(item.path) || searchQuery) && item.files) {
       const childItems = flattenFileTree(
         item.files,
         expandedFolders,
@@ -70,19 +63,17 @@ function flattenFileTree(
 }
 
 export function FileBrowserList() {
-  const fileTree = useFileBrowserStore(state => state.fileTree);
-  const expandedFolders = useFileBrowserStore(state => state.expandedFolders);
-  const sortBy = useFileBrowserStore(state => state.sortBy);
-  const sortDirection = useFileBrowserStore(state => state.sortDirection);
-  const isAtRoot = useFileBrowserStore(state => state.isAtRoot);
-  const currentPath = useFileBrowserStore(state => state.currentPath);
-  const scrollTop = useFileBrowserStore(state => state.scrollTop);
-  const searchQuery = useFileBrowserStore(state => state.searchQuery);
-  const setSearchQuery = useFileBrowserStore(state => state.setSearchQuery);
-  const setFileBrowserScrollTop = useFileBrowserStore(
-    state => state.setFileBrowserScrollTop,
-  );
-  const sidebarPosition = useSidebarStore(state => state.position);
+  const fileTree = useFileBrowserStore((state) => state.fileTree);
+  const expandedFolders = useFileBrowserStore((state) => state.expandedFolders);
+  const sortBy = useFileBrowserStore((state) => state.sortBy);
+  const sortDirection = useFileBrowserStore((state) => state.sortDirection);
+  const isAtRoot = useFileBrowserStore((state) => state.isAtRoot);
+  const currentPath = useFileBrowserStore((state) => state.currentPath);
+  const scrollTop = useFileBrowserStore((state) => state.scrollTop);
+  const searchQuery = useFileBrowserStore((state) => state.searchQuery);
+  const setSearchQuery = useFileBrowserStore((state) => state.setSearchQuery);
+  const setFileBrowserScrollTop = useFileBrowserStore((state) => state.setFileBrowserScrollTop);
+  const sidebarPosition = useSidebarStore((state) => state.position);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -104,13 +95,7 @@ export function FileBrowserList() {
   }, [isSearchFocused, setSearchQuery]);
 
   const flattenedItems = useMemo(() => {
-    const items = flattenFileTree(
-      fileTree?.files ?? [],
-      expandedFolders,
-      0,
-      sortBy,
-      sortDirection,
-    );
+    const items = flattenFileTree(fileTree?.files ?? [], expandedFolders, 0, sortBy, sortDirection);
 
     const result: FlattenedItem[] = [];
 
@@ -122,10 +107,7 @@ export function FileBrowserList() {
 
     return result;
   }, [fileTree, expandedFolders, sortBy, sortDirection, searchQuery]);
-  const visibleFileItems = useMemo(
-    () => flattenedItems.map(row => row.item),
-    [flattenedItems],
-  );
+  const visibleFileItems = useMemo(() => flattenedItems.map((row) => row.item), [flattenedItems]);
 
   const showBackButton = !isAtRoot && currentPath && !searchQuery;
 
@@ -133,18 +115,15 @@ export function FileBrowserList() {
     count: flattenedItems.length,
     getScrollElement: () => scrollContainerRef.current,
     estimateSize: () => 38,
-    getItemKey: index => flattenedItems[index]?.item.path ?? index,
+    getItemKey: (index) => flattenedItems[index]?.item.path ?? index,
     overscan: 20,
   });
 
-  const currentVideo = usePlayerStore(state => state.currentVideo);
+  const currentVideo = usePlayerStore((state) => state.currentVideo);
   const currentVideoIndex = useMemo(() => {
-    if (!currentVideo)
-      return -1;
+    if (!currentVideo) return -1;
     const normalized = normalizeVideoPath(currentVideo).replace(BACKSLASH_REGEX, "/");
-    return flattenedItems.findIndex(
-      row => row.type === "item" && row.item.path === normalized,
-    );
+    return flattenedItems.findIndex((row) => row.type === "item" && row.item.path === normalized);
   }, [flattenedItems, currentVideo]);
 
   const virtualItems = virtualizer.getVirtualItems();
@@ -152,25 +131,18 @@ export function FileBrowserList() {
   const scrollElementSize = virtualizer.scrollRect?.height ?? 0;
 
   const isAbove = useMemo(() => {
-    if (currentVideoIndex === -1 || virtualItems.length === 0)
-      return false;
-    const item = virtualItems.find(vi => vi.index === currentVideoIndex);
-    if (!item)
-      return currentVideoIndex < virtualItems[0]!.index;
+    if (currentVideoIndex === -1 || virtualItems.length === 0) return false;
+    const item = virtualItems.find((vi) => vi.index === currentVideoIndex);
+    if (!item) return currentVideoIndex < virtualItems[0]!.index;
     return item.start < scrollOffset - 4;
   }, [currentVideoIndex, scrollOffset, virtualItems]);
 
   const isBelow = useMemo(() => {
-    if (currentVideoIndex === -1 || virtualItems.length === 0)
-      return false;
-    const item = virtualItems.find(vi => vi.index === currentVideoIndex);
+    if (currentVideoIndex === -1 || virtualItems.length === 0) return false;
+    const item = virtualItems.find((vi) => vi.index === currentVideoIndex);
     const lastItem = virtualItems.at(-1)!;
-    if (!item)
-      return currentVideoIndex > lastItem.index;
-    return (
-      item.start + item.size
-      > scrollOffset + scrollElementSize + 4
-    );
+    if (!item) return currentVideoIndex > lastItem.index;
+    return item.start + item.size > scrollOffset + scrollElementSize + 4;
   }, [currentVideoIndex, scrollElementSize, scrollOffset, virtualItems]);
 
   useEffect(() => {
@@ -182,45 +154,49 @@ export function FileBrowserList() {
   return (
     <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
       <div className="py-2">
-        <div className="relative group">
-          <Search className={cn(
-            "absolute left-2.5 top-1/2 -translate-y-1/2 size-3 text-muted-foreground transition-colors duration-200 z-10",
-            isSearchFocused ? "text-primary" : "text-muted-foreground"
-          )}
+        <div className="group relative">
+          <Search
+            className={cn(
+              "absolute left-2.5 top-1/2 -translate-y-1/2 size-3 text-muted-foreground transition-colors duration-200 z-10",
+              isSearchFocused ? "text-primary" : "text-muted-foreground",
+            )}
           />
           <Input
             ref={searchInputRef}
             placeholder="Search..."
             value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
+            onChange={(e) => setSearchQuery(e.target.value)}
             onFocus={() => setIsSearchFocused(true)}
             onBlur={() => setIsSearchFocused(false)}
             onKeyDown={(e) => {
               if (e.key === "Enter" && flattenedItems.length > 0) {
-                const firstItem = flattenedItems.find(item => item.type === "item") as { type: "item"; item: FileSystemItem } | undefined;
+                const firstItem = flattenedItems.find((item) => item.type === "item") as
+                  | { type: "item"; item: FileSystemItem }
+                  | undefined;
                 if (firstItem) {
                   if (firstItem.item.type === "folder") {
                     toggleFolder(firstItem.item.path);
-                  }
-                  else {
+                  } else {
                     playFileBrowserVideo(firstItem.item);
                   }
                 }
               }
               if (e.key === "ArrowDown" && flattenedItems.length > 0) {
                 e.preventDefault();
-                const triggers = Array.from(document.querySelectorAll<HTMLElement>("[data-item-trigger='true']"));
+                const triggers = Array.from(
+                  document.querySelectorAll<HTMLElement>("[data-item-trigger='true']"),
+                );
                 triggers[0]?.focus();
               }
             }}
-            className="h-7 rounded-md border-transparent bg-muted/40 pl-7 pr-7 text-xs ring-inset transition-all duration-200 hover:bg-muted/60 focus:border-input focus:bg-background"
+            className="bg-muted/40 hover:bg-muted/60 focus:border-input focus:bg-background h-7 rounded-md border-transparent pr-7 pl-7 text-xs transition-all duration-200 ring-inset"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery("")}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 hover:bg-muted rounded-sm transition-colors z-10"
+              className="hover:bg-muted absolute top-1/2 right-2 z-10 -translate-y-1/2 rounded-sm p-0.5 transition-colors"
             >
-              <X className="size-3 text-muted-foreground" />
+              <X className="text-muted-foreground size-3" />
             </button>
           )}
         </div>
@@ -236,17 +212,18 @@ export function FileBrowserList() {
       >
         <Tooltip>
           <TooltipTrigger
-            render={triggerProps => (
+            render={(triggerProps) => (
               <Button
                 {...triggerProps}
                 variant="ghost"
                 size="icon-xs"
-                className="size-7 rounded-md text-muted-foreground hover:text-foreground before:rounded-[calc(var(--radius-md)-1px)] sm:size-7"
+                className="text-muted-foreground hover:text-foreground size-7 rounded-md before:rounded-[calc(var(--radius-md)-1px)] sm:size-7"
                 aria-hidden={!isAbove}
                 onClick={() =>
                   virtualizer.scrollToIndex(currentVideoIndex, {
                     align: "center",
-                  })}
+                  })
+                }
                 tabIndex={isAbove ? undefined : -1}
               >
                 <ChevronUp className="size-4" />
@@ -259,56 +236,46 @@ export function FileBrowserList() {
         </Tooltip>
       </div>
 
-      {showBackButton
-        ? (
-            <div className="shrink-0 pr-1 pb-1">
-              <Tooltip>
-                <TooltipTrigger
-                  render={triggerProps => (
-                    <Button
-                      {...triggerProps}
-                      className="h-7 w-full justify-start px-3 text-left text-xs font-medium text-muted-foreground hover:bg-muted/40 focus-visible:ring-inset sm:h-7"
-                      data-item-trigger="true"
-                      onClick={() => {
-                        void navigateToParent();
-                      }}
-                      onKeyDown={(event) => {
-                        if (event.key === "ArrowDown") {
-                          event.preventDefault();
-                          const triggers = Array.from(
-                            document.querySelectorAll<HTMLElement>(
-                              "[data-item-trigger='true']",
-                            ),
-                          );
-                          triggers[1]?.focus();
-                        }
-                        else if (event.key === "End") {
-                          event.preventDefault();
-                          const triggers = Array.from(
-                            document.querySelectorAll<HTMLElement>(
-                              "[data-item-trigger='true']",
-                            ),
-                          );
-                          triggers.at(-1)?.focus();
-                        }
-                      }}
-                      size="xs"
-                      variant="ghost"
-                    >
-                      ../
-                    </Button>
-                  )}
-                />
-                <TooltipContent
-                  align="start"
-                  side={sidebarPosition === "left" ? "right" : "left"}
+      {showBackButton ? (
+        <div className="shrink-0 pr-1 pb-1">
+          <Tooltip>
+            <TooltipTrigger
+              render={(triggerProps) => (
+                <Button
+                  {...triggerProps}
+                  className="text-muted-foreground hover:bg-muted/40 h-7 w-full justify-start px-3 text-left text-xs font-medium focus-visible:ring-inset sm:h-7"
+                  data-item-trigger="true"
+                  onClick={() => {
+                    void navigateToParent();
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "ArrowDown") {
+                      event.preventDefault();
+                      const triggers = Array.from(
+                        document.querySelectorAll<HTMLElement>("[data-item-trigger='true']"),
+                      );
+                      triggers[1]?.focus();
+                    } else if (event.key === "End") {
+                      event.preventDefault();
+                      const triggers = Array.from(
+                        document.querySelectorAll<HTMLElement>("[data-item-trigger='true']"),
+                      );
+                      triggers.at(-1)?.focus();
+                    }
+                  }}
+                  size="xs"
+                  variant="ghost"
                 >
-                  Go back
-                </TooltipContent>
-              </Tooltip>
-            </div>
-          )
-        : null}
+                  ../
+                </Button>
+              )}
+            />
+            <TooltipContent align="start" side={sidebarPosition === "left" ? "right" : "left"}>
+              Go back
+            </TooltipContent>
+          </Tooltip>
+        </div>
+      ) : null}
 
       <ScrollArea
         className="flex-1"
@@ -329,18 +296,14 @@ export function FileBrowserList() {
           style={{ height: `${virtualizer.getTotalSize()}px` }}
           onKeyDown={(event) => {
             const triggers = Array.from(
-              document.querySelectorAll<HTMLElement>(
-                "[data-item-trigger='true']",
-              ),
+              document.querySelectorAll<HTMLElement>("[data-item-trigger='true']"),
             );
-            if (triggers.length === 0)
-              return;
+            if (triggers.length === 0) return;
 
             if (event.key === "Home") {
               event.preventDefault();
               triggers[0]?.focus();
-            }
-            else if (event.key === "End") {
+            } else if (event.key === "End") {
               event.preventDefault();
               triggers.at(-1)?.focus();
             }
@@ -348,8 +311,7 @@ export function FileBrowserList() {
         >
           {virtualizer.getVirtualItems().map((virtualRow) => {
             const row = flattenedItems[virtualRow.index];
-            if (!row)
-              return null;
+            if (!row) return null;
 
             return (
               <div
@@ -387,17 +349,18 @@ export function FileBrowserList() {
       >
         <Tooltip>
           <TooltipTrigger
-            render={triggerProps => (
+            render={(triggerProps) => (
               <Button
                 {...triggerProps}
                 variant="ghost"
                 size="icon-xs"
-                className="size-7 rounded-md text-muted-foreground hover:text-foreground before:rounded-[calc(var(--radius-md)-1px)] sm:size-7"
+                className="text-muted-foreground hover:text-foreground size-7 rounded-md before:rounded-[calc(var(--radius-md)-1px)] sm:size-7"
                 aria-hidden={!isBelow}
                 onClick={() =>
                   virtualizer.scrollToIndex(currentVideoIndex, {
                     align: "center",
-                  })}
+                  })
+                }
                 tabIndex={isBelow ? undefined : -1}
               >
                 <ChevronDown className="size-4" />

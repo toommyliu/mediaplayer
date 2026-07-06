@@ -3,11 +3,7 @@ import { X } from "lucide-react";
 
 import { playVideo, stopPlayback } from "@/actions/playback";
 import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { makeTimeString } from "@/lib/make-time-string";
 import { cn } from "@/lib/utils";
 import { useCurrentQueueItem, useQueueStore } from "@/stores/queue";
@@ -18,8 +14,8 @@ export interface QueueItemProps {
 }
 
 export function QueueItem({ index, item }: QueueItemProps) {
-  const queueItems = useQueueStore(state => state.items);
-  const removeQueueItem = useQueueStore(state => state.removeQueueItem);
+  const queueItems = useQueueStore((state) => state.items);
+  const removeQueueItem = useQueueStore((state) => state.removeQueueItem);
   const currentItem = useCurrentQueueItem();
 
   function removeItem(item: QueueItemType): void {
@@ -29,16 +25,13 @@ export function QueueItem({ index, item }: QueueItemProps) {
       return;
     }
 
-    const currentIndex = queueItems.findIndex(
-      queueItem => queueItem.id === item.id,
-    );
+    const currentIndex = queueItems.findIndex((queueItem) => queueItem.id === item.id);
     let nextVideoToPlay: string | null = null;
 
     if (queueItems.length > 1) {
       if (currentIndex < queueItems.length - 1) {
         nextVideoToPlay = queueItems[currentIndex + 1].path;
-      }
-      else if (currentIndex > 0) {
+      } else if (currentIndex > 0) {
         nextVideoToPlay = queueItems[currentIndex - 1].path;
       }
     }
@@ -47,8 +40,7 @@ export function QueueItem({ index, item }: QueueItemProps) {
 
     if (nextVideoToPlay) {
       playVideo(nextVideoToPlay);
-    }
-    else {
+    } else {
       stopPlayback(true);
     }
   }
@@ -57,7 +49,7 @@ export function QueueItem({ index, item }: QueueItemProps) {
   return (
     <Tooltip>
       <TooltipTrigger
-        render={(
+        render={
           <div
             data-slot="queue-item"
             className={cn(
@@ -76,20 +68,16 @@ export function QueueItem({ index, item }: QueueItemProps) {
             </span>
 
             <div className="min-w-0 flex-1">
-              <div className="truncate leading-tight font-medium">
-                {item.name}
-              </div>
-              {item.duration
-                ? (
-                    <div className="text-muted-foreground/60 mt-0.5 text-[0.625rem]">
-                      {makeTimeString(item.duration)}
-                    </div>
-                  )
-                : null}
+              <div className="truncate leading-tight font-medium">{item.name}</div>
+              {item.duration ? (
+                <div className="text-muted-foreground/60 mt-0.5 text-[0.625rem]">
+                  {makeTimeString(item.duration)}
+                </div>
+              ) : null}
             </div>
 
             <Button
-              className="text-muted-foreground/60 hover:bg-destructive/10 hover:text-destructive size-5 p-0 group-hover/queue-item:inline-flex hidden"
+              className="text-muted-foreground/60 hover:bg-destructive/10 hover:text-destructive hidden size-5 p-0 group-hover/queue-item:inline-flex"
               data-slot="queue-item-remove"
               onClick={(event) => {
                 event.stopPropagation();
@@ -102,7 +90,7 @@ export function QueueItem({ index, item }: QueueItemProps) {
               <X className="size-3" />
             </Button>
           </div>
-        )}
+        }
       />
       <TooltipContent side="right" sideOffset={10}>
         {item.name}

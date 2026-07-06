@@ -1,10 +1,6 @@
 import { useEffect } from "react";
 import { runHotkeyAction } from "@/actions/hotkeys";
-import {
-  onMediaNextTrack,
-  onMediaPlayPause,
-  onMediaPreviousTrack,
-} from "@/lib/ipc";
+import { onMediaNextTrack, onMediaPlayPause, onMediaPreviousTrack } from "@/lib/ipc";
 
 export function MediaKeyBindings() {
   useEffect(() => {

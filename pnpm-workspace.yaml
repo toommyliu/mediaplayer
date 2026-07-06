@@ -1,6 +1,6 @@
 allowBuilds:
-  '@ffmpeg-installer/darwin-arm64': true
-  '@ffprobe-installer/darwin-arm64': true
+  "@ffmpeg-installer/darwin-arm64": true
+  "@ffprobe-installer/darwin-arm64": true
   electron: true
   esbuild: true
   msgpackr-extract: false

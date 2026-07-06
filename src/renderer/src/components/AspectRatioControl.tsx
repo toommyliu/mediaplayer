@@ -7,25 +7,21 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/menu";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { usePlayerStore } from "@/stores/player";
 
 export function AspectRatioControl() {
-  const aspectRatio = usePlayerStore(state => state.aspectRatio);
-  const setPlayerState = usePlayerStore(state => state.setPlayerState);
+  const aspectRatio = usePlayerStore((state) => state.aspectRatio);
+  const setPlayerState = usePlayerStore((state) => state.setPlayerState);
 
   return (
     <DropdownMenu>
       <Tooltip>
         <TooltipTrigger
-          render={(
+          render={
             <DropdownMenuTrigger
-              render={(
+              render={
                 <Button
                   className={cn(
                     "h-9 rounded-md border-0 bg-transparent px-3 text-white shadow-none transition-all duration-300 hover:bg-white/10 active:scale-90",
@@ -37,9 +33,9 @@ export function AspectRatioControl() {
                 >
                   <Scaling className="size-4" />
                 </Button>
-              )}
+              }
             />
-          )}
+          }
         />
         <TooltipContent side="top">
           <p>Aspect Ratio</p>
@@ -47,10 +43,11 @@ export function AspectRatioControl() {
       </Tooltip>
       <DropdownMenuContent align="end" className="w-40" side="top">
         <DropdownMenuRadioGroup
-          onValueChange={nextValue =>
+          onValueChange={(nextValue) =>
             setPlayerState({
               aspectRatio: nextValue as "contain" | "cover" | "fill",
-            })}
+            })
+          }
           value={aspectRatio}
         >
           <DropdownMenuRadioItem value="contain">

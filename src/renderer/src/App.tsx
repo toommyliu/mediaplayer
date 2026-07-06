@@ -28,22 +28,16 @@ const PEEK_DELAY_MS = 80;
 const EASE_OUT = "cubic-bezier(0.23, 1, 0.32, 1)";
 
 export default function App() {
-  const isOpen = useSidebarStore(state => state.isOpen);
-  const position = useSidebarStore(state => state.position);
-  const width = useSidebarStore(state => state.width);
-  const isDragging = useSidebarStore(state => state.isDragging);
-  const setSidebarWidth = useSidebarStore(state => state.setSidebarWidth);
-  const setSidebarPosition = useSidebarStore(
-    state => state.setSidebarPosition,
-  );
-  const setSidebarDragging = useSidebarStore(
-    state => state.setSidebarDragging,
-  );
-  const windowBlurAction = useSettingsStore(state => state.windowBlurAction);
-  const setSettingsDialogOpen = useSettingsStore(
-    state => state.setSettingsDialogOpen,
-  );
-  const setMuted = useVolumeStore(state => state.setMuted);
+  const isOpen = useSidebarStore((state) => state.isOpen);
+  const position = useSidebarStore((state) => state.position);
+  const width = useSidebarStore((state) => state.width);
+  const isDragging = useSidebarStore((state) => state.isDragging);
+  const setSidebarWidth = useSidebarStore((state) => state.setSidebarWidth);
+  const setSidebarPosition = useSidebarStore((state) => state.setSidebarPosition);
+  const setSidebarDragging = useSidebarStore((state) => state.setSidebarDragging);
+  const windowBlurAction = useSettingsStore((state) => state.windowBlurAction);
+  const setSettingsDialogOpen = useSettingsStore((state) => state.setSettingsDialogOpen);
+  const setMuted = useVolumeStore((state) => state.setMuted);
 
   const [isResizing, setIsResizing] = useState(false);
   const draftWidthRef = useRef(width);
@@ -58,8 +52,7 @@ export default function App() {
 
   useEffect(() => {
     function handleWindowBlur(): void {
-      if (usePlayerStore.getState().isPictureInPicture)
-        return;
+      if (usePlayerStore.getState().isPictureInPicture) return;
 
       if (windowBlurAction === "pause") {
         pausePlayback();
@@ -73,8 +66,7 @@ export default function App() {
     }
 
     function handleWindowFocus(): void {
-      if (mutedBeforeBlurRef.current === null)
-        return;
+      if (mutedBeforeBlurRef.current === null) return;
 
       setMuted(mutedBeforeBlurRef.current);
       mutedBeforeBlurRef.current = null;
@@ -97,8 +89,7 @@ export default function App() {
       lastPositionRef.current = position;
     }
     return () => {
-      if (timer)
-        clearTimeout(timer);
+      if (timer) clearTimeout(timer);
     };
   }, [position]);
 
@@ -106,8 +97,7 @@ export default function App() {
   const isSidebarInteractive = isOpen || isPeeking;
 
   const startPeek = useCallback(() => {
-    if (isOpen)
-      return;
+    if (isOpen) return;
     clearTimeout(peekTimeoutRef.current);
     setIsPeeking(true);
   }, [isOpen]);
@@ -122,26 +112,23 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (isOpen)
-      setIsPeeking(false);
+    if (isOpen) setIsPeeking(false);
   }, [isOpen]);
 
   useEffect(() => {
-    if (isSidebarInteractive)
-      return;
+    if (isSidebarInteractive) return;
 
     const activeElement = document.activeElement;
     if (
-      activeElement instanceof HTMLElement
-      && sidebarContainerRef.current?.contains(activeElement)
+      activeElement instanceof HTMLElement &&
+      sidebarContainerRef.current?.contains(activeElement)
     ) {
       activeElement.blur();
     }
   }, [isSidebarInteractive]);
 
   useEffect(() => {
-    if (!isResizing)
-      return;
+    if (!isResizing) return;
 
     const onMouseMove = (e: MouseEvent) => {
       const pct = isLeft
@@ -178,8 +165,7 @@ export default function App() {
   }, [isResizing, width]);
 
   useEffect(() => {
-    if (!isDragging)
-      return;
+    if (!isDragging) return;
     const onMouseMove = (e: MouseEvent) => {
       setDropSide(e.clientX < window.innerWidth / 2 ? "left" : "right");
     };
@@ -244,28 +230,24 @@ export default function App() {
       >
         {isDragging && (
           <div
-            className="bg-background/20 pointer-events-none absolute inset-0 z-100 flex items-center justify-center backdrop-blur-sm animate-in fade-in duration-200"
+            className="bg-background/20 animate-in fade-in pointer-events-none absolute inset-0 z-100 flex items-center justify-center backdrop-blur-sm duration-200"
             style={{ transitionTimingFunction: EASE_OUT }}
           >
             <div
-              className="flex flex-col items-center gap-6 animate-in fade-in zoom-in-95 duration-200"
+              className="animate-in fade-in zoom-in-95 flex flex-col items-center gap-6 duration-200"
               style={{ transitionTimingFunction: EASE_OUT }}
             >
               <div className="bg-background/80 border-border/50 flex w-[360px] gap-2 rounded-3xl border p-2 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] backdrop-blur-xl">
                 <div
                   className={cn(
                     "relative flex-1 rounded-2xl p-6 transition-all duration-300",
-                    dropSide === "left"
-                      ? "bg-primary/5"
-                      : "bg-transparent",
+                    dropSide === "left" ? "bg-primary/5" : "bg-transparent",
                   )}
                 >
                   <div
                     className={cn(
                       "absolute inset-0 rounded-2xl border-2 border-dashed transition-all duration-300",
-                      dropSide === "left"
-                        ? "border-primary/40 scale-[0.98]"
-                        : "border-transparent",
+                      dropSide === "left" ? "border-primary/40 scale-[0.98]" : "border-transparent",
                     )}
                   />
                   <div className="relative flex flex-col items-center gap-3">
@@ -284,9 +266,7 @@ export default function App() {
                       <p
                         className={cn(
                           "text-sm font-semibold transition-colors duration-300",
-                          dropSide === "left"
-                            ? "text-primary"
-                            : "text-foreground",
+                          dropSide === "left" ? "text-primary" : "text-foreground",
                         )}
                       >
                         Left
@@ -298,9 +278,7 @@ export default function App() {
                 <div
                   className={cn(
                     "relative flex-1 rounded-2xl p-6 transition-all duration-300",
-                    dropSide === "right"
-                      ? "bg-primary/5"
-                      : "bg-transparent",
+                    dropSide === "right" ? "bg-primary/5" : "bg-transparent",
                   )}
                 >
                   <div
@@ -327,9 +305,7 @@ export default function App() {
                       <p
                         className={cn(
                           "text-sm font-semibold transition-colors duration-300",
-                          dropSide === "right"
-                            ? "text-primary"
-                            : "text-foreground",
+                          dropSide === "right" ? "text-primary" : "text-foreground",
                         )}
                       >
                         Right
@@ -340,15 +316,13 @@ export default function App() {
               </div>
 
               <div
-                className="flex items-center gap-2 text-[13px] font-medium text-foreground/70 animate-in fade-in slide-in-from-bottom-2 duration-300"
+                className="text-foreground/70 animate-in fade-in slide-in-from-bottom-2 flex items-center gap-2 text-[13px] font-medium duration-300"
                 style={{ transitionTimingFunction: EASE_OUT }}
               >
-                Press
-                {" "}
-                <Kbd className="h-6 min-w-8 font-bold shadow-sm uppercase tracking-tighter text-[11px] text-foreground bg-muted/80">
+                Press{" "}
+                <Kbd className="text-foreground bg-muted/80 h-6 min-w-8 text-[11px] font-bold tracking-tighter uppercase shadow-sm">
                   Esc
-                </Kbd>
-                {" "}
+                </Kbd>{" "}
                 to cancel
               </div>
             </div>
@@ -362,7 +336,9 @@ export default function App() {
           className={cn(
             "absolute inset-y-0 flex flex-col",
             isOpen ? "z-20" : "z-40",
-            isOpen ? "bg-sidebar/95 border-sidebar-border" : "bg-sidebar/70 backdrop-blur-3xl border-white/20 dark:border-white/10",
+            isOpen
+              ? "bg-sidebar/95 border-sidebar-border"
+              : "bg-sidebar/70 backdrop-blur-3xl border-white/20 dark:border-white/10",
             isOpen && "border-r shadow-none",
             !isOpen && [
               "top-10 bottom-24 border shadow-[0_20px_50px_rgba(0,0,0,0.3)]",
@@ -387,10 +363,7 @@ export default function App() {
 
         {!isOpen && (
           <div
-            className={cn(
-              "absolute inset-y-0 z-30 w-3",
-              isLeft ? "left-0" : "right-0",
-            )}
+            className={cn("absolute inset-y-0 z-30 w-3", isLeft ? "left-0" : "right-0")}
             onMouseEnter={startPeek}
             onMouseLeave={endPeek}
           />
@@ -422,9 +395,7 @@ export default function App() {
             !isCommitting && !isResizing && "transition-[margin] duration-300",
           )}
           style={{
-            [isLeft ? "marginLeft" : "marginRight"]: isOpen
-              ? "var(--sidebar-width)"
-              : 0,
+            [isLeft ? "marginLeft" : "marginRight"]: isOpen ? "var(--sidebar-width)" : 0,
           }}
         >
           <VideoPlayer />

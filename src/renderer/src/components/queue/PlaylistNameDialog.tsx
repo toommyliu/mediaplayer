@@ -36,8 +36,7 @@ export function PlaylistNameDialog({
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    if (!open)
-      return;
+    if (!open) return;
 
     const focusTimer = window.setTimeout(() => {
       inputRef.current?.focus();
@@ -67,22 +66,18 @@ export function PlaylistNameDialog({
             <DialogTitle>{title}</DialogTitle>
             <DialogDescription>{description}</DialogDescription>
           </DialogHeader>
-          <div className="space-y-2 px-6 pb-6 pt-1">
+          <div className="space-y-2 px-6 pt-1 pb-6">
             <Input
               aria-invalid={error ? true : undefined}
               nativeInput
-              onChange={event => setName(event.target.value)}
+              onChange={(event) => setName(event.target.value)}
               ref={inputRef}
               value={name}
             />
-            {error
-              ? <p className="text-destructive text-sm">{error}</p>
-              : null}
+            {error ? <p className="text-destructive text-sm">{error}</p> : null}
           </div>
           <DialogFooter>
-            <DialogClose render={<Button variant="outline" />}>
-              Cancel
-            </DialogClose>
+            <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
             <Button type="submit">{submitLabel}</Button>
           </DialogFooter>
         </form>

@@ -60,19 +60,12 @@ export const PLAYBACK_RATES = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2] as const;
 
 const SEEK_UNDO_STACK_LIMIT = 50;
 
-const ASPECT_RATIO_MODES = new Set<AspectRatioMode>([
-  "contain",
-  "cover",
-  "fill",
-]);
+const ASPECT_RATIO_MODES = new Set<AspectRatioMode>(["contain", "cover", "fill"]);
 
 function getPlaybackRateIndex(playbackRate: number): number {
-  const exactIndex = PLAYBACK_RATES.indexOf(
-    playbackRate as (typeof PLAYBACK_RATES)[number],
-  );
+  const exactIndex = PLAYBACK_RATES.indexOf(playbackRate as (typeof PLAYBACK_RATES)[number]);
 
-  if (exactIndex !== -1)
-    return exactIndex;
+  if (exactIndex !== -1) return exactIndex;
 
   return PLAYBACK_RATES.reduce((closestIndex, rate, index) => {
     const closestRate = PLAYBACK_RATES[closestIndex];
@@ -91,8 +84,8 @@ function migratePlayerState(persistedState: unknown): PlayerPersisted {
   }
 
   const state = persistedState as Partial<PlayerPersisted>;
-  const playbackRate
-    = typeof state.playbackRate === "number" && Number.isFinite(state.playbackRate)
+  const playbackRate =
+    typeof state.playbackRate === "number" && Number.isFinite(state.playbackRate)
       ? PLAYBACK_RATES[getPlaybackRateIndex(state.playbackRate)]
       : initialPlayerState.playbackRate;
 
@@ -108,9 +101,9 @@ export const usePlayerStore = create<PlayerStore>()(
   persist(
     (set, get) => ({
       ...initialPlayerState,
-      setPlayerState: patch => set(state => ({ ...state, ...patch })),
+      setPlayerState: (patch) => set((state) => ({ ...state, ...patch })),
       resetPlayer: () =>
-        set(state => ({
+        set((state) => ({
           ...state,
           currentTime: 0,
           duration: 0,
@@ -120,9 +113,9 @@ export const usePlayerStore = create<PlayerStore>()(
           isPlaying: false,
           seekUndoStack: [],
         })),
-      setCurrentTime: currentTime => set({ currentTime }),
-      setDuration: duration => set({ duration }),
-      setPlaybackRate: playbackRate => set({ playbackRate }),
+      setCurrentTime: (currentTime) => set({ currentTime }),
+      setDuration: (duration) => set({ duration }),
+      setPlaybackRate: (playbackRate) => set({ playbackRate }),
       increasePlaybackRate: () => {
         const currentIndex = getPlaybackRateIndex(get().playbackRate);
         const nextIndex = Math.min(PLAYBACK_RATES.length - 1, currentIndex + 1);
@@ -134,14 +127,10 @@ export const usePlayerStore = create<PlayerStore>()(
         set({ playbackRate: PLAYBACK_RATES[nextIndex] });
       },
       pushSeekUndoTime: (time, video = get().currentVideo) => {
-        if (!Number.isFinite(time) || time < 0)
-          return;
+        if (!Number.isFinite(time) || time < 0) return;
 
-        set(state => ({
-          seekUndoStack: [
-            ...state.seekUndoStack,
-            { time, video },
-          ].slice(-SEEK_UNDO_STACK_LIMIT),
+        set((state) => ({
+          seekUndoStack: [...state.seekUndoStack, { time, video }].slice(-SEEK_UNDO_STACK_LIMIT),
         }));
       },
       popSeekUndoTime: (currentVideo) => {
@@ -167,12 +156,10 @@ export const usePlayerStore = create<PlayerStore>()(
     }),
     {
       name: "player-store",
-      storage: createJSONStorage<PlayerPersisted>(
-        () => createUserDataStateStorage(),
-      ),
+      storage: createJSONStorage<PlayerPersisted>(() => createUserDataStateStorage()),
       version: 1,
       migrate: migratePlayerState,
-      partialize: state => ({
+      partialize: (state) => ({
         aspectRatio: state.aspectRatio,
         playbackRate: state.playbackRate,
       }),

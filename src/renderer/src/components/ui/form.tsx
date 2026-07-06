@@ -4,10 +4,7 @@ import type * as React from "react";
 import { Form as FormPrimitive } from "@base-ui/react/form";
 import { cn } from "@/lib/utils";
 
-export function Form({
-  className,
-  ...props
-}: FormPrimitive.Props): React.ReactElement {
+export function Form({ className, ...props }: FormPrimitive.Props): React.ReactElement {
   return (
     <FormPrimitive
       className={cn("flex w-full flex-col gap-4", className)}

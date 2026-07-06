@@ -85,14 +85,13 @@ function collectItemsByPath(
 function toPlaylistItems(items: FileSystemItem[]): QueueItem[] {
   const seenPaths = new Set<string>();
   const playlistItems: QueueItem[] = [];
-  const videos = items.flatMap(item =>
+  const videos = items.flatMap((item) =>
     item.type === "video" ? [item] : flattenVideoFiles([item]),
   );
 
   for (const video of videos) {
     const normalizedPath = normalizeVideoPath(video.path);
-    if (seenPaths.has(normalizedPath))
-      continue;
+    if (seenPaths.has(normalizedPath)) continue;
 
     seenPaths.add(normalizedPath);
     playlistItems.push({
@@ -106,27 +105,18 @@ function toPlaylistItems(items: FileSystemItem[]): QueueItem[] {
   return playlistItems;
 }
 
-function getNewPlaylistItemCount(
-  playlistItems: QueueItem[],
-  existingItems: QueueItem[],
-): number {
-  const existingPaths = new Set(
-    existingItems.map(item => normalizeVideoPath(item.path)),
-  );
-  return playlistItems.filter(
-    item => !existingPaths.has(normalizeVideoPath(item.path)),
-  ).length;
+function getNewPlaylistItemCount(playlistItems: QueueItem[], existingItems: QueueItem[]): number {
+  const existingPaths = new Set(existingItems.map((item) => normalizeVideoPath(item.path)));
+  return playlistItems.filter((item) => !existingPaths.has(normalizeVideoPath(item.path))).length;
 }
 
 function AddToPlaylistSubMenu({ items }: { items: FileSystemItem[] }) {
-  const playlists = usePlaylistsStore(state => state.playlists);
-  const addPlaylistItems = usePlaylistsStore(state => state.addPlaylistItems);
+  const playlists = usePlaylistsStore((state) => state.playlists);
+  const addPlaylistItems = usePlaylistsStore((state) => state.addPlaylistItems);
   const playlistItems = toPlaylistItems(items);
   const hasVideos = playlistItems.length > 0;
-  const triggerLabel
-    = playlistItems.length > 1
-      ? `Add ${playlistItems.length} videos to playlist`
-      : "Add to playlist";
+  const triggerLabel =
+    playlistItems.length > 1 ? `Add ${playlistItems.length} videos to playlist` : "Add to playlist";
 
   return (
     <ContextMenuSub>
@@ -135,48 +125,37 @@ function AddToPlaylistSubMenu({ items }: { items: FileSystemItem[] }) {
         {triggerLabel}
       </ContextMenuSubTrigger>
       <ContextMenuSubContent className="min-w-52">
-        {playlists.length === 0
-          ? (
-              <ContextMenuItem disabled>
-                <ListMusicIcon className="size-4" />
-                No playlists
-              </ContextMenuItem>
-            )
-          : playlists.map((playlist) => {
-              const newItemCount = getNewPlaylistItemCount(
-                playlistItems,
-                playlist.items,
-              );
-              const isAlreadyAdded = hasVideos && newItemCount === 0;
+        {playlists.length === 0 ? (
+          <ContextMenuItem disabled>
+            <ListMusicIcon className="size-4" />
+            No playlists
+          </ContextMenuItem>
+        ) : (
+          playlists.map((playlist) => {
+            const newItemCount = getNewPlaylistItemCount(playlistItems, playlist.items);
+            const isAlreadyAdded = hasVideos && newItemCount === 0;
 
-              return (
-                <ContextMenuItem
-                  disabled={isAlreadyAdded}
-                  key={playlist.id}
-                  onClick={() => addPlaylistItems(playlist.id, playlistItems)}
-                >
-                  {isAlreadyAdded
-                    ? (
-                        <CheckIcon className="text-primary size-4" />
-                      )
-                    : (
-                        <ListMusicIcon className="size-4" />
-                      )}
-                  <span className="truncate">{playlist.name}</span>
-                  {isAlreadyAdded
-                    ? <ContextMenuShortcut>Added</ContextMenuShortcut>
-                    : playlistItems.length > 1
-                      ? (
-                          <ContextMenuShortcut>
-                            {newItemCount}
-                            {" "}
-                            new
-                          </ContextMenuShortcut>
-                        )
-                      : null}
-                </ContextMenuItem>
-              );
-            })}
+            return (
+              <ContextMenuItem
+                disabled={isAlreadyAdded}
+                key={playlist.id}
+                onClick={() => addPlaylistItems(playlist.id, playlistItems)}
+              >
+                {isAlreadyAdded ? (
+                  <CheckIcon className="text-primary size-4" />
+                ) : (
+                  <ListMusicIcon className="size-4" />
+                )}
+                <span className="truncate">{playlist.name}</span>
+                {isAlreadyAdded ? (
+                  <ContextMenuShortcut>Added</ContextMenuShortcut>
+                ) : playlistItems.length > 1 ? (
+                  <ContextMenuShortcut>{newItemCount} new</ContextMenuShortcut>
+                ) : null}
+              </ContextMenuItem>
+            );
+          })
+        )}
       </ContextMenuSubContent>
     </ContextMenuSub>
   );
@@ -196,9 +175,7 @@ function CopyPathMenuItem({ path }: CopyPathMenuItemProps) {
       <div
         className={cn(
           "flex items-center gap-2 transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)]",
-          copied
-            ? "-translate-y-full opacity-0 blur-sm"
-            : "blur-0 translate-y-0 opacity-100",
+          copied ? "-translate-y-full opacity-0 blur-sm" : "blur-0 translate-y-0 opacity-100",
         )}
       >
         <CopyIcon className="size-4" />
@@ -207,9 +184,7 @@ function CopyPathMenuItem({ path }: CopyPathMenuItemProps) {
       <div
         className={cn(
           "absolute inset-0 flex items-center gap-2 px-1.5 transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)]",
-          copied
-            ? "blur-0 translate-y-0 opacity-100"
-            : "translate-y-full opacity-0 blur-sm",
+          copied ? "blur-0 translate-y-0 opacity-100" : "translate-y-full opacity-0 blur-sm",
         )}
       >
         <CheckIcon className="text-primary size-4" />
@@ -279,19 +254,14 @@ interface RenameDialogProps {
   open: boolean;
 }
 
-function RenameDialog({
-  item,
-  onOpenChange,
-  open,
-}: RenameDialogProps) {
+function RenameDialog({ item, onOpenChange, open }: RenameDialogProps) {
   const [name, setName] = useState(item.name);
   const [error, setError] = useState<string | null>(null);
   const [isRenaming, setIsRenaming] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    if (!open)
-      return;
+    if (!open) return;
 
     setName(item.name);
     setError(null);
@@ -322,11 +292,9 @@ function RenameDialog({
     try {
       await renameFileBrowserItem(item, trimmedName);
       onOpenChange(false);
-    }
-    catch (error) {
+    } catch (error) {
       setError(error instanceof Error ? error.message : "Rename failed.");
-    }
-    finally {
+    } finally {
       setIsRenaming(false);
     }
   }
@@ -337,22 +305,18 @@ function RenameDialog({
         <form className="flex flex-col" onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>Rename</DialogTitle>
-            <DialogDescription>
-              Enter a new name for this item.
-            </DialogDescription>
+            <DialogDescription>Enter a new name for this item.</DialogDescription>
           </DialogHeader>
-          <div className="space-y-2 px-6 pb-6 pt-1">
+          <div className="space-y-2 px-6 pt-1 pb-6">
             <Input
               aria-invalid={error ? true : undefined}
               disabled={isRenaming}
               nativeInput
-              onChange={event => setName(event.target.value)}
+              onChange={(event) => setName(event.target.value)}
               ref={inputRef}
               value={name}
             />
-            {error
-              ? <p className="text-destructive text-sm">{error}</p>
-              : null}
+            {error ? <p className="text-destructive text-sm">{error}</p> : null}
           </div>
           <DialogFooter>
             <DialogClose render={<Button disabled={isRenaming} variant="outline" />}>
@@ -374,17 +338,12 @@ interface DeleteDialogProps {
   open: boolean;
 }
 
-function DeleteDialog({
-  item,
-  onOpenChange,
-  open,
-}: DeleteDialogProps) {
+function DeleteDialog({ item, onOpenChange, open }: DeleteDialogProps) {
   const [error, setError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
-    if (!open)
-      return;
+    if (!open) return;
 
     setError(null);
     setIsDeleting(false);
@@ -396,11 +355,9 @@ function DeleteDialog({
     try {
       await deleteFileBrowserItem(item);
       onOpenChange(false);
-    }
-    catch (error) {
+    } catch (error) {
       setError(error instanceof Error ? error.message : "Delete failed.");
-    }
-    finally {
+    } finally {
       setIsDeleting(false);
     }
   }
@@ -412,15 +369,11 @@ function DeleteDialog({
           <AlertDialogTitle>Move to Trash?</AlertDialogTitle>
           <AlertDialogDescription className="break-words">
             This will move &quot;
-            <span className="font-semibold text-foreground break-all">
-              {item.name}
-            </span>
+            <span className="text-foreground font-semibold break-all">{item.name}</span>
             &quot; to the Trash and remove it from the library and queue.
           </AlertDialogDescription>
         </AlertDialogHeader>
-        {error
-          ? <p className="text-destructive px-6 pb-4 text-sm">{error}</p>
-          : null}
+        {error ? <p className="text-destructive px-6 pb-4 text-sm">{error}</p> : null}
         <AlertDialogFooter>
           <AlertDialogClose render={<Button disabled={isDeleting} variant="outline" />}>
             Cancel
@@ -447,11 +400,7 @@ export interface FileBrowserItemContextMenuProps {
 }
 
 // Folder
-function FolderItemContextMenu({
-  item,
-  items,
-  isExpanded,
-}: FileBrowserItemContextMenuProps) {
+function FolderItemContextMenu({ item, items, isExpanded }: FileBrowserItemContextMenuProps) {
   const playlistItems = items ?? [item];
 
   return (
@@ -480,15 +429,14 @@ function FolderItemContextMenu({
 
 // File
 function FileItemContextMenu({ item, items }: FileBrowserItemContextMenuProps) {
-  const addQueueItemAtIndex = useQueueStore(state => state.addQueueItemAtIndex);
-  const addQueueItems = useQueueStore(state => state.addQueueItems);
-  const queueIndex = useQueueStore(state => state.index);
+  const addQueueItemAtIndex = useQueueStore((state) => state.addQueueItemAtIndex);
+  const addQueueItems = useQueueStore((state) => state.addQueueItems);
+  const queueIndex = useQueueStore((state) => state.index);
   const playlistItems = items ?? [item];
   const videoItems = toPlaylistItems(playlistItems);
-  const addToQueueLabel
-    = videoItems.length > 1 ? `Add ${videoItems.length} to queue` : "Add to queue";
-  const addNextLabel
-    = videoItems.length > 1 ? `Add ${videoItems.length} next` : "Add next";
+  const addToQueueLabel =
+    videoItems.length > 1 ? `Add ${videoItems.length} to queue` : "Add to queue";
+  const addNextLabel = videoItems.length > 1 ? `Add ${videoItems.length} next` : "Add next";
 
   return (
     <>
@@ -525,17 +473,12 @@ function FileItemContextMenu({ item, items }: FileBrowserItemContextMenuProps) {
   );
 }
 
-export function FileBrowserItemContextMenu({
-  item,
-  isExpanded,
-}: FileBrowserItemContextMenuProps) {
+export function FileBrowserItemContextMenu({ item, isExpanded }: FileBrowserItemContextMenuProps) {
   const isFolder = item.type === "folder";
-  const contextMenuItemPaths = useFileBrowserStore(
-    state => state.contextMenuItemPaths,
-  );
-  const fileTree = useFileBrowserStore(state => state.fileTree);
-  const selectedItems
-    = contextMenuItemPaths.size > 0 && fileTree
+  const contextMenuItemPaths = useFileBrowserStore((state) => state.contextMenuItemPaths);
+  const fileTree = useFileBrowserStore((state) => state.fileTree);
+  const selectedItems =
+    contextMenuItemPaths.size > 0 && fileTree
       ? collectItemsByPath(fileTree.files, contextMenuItemPaths)
       : [];
   const contextItems = selectedItems.length > 0 ? selectedItems : [item];
@@ -545,41 +488,20 @@ export function FileBrowserItemContextMenu({
   return (
     <>
       <ContextMenuContent className="min-w-48">
-        {isFolder
-          ? (
-              <FolderItemContextMenu
-                item={item}
-                items={contextItems}
-                isExpanded={isExpanded}
-              />
-            )
-          : (
-              <FileItemContextMenu
-                item={item}
-                items={contextItems}
-                isExpanded={isExpanded}
-              />
-            )}
+        {isFolder ? (
+          <FolderItemContextMenu item={item} items={contextItems} isExpanded={isExpanded} />
+        ) : (
+          <FileItemContextMenu item={item} items={contextItems} isExpanded={isExpanded} />
+        )}
 
         <ContextMenuSeparator />
-        <RenameMenuItem
-          item={item}
-          onRename={() => setIsRenameOpen(true)}
-        />
+        <RenameMenuItem item={item} onRename={() => setIsRenameOpen(true)} />
         <DeleteMenuItem onDelete={() => setIsDeleteOpen(true)} />
         <RevealInFinderMenuItem path={item.path} />
         <CopyPathMenuItem path={item.path} />
       </ContextMenuContent>
-      <RenameDialog
-        item={item}
-        onOpenChange={setIsRenameOpen}
-        open={isRenameOpen}
-      />
-      <DeleteDialog
-        item={item}
-        onOpenChange={setIsDeleteOpen}
-        open={isDeleteOpen}
-      />
+      <RenameDialog item={item} onOpenChange={setIsRenameOpen} open={isRenameOpen} />
+      <DeleteDialog item={item} onOpenChange={setIsDeleteOpen} open={isDeleteOpen} />
     </>
   );
 }

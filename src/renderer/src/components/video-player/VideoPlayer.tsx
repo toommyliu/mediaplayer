@@ -29,18 +29,18 @@ import { VideoPlayerControls } from "./VideoPlayerControls";
 type HoldDirection = "left" | "right" | null;
 
 export default function VideoPlayer() {
-  const aspectRatio = usePlayerStore(state => state.aspectRatio);
-  const duration = usePlayerStore(state => state.duration);
-  const error = usePlayerStore(state => state.error);
-  const isLoading = usePlayerStore(state => state.isLoading);
-  const isPictureInPicture = usePlayerStore(state => state.isPictureInPicture);
-  const isPlaying = usePlayerStore(state => state.isPlaying);
-  const isQuickJumpOpen = usePlayerStore(state => state.isQuickJumpOpen);
-  const playbackRate = usePlayerStore(state => state.playbackRate);
-  const setCurrentTime = usePlayerStore(state => state.setCurrentTime);
-  const setDuration = usePlayerStore(state => state.setDuration);
-  const setPlayerState = usePlayerStore(state => state.setPlayerState);
-  const repeatMode = useQueueStore(state => state.repeatMode);
+  const aspectRatio = usePlayerStore((state) => state.aspectRatio);
+  const duration = usePlayerStore((state) => state.duration);
+  const error = usePlayerStore((state) => state.error);
+  const isLoading = usePlayerStore((state) => state.isLoading);
+  const isPictureInPicture = usePlayerStore((state) => state.isPictureInPicture);
+  const isPlaying = usePlayerStore((state) => state.isPlaying);
+  const isQuickJumpOpen = usePlayerStore((state) => state.isQuickJumpOpen);
+  const playbackRate = usePlayerStore((state) => state.playbackRate);
+  const setCurrentTime = usePlayerStore((state) => state.setCurrentTime);
+  const setDuration = usePlayerStore((state) => state.setDuration);
+  const setPlayerState = usePlayerStore((state) => state.setPlayerState);
+  const repeatMode = useQueueStore((state) => state.repeatMode);
   const currentItem = useCurrentQueueItem();
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -57,33 +57,24 @@ export default function VideoPlayer() {
     refreshPictureInPictureState();
   }, []);
 
-  const setVideoElementRef = useCallback((element: HTMLVideoElement | null) => {
-    if (videoRef.current) {
-      videoRef.current.removeEventListener(
-        "enterpictureinpicture",
-        syncPictureInPictureState,
-      );
-      videoRef.current.removeEventListener(
-        "leavepictureinpicture",
-        syncPictureInPictureState,
-      );
-    }
+  const setVideoElementRef = useCallback(
+    (element: HTMLVideoElement | null) => {
+      if (videoRef.current) {
+        videoRef.current.removeEventListener("enterpictureinpicture", syncPictureInPictureState);
+        videoRef.current.removeEventListener("leavepictureinpicture", syncPictureInPictureState);
+      }
 
-    videoRef.current = element;
-    if (element) {
-      element.playbackRate = playbackRate;
-      element.addEventListener(
-        "enterpictureinpicture",
-        syncPictureInPictureState,
-      );
-      element.addEventListener(
-        "leavepictureinpicture",
-        syncPictureInPictureState,
-      );
-    }
-    bindPlaybackVideoElement(element);
-    refreshPictureInPictureState();
-  }, [playbackRate, syncPictureInPictureState]);
+      videoRef.current = element;
+      if (element) {
+        element.playbackRate = playbackRate;
+        element.addEventListener("enterpictureinpicture", syncPictureInPictureState);
+        element.addEventListener("leavepictureinpicture", syncPictureInPictureState);
+      }
+      bindPlaybackVideoElement(element);
+      refreshPictureInPictureState();
+    },
+    [playbackRate, syncPictureInPictureState],
+  );
 
   useEffect(() => {
     setPlayerState({ showControls });
@@ -150,8 +141,7 @@ export default function VideoPlayer() {
   }, [stopHoldSeeking]);
 
   const shouldIgnoreGestureTarget = useCallback((target: EventTarget | null): boolean => {
-    if (!(target instanceof HTMLElement))
-      return true;
+    if (!(target instanceof HTMLElement)) return true;
 
     return Boolean(
       target.closest(
@@ -160,101 +150,91 @@ export default function VideoPlayer() {
     );
   }, []);
 
-  const seekByGestureStep = useCallback((direction: "backward" | "forward", steps: number): void => {
-    const video = videoRef.current;
-    if (!video || !Number.isFinite(duration))
-      return;
+  const seekByGestureStep = useCallback(
+    (direction: "backward" | "forward", steps: number): void => {
+      const video = videoRef.current;
+      if (!video || !Number.isFinite(duration)) return;
 
-    const delta = TRACKPAD_SEEK_TIME_STEP * steps;
-    const nextTime = direction === "forward"
-      ? Math.min(duration, video.currentTime + delta)
-      : Math.max(0, video.currentTime - delta);
+      const delta = TRACKPAD_SEEK_TIME_STEP * steps;
+      const nextTime =
+        direction === "forward"
+          ? Math.min(duration, video.currentTime + delta)
+          : Math.max(0, video.currentTime - delta);
 
-    video.currentTime = nextTime;
-    setCurrentTime(nextTime);
-  }, [duration, setCurrentTime]);
+      video.currentTime = nextTime;
+      setCurrentTime(nextTime);
+    },
+    [duration, setCurrentTime],
+  );
 
   const adjustVolumeByGestureStep = useCallback((direction: "down" | "up", steps: number): void => {
     const volumeStore = useVolumeStore.getState();
     const delta = TRACKPAD_VOLUME_STEP * steps;
-    const nextVolume = direction === "up"
-      ? clamp(volumeStore.value + delta, 0, 1)
-      : clamp(volumeStore.value - delta, 0, 1);
+    const nextVolume =
+      direction === "up"
+        ? clamp(volumeStore.value + delta, 0, 1)
+        : clamp(volumeStore.value - delta, 0, 1);
 
     volumeStore.setVolume(nextVolume);
     volumeStore.setMuted(nextVolume === 0);
-    if (nextVolume > 0)
-      volumeStore.setMuted(false);
+    if (nextVolume > 0) volumeStore.setMuted(false);
   }, []);
 
-  const handleWheelGesture = useCallback((event: WheelEvent<HTMLDivElement>) => {
-    if (!videoRef.current || shouldIgnoreGestureTarget(event.target))
-      return;
+  const handleWheelGesture = useCallback(
+    (event: WheelEvent<HTMLDivElement>) => {
+      if (!videoRef.current || shouldIgnoreGestureTarget(event.target)) return;
 
-    const absX = Math.abs(event.deltaX);
-    const absY = Math.abs(event.deltaY);
+      const absX = Math.abs(event.deltaX);
+      const absY = Math.abs(event.deltaY);
 
-    if (absX === 0 && absY === 0)
-      return;
+      if (absX === 0 && absY === 0) return;
 
-    const horizontal = absX > absY * TRACKPAD_GESTURE_AXIS_RATIO;
-    const vertical = absY > absX * TRACKPAD_GESTURE_AXIS_RATIO;
+      const horizontal = absX > absY * TRACKPAD_GESTURE_AXIS_RATIO;
+      const vertical = absY > absX * TRACKPAD_GESTURE_AXIS_RATIO;
 
-    if (!horizontal && !vertical)
-      return;
+      if (!horizontal && !vertical) return;
 
-    event.preventDefault();
-    resetHideTimer();
+      event.preventDefault();
+      resetHideTimer();
 
-    if (gestureResetTimerRef.current)
-      window.clearTimeout(gestureResetTimerRef.current);
+      if (gestureResetTimerRef.current) window.clearTimeout(gestureResetTimerRef.current);
 
-    gestureResetTimerRef.current = window.setTimeout(() => {
-      gestureDeltaXRef.current = 0;
-      gestureDeltaYRef.current = 0;
-      gestureResetTimerRef.current = null;
-    }, 160);
+      gestureResetTimerRef.current = window.setTimeout(() => {
+        gestureDeltaXRef.current = 0;
+        gestureDeltaYRef.current = 0;
+        gestureResetTimerRef.current = null;
+      }, 160);
 
-    if (horizontal) {
-      gestureDeltaXRef.current += event.deltaX;
-      gestureDeltaYRef.current = 0;
+      if (horizontal) {
+        gestureDeltaXRef.current += event.deltaX;
+        gestureDeltaYRef.current = 0;
 
-      const steps = Math.trunc(
-        Math.abs(gestureDeltaXRef.current) / TRACKPAD_GESTURE_THRESHOLD,
-      );
-      if (steps === 0)
+        const steps = Math.trunc(Math.abs(gestureDeltaXRef.current) / TRACKPAD_GESTURE_THRESHOLD);
+        if (steps === 0) return;
+
+        const direction = gestureDeltaXRef.current > 0 ? "forward" : "backward";
+        seekByGestureStep(direction, steps);
+        gestureDeltaXRef.current -=
+          Math.sign(gestureDeltaXRef.current) * steps * TRACKPAD_GESTURE_THRESHOLD;
         return;
+      }
 
-      const direction = gestureDeltaXRef.current > 0 ? "forward" : "backward";
-      seekByGestureStep(direction, steps);
-      gestureDeltaXRef.current
-        -= Math.sign(gestureDeltaXRef.current) * steps * TRACKPAD_GESTURE_THRESHOLD;
-      return;
-    }
+      gestureDeltaYRef.current += event.deltaY;
+      gestureDeltaXRef.current = 0;
 
-    gestureDeltaYRef.current += event.deltaY;
-    gestureDeltaXRef.current = 0;
+      const steps = Math.trunc(Math.abs(gestureDeltaYRef.current) / TRACKPAD_GESTURE_THRESHOLD);
+      if (steps === 0) return;
 
-    const steps = Math.trunc(
-      Math.abs(gestureDeltaYRef.current) / TRACKPAD_GESTURE_THRESHOLD,
-    );
-    if (steps === 0)
-      return;
-
-    const direction = gestureDeltaYRef.current < 0 ? "up" : "down";
-    adjustVolumeByGestureStep(direction, steps);
-    gestureDeltaYRef.current
-      -= Math.sign(gestureDeltaYRef.current) * steps * TRACKPAD_GESTURE_THRESHOLD;
-  }, [
-    adjustVolumeByGestureStep,
-    resetHideTimer,
-    seekByGestureStep,
-    shouldIgnoreGestureTarget,
-  ]);
+      const direction = gestureDeltaYRef.current < 0 ? "up" : "down";
+      adjustVolumeByGestureStep(direction, steps);
+      gestureDeltaYRef.current -=
+        Math.sign(gestureDeltaYRef.current) * steps * TRACKPAD_GESTURE_THRESHOLD;
+    },
+    [adjustVolumeByGestureStep, resetHideTimer, seekByGestureStep, shouldIgnoreGestureTarget],
+  );
 
   function startHoldSeeking(direction: HoldDirection): void {
-    if (!videoRef.current || !direction)
-      return;
+    if (!videoRef.current || !direction) return;
     setPlayerState({ isHolding: true });
     setHoldDirection(direction);
 
@@ -266,11 +246,10 @@ export default function VideoPlayer() {
 
       const seekAmount = 0.3;
       const currentDuration = duration;
-      if (!Number.isFinite(currentDuration))
-        return;
+      if (!Number.isFinite(currentDuration)) return;
 
-      const nextTime
-        = direction === "right"
+      const nextTime =
+        direction === "right"
           ? Math.min(videoRef.current.currentTime + seekAmount, currentDuration)
           : Math.max(videoRef.current.currentTime - seekAmount, 0);
 
@@ -299,24 +278,19 @@ export default function VideoPlayer() {
         id="video-container"
         onDoubleClick={async (event) => {
           const target = event.target as HTMLElement | null;
-          if (target?.closest("#media-controls"))
-            return;
+          if (target?.closest("#media-controls")) return;
           await togglePlayPause();
         }}
         onMouseDown={(event) => {
-          if (event.button !== 0 || !videoRef.current)
-            return;
+          if (event.button !== 0 || !videoRef.current) return;
           const target = event.target as HTMLElement | null;
-          if (target && !event.currentTarget.contains(target))
-            return;
-          if (target?.closest("#media-controls"))
-            return;
+          if (target && !event.currentTarget.contains(target)) return;
+          if (target?.closest("#media-controls")) return;
           const rect = containerRef.current?.getBoundingClientRect();
-          if (!rect)
-            return;
+          if (!rect) return;
 
-          const direction: HoldDirection
-            = event.clientX - rect.left < rect.width / 2 ? "left" : "right";
+          const direction: HoldDirection =
+            event.clientX - rect.left < rect.width / 2 ? "left" : "right";
           holdTimerRef.current = window.setTimeout(() => {
             startHoldSeeking(direction);
           }, 300);
@@ -398,48 +372,40 @@ export default function VideoPlayer() {
           src={toFileUrl(currentItem.path)}
         />
 
-        {isLoading
-          ? (
-              <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/40">
-                <Loader2 className="h-8 w-8 animate-spin text-white" />
-              </div>
-            )
-          : null}
+        {isLoading ? (
+          <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/40">
+            <Loader2 className="h-8 w-8 animate-spin text-white" />
+          </div>
+        ) : null}
 
-        {error
-          ? (
-              <div className="border-destructive/30 bg-destructive/10 text-destructive absolute top-6 left-1/2 z-30 -translate-x-1/2 rounded-lg border px-4 py-2 text-sm">
-                {error}
-              </div>
-            )
-          : null}
+        {error ? (
+          <div className="border-destructive/30 bg-destructive/10 text-destructive absolute top-6 left-1/2 z-30 -translate-x-1/2 rounded-lg border px-4 py-2 text-sm">
+            {error}
+          </div>
+        ) : null}
 
-        {holdDirection
-          ? (
-              <div
-                className={cn(
-                  "pointer-events-none absolute top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white backdrop-blur-sm",
-                  holdDirection === "left" ? "left-8" : "right-8",
-                )}
-              >
-                {holdDirection === "left" ? "←" : "→"}
-              </div>
-            )
-          : null}
+        {holdDirection ? (
+          <div
+            className={cn(
+              "pointer-events-none absolute top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white backdrop-blur-sm",
+              holdDirection === "left" ? "left-8" : "right-8",
+            )}
+          >
+            {holdDirection === "left" ? "←" : "→"}
+          </div>
+        ) : null}
 
         <VideoInfoOverlay visible={showControls} />
         <UpNextNotification />
         <BookmarkIndicator />
-        {isQuickJumpOpen
-          ? (
-              <QuickJumpDialog
-                onOpenChange={(open) => {
-                  setPlayerState({ isQuickJumpOpen: open });
-                }}
-                open={isQuickJumpOpen}
-              />
-            )
-          : null}
+        {isQuickJumpOpen ? (
+          <QuickJumpDialog
+            onOpenChange={(open) => {
+              setPlayerState({ isQuickJumpOpen: open });
+            }}
+            open={isQuickJumpOpen}
+          />
+        ) : null}
         <VideoPlayerControls
           onControlsMouseEnter={() => {
             resetHideTimer();

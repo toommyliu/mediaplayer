@@ -7,7 +7,7 @@ import { QueueList } from "./QueueList";
 import { SaveQueueAsPlaylistButton } from "./SaveQueueAsPlaylistButton";
 
 export function QueuePanel() {
-  const queueItemsLength = useQueueStore(state => state.items.length);
+  const queueItemsLength = useQueueStore((state) => state.items.length);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-2.5 pt-1">

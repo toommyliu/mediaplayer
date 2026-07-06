@@ -7,7 +7,6 @@ export interface LoggerServiceShape {
   error: (...args: unknown[]) => void;
 }
 
-export class LoggerService extends ServiceMap.Service<
-  LoggerService,
-  LoggerServiceShape
->()("main/logging/LoggerService") {}
+export class LoggerService extends ServiceMap.Service<LoggerService, LoggerServiceShape>()(
+  "main/logging/LoggerService",
+) {}

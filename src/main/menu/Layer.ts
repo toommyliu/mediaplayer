@@ -41,11 +41,7 @@ export const MenuLayer = Layer.effectDiscard(
             runMenuEffect(
               Effect.gen(function* () {
                 const browserWindow = yield* windows.getOrCreateMainWindow;
-                yield* rendererEvents.emit(
-                  browserWindow.webContents,
-                  "openSettings",
-                  undefined,
-                );
+                yield* rendererEvents.emit(browserWindow.webContents, "openSettings", undefined);
               }),
             );
           },
@@ -68,11 +64,7 @@ export const MenuLayer = Layer.effectDiscard(
                 if (!ret) return;
 
                 const browserWindow = yield* windows.getOrCreateMainWindow;
-                yield* rendererEvents.emit(
-                  browserWindow.webContents,
-                  "addFile",
-                  ret,
-                );
+                yield* rendererEvents.emit(browserWindow.webContents, "addFile", ret);
               }),
             );
           },
@@ -87,11 +79,7 @@ export const MenuLayer = Layer.effectDiscard(
                 if (!ret) return;
 
                 const browserWindow = yield* windows.getOrCreateMainWindow;
-                yield* rendererEvents.emit(
-                  browserWindow.webContents,
-                  "addFolder",
-                  ret,
-                );
+                yield* rendererEvents.emit(browserWindow.webContents, "addFolder", ret);
               }),
             );
           },

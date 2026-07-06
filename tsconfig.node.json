@@ -6,10 +6,5 @@
     "moduleResolution": "bundler",
     "types": ["electron-vite/node"]
   },
-  "include": [
-    "electron.vite.config.*",
-    "src/main/**/*",
-    "src/preload/**/*",
-    "src/shared/**/*"
-  ]
+  "include": ["electron.vite.config.*", "src/main/**/*", "src/preload/**/*", "src/shared/**/*"]
 }

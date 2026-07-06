@@ -8,7 +8,8 @@ export function BookmarksEmptyState() {
       </div>
       <h3 className="mb-0.5 text-xs font-medium">No bookmarks yet</h3>
       <p className="text-muted-foreground/60 text-[0.625rem] leading-relaxed">
-        Press <span className="text-foreground/80 font-mono">B</span> or use the bookmark button to save a moment.
+        Press <span className="text-foreground/80 font-mono">B</span> or use the bookmark button to
+        save a moment.
       </p>
     </div>
   );

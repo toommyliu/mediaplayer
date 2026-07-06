@@ -2,10 +2,7 @@ import type { RegisterableHotkey } from "@tanstack/react-hotkeys";
 import type { HotkeyCategory } from "@/types";
 // import { TanStackDevtools } from "@tanstack/react-devtools";
 // import { hotkeysDevtoolsPlugin } from "@tanstack/react-hotkeys-devtools";
-import {
-  HotkeysProvider as THotkeysProvider,
-  useHotkey,
-} from "@tanstack/react-hotkeys";
+import { HotkeysProvider as THotkeysProvider, useHotkey } from "@tanstack/react-hotkeys";
 import { useMemo } from "react";
 import { runHotkeyAction } from "@/actions/hotkeys";
 import { getStoredHotkeys, useHotkeysStore } from "@/stores/hotkeys";
@@ -134,9 +131,7 @@ function cloneCategory(category: HotkeyCategory): HotkeyCategory {
 
 function useHotkeysCategories(): HotkeyCategory[] {
   const categories = useHotkeysStore((state) => state.categories);
-  const setHotkeyCategories = useHotkeysStore(
-    (state) => state.setHotkeyCategories,
-  );
+  const setHotkeyCategories = useHotkeysStore((state) => state.setHotkeyCategories);
 
   return useMemo(() => {
     if (categories.length > 0) {
@@ -171,25 +166,17 @@ function HotkeysRegistrar() {
     for (const action of category.actions) {
       const hotkeys = convertHotkeyFormat(action.keys);
       for (const hotkey of hotkeys) {
-        useHotkey(
-          hotkey as RegisterableHotkey,
-          () => runHotkeyAction(action.id),
-          {
-            enabled: action.enabled !== false && !showDialog,
-          },
-        );
+        useHotkey(hotkey as RegisterableHotkey, () => runHotkeyAction(action.id), {
+          enabled: action.enabled !== false && !showDialog,
+        });
       }
     }
   }
 
   for (let i = 0; i <= 9; i++) {
-    useHotkey(
-      String(i) as RegisterableHotkey,
-      () => runHotkeyAction(`jump-${i}`),
-      {
-        enabled: !showDialog,
-      },
-    );
+    useHotkey(String(i) as RegisterableHotkey, () => runHotkeyAction(`jump-${i}`), {
+      enabled: !showDialog,
+    });
   }
 
   return null;

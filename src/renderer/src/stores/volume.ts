@@ -51,11 +51,11 @@ export const useVolumeStore = create<VolumeStore>()(
       boost: 1,
       isMuted: false,
       value: 1.0,
-      setBoost: boost => set({ boost: clamp(boost, 1, 3) }),
-      setMuted: isMuted => set({ isMuted }),
+      setBoost: (boost) => set({ boost: clamp(boost, 1, 3) }),
+      setMuted: (isMuted) => set({ isMuted }),
       setVolume: (value) => {
         const next = clamp(value, 0, 1);
-        set(state => ({
+        set((state) => ({
           isMuted: next === 0 ? true : state.isMuted,
           value: next,
         }));
@@ -75,12 +75,10 @@ export const useVolumeStore = create<VolumeStore>()(
     }),
     {
       name: "volume-store",
-      storage: createJSONStorage<VolumePersisted>(
-        () => createUserDataStateStorage(),
-      ),
+      storage: createJSONStorage<VolumePersisted>(() => createUserDataStateStorage()),
       version: 1,
       migrate: migrateVolumeState,
-      partialize: state => ({
+      partialize: (state) => ({
         boost: state.boost,
         isMuted: state.isMuted,
         value: state.value,

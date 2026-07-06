@@ -47,43 +47,36 @@ function getString(record: FfprobeRecord | undefined, key: string): string | und
 
 function getNumber(record: FfprobeRecord | undefined, key: string): number | undefined {
   const value = record?.[key];
-  const parsed = typeof value === "number"
-    ? value
-    : typeof value === "string"
-      ? Number.parseFloat(value)
-      : Number.NaN;
+  const parsed =
+    typeof value === "number"
+      ? value
+      : typeof value === "string"
+        ? Number.parseFloat(value)
+        : Number.NaN;
 
   return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
 }
 
 function parseFrameRate(value: string | undefined): number | undefined {
-  if (!value || value === "0/0")
-    return undefined;
+  if (!value || value === "0/0") return undefined;
 
   const [numerator, denominator] = value.split("/").map(Number);
-  const parsed = denominator
-    ? numerator / denominator
-    : Number.parseFloat(value);
+  const parsed = denominator ? numerator / denominator : Number.parseFloat(value);
 
   return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
 }
 
-function getStream(
-  streams: unknown,
-  codecType: "audio" | "video",
-): FfprobeRecord | undefined {
-  if (!Array.isArray(streams))
-    return undefined;
+function getStream(streams: unknown, codecType: "audio" | "video"): FfprobeRecord | undefined {
+  if (!Array.isArray(streams)) return undefined;
 
-  return streams.find(stream =>
-    isRecord(stream) && stream.codec_type === codecType,
-  ) as FfprobeRecord | undefined;
+  return streams.find((stream) => isRecord(stream) && stream.codec_type === codecType) as
+    | FfprobeRecord
+    | undefined;
 }
 
 function parseProbeOutput(stdout: string): FfprobeRecord {
   const parsed: unknown = JSON.parse(stdout);
-  if (!isRecord(parsed))
-    throw new Error("ffprobe returned invalid metadata");
+  if (!isRecord(parsed)) throw new Error("ffprobe returned invalid metadata");
 
   return parsed;
 }
@@ -99,21 +92,19 @@ export const MediaLayer = Layer.effect(
     let isFfmpegInitialized = false;
 
     const parsePreviousPath = (value: string | null): string | null => {
-      if (!value)
-        return null;
+      if (!value) return null;
 
       try {
         const parsed: unknown = JSON.parse(value);
         if (
-          parsed
-          && typeof parsed === "object"
-          && "path" in parsed
-          && typeof parsed.path === "string"
+          parsed &&
+          typeof parsed === "object" &&
+          "path" in parsed &&
+          typeof parsed.path === "string"
         ) {
           return parsed.path;
         }
-      }
-      catch {
+      } catch {
         return value;
       }
 
@@ -121,12 +112,9 @@ export const MediaLayer = Layer.effect(
     };
 
     const loadPreviousPath = Effect.gen(function* () {
-      if (previousPath)
-        return previousPath;
+      if (previousPath) return previousPath;
 
-      const storedPath = yield* userData.readPersistedStore(
-        PREVIOUS_OPEN_DIRECTORY_STORE,
-      );
+      const storedPath = yield* userData.readPersistedStore(PREVIOUS_OPEN_DIRECTORY_STORE);
       previousPath = parsePreviousPath(storedPath);
       return previousPath;
     });
@@ -149,9 +137,7 @@ export const MediaLayer = Layer.effect(
             cacheTtlMs: 15 * 60 * 1000,
           });
           await pool.initialize();
-          logger.debug(
-            `media worker pool initialized with ${WORKER_POOL_SIZE} workers`,
-          );
+          logger.debug(`media worker pool initialized with ${WORKER_POOL_SIZE} workers`);
           return pool;
         },
         catch: (error) => error,
@@ -188,9 +174,7 @@ export const MediaLayer = Layer.effect(
           const isExecutable = ffprobeStats.mode & 0o111;
 
           if (ffprobeStats.isFile() && !isExecutable) {
-            logger.debug(
-              "ffprobe does not have execute permissions, fixing...",
-            );
+            logger.debug("ffprobe does not have execute permissions, fixing...");
             await chmod(ffprobeInstaller.path, 0o755);
           }
         } catch (error) {
@@ -240,9 +224,7 @@ export const MediaLayer = Layer.effect(
           if (FileTree.isHidden(entry.name)) continue;
 
           if (entry.isDirectory()) {
-            const subDirPath = FileTree.normalizePath(
-              join(dirPath, entry.name),
-            );
+            const subDirPath = FileTree.normalizePath(join(dirPath, entry.name));
             const index = entries.length;
 
             entries.push({
@@ -276,10 +258,7 @@ export const MediaLayer = Layer.effect(
             subdirectoryTasks.map((task) =>
               task.effect.pipe(
                 Effect.catch((error) => {
-                  logger.error(
-                    `Error processing subdirectory ${task.path}`,
-                    error,
-                  );
+                  logger.error(`Error processing subdirectory ${task.path}`, error);
                   return Effect.succeed({
                     type: "folder",
                     rootPath: task.path,
@@ -297,19 +276,13 @@ export const MediaLayer = Layer.effect(
                     await workerPool.processFiles(
                       videoFileTasks.map((task) => task.path),
                       (filePath, error) => {
-                        logger.error(
-                          `Error getting duration for ${filePath}`,
-                          error,
-                        );
+                        logger.error(`Error getting duration for ${filePath}`, error);
                       },
                     ),
                   catch: (error) => error,
                 }).pipe(
                   Effect.catch((error) => {
-                    logger.error(
-                      "Error while processing video durations",
-                      error,
-                    );
+                    logger.error("Error while processing video durations", error);
                     return Effect.succeed(new Map<string, number>());
                   }),
                 )
@@ -318,13 +291,11 @@ export const MediaLayer = Layer.effect(
 
         for (let i = 0; i < subdirectoryTasks.length; i++) {
           const result = subdirectoryResults[i];
-          entries[subdirectoryTasks[i].index].files =
-            result.type === "folder" ? result.tree : [];
+          entries[subdirectoryTasks[i].index].files = result.type === "folder" ? result.tree : [];
         }
 
         for (let i = 0; i < videoFileTasks.length; i++) {
-          entries[videoFileTasks[i].index].duration =
-            durationMap.get(videoFileTasks[i].path) ?? 0;
+          entries[videoFileTasks[i].index].duration = durationMap.get(videoFileTasks[i].path) ?? 0;
         }
 
         ret.tree = FileTree.buildSortedFileTree(entries, sortOptions);
@@ -359,9 +330,7 @@ export const MediaLayer = Layer.effect(
         for (const entry of entries) {
           if (FileTree.isHidden(entry.name)) continue;
 
-          const fullPath = FileTree.normalizePath(
-            join(resolvedPath, entry.name),
-          );
+          const fullPath = FileTree.normalizePath(join(resolvedPath, entry.name));
 
           if (entry.isDirectory()) {
             rawEntries.push({
@@ -393,10 +362,7 @@ export const MediaLayer = Layer.effect(
             catch: (error) => error,
           }).pipe(
             Effect.catch((error) => {
-              logger.error(
-                "Error while processing directory video durations",
-                error,
-              );
+              logger.error("Error while processing directory video durations", error);
               return Effect.succeed(new Map<string, number>());
             }),
           );
@@ -442,9 +408,7 @@ export const MediaLayer = Layer.effect(
             for (const entry of dirEntries) {
               if (FileTree.isHidden(entry.name)) continue;
 
-              const fullPath = FileTree.normalizePath(
-                join(dirPath, entry.name),
-              );
+              const fullPath = FileTree.normalizePath(join(dirPath, entry.name));
               if (entry.isDirectory()) {
                 subdirectories.push(fullPath);
               } else if (FileTree.isVideoFile(entry.name)) {
@@ -483,10 +447,7 @@ export const MediaLayer = Layer.effect(
           catch: (error) => error,
         }).pipe(
           Effect.catch((error) => {
-            logger.error(
-              "Error while processing recursive video durations",
-              error,
-            );
+            logger.error("Error while processing recursive video durations", error);
             return Effect.succeed(new Map<string, number>());
           }),
         );
@@ -498,9 +459,7 @@ export const MediaLayer = Layer.effect(
         }));
       });
 
-    const getVideoMetadata = (
-      filePath: string,
-    ): Effect.Effect<VideoMetadata, unknown> =>
+    const getVideoMetadata = (filePath: string): Effect.Effect<VideoMetadata, unknown> =>
       Effect.gen(function* () {
         yield* doFfmpegInit;
 
@@ -524,15 +483,7 @@ export const MediaLayer = Layer.effect(
           try: async () => {
             const { stdout } = (await execFileAsync(
               ffprobeInstaller.path,
-              [
-                "-v",
-                "error",
-                "-show_format",
-                "-show_streams",
-                "-of",
-                "json",
-                resolvedPath,
-              ],
+              ["-v", "error", "-show_format", "-show_streams", "-of", "json", resolvedPath],
               {
                 timeout: FFPROBE_TIMEOUT_MS,
                 maxBuffer: 1024 * 1024,
@@ -543,7 +494,7 @@ export const MediaLayer = Layer.effect(
           },
           catch: (error) => error,
         }).pipe(
-          Effect.map(probe => ({ probe, success: true }) as const),
+          Effect.map((probe) => ({ probe, success: true }) as const),
           Effect.catch((error) => {
             logger.error(`Error getting metadata for ${resolvedPath}`, error);
             return Effect.succeed({ error, success: false } as const);
@@ -553,15 +504,14 @@ export const MediaLayer = Layer.effect(
         if (!probeResult.success) {
           return {
             ...metadata,
-            probeError: probeResult.error instanceof Error
-              ? probeResult.error.message
-              : String(probeResult.error),
+            probeError:
+              probeResult.error instanceof Error
+                ? probeResult.error.message
+                : String(probeResult.error),
           };
         }
 
-        const format = isRecord(probeResult.probe.format)
-          ? probeResult.probe.format
-          : undefined;
+        const format = isRecord(probeResult.probe.format) ? probeResult.probe.format : undefined;
         const videoStream = getStream(probeResult.probe.streams, "video");
         const audioStream = getStream(probeResult.probe.streams, "audio");
 
@@ -582,8 +532,7 @@ export const MediaLayer = Layer.effect(
             codecName: getString(videoStream, "codec_name"),
             displayAspectRatio: getString(videoStream, "display_aspect_ratio"),
             frameRate: parseFrameRate(
-              getString(videoStream, "avg_frame_rate")
-              ?? getString(videoStream, "r_frame_rate"),
+              getString(videoStream, "avg_frame_rate") ?? getString(videoStream, "r_frame_rate"),
             ),
             height: getNumber(videoStream, "height"),
             width: getNumber(videoStream, "width"),
@@ -608,14 +557,9 @@ export const MediaLayer = Layer.effect(
       mode: "both" | "file" | "folder",
     ): Effect.Effect<PickerResult | null, unknown> =>
       Effect.gen(function* () {
-        const defaultPath
-          = (yield* loadPreviousPath) ?? app.getPath("downloads");
-        const properties: (
-          | "createDirectory"
-          | "multiSelections"
-          | "openDirectory"
-          | "openFile"
-        )[] = [];
+        const defaultPath = (yield* loadPreviousPath) ?? app.getPath("downloads");
+        const properties: ("createDirectory" | "multiSelections" | "openDirectory" | "openFile")[] =
+          [];
 
         if (mode === "file") {
           properties.push("openFile", "multiSelections");
@@ -715,7 +659,7 @@ export const MediaLayer = Layer.effect(
             oldPath,
           };
         },
-        catch: error => error,
+        catch: (error) => error,
       }).pipe(
         Effect.catch((error) => {
           logger.error("Error renaming file system item", error);

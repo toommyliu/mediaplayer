@@ -1,26 +1,14 @@
-import {
-  ArrowDown01,
-  ArrowDownAZ,
-  ArrowUp01,
-  ArrowUpAZ,
-  FolderOpen,
-} from "lucide-react";
+import { ArrowDown01, ArrowDownAZ, ArrowUp01, ArrowUpAZ, FolderOpen } from "lucide-react";
 import { resetAndBrowseLibrary } from "@/actions/library";
 import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useFileBrowserStore } from "@/stores/file-browser";
 
 export function FileBrowserHeader() {
   const sortBy = useFileBrowserStore((state) => state.sortBy);
   const sortDirection = useFileBrowserStore((state) => state.sortDirection);
-  const setFileBrowserSort = useFileBrowserStore(
-    (state) => state.setFileBrowserSort,
-  );
+  const setFileBrowserSort = useFileBrowserStore((state) => state.setFileBrowserSort);
 
   return (
     <div
@@ -92,9 +80,7 @@ export function FileBrowserHeader() {
       </div>
 
       <Button
-        className={cn(
-          "border-sidebar-border/60 h-7 gap-1.5 px-2 text-xs leading-relaxed",
-        )}
+        className={cn("border-sidebar-border/60 h-7 gap-1.5 px-2 text-xs leading-relaxed")}
         onClick={resetAndBrowseLibrary}
         size="xs"
         type="button"

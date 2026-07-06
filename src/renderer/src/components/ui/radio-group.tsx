@@ -5,10 +5,7 @@ import { Radio as RadioPrimitive } from "@base-ui/react/radio";
 import { RadioGroup as RadioGroupPrimitive } from "@base-ui/react/radio-group";
 import { cn } from "@/lib/utils";
 
-export function RadioGroup({
-  className,
-  ...props
-}: RadioGroupPrimitive.Props): React.ReactElement {
+export function RadioGroup({ className, ...props }: RadioGroupPrimitive.Props): React.ReactElement {
   return (
     <RadioGroupPrimitive
       className={cn("flex flex-col gap-3", className)}
@@ -18,10 +15,7 @@ export function RadioGroup({
   );
 }
 
-export function Radio({
-  className,
-  ...props
-}: RadioPrimitive.Root.Props): React.ReactElement {
+export function Radio({ className, ...props }: RadioPrimitive.Root.Props): React.ReactElement {
   return (
     <RadioPrimitive.Root
       className={cn(
@@ -32,7 +26,7 @@ export function Radio({
       {...props}
     >
       <RadioPrimitive.Indicator
-        className="absolute -inset-px flex size-4.5 items-center justify-center rounded-full before:size-2 before:rounded-full before:bg-primary-foreground data-unchecked:hidden data-checked:bg-primary sm:size-4 sm:before:size-1.5"
+        className="before:bg-primary-foreground data-checked:bg-primary absolute -inset-px flex size-4.5 items-center justify-center rounded-full before:size-2 before:rounded-full data-unchecked:hidden sm:size-4 sm:before:size-1.5"
         data-slot="radio-indicator"
       />
     </RadioPrimitive.Root>

@@ -53,9 +53,7 @@ export function UpNextNotification() {
     >
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-baseline gap-1.5">
-          <span className="text-muted-foreground text-[11px] font-medium">
-            Up Next
-          </span>
+          <span className="text-muted-foreground text-[11px] font-medium">Up Next</span>
           <span className="text-muted-foreground/50 text-[10px] tabular-nums">
             &middot; {Math.ceil(remaining)}s
           </span>
@@ -70,9 +68,7 @@ export function UpNextNotification() {
         </Button>
       </div>
 
-      <div className="line-clamp-2 text-xs leading-relaxed font-medium">
-        {nextItem?.name}
-      </div>
+      <div className="line-clamp-2 text-xs leading-relaxed font-medium">{nextItem?.name}</div>
     </div>
   );
 }

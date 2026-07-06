@@ -9,21 +9,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useSettingsStore } from "@/stores/settings";
 import { useVolumeStore } from "@/stores/volume";
 
 export function PlaybackSection() {
   const value = useVolumeStore((state) => state.value);
-  const windowBlurAction = useSettingsStore(state => state.windowBlurAction);
+  const windowBlurAction = useSettingsStore((state) => state.windowBlurAction);
   const setMuted = useVolumeStore((state) => state.setMuted);
-  const setWindowBlurAction = useSettingsStore(
-    state => state.setWindowBlurAction,
-  );
+  const setWindowBlurAction = useSettingsStore((state) => state.setWindowBlurAction);
   const setVolume = useVolumeStore((state) => state.setVolume);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -32,18 +26,14 @@ export function PlaybackSection() {
       <div>
         <h3 className="mb-1 text-sm font-medium">Playback</h3>
         <p className="text-muted-foreground text-xs leading-relaxed">
-          Autoplay follows queue selection and starts on load when a file or
-          folder is opened.
+          Autoplay follows queue selection and starts on load when a file or folder is opened.
         </p>
       </div>
       <div>
-        <Label className="mb-1.5 block text-xs font-medium">
-          When Window Loses Focus
-        </Label>
+        <Label className="mb-1.5 block text-xs font-medium">When Window Loses Focus</Label>
         <Select
           value={windowBlurAction}
-          onValueChange={value =>
-            setWindowBlurAction(value as WindowBlurAction)}
+          onValueChange={(value) => setWindowBlurAction(value as WindowBlurAction)}
         >
           <SelectTrigger className="h-7 w-44 text-xs">
             <SelectValue>
@@ -61,8 +51,8 @@ export function PlaybackSection() {
           </SelectContent>
         </Select>
         <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
-          Muting is temporary and restores your previous mute state when the
-          window is focused again.
+          Muting is temporary and restores your previous mute state when the window is focused
+          again.
         </p>
       </div>
 
@@ -86,9 +76,7 @@ export function PlaybackSection() {
                     onMouseEnter={() => setIsDragging(true)}
                     onMouseLeave={() => setIsDragging(false)}
                     onValueChange={(next) => {
-                      const val = Array.isArray(next)
-                        ? Number(next[0])
-                        : Number(next);
+                      const val = Array.isArray(next) ? Number(next[0]) : Number(next);
                       setVolume(val);
                       if (val > 0) {
                         setMuted(false);
@@ -98,9 +86,7 @@ export function PlaybackSection() {
                 );
               }}
             />
-            <TooltipContent side="top">
-              {Math.round(value * 100)}%
-            </TooltipContent>
+            <TooltipContent side="top">{Math.round(value * 100)}%</TooltipContent>
           </Tooltip>
         </div>
       </div>

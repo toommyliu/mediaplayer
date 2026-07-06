@@ -4,12 +4,7 @@ import { Search, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { playVideo } from "@/actions/playback";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import { makeTimeString } from "@/lib/make-time-string";
@@ -37,13 +32,10 @@ function normalizeSearchValue(value: string): string {
   return value.trim().toLowerCase();
 }
 
-export function QuickJumpDialog({
-  onOpenChange,
-  open,
-}: QuickJumpDialogProps) {
+export function QuickJumpDialog({ onOpenChange, open }: QuickJumpDialogProps) {
   const currentItem = useCurrentQueueItem();
-  const queueIndex = useQueueStore(state => state.index);
-  const queueItems = useQueueStore(state => state.items);
+  const queueIndex = useQueueStore((state) => state.index);
+  const queueItems = useQueueStore((state) => state.items);
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -59,10 +51,7 @@ export function QuickJumpDialog({
       });
     }
 
-    return [
-      ...entries.slice(queueIndex + 1),
-      ...entries.slice(0, queueIndex + 1),
-    ];
+    return [...entries.slice(queueIndex + 1), ...entries.slice(0, queueIndex + 1)];
   }, [query, queueIndex, queueItems]);
 
   const safeActiveIndex = Math.min(activeIndex, Math.max(0, results.length - 1));
@@ -74,8 +63,7 @@ export function QuickJumpDialog({
   }, [safeActiveIndex]);
 
   function selectResult(result: QuickJumpResult | undefined): void {
-    if (!result)
-      return;
+    if (!result) return;
 
     onOpenChange(false);
     if (result.item.id !== currentItem?.id) {
@@ -94,11 +82,7 @@ export function QuickJumpDialog({
     if (event.key === "ArrowDown") {
       event.preventDefault();
       event.stopPropagation();
-      setActiveIndex(
-        results.length === 0
-          ? 0
-          : (safeActiveIndex + 1) % results.length,
-      );
+      setActiveIndex(results.length === 0 ? 0 : (safeActiveIndex + 1) % results.length);
       return;
     }
 
@@ -106,9 +90,7 @@ export function QuickJumpDialog({
       event.preventDefault();
       event.stopPropagation();
       setActiveIndex(
-        results.length === 0
-          ? 0
-          : (safeActiveIndex - 1 + results.length) % results.length,
+        results.length === 0 ? 0 : (safeActiveIndex - 1 + results.length) % results.length,
       );
       return;
     }
@@ -151,11 +133,11 @@ export function QuickJumpDialog({
 
         <div className="border-b p-3">
           <div className="relative">
-            <Search className="text-muted-foreground pointer-events-none absolute left-3 top-1/2 z-10 size-4 -translate-y-1/2" />
+            <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 z-10 size-4 -translate-y-1/2" />
             <Input
               ref={inputRef}
               autoFocus
-              className="h-10 rounded-lg bg-muted/40 pl-9 pr-9 text-sm shadow-none"
+              className="bg-muted/40 h-10 rounded-lg pr-9 pl-9 text-sm shadow-none"
               nativeInput
               onChange={(event) => {
                 setQuery(event.target.value);
@@ -165,86 +147,78 @@ export function QuickJumpDialog({
               type="search"
               value={query}
             />
-            {query
-              ? (
-                  <Button
-                    aria-label="Clear search"
-                    className="absolute right-2 top-1/2 z-10 size-6 -translate-y-1/2 rounded-md text-muted-foreground hover:text-foreground"
-                    onClick={() => {
-                      setQuery("");
-                      setActiveIndex(0);
-                      inputRef.current?.focus();
-                    }}
-                    size="icon-xs"
-                    variant="ghost"
-                  >
-                    <X className="size-3.5" />
-                  </Button>
-                )
-              : null}
+            {query ? (
+              <Button
+                aria-label="Clear search"
+                className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 z-10 size-6 -translate-y-1/2 rounded-md"
+                onClick={() => {
+                  setQuery("");
+                  setActiveIndex(0);
+                  inputRef.current?.focus();
+                }}
+                size="icon-xs"
+                variant="ghost"
+              >
+                <X className="size-3.5" />
+              </Button>
+            ) : null}
           </div>
         </div>
 
         <div className="min-h-0 overflow-y-auto p-2">
-          {results.length === 0
-            ? (
-                <div className="flex h-32 items-center justify-center px-4 text-center text-muted-foreground text-sm">
-                  No videos found
-                </div>
-              )
-            : results.map((result, resultIndex) => {
-                const isActive = resultIndex === safeActiveIndex;
-                const isCurrent = result.item.id === currentItem?.id;
-                const folder = getContainingFolder(result.item.path);
+          {results.length === 0 ? (
+            <div className="text-muted-foreground flex h-32 items-center justify-center px-4 text-center text-sm">
+              No videos found
+            </div>
+          ) : (
+            results.map((result, resultIndex) => {
+              const isActive = resultIndex === safeActiveIndex;
+              const isCurrent = result.item.id === currentItem?.id;
+              const folder = getContainingFolder(result.item.path);
 
-                return (
-                  <button
-                    aria-current={isCurrent ? "true" : undefined}
-                    className={cn(
-                      "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm outline-none transition-colors",
-                      isActive
-                        ? "bg-accent text-accent-foreground"
-                        : "hover:bg-muted/70",
-                    )}
-                    key={result.item.id}
-                    onClick={() => selectResult(result)}
-                    onMouseEnter={() => setActiveIndex(resultIndex)}
-                    ref={(element) => {
-                      resultButtonsRef.current[resultIndex] = element;
-                    }}
-                    type="button"
-                  >
-                    <span className="text-muted-foreground/70 w-8 shrink-0 text-right text-xs font-medium tabular-nums">
-                      {result.index + 1}
+              return (
+                <button
+                  aria-current={isCurrent ? "true" : undefined}
+                  className={cn(
+                    "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm outline-none transition-colors",
+                    isActive ? "bg-accent text-accent-foreground" : "hover:bg-muted/70",
+                  )}
+                  key={result.item.id}
+                  onClick={() => selectResult(result)}
+                  onMouseEnter={() => setActiveIndex(resultIndex)}
+                  ref={(element) => {
+                    resultButtonsRef.current[resultIndex] = element;
+                  }}
+                  type="button"
+                >
+                  <span className="text-muted-foreground/70 w-8 shrink-0 text-right text-xs font-medium tabular-nums">
+                    {result.index + 1}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate leading-tight font-medium">
+                      {result.item.name}
                     </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate font-medium leading-tight">
-                        {result.item.name}
-                      </span>
-                      <span className="mt-1 flex min-w-0 items-center gap-2 text-muted-foreground/72 text-xs">
-                        {folder ? <span className="truncate">{folder}</span> : null}
-                        {result.item.duration
-                          ? (
-                              <span className="shrink-0 tabular-nums">
-                                {makeTimeString(result.item.duration)}
-                              </span>
-                            )
-                          : null}
-                      </span>
+                    <span className="text-muted-foreground/72 mt-1 flex min-w-0 items-center gap-2 text-xs">
+                      {folder ? <span className="truncate">{folder}</span> : null}
+                      {result.item.duration ? (
+                        <span className="shrink-0 tabular-nums">
+                          {makeTimeString(result.item.duration)}
+                        </span>
+                      ) : null}
                     </span>
-                    {isCurrent
-                      ? (
-                          <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-[0.6875rem] font-medium text-primary">
-                            Now
-                          </span>
-                        )
-                      : null}
-                  </button>
-                );
-              })}
+                  </span>
+                  {isCurrent ? (
+                    <span className="bg-primary/10 text-primary rounded-md px-1.5 py-0.5 text-[0.6875rem] font-medium">
+                      Now
+                    </span>
+                  ) : null}
+                </button>
+              );
+            })
+          )}
         </div>
 
-        <div className="flex items-center justify-between gap-3 border-t px-4 py-3 text-muted-foreground text-xs">
+        <div className="text-muted-foreground flex items-center justify-between gap-3 border-t px-4 py-3 text-xs">
           <span>{query ? "Search results" : "Up next first"}</span>
           <div className="flex items-center gap-3">
             <span className="hidden items-center gap-1 sm:flex">

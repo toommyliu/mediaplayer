@@ -7,12 +7,10 @@ let sourceNode: MediaElementAudioSourceNode | null = null;
 const sourceNodes = new WeakMap<HTMLVideoElement, MediaElementAudioSourceNode>();
 
 function getAudioContext(): AudioContext | null {
-  if (audioContext)
-    return audioContext;
+  if (audioContext) return audioContext;
 
   const AudioContextConstructor = window.AudioContext;
-  if (!AudioContextConstructor)
-    return null;
+  if (!AudioContextConstructor) return null;
 
   audioContext = new AudioContextConstructor();
   gainNode = audioContext.createGain();
@@ -21,12 +19,10 @@ function getAudioContext(): AudioContext | null {
 }
 
 function bindAudioGraph(element: HTMLVideoElement): void {
-  if (sourceElement === element && sourceNode)
-    return;
+  if (sourceElement === element && sourceNode) return;
 
   const context = getAudioContext();
-  if (!context || !gainNode)
-    return;
+  if (!context || !gainNode) return;
 
   sourceNode?.disconnect();
   sourceElement = element;
@@ -43,8 +39,7 @@ function sync(): void {
     sourceElement.muted = isMuted;
   }
 
-  if (gainNode)
-    gainNode.gain.value = isMuted ? 0 : boost;
+  if (gainNode) gainNode.gain.value = isMuted ? 0 : boost;
 }
 
 useVolumeStore.subscribe(sync);
@@ -63,6 +58,5 @@ export function bindAudioOutput(element: HTMLVideoElement | null): void {
 
 export async function resumeAudioOutput(): Promise<void> {
   const context = getAudioContext();
-  if (context?.state === "suspended")
-    await context.resume();
+  if (context?.state === "suspended") await context.resume();
 }

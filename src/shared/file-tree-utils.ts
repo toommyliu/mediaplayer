@@ -98,10 +98,7 @@ function smartNameCompare(a: string, b: string): number {
 /**
  * Sorts an array of FileTreeItem objects according to the specified options
  */
-export function sortFileTree(
-  items: FileTreeItem[],
-  sortOptions: SortOptions,
-): FileTreeItem[] {
+export function sortFileTree(items: FileTreeItem[], sortOptions: SortOptions): FileTreeItem[] {
   const sorted = [...items].sort((a, b) => {
     // Folders first
     if (a.type === "folder" && b.type !== "folder") return -1;

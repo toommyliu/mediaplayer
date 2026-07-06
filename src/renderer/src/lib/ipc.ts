@@ -14,116 +14,73 @@ function onRendererEvent<K extends keyof RendererEventPayloadMap>(
   eventName: K,
   listener: (payload: RendererEventPayloadMap[K]) => void,
 ): () => void {
-  return window.electron.ipcRenderer.on(
-    IPC_EVENT_CHANNELS[eventName],
-    (_event, payload) => {
-      listener(payload as RendererEventPayloadMap[K]);
-    },
-  );
+  return window.electron.ipcRenderer.on(IPC_EVENT_CHANNELS[eventName], (_event, payload) => {
+    listener(payload as RendererEventPayloadMap[K]);
+  });
 }
 
 export function enterFullscreen(): Promise<void> {
-  return window.electron.ipcRenderer.invoke(
-    IPC_INVOKE_CHANNELS.enterFullscreen,
-    undefined,
-  );
+  return window.electron.ipcRenderer.invoke(IPC_INVOKE_CHANNELS.enterFullscreen, undefined);
 }
 
 export function exitFullscreen(): Promise<void> {
-  return window.electron.ipcRenderer.invoke(
-    IPC_INVOKE_CHANNELS.exitFullscreen,
-    undefined,
-  );
+  return window.electron.ipcRenderer.invoke(IPC_INVOKE_CHANNELS.exitFullscreen, undefined);
 }
 
 export function getAllVideoFiles(path: string): Promise<VideoFileItem[]> {
-  return window.electron.ipcRenderer.invoke(
-    IPC_INVOKE_CHANNELS.getAllVideoFiles,
-    path,
-  );
+  return window.electron.ipcRenderer.invoke(IPC_INVOKE_CHANNELS.getAllVideoFiles, path);
 }
 
 export function getPlatform(): Promise<PlatformInfo> {
-  return window.electron.ipcRenderer.invoke(
-    IPC_INVOKE_CHANNELS.getPlatform,
-    undefined,
-  );
+  return window.electron.ipcRenderer.invoke(IPC_INVOKE_CHANNELS.getPlatform, undefined);
 }
 
 export function getVideoMetadata(path: string): Promise<VideoMetadata> {
-  return window.electron.ipcRenderer.invoke(
-    IPC_INVOKE_CHANNELS.getVideoMetadata,
-    path,
-  );
+  return window.electron.ipcRenderer.invoke(IPC_INVOKE_CHANNELS.getVideoMetadata, path);
 }
 
 export function readPersistedStore(name: string): Promise<string | null> {
-  return window.electron.ipcRenderer.invoke(
-    IPC_INVOKE_CHANNELS.readPersistedStore,
-    name,
-  );
+  return window.electron.ipcRenderer.invoke(IPC_INVOKE_CHANNELS.readPersistedStore, name);
 }
 
 export function readDirectory(path: string): Promise<DirectoryContents> {
-  return window.electron.ipcRenderer.invoke(
-    IPC_INVOKE_CHANNELS.readDirectory,
-    path,
-  );
+  return window.electron.ipcRenderer.invoke(IPC_INVOKE_CHANNELS.readDirectory, path);
 }
 
 export function deleteFileSystemItem(path: string): Promise<void> {
-  return window.electron.ipcRenderer.invoke(
-    IPC_INVOKE_CHANNELS.deleteFileSystemItem,
-    path,
-  );
+  return window.electron.ipcRenderer.invoke(IPC_INVOKE_CHANNELS.deleteFileSystemItem, path);
 }
 
 export function removePersistedStore(name: string): Promise<void> {
-  return window.electron.ipcRenderer.invoke(
-    IPC_INVOKE_CHANNELS.removePersistedStore,
-    name,
-  );
+  return window.electron.ipcRenderer.invoke(IPC_INVOKE_CHANNELS.removePersistedStore, name);
 }
 
 export function renameFileSystemItem(
   input: RenameFileSystemItemInput,
 ): Promise<RenameFileSystemItemResult> {
-  return window.electron.ipcRenderer.invoke(
-    IPC_INVOKE_CHANNELS.renameFileSystemItem,
-    input,
-  );
+  return window.electron.ipcRenderer.invoke(IPC_INVOKE_CHANNELS.renameFileSystemItem, input);
 }
 
 export function selectFileOrFolder(): Promise<PickerResult | null> {
-  return window.electron.ipcRenderer.invoke(
-    IPC_INVOKE_CHANNELS.selectFileOrFolder,
-    undefined,
-  );
+  return window.electron.ipcRenderer.invoke(IPC_INVOKE_CHANNELS.selectFileOrFolder, undefined);
 }
 
 export function showItemInFolder(path: string): Promise<void> {
-  return window.electron.ipcRenderer.invoke(
-    IPC_INVOKE_CHANNELS.showItemInFolder,
-    path,
-  );
+  return window.electron.ipcRenderer.invoke(IPC_INVOKE_CHANNELS.showItemInFolder, path);
 }
 
 export function writePersistedStore(name: string, value: string): Promise<void> {
-  return window.electron.ipcRenderer.invoke(
-    IPC_INVOKE_CHANNELS.writePersistedStore,
-    { name, value },
-  );
+  return window.electron.ipcRenderer.invoke(IPC_INVOKE_CHANNELS.writePersistedStore, {
+    name,
+    value,
+  });
 }
 
-export function onAddFile(
-  listener: (result: PickerResult) => void,
-): () => void {
+export function onAddFile(listener: (result: PickerResult) => void): () => void {
   return onRendererEvent("addFile", listener);
 }
 
-export function onAddFolder(
-  listener: (result: PickerResult) => void,
-): () => void {
+export function onAddFolder(listener: (result: PickerResult) => void): () => void {
   return onRendererEvent("addFolder", listener);
 }
 

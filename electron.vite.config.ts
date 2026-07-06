@@ -14,10 +14,6 @@ export default defineConfig({
         "@stores": resolve("src/renderer/stores"),
       },
     },
-    plugins: [
-      react({}),
-      babel({ presets: [reactCompilerPreset()] }),
-      tailwindcss(),
-    ],
+    plugins: [react({}), babel({ presets: [reactCompilerPreset()] }), tailwindcss()],
   },
 });

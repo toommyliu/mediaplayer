@@ -22,10 +22,7 @@ export const MainProgram = Effect.gen(function* () {
 
   yield* windows.create;
 
-  const onBrowserWindowCreated = (
-    _event: Electron.Event,
-    window: BrowserWindow,
-  ): void => {
+  const onBrowserWindowCreated = (_event: Electron.Event, window: BrowserWindow): void => {
     optimizer.watchWindowShortcuts(window);
   };
 

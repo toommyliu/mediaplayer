@@ -89,8 +89,7 @@ export const WindowLayer = Layer.effect(
 
       if (is.dev && process.env.ELECTRON_RENDERER_URL) {
         void window.loadURL(process.env.ELECTRON_RENDERER_URL);
-      }
-      else {
+      } else {
         void window.loadFile(join(__dirname, "../renderer/index.html"));
       }
 
@@ -98,18 +97,14 @@ export const WindowLayer = Layer.effect(
     };
 
     const destroyMainWindow = (): void => {
-      if (!mainWindow)
-        return;
+      if (!mainWindow) return;
       try {
         detachWindowEventListeners(mainWindow);
         mainWindow.removeAllListeners("close");
-        if (!mainWindow.isDestroyed())
-          mainWindow.destroy();
-      }
-      catch (error) {
+        if (!mainWindow.isDestroyed()) mainWindow.destroy();
+      } catch (error) {
         logger.error("Error destroying main window", error);
-      }
-      finally {
+      } finally {
         mainWindow = null;
       }
     };
@@ -131,18 +126,15 @@ export const WindowLayer = Layer.effect(
       }),
       setFullScreen: (flag: boolean) =>
         Effect.sync(() => {
-          if (!mainWindow || mainWindow.isDestroyed())
-            return;
+          if (!mainWindow || mainWindow.isDestroyed()) return;
           mainWindow.setFullScreen(flag);
         }),
       show: Effect.sync(() => {
-        if (!mainWindow || mainWindow.isDestroyed())
-          return;
+        if (!mainWindow || mainWindow.isDestroyed()) return;
         mainWindow.show();
       }),
       hide: Effect.sync(() => {
-        if (!mainWindow || mainWindow.isDestroyed())
-          return;
+        if (!mainWindow || mainWindow.isDestroyed()) return;
         mainWindow.hide();
       }),
       destroy: Effect.sync(destroyMainWindow),

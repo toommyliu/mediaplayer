@@ -17,11 +17,7 @@ export type SettingsStore = SettingsState & SettingsActions;
 
 type SettingsPersisted = Pick<SettingsState, "windowBlurAction">;
 
-const WINDOW_BLUR_ACTIONS = new Set<WindowBlurAction>([
-  "mute",
-  "none",
-  "pause",
-]);
+const WINDOW_BLUR_ACTIONS = new Set<WindowBlurAction>(["mute", "none", "pause"]);
 
 function migrateSettingsState(persistedState: unknown): SettingsPersisted {
   if (!persistedState || typeof persistedState !== "object") {
@@ -38,20 +34,18 @@ function migrateSettingsState(persistedState: unknown): SettingsPersisted {
 
 export const useSettingsStore = create<SettingsStore>()(
   persist(
-    set => ({
+    (set) => ({
       showDialog: false,
       windowBlurAction: "none",
-      setSettingsDialogOpen: showDialog => set({ showDialog }),
-      setWindowBlurAction: windowBlurAction => set({ windowBlurAction }),
+      setSettingsDialogOpen: (showDialog) => set({ showDialog }),
+      setWindowBlurAction: (windowBlurAction) => set({ windowBlurAction }),
     }),
     {
       name: "settings-store",
-      storage: createJSONStorage<SettingsPersisted>(
-        () => createUserDataStateStorage(),
-      ),
+      storage: createJSONStorage<SettingsPersisted>(() => createUserDataStateStorage()),
       version: 1,
       migrate: migrateSettingsState,
-      partialize: state => ({ windowBlurAction: state.windowBlurAction }),
+      partialize: (state) => ({ windowBlurAction: state.windowBlurAction }),
     },
   ),
 );

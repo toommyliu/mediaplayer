@@ -11,12 +11,10 @@ export function QueueEmptyState() {
   return (
     <Empty className="h-full py-0">
       <EmptyMedia variant="icon">
-        <Film className="size-6 text-muted-foreground/60" />
+        <Film className="text-muted-foreground/60 size-6" />
       </EmptyMedia>
       <EmptyHeader>
-        <EmptyTitle className="text-base font-medium">
-          Queue is empty
-        </EmptyTitle>
+        <EmptyTitle className="text-base font-medium">Queue is empty</EmptyTitle>
         <EmptyDescription className="text-xs">
           Add videos to your queue to watch them sequentially.
         </EmptyDescription>

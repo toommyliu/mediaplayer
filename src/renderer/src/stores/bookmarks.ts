@@ -30,18 +30,17 @@ export type BookmarksStore = BookmarksState & BookmarksActions;
 type BookmarksPersisted = Pick<BookmarksState, "bookmarks">;
 
 function isBookmark(value: unknown): value is Bookmark {
-  if (!value || typeof value !== "object")
-    return false;
+  if (!value || typeof value !== "object") return false;
 
   const candidate = value as Partial<Bookmark>;
   return (
-    typeof candidate.createdAt === "number"
-    && Number.isFinite(candidate.createdAt)
-    && typeof candidate.id === "string"
-    && (candidate.label === undefined || typeof candidate.label === "string")
-    && typeof candidate.timestamp === "number"
-    && Number.isFinite(candidate.timestamp)
-    && typeof candidate.videoPath === "string"
+    typeof candidate.createdAt === "number" &&
+    Number.isFinite(candidate.createdAt) &&
+    typeof candidate.id === "string" &&
+    (candidate.label === undefined || typeof candidate.label === "string") &&
+    typeof candidate.timestamp === "number" &&
+    Number.isFinite(candidate.timestamp) &&
+    typeof candidate.videoPath === "string"
   );
 }
 
@@ -65,12 +64,9 @@ export const useBookmarksStore = create<BookmarksStore>()(
       lastAction: null,
       addBookmark: (videoPath, timestamp, label) => {
         // Prevent duplicate bookmarks within 0.1s of each other
-        const existing = get()
-          .bookmarks
-          .find(
-            b =>
-              b.videoPath === videoPath && Math.abs(b.timestamp - timestamp) < 0.1,
-          );
+        const existing = get().bookmarks.find(
+          (b) => b.videoPath === videoPath && Math.abs(b.timestamp - timestamp) < 0.1,
+        );
 
         if (existing) {
           set({
@@ -87,7 +83,7 @@ export const useBookmarksStore = create<BookmarksStore>()(
           timestamp,
           videoPath,
         };
-        set(state => ({
+        set((state) => ({
           bookmarks: [...state.bookmarks, bookmark],
           lastAddedId: bookmark.id,
           lastAction: { type: "new", timestamp: Date.now() },
@@ -95,16 +91,14 @@ export const useBookmarksStore = create<BookmarksStore>()(
         return { bookmark, isNew: true };
       },
       deleteBookmark: (id) => {
-        set(state => ({
-          bookmarks: state.bookmarks.filter(b => b.id !== id),
+        set((state) => ({
+          bookmarks: state.bookmarks.filter((b) => b.id !== id),
           lastAddedId: state.lastAddedId === id ? null : state.lastAddedId,
         }));
       },
       updateBookmark: (id, patch) => {
-        set(state => ({
-          bookmarks: state.bookmarks.map(b =>
-            b.id === id ? { ...b, ...patch } : b,
-          ),
+        set((state) => ({
+          bookmarks: state.bookmarks.map((b) => (b.id === id ? { ...b, ...patch } : b)),
         }));
       },
       clearLastAddedId: () => {
@@ -116,12 +110,10 @@ export const useBookmarksStore = create<BookmarksStore>()(
     }),
     {
       name: "bookmarks-store",
-      storage: createJSONStorage<BookmarksPersisted>(
-        () => createUserDataStateStorage(),
-      ),
+      storage: createJSONStorage<BookmarksPersisted>(() => createUserDataStateStorage()),
       version: 1,
       migrate: migrateBookmarksState,
-      partialize: state => ({ bookmarks: state.bookmarks }),
+      partialize: (state) => ({ bookmarks: state.bookmarks }),
     },
   ),
 );

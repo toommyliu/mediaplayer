@@ -1,9 +1,5 @@
 import type { StateStorage } from "zustand/middleware";
-import {
-  readPersistedStore,
-  removePersistedStore,
-  writePersistedStore,
-} from "@/lib/ipc";
+import { readPersistedStore, removePersistedStore, writePersistedStore } from "@/lib/ipc";
 
 export function createUserDataStateStorage(): StateStorage<Promise<void>> {
   return {

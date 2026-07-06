@@ -4,11 +4,7 @@ export type SidebarTab = "file-browser" | "playlists" | "queue";
 export type RepeatMode = "all" | "off" | "one";
 export type WindowBlurAction = "mute" | "none" | "pause";
 export type SidebarPosition = "left" | "right";
-export type NotificationPosition
-  = | "top-left"
-    | "top-right"
-    | "bottom-left"
-    | "bottom-right";
+export type NotificationPosition = "top-left" | "top-right" | "bottom-left" | "bottom-right";
 export type AspectRatioMode = "contain" | "cover" | "fill";
 
 export interface QueueItem {

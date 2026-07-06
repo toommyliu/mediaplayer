@@ -23,9 +23,7 @@ export function ShortcutsSection({
   setSearchTerm: (term: string) => void;
 }) {
   const categories = useHotkeysStore((state) => state.categories);
-  const clearStoredHotkeys = useHotkeysStore(
-    (state) => state.clearStoredHotkeys,
-  );
+  const clearStoredHotkeys = useHotkeysStore((state) => state.clearStoredHotkeys);
 
   const handleResetDefaults = () => {
     clearStoredHotkeys();

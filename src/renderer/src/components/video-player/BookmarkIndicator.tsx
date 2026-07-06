@@ -5,8 +5,8 @@ import { useBookmarksStore } from "@/stores/bookmarks";
 import { usePlayerStore } from "@/stores/player";
 
 export function BookmarkIndicator() {
-  const lastAction = useBookmarksStore(state => state.lastAction);
-  const showControls = usePlayerStore(state => state.showControls);
+  const lastAction = useBookmarksStore((state) => state.lastAction);
+  const showControls = usePlayerStore((state) => state.showControls);
   const [isVisible, setIsVisible] = useState(false);
   const [type, setType] = useState<"new" | "duplicate" | null>(null);
 
@@ -56,17 +56,11 @@ export function BookmarkIndicator() {
             type === "duplicate" && "border-amber-400/20",
           )}
         >
-          {type === "new"
-            ? (
-                <BookmarkCheck
-                  className="size-4 text-emerald-400 animate-pop-spring!"
-                />
-              )
-            : (
-                <BookmarkIcon
-                  className="size-4 text-amber-400 animate-recoil!"
-                />
-              )}
+          {type === "new" ? (
+            <BookmarkCheck className="animate-pop-spring! size-4 text-emerald-400" />
+          ) : (
+            <BookmarkIcon className="animate-recoil! size-4 text-amber-400" />
+          )}
         </div>
 
         {isVisible && type === "new" && (

@@ -8,11 +8,7 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/menu";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useVolumeStore } from "@/stores/volume";
 
@@ -23,16 +19,16 @@ function formatBoost(boost: number): string {
 }
 
 export function AudioBoostControl() {
-  const boost = useVolumeStore(state => state.boost);
-  const setBoost = useVolumeStore(state => state.setBoost);
+  const boost = useVolumeStore((state) => state.boost);
+  const setBoost = useVolumeStore((state) => state.setBoost);
 
   return (
     <DropdownMenu>
       <Tooltip>
         <TooltipTrigger
-          render={(
+          render={
             <DropdownMenuTrigger
-              render={(
+              render={
                 <Button
                   className={cn(
                     "h-9 min-w-12 rounded-md border-0 bg-transparent px-2 text-xs font-medium text-white shadow-none transition-all duration-300 hover:bg-white/10 active:scale-95",
@@ -43,13 +39,11 @@ export function AudioBoostControl() {
                   variant="ghost"
                 >
                   <Volume2 className="size-3.5" />
-                  <span className="tabular-nums">
-                    {formatBoost(boost)}
-                  </span>
+                  <span className="tabular-nums">{formatBoost(boost)}</span>
                 </Button>
-              )}
+              }
             />
-          )}
+          }
         />
         <TooltipContent side="top">
           <p>Audio boost</p>
@@ -63,7 +57,7 @@ export function AudioBoostControl() {
           }}
           value={String(boost)}
         >
-          {BOOST_LEVELS.map(level => (
+          {BOOST_LEVELS.map((level) => (
             <DropdownMenuRadioItem key={level} value={String(level)}>
               <span className="tabular-nums">{formatBoost(level)}</span>
               {level === 1 ? "Normal" : null}

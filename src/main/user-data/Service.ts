@@ -12,7 +12,6 @@ export interface UserDataServiceShape {
   writePersistedStore: (input: PersistedStoreWrite) => Effect.Effect<void>;
 }
 
-export class UserDataService extends ServiceMap.Service<
-  UserDataService,
-  UserDataServiceShape
->()("main/user-data/UserDataService") {}
+export class UserDataService extends ServiceMap.Service<UserDataService, UserDataServiceShape>()(
+  "main/user-data/UserDataService",
+) {}

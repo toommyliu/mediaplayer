@@ -2,11 +2,7 @@ import { Volume, Volume2, VolumeX } from "lucide-react";
 import { useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useVolumeStore } from "@/stores/volume";
 
 function VolumeSlider({
@@ -22,16 +18,14 @@ function VolumeSlider({
   const [isScrolling, setIsScrolling] = useState(false);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const fillPercent = value * 100;
-  const fillColor = isMuted
-    ? "rgba(255,255,255,0.25)"
-    : "rgba(255,255,255,0.9)";
+  const fillColor = isMuted ? "rgba(255,255,255,0.25)" : "rgba(255,255,255,0.9)";
   const trackColor = "rgba(255,255,255,0.15)";
 
   return (
     <div className="relative flex h-full w-full items-center">
       <Tooltip open={isDragging || isScrolling}>
         <TooltipTrigger
-          render={props => (
+          render={(props) => (
             <input
               {...props}
               type="range"
@@ -39,7 +33,7 @@ function VolumeSlider({
               max={1}
               step={0.01}
               value={value}
-              onChange={e => onChange(Number.parseFloat(e.target.value))}
+              onChange={(e) => onChange(Number.parseFloat(e.target.value))}
               onMouseDown={() => setIsDragging(true)}
               onMouseUp={() => setIsDragging(false)}
               onTouchStart={() => setIsDragging(true)}
@@ -67,8 +61,7 @@ function VolumeSlider({
           )}
         />
         <TooltipContent side="top" sideOffset={12}>
-          {Math.round(value * 100)}
-          %
+          {Math.round(value * 100)}%
         </TooltipContent>
       </Tooltip>
 
@@ -157,16 +150,16 @@ function VolumeSlider({
 }
 
 export function VolumeControl() {
-  const setVolume = useVolumeStore(state => state.setVolume);
-  const setMuted = useVolumeStore(state => state.setMuted);
-  const isMuted = useVolumeStore(state => state.isMuted);
-  const value = useVolumeStore(state => state.value);
+  const setVolume = useVolumeStore((state) => state.setVolume);
+  const setMuted = useVolumeStore((state) => state.setMuted);
+  const isMuted = useVolumeStore((state) => state.isMuted);
+  const value = useVolumeStore((state) => state.value);
 
   return (
     <div className="group/volume flex h-9 items-center text-white sm:h-8">
       <Tooltip>
         <TooltipTrigger
-          render={props => (
+          render={(props) => (
             <Button
               {...props}
               className="size-9 shrink-0 rounded-md border-0 bg-transparent p-0 text-white shadow-none transition-all hover:bg-white/10 active:scale-95 sm:size-8"
@@ -175,32 +168,25 @@ export function VolumeControl() {
               type="button"
               variant="ghost"
             >
-              {isMuted || value === 0
-                ? (
-                    <VolumeX className="h-4 w-4" />
-                  )
-                : value < 0.5
-                  ? (
-                      <Volume className="h-4 w-4" />
-                    )
-                  : (
-                      <Volume2 className="h-4 w-4" />
-                    )}
+              {isMuted || value === 0 ? (
+                <VolumeX className="h-4 w-4" />
+              ) : value < 0.5 ? (
+                <Volume className="h-4 w-4" />
+              ) : (
+                <Volume2 className="h-4 w-4" />
+              )}
             </Button>
           )}
         />
         <TooltipContent side="top" sideOffset={8}>
-          {isMuted ? "Unmute" : "Mute"}
-          {" "}
-          (
-          {Math.round(value * 100)}
+          {isMuted ? "Unmute" : "Mute"} ({Math.round(value * 100)}
           %)
         </TooltipContent>
       </Tooltip>
 
       <div className="flex h-full items-center">
         <div className="pointer-events-none w-0 overflow-visible opacity-0 transition-all duration-300 ease-out group-focus-within/volume:pointer-events-auto group-focus-within/volume:w-28 group-focus-within/volume:opacity-100 group-hover/volume:pointer-events-auto group-hover/volume:w-28 group-hover/volume:opacity-100">
-          <div className="flex h-full w-28 items-center pr-2 pl-2 py-1">
+          <div className="flex h-full w-28 items-center py-1 pr-2 pl-2">
             <VolumeSlider
               value={value}
               isMuted={isMuted}

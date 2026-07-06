@@ -4,16 +4,9 @@ import { RendererEventsService } from "../ipc/RendererEvents";
 import { LoggerService } from "../logging/Service";
 import { WindowService } from "../windows/Service";
 
-const MANAGED_SHORTCUTS = [
-  "MediaPreviousTrack",
-  "MediaNextTrack",
-  "MediaPlayPause",
-] as const;
+const MANAGED_SHORTCUTS = ["MediaPreviousTrack", "MediaNextTrack", "MediaPlayPause"] as const;
 type ManagedShortcut = (typeof MANAGED_SHORTCUTS)[number];
-type MediaHandlerName =
-  | "mediaNextTrack"
-  | "mediaPlayPause"
-  | "mediaPreviousTrack";
+type MediaHandlerName = "mediaNextTrack" | "mediaPlayPause" | "mediaPreviousTrack";
 
 export const InputLayer = Layer.effectDiscard(
   Effect.gen(function* () {
@@ -33,17 +26,14 @@ export const InputLayer = Layer.effectDiscard(
 
     const refreshAccessibilityPermission = (prompt = false): void => {
       try {
-        accessibilityPermissionGranted =
-          systemPreferences.isTrustedAccessibilityClient(prompt);
+        accessibilityPermissionGranted = systemPreferences.isTrustedAccessibilityClient(prompt);
       } catch (error) {
         accessibilityPermissionGranted = false;
         logger.error("Failed to determine accessibility permission", error);
       }
     };
 
-    const invokeRendererHandler = (
-      handler: MediaHandlerName,
-    ): Effect.Effect<void> =>
+    const invokeRendererHandler = (handler: MediaHandlerName): Effect.Effect<void> =>
       Effect.gen(function* () {
         const window = yield* windows.getMainWindow;
         if (!window || window.isDestroyed()) {
@@ -53,26 +43,19 @@ export const InputLayer = Layer.effectDiscard(
 
         const webContents = window.webContents;
         if (!webContents) {
-          logger.debug(
-            "Window webContents not available for media key handler",
-          );
+          logger.debug("Window webContents not available for media key handler");
           return;
         }
 
         yield* rendererEvents.emit(webContents, handler, undefined);
       }).pipe(
         Effect.catch((error) => {
-          logger.error(
-            `Failed to invoke renderer handler ${String(handler)}`,
-            error,
-          );
+          logger.error(`Failed to invoke renderer handler ${String(handler)}`, error);
           return Effect.void;
         }),
       );
 
-    const getShortcutHandler = (
-      shortcut: ManagedShortcut,
-    ): Effect.Effect<void> => {
+    const getShortcutHandler = (shortcut: ManagedShortcut): Effect.Effect<void> => {
       switch (shortcut) {
         case "MediaPreviousTrack":
           return invokeRendererHandler("mediaPreviousTrack");
@@ -99,10 +82,7 @@ export const InputLayer = Layer.effectDiscard(
               runWithServices(
                 getShortcutHandler(shortcut).pipe(
                   Effect.catch((error) => {
-                    logger.error(
-                      `Shortcut handler failed for ${shortcut}`,
-                      error,
-                    );
+                    logger.error(`Shortcut handler failed for ${shortcut}`, error);
                     return Effect.void;
                   }),
                 ),
@@ -110,18 +90,13 @@ export const InputLayer = Layer.effectDiscard(
             });
 
             if (!ok) {
-              logger.warn(
-                `Global shortcut registration returned false for ${shortcut}`,
-              );
+              logger.warn(`Global shortcut registration returned false for ${shortcut}`);
             } else {
               // logger.debug(`Registered global shortcut: ${shortcut}`);
               ownedShortcuts.add(shortcut);
             }
           } catch (error) {
-            logger.error(
-              `Failed to register global shortcut ${shortcut}`,
-              error,
-            );
+            logger.error(`Failed to register global shortcut ${shortcut}`, error);
           }
         }
       } catch (error) {
@@ -139,10 +114,7 @@ export const InputLayer = Layer.effectDiscard(
             }
             ownedShortcuts.delete(shortcut);
           } catch (error) {
-            logger.error(
-              `Failed to unregister owned global shortcut ${shortcut}`,
-              error,
-            );
+            logger.error(`Failed to unregister owned global shortcut ${shortcut}`, error);
           }
         }
       } catch (error) {
@@ -173,30 +145,18 @@ export const InputLayer = Layer.effectDiscard(
 
             return Effect.gen(function* () {
               const onFocusUnsub = yield* windows.on("focus", () => {
-                logger.debug(
-                  "mainWindow focused, registering global shortcuts",
-                );
+                logger.debug("mainWindow focused, registering global shortcuts");
                 registerGlobalShortcuts();
                 runWithServices(
-                  rendererEvents.emit(
-                    mainWindow.webContents,
-                    "windowFocus",
-                    undefined,
-                  ),
+                  rendererEvents.emit(mainWindow.webContents, "windowFocus", undefined),
                 );
               });
 
               const onBlurUnsub = yield* windows.on("blur", () => {
-                logger.debug(
-                  "mainWindow blurred, unregistering global shortcuts",
-                );
+                logger.debug("mainWindow blurred, unregistering global shortcuts");
                 unregisterGlobalShortcuts();
                 runWithServices(
-                  rendererEvents.emit(
-                    mainWindow.webContents,
-                    "windowBlur",
-                    undefined,
-                  ),
+                  rendererEvents.emit(mainWindow.webContents, "windowBlur", undefined),
                 );
               });
 
@@ -204,31 +164,17 @@ export const InputLayer = Layer.effectDiscard(
                 cleanupEventListeners();
               });
 
-              const onEnterFullscreenUnsub = yield* windows.on(
-                "enter-full-screen",
-                () => {
-                  runWithServices(
-                    rendererEvents.emit(
-                      mainWindow.webContents,
-                      "windowFullscreenEnter",
-                      undefined,
-                    ),
-                  );
-                },
-              );
+              const onEnterFullscreenUnsub = yield* windows.on("enter-full-screen", () => {
+                runWithServices(
+                  rendererEvents.emit(mainWindow.webContents, "windowFullscreenEnter", undefined),
+                );
+              });
 
-              const onLeaveFullscreenUnsub = yield* windows.on(
-                "leave-full-screen",
-                () => {
-                  runWithServices(
-                    rendererEvents.emit(
-                      mainWindow.webContents,
-                      "windowFullscreenExit",
-                      undefined,
-                    ),
-                  );
-                },
-              );
+              const onLeaveFullscreenUnsub = yield* windows.on("leave-full-screen", () => {
+                runWithServices(
+                  rendererEvents.emit(mainWindow.webContents, "windowFullscreenExit", undefined),
+                );
+              });
 
               windowUnsubscribers.push(
                 onFocusUnsub,
@@ -252,9 +198,7 @@ export const InputLayer = Layer.effectDiscard(
       const onReady = (): void => {
         refreshAccessibilityPermission(true);
         if (!accessibilityPermissionGranted) {
-          logger.warn(
-            "accessibility permissions not granted, global shortcuts will not work",
-          );
+          logger.warn("accessibility permissions not granted, global shortcuts will not work");
         }
 
         runWithServices(

@@ -1,11 +1,7 @@
 import type { KeyboardEvent } from "react";
 import type { Bookmark } from "@/lib/contracts";
 import { X } from "lucide-react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { makeTimeString } from "@/lib/make-time-string";
 import { cn } from "@/lib/utils";
 import { useBookmarksStore } from "@/stores/bookmarks";
@@ -17,9 +13,9 @@ export interface BookmarkItemProps {
 }
 
 export function BookmarkItem({ item }: BookmarkItemProps) {
-  const deleteBookmark = useBookmarksStore(state => state.deleteBookmark);
-  const setCurrentTime = usePlayerStore(state => state.setCurrentTime);
-  const currentTime = usePlayerStore(state => state.currentTime);
+  const deleteBookmark = useBookmarksStore((state) => state.deleteBookmark);
+  const setCurrentTime = usePlayerStore((state) => state.setCurrentTime);
+  const currentTime = usePlayerStore((state) => state.currentTime);
   const isElapsed = currentTime >= item.timestamp;
 
   function jumpToBookmark() {
@@ -31,8 +27,7 @@ export function BookmarkItem({ item }: BookmarkItemProps) {
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
-    if (event.key !== "Enter" && event.key !== " ")
-      return;
+    if (event.key !== "Enter" && event.key !== " ") return;
 
     event.preventDefault();
     jumpToBookmark();
@@ -41,7 +36,7 @@ export function BookmarkItem({ item }: BookmarkItemProps) {
   return (
     <Tooltip>
       <TooltipTrigger
-        render={props => (
+        render={(props) => (
           <div
             {...props}
             className={cn(

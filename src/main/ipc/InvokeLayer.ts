@@ -1,7 +1,4 @@
-import type {
-  IpcInvokeRequestMap,
-  IpcInvokeResponseMap,
-} from "../../shared/ipc";
+import type { IpcInvokeRequestMap, IpcInvokeResponseMap } from "../../shared/ipc";
 import { sep } from "node:path";
 import { platform } from "@electron-toolkit/utils";
 import { Effect, Layer } from "effect";
@@ -13,11 +10,7 @@ import { UserDataService } from "../user-data/Service";
 import { WindowService } from "../windows/Service";
 
 type IpcInvokeName = keyof IpcInvokeRequestMap;
-type IpcInvokeEnvironment
-  = | LoggerService
-    | MediaService
-    | UserDataService
-    | WindowService;
+type IpcInvokeEnvironment = LoggerService | MediaService | UserDataService | WindowService;
 
 export const IpcInvokeLayer = Layer.effectDiscard(
   Effect.gen(function* () {
@@ -36,25 +29,25 @@ export const IpcInvokeLayer = Layer.effectDiscard(
       selectFile: () => media.showFilePicker("file"),
       selectFolder: () => media.showFilePicker("folder"),
       selectFileOrFolder: () => media.showFilePicker("both"),
-      readPersistedStore: name => userData.readPersistedStore(name),
-      readDirectory: path => media.loadDirectoryContents(path),
-      removePersistedStore: name => userData.removePersistedStore(name),
-      renameFileSystemItem: input => media.renameFileSystemItem(input),
-      getAllVideoFiles: path => media.getAllVideoFilesRecursive(path),
-      getVideoMetadata: path => media.getVideoMetadata(path),
-      deleteFileSystemItem: path =>
+      readPersistedStore: (name) => userData.readPersistedStore(name),
+      readDirectory: (path) => media.loadDirectoryContents(path),
+      removePersistedStore: (name) => userData.removePersistedStore(name),
+      renameFileSystemItem: (input) => media.renameFileSystemItem(input),
+      getAllVideoFiles: (path) => media.getAllVideoFilesRecursive(path),
+      getVideoMetadata: (path) => media.getVideoMetadata(path),
+      deleteFileSystemItem: (path) =>
         Effect.tryPromise({
           try: async () => {
             await shell.trashItem(path);
           },
-          catch: error => error,
+          catch: (error) => error,
         }).pipe(
           Effect.catch((error) => {
             logger.error("Error deleting file system item", error);
             return Effect.fail(error);
           }),
         ),
-      showItemInFolder: path =>
+      showItemInFolder: (path) =>
         Effect.sync(() => {
           shell.showItemInFolder(path);
         }).pipe(
@@ -70,7 +63,7 @@ export const IpcInvokeLayer = Layer.effectDiscard(
           isLinux: platform.isLinux,
           pathSep: sep,
         }),
-      writePersistedStore: input => userData.writePersistedStore(input),
+      writePersistedStore: (input) => userData.writePersistedStore(input),
     };
 
     const services = yield* Effect.services<IpcInvokeEnvironment>();
@@ -84,12 +77,9 @@ export const IpcInvokeLayer = Layer.effectDiscard(
     ): void => {
       const channel = IPC_INVOKE_CHANNELS[name];
       ipcMain.removeHandler(channel);
-      ipcMain.handle(
-        channel,
-        async (_event, payload: IpcInvokeRequestMap[K]) => {
-          return await runWithServices(handler(payload));
-        },
-      );
+      ipcMain.handle(channel, async (_event, payload: IpcInvokeRequestMap[K]) => {
+        return await runWithServices(handler(payload));
+      });
     };
 
     registerHandler("enterFullscreen", handlers.enterFullscreen);

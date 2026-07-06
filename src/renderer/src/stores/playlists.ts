@@ -27,15 +27,14 @@ function isFiniteNumber(value: unknown): value is number {
 }
 
 function isQueueItem(value: unknown): value is QueueItem {
-  if (!value || typeof value !== "object")
-    return false;
+  if (!value || typeof value !== "object") return false;
 
   const candidate = value as Partial<QueueItem>;
   return (
-    typeof candidate.id === "string"
-    && typeof candidate.name === "string"
-    && typeof candidate.path === "string"
-    && (candidate.duration === undefined || isFiniteNumber(candidate.duration))
+    typeof candidate.id === "string" &&
+    typeof candidate.name === "string" &&
+    typeof candidate.path === "string" &&
+    (candidate.duration === undefined || isFiniteNumber(candidate.duration))
   );
 }
 
@@ -44,20 +43,16 @@ function cloneQueueItems(items: QueueItem[]): QueueItem[] {
   const playlistItems: QueueItem[] = [];
 
   for (const item of items) {
-    if (!isQueueItem(item))
-      continue;
+    if (!isQueueItem(item)) continue;
 
     const normalizedPath = normalizeVideoPath(item.path);
-    if (seenPaths.has(normalizedPath))
-      continue;
+    if (seenPaths.has(normalizedPath)) continue;
 
     seenPaths.add(normalizedPath);
     playlistItems.push({
       ...item,
       duration:
-        item.duration !== undefined && Number.isFinite(item.duration)
-          ? item.duration
-          : undefined,
+        item.duration !== undefined && Number.isFinite(item.duration) ? item.duration : undefined,
     });
   }
 
@@ -65,21 +60,19 @@ function cloneQueueItems(items: QueueItem[]): QueueItem[] {
 }
 
 function isPlaylist(value: unknown): value is Playlist {
-  if (!value || typeof value !== "object")
-    return false;
+  if (!value || typeof value !== "object") return false;
 
   const candidate = value as Partial<Playlist>;
   return (
-    typeof candidate.createdAt === "number"
-    && Number.isFinite(candidate.createdAt)
-    && typeof candidate.id === "string"
-    && Array.isArray(candidate.items)
-    && candidate.items.every(isQueueItem)
-    && (candidate.lastPlayedAt === undefined
-      || isFiniteNumber(candidate.lastPlayedAt))
-    && typeof candidate.name === "string"
-    && typeof candidate.updatedAt === "number"
-    && Number.isFinite(candidate.updatedAt)
+    typeof candidate.createdAt === "number" &&
+    Number.isFinite(candidate.createdAt) &&
+    typeof candidate.id === "string" &&
+    Array.isArray(candidate.items) &&
+    candidate.items.every(isQueueItem) &&
+    (candidate.lastPlayedAt === undefined || isFiniteNumber(candidate.lastPlayedAt)) &&
+    typeof candidate.name === "string" &&
+    typeof candidate.updatedAt === "number" &&
+    Number.isFinite(candidate.updatedAt)
   );
 }
 
@@ -98,9 +91,7 @@ function migratePlaylistsState(persistedState: unknown): PlaylistsPersisted {
 
   const { playlists } = persistedState as Partial<PlaylistsPersisted>;
   return {
-    playlists: Array.isArray(playlists)
-      ? sortPlaylists(playlists.filter(isPlaylist))
-      : [],
+    playlists: Array.isArray(playlists) ? sortPlaylists(playlists.filter(isPlaylist)) : [],
   };
 }
 
@@ -108,8 +99,7 @@ function makePlaylist(name: string, items: QueueItem[] = []): Playlist | null {
   const trimmedName = name.trim();
   const playlistItems = cloneQueueItems(items);
 
-  if (!trimmedName)
-    return null;
+  if (!trimmedName) return null;
 
   const now = Date.now();
   return {
@@ -127,26 +117,21 @@ export const usePlaylistsStore = create<PlaylistsStore>()(
       playlists: [],
       addPlaylistItems: (id, items) => {
         const playlistItems = cloneQueueItems(items);
-        if (playlistItems.length === 0)
-          return false;
+        if (playlistItems.length === 0) return false;
 
-        const playlist = get().playlists.find(playlist => playlist.id === id);
-        if (!playlist)
-          return false;
+        const playlist = get().playlists.find((playlist) => playlist.id === id);
+        if (!playlist) return false;
 
-        const existingPaths = new Set(
-          playlist.items.map(item => normalizeVideoPath(item.path)),
-        );
+        const existingPaths = new Set(playlist.items.map((item) => normalizeVideoPath(item.path)));
         const itemsToAdd = playlistItems.filter(
-          item => !existingPaths.has(normalizeVideoPath(item.path)),
+          (item) => !existingPaths.has(normalizeVideoPath(item.path)),
         );
-        if (itemsToAdd.length === 0)
-          return false;
+        if (itemsToAdd.length === 0) return false;
 
         const now = Date.now();
-        set(state => ({
+        set((state) => ({
           playlists: sortPlaylists(
-            state.playlists.map(playlist =>
+            state.playlists.map((playlist) =>
               playlist.id === id
                 ? {
                     ...playlist,
@@ -161,38 +146,33 @@ export const usePlaylistsStore = create<PlaylistsStore>()(
       },
       createPlaylist: (name, items) => {
         const playlist = makePlaylist(name, items);
-        if (!playlist)
-          return null;
+        if (!playlist) return null;
 
-        set(state => ({
+        set((state) => ({
           playlists: [playlist, ...state.playlists],
         }));
         return playlist;
       },
       deletePlaylist: (id) => {
-        if (!get().playlists.some(playlist => playlist.id === id))
-          return false;
+        if (!get().playlists.some((playlist) => playlist.id === id)) return false;
 
-        set(state => ({
-          playlists: state.playlists.filter(playlist => playlist.id !== id),
+        set((state) => ({
+          playlists: state.playlists.filter((playlist) => playlist.id !== id),
         }));
         return true;
       },
       removePlaylistItem: (playlistId, itemId) => {
-        const playlist = get().playlists.find(
-          playlist => playlist.id === playlistId,
-        );
-        if (!playlist || !playlist.items.some(item => item.id === itemId))
-          return false;
+        const playlist = get().playlists.find((playlist) => playlist.id === playlistId);
+        if (!playlist || !playlist.items.some((item) => item.id === itemId)) return false;
 
         const now = Date.now();
-        set(state => ({
+        set((state) => ({
           playlists: sortPlaylists(
-            state.playlists.map(playlist =>
+            state.playlists.map((playlist) =>
               playlist.id === playlistId
                 ? {
                     ...playlist,
-                    items: playlist.items.filter(item => item.id !== itemId),
+                    items: playlist.items.filter((item) => item.id !== itemId),
                     updatedAt: now,
                   }
                 : playlist,
@@ -203,19 +183,15 @@ export const usePlaylistsStore = create<PlaylistsStore>()(
       },
       renamePlaylist: (id, name) => {
         const trimmedName = name.trim();
-        if (!trimmedName)
-          return false;
+        if (!trimmedName) return false;
 
-        if (!get().playlists.some(playlist => playlist.id === id))
-          return false;
+        if (!get().playlists.some((playlist) => playlist.id === id)) return false;
 
         const now = Date.now();
-        set(state => ({
+        set((state) => ({
           playlists: sortPlaylists(
-            state.playlists.map(playlist =>
-              playlist.id === id
-                ? { ...playlist, name: trimmedName, updatedAt: now }
-                : playlist,
+            state.playlists.map((playlist) =>
+              playlist.id === id ? { ...playlist, name: trimmedName, updatedAt: now } : playlist,
             ),
           ),
         }));
@@ -223,35 +199,28 @@ export const usePlaylistsStore = create<PlaylistsStore>()(
       },
       replacePlaylistItems: (id, items) => {
         const playlistItems = cloneQueueItems(items);
-        if (playlistItems.length === 0)
-          return false;
+        if (playlistItems.length === 0) return false;
 
-        if (!get().playlists.some(playlist => playlist.id === id))
-          return false;
+        if (!get().playlists.some((playlist) => playlist.id === id)) return false;
 
         const now = Date.now();
-        set(state => ({
+        set((state) => ({
           playlists: sortPlaylists(
-            state.playlists.map(playlist =>
-              playlist.id === id
-                ? { ...playlist, items: playlistItems, updatedAt: now }
-                : playlist,
+            state.playlists.map((playlist) =>
+              playlist.id === id ? { ...playlist, items: playlistItems, updatedAt: now } : playlist,
             ),
           ),
         }));
         return true;
       },
       touchPlaylist: (id) => {
-        if (!get().playlists.some(playlist => playlist.id === id))
-          return false;
+        if (!get().playlists.some((playlist) => playlist.id === id)) return false;
 
         const now = Date.now();
-        set(state => ({
+        set((state) => ({
           playlists: sortPlaylists(
-            state.playlists.map(playlist =>
-              playlist.id === id
-                ? { ...playlist, lastPlayedAt: now }
-                : playlist,
+            state.playlists.map((playlist) =>
+              playlist.id === id ? { ...playlist, lastPlayedAt: now } : playlist,
             ),
           ),
         }));
@@ -260,12 +229,10 @@ export const usePlaylistsStore = create<PlaylistsStore>()(
     }),
     {
       name: "playlists-store",
-      storage: createJSONStorage<PlaylistsPersisted>(
-        () => createUserDataStateStorage(),
-      ),
+      storage: createJSONStorage<PlaylistsPersisted>(() => createUserDataStateStorage()),
       version: 1,
       migrate: migratePlaylistsState,
-      partialize: state => ({ playlists: sortPlaylists(state.playlists) }),
+      partialize: (state) => ({ playlists: sortPlaylists(state.playlists) }),
     },
   ),
 );

@@ -7,8 +7,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
-export const Autocomplete: typeof AutocompletePrimitive.Root =
-  AutocompletePrimitive.Root;
+export const Autocomplete: typeof AutocompletePrimitive.Root = AutocompletePrimitive.Root;
 
 export function AutocompleteInput({
   className,
@@ -32,13 +31,13 @@ export function AutocompleteInput({
 
   return (
     <AutocompletePrimitive.InputGroup
-      className="relative not-has-[>*.w-full]:w-fit w-full text-foreground has-disabled:opacity-64"
+      className="text-foreground relative w-full not-has-[>*.w-full]:w-fit has-disabled:opacity-64"
       data-slot="autocomplete-input-group"
     >
       {startAddon && (
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 start-px z-10 flex items-center ps-[calc(--spacing(3)-1px)] opacity-80 has-[+[data-size=sm]]:ps-[calc(--spacing(2.5)-1px)] [&_svg:not([class*='size-'])]:size-4.5 sm:[&_svg:not([class*='size-'])]:size-4 [&_svg]:-mx-0.5"
+          className="pointer-events-none absolute inset-y-0 start-px z-10 flex items-center ps-[calc(--spacing(3)-1px)] opacity-80 has-[+[data-size=sm]]:ps-[calc(--spacing(2.5)-1px)] [&_svg]:-mx-0.5 [&_svg:not([class*='size-'])]:size-4.5 sm:[&_svg:not([class*='size-'])]:size-4"
           data-slot="autocomplete-start-addon"
         >
           {startAddon}
@@ -119,7 +118,7 @@ export function AutocompletePopup({
           )}
         >
           <AutocompletePrimitive.Popup
-            className="flex max-h-[min(var(--available-height),23rem)] flex-1 flex-col text-foreground"
+            className="text-foreground flex max-h-[min(var(--available-height),23rem)] flex-1 flex-col"
             data-slot="autocomplete-popup"
             {...props}
           >
@@ -182,10 +181,7 @@ export function AutocompleteGroupLabel({
 }: AutocompletePrimitive.GroupLabel.Props): React.ReactElement {
   return (
     <AutocompletePrimitive.GroupLabel
-      className={cn(
-        "px-2 py-1.5 font-medium text-muted-foreground text-xs",
-        className,
-      )}
+      className={cn("px-2 py-1.5 font-medium text-muted-foreground text-xs", className)}
       data-slot="autocomplete-group-label"
       {...props}
     />
@@ -213,24 +209,17 @@ export function AutocompleteRow({
   ...props
 }: AutocompletePrimitive.Row.Props): React.ReactElement {
   return (
-    <AutocompletePrimitive.Row
-      className={className}
-      data-slot="autocomplete-row"
-      {...props}
-    />
+    <AutocompletePrimitive.Row className={className} data-slot="autocomplete-row" {...props} />
   );
 }
 
 export function AutocompleteValue({
   ...props
 }: AutocompletePrimitive.Value.Props): React.ReactElement {
-  return (
-    <AutocompletePrimitive.Value data-slot="autocomplete-value" {...props} />
-  );
+  return <AutocompletePrimitive.Value data-slot="autocomplete-value" {...props} />;
 }
 
-export interface AutocompleteListProps
-  extends AutocompletePrimitive.List.Props {
+export interface AutocompleteListProps extends AutocompletePrimitive.List.Props {
   viewportClassName?: string;
 }
 
@@ -292,12 +281,7 @@ export function AutocompleteStatus({
 export function AutocompleteCollection({
   ...props
 }: AutocompletePrimitive.Collection.Props): React.ReactElement {
-  return (
-    <AutocompletePrimitive.Collection
-      data-slot="autocomplete-collection"
-      {...props}
-    />
-  );
+  return <AutocompletePrimitive.Collection data-slot="autocomplete-collection" {...props} />;
 }
 
 export function AutocompleteTrigger({

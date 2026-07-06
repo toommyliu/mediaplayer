@@ -27,7 +27,7 @@ export function initializeQueue(): void {
 }
 
 function toQueueItems(videos: QueueInsertItem[]): QueueItem[] {
-  return videos.map(video => ({
+  return videos.map((video) => ({
     duration: video.duration ?? 0,
     id: makeQueueId(video.path),
     name: video.name,
@@ -36,24 +36,16 @@ function toQueueItems(videos: QueueInsertItem[]): QueueItem[] {
 }
 
 export function updatePlayerQueueForced(preserveCurrentVideo = false): void {
-  const currentVideo = preserveCurrentVideo
-    ? usePlayerStore.getState().currentVideo
-    : null;
+  const currentVideo = preserveCurrentVideo ? usePlayerStore.getState().currentVideo : null;
   const fileBrowser = useFileBrowserStore.getState();
   const videoFiles = flattenVideoFiles(fileBrowser.fileTree?.files ?? []);
   const nextItems = toQueueItems(videoFiles);
 
-  const normalizedCurrentVideo = currentVideo
-    ? normalizeVideoPath(currentVideo)
-    : null;
+  const normalizedCurrentVideo = currentVideo ? normalizeVideoPath(currentVideo) : null;
   const preservedIndex = normalizedCurrentVideo
-    ? nextItems.findIndex(
-        item => normalizeVideoPath(item.path) === normalizedCurrentVideo,
-      )
+    ? nextItems.findIndex((item) => normalizeVideoPath(item.path) === normalizedCurrentVideo)
     : -1;
-  const nextIndex = currentVideo
-    ? Math.max(0, preservedIndex)
-    : 0;
+  const nextIndex = currentVideo ? Math.max(0, preservedIndex) : 0;
 
   useQueueStore.getState().setQueueItems(nextItems, nextIndex);
 
@@ -71,18 +63,15 @@ export function updatePlayerQueueForced(preserveCurrentVideo = false): void {
 }
 
 export function playFileBrowserVideo(item: FileSystemItem): void {
-  if (item.type !== "video")
-    return;
+  if (item.type !== "video") return;
 
   const currentVideo = usePlayerStore.getState().currentVideo;
   const normalizedItemPath = normalizeVideoPath(item.path);
-  const normalizedCurrentVideo = currentVideo
-    ? normalizeVideoPath(currentVideo)
-    : null;
+  const normalizedCurrentVideo = currentVideo ? normalizeVideoPath(currentVideo) : null;
   const isCurrentVideo = normalizedCurrentVideo === normalizedItemPath;
   const queue = useQueueStore.getState();
   const queueIndex = queue.items.findIndex(
-    queueItem => normalizeVideoPath(queueItem.path) === normalizedItemPath,
+    (queueItem) => normalizeVideoPath(queueItem.path) === normalizedItemPath,
   );
 
   if (queueIndex !== -1) {
@@ -96,11 +85,9 @@ export function playFileBrowserVideo(item: FileSystemItem): void {
   }
 
   const fileBrowser = useFileBrowserStore.getState();
-  let nextItems = toQueueItems(
-    flattenVideoFiles(fileBrowser.fileTree?.files ?? []),
-  );
+  let nextItems = toQueueItems(flattenVideoFiles(fileBrowser.fileTree?.files ?? []));
   let nextIndex = nextItems.findIndex(
-    queueItem => normalizeVideoPath(queueItem.path) === normalizedItemPath,
+    (queueItem) => normalizeVideoPath(queueItem.path) === normalizedItemPath,
   );
 
   if (nextIndex === -1) {
@@ -122,8 +109,7 @@ export function playFileBrowserVideo(item: FileSystemItem): void {
 }
 
 export async function handleAddFileEvent(result: PickerResult): Promise<void> {
-  if (result.type !== "file")
-    return;
+  if (result.type !== "file") return;
 
   const queue = useQueueStore.getState();
   queue.resetQueue();
@@ -134,9 +120,7 @@ export async function handleAddFileEvent(result: PickerResult): Promise<void> {
   playVideo(result.path);
 }
 
-export async function handleAddFolderEvent(
-  result: PickerResult,
-): Promise<void> {
+export async function handleAddFolderEvent(result: PickerResult): Promise<void> {
   if (result.type === "file") {
     await handleAddFileEvent(result);
     return;
@@ -145,8 +129,7 @@ export async function handleAddFolderEvent(
   try {
     useFileBrowserStore.getState().setFileBrowserState({ error: null });
     await handlePickerResult(result);
-  }
-  catch {
+  } catch {
     useFileBrowserStore.getState().setFileBrowserState({
       error: "Failed to load file system. Please try again.",
     });
@@ -219,8 +202,7 @@ export async function loadFileSystemStructure(): Promise<void> {
     }
 
     await handlePickerResult(result);
-  }
-  catch {
+  } catch {
     useFileBrowserStore.getState().setFileBrowserState({
       currentPath: null,
       error: "Failed to load file system. Please try again.",
@@ -236,8 +218,7 @@ export async function loadFolderContents(folderPath: string): Promise<void> {
   const fileBrowser = useFileBrowserStore.getState();
   const fileSystem = fileBrowser.fileTree?.files ?? [];
   const folder = findFolderInFileSystem(fileSystem, folderPath);
-  if (!folder || (folder.files && folder.files.length > 0))
-    return;
+  if (!folder || (folder.files && folder.files.length > 0)) return;
 
   const loadingFolders = new Set(fileBrowser.loadingFolders);
   loadingFolders.add(folderPath);
@@ -246,17 +227,9 @@ export async function loadFolderContents(folderPath: string): Promise<void> {
   try {
     const result = await readDirectory(folderPath);
     const latest = useFileBrowserStore.getState();
-    const folderContents = transformDirectoryContents(
-      result,
-      latest.sortBy,
-      latest.sortDirection,
-    );
+    const folderContents = transformDirectoryContents(result, latest.sortBy, latest.sortDirection);
     const latestFileSystem = latest.fileTree?.files ?? [];
-    const updated = updateFolderContents(
-      latestFileSystem,
-      folderPath,
-      folderContents,
-    );
+    const updated = updateFolderContents(latestFileSystem, folderPath, folderContents);
 
     const tree = useFileBrowserStore.getState().fileTree;
     if (updated && tree) {
@@ -268,13 +241,10 @@ export async function loadFolderContents(folderPath: string): Promise<void> {
       });
       updatePlayerQueueForced(true);
     }
-  }
-  finally {
+  } finally {
     const nextLoading = new Set(useFileBrowserStore.getState().loadingFolders);
     nextLoading.delete(folderPath);
-    useFileBrowserStore
-      .getState()
-      .setFileBrowserState({ loadingFolders: nextLoading });
+    useFileBrowserStore.getState().setFileBrowserState({ loadingFolders: nextLoading });
   }
 }
 
@@ -306,8 +276,7 @@ export async function navigateToDirectory(dirPath: string): Promise<void> {
     });
 
     updatePlayerQueueForced(true);
-  }
-  catch {
+  } catch {
     useFileBrowserStore.getState().setFileBrowserState({
       error: "Failed to load directory. Please try again.",
       isLoading: false,
@@ -317,8 +286,7 @@ export async function navigateToDirectory(dirPath: string): Promise<void> {
 
 export async function navigateToParent(): Promise<void> {
   const fileBrowser = useFileBrowserStore.getState();
-  if (!fileBrowser.currentPath || fileBrowser.isAtRoot)
-    return;
+  if (!fileBrowser.currentPath || fileBrowser.isAtRoot) return;
 
   useFileBrowserStore.getState().setFileBrowserState({ isLoading: true });
   try {
@@ -326,8 +294,7 @@ export async function navigateToParent(): Promise<void> {
     if (result.parentPath) {
       await navigateToDirectory(result.parentPath);
     }
-  }
-  catch {
+  } catch {
     useFileBrowserStore.getState().setFileBrowserState({
       error: "Failed to navigate to parent directory.",
       isLoading: false,
@@ -339,8 +306,7 @@ export function toggleFolder(path: string): void {
   const nextExpanded = new Set(useFileBrowserStore.getState().expandedFolders);
   if (nextExpanded.has(path)) {
     nextExpanded.delete(path);
-  }
-  else {
+  } else {
     nextExpanded.add(path);
     void loadFolderContents(path);
   }
@@ -363,13 +329,9 @@ function isPathWithin(path: string, parentPath: string): boolean {
   return path === parentPath || path.startsWith(`${parentPath}/`);
 }
 
-function removeItemPath(
-  items: FileSystemItem[],
-  deletedPath: string,
-): FileSystemItem[] {
+function removeItemPath(items: FileSystemItem[], deletedPath: string): FileSystemItem[] {
   return items.flatMap((item) => {
-    if (item.path === deletedPath)
-      return [];
+    if (item.path === deletedPath) return [];
 
     return {
       ...item,
@@ -388,10 +350,7 @@ function removePathSet(paths: Set<string>, deletedPath: string): Set<string> {
   return next;
 }
 
-function clearDeletedPath(
-  path: string | null,
-  deletedPath: string,
-): string | null {
+function clearDeletedPath(path: string | null, deletedPath: string): string | null {
   return path && isPathWithin(path, deletedPath) ? null : path;
 }
 
@@ -402,37 +361,30 @@ function updateItemPath(
   newName: string,
 ): FileSystemItem[] {
   return items.map((item) => {
-    const path = item.path === oldPath
-      ? newPath
-      : item.path.startsWith(`${oldPath}/`)
-        ? `${newPath}${item.path.slice(oldPath.length)}`
-        : item.path;
+    const path =
+      item.path === oldPath
+        ? newPath
+        : item.path.startsWith(`${oldPath}/`)
+          ? `${newPath}${item.path.slice(oldPath.length)}`
+          : item.path;
 
     return {
       ...item,
-      files: item.files
-        ? updateItemPath(item.files, oldPath, newPath, newName)
-        : undefined,
+      files: item.files ? updateItemPath(item.files, oldPath, newPath, newName) : undefined,
       name: item.path === oldPath ? newName : item.name,
       path,
     };
   });
 }
 
-function updatePathSet(
-  paths: Set<string>,
-  oldPath: string,
-  newPath: string,
-): Set<string> {
+function updatePathSet(paths: Set<string>, oldPath: string, newPath: string): Set<string> {
   const next = new Set<string>();
   for (const path of paths) {
     if (path === oldPath) {
       next.add(newPath);
-    }
-    else if (path.startsWith(`${oldPath}/`)) {
+    } else if (path.startsWith(`${oldPath}/`)) {
       next.add(`${newPath}${path.slice(oldPath.length)}`);
-    }
-    else {
+    } else {
       next.add(path);
     }
   }
@@ -440,18 +392,14 @@ function updatePathSet(
 }
 
 function renamePath(path: string, oldPath: string, newPath: string): string {
-  if (path === oldPath)
-    return newPath;
+  if (path === oldPath) return newPath;
 
-  if (path.startsWith(`${oldPath}/`))
-    return `${newPath}${path.slice(oldPath.length)}`;
+  if (path.startsWith(`${oldPath}/`)) return `${newPath}${path.slice(oldPath.length)}`;
 
   return path;
 }
 
-export async function deleteFileBrowserItem(
-  item: FileSystemItem,
-): Promise<void> {
+export async function deleteFileBrowserItem(item: FileSystemItem): Promise<void> {
   await deleteFileSystemItem(item.path);
 
   const fileBrowser = useFileBrowserStore.getState();
@@ -477,21 +425,20 @@ export async function deleteFileBrowserItem(
   const queue = useQueueStore.getState();
   const previousCurrentItem = queue.items[queue.index] ?? null;
   const nextItems = queue.items.filter(
-    queueItem => !isPathWithin(normalizeVideoPath(queueItem.path), item.path),
+    (queueItem) => !isPathWithin(normalizeVideoPath(queueItem.path), item.path),
   );
   const preservedIndex = previousCurrentItem
-    ? nextItems.findIndex(queueItem => queueItem.id === previousCurrentItem.id)
+    ? nextItems.findIndex((queueItem) => queueItem.id === previousCurrentItem.id)
     : -1;
-  const nextIndex = preservedIndex === -1
-    ? Math.min(queue.index, Math.max(0, nextItems.length - 1))
-    : preservedIndex;
+  const nextIndex =
+    preservedIndex === -1
+      ? Math.min(queue.index, Math.max(0, nextItems.length - 1))
+      : preservedIndex;
 
   queue.setQueueItems(nextItems, nextIndex);
 
   const currentVideo = usePlayerStore.getState().currentVideo;
-  const normalizedCurrentVideo = currentVideo
-    ? normalizeVideoPath(currentVideo)
-    : null;
+  const normalizedCurrentVideo = currentVideo ? normalizeVideoPath(currentVideo) : null;
   if (normalizedCurrentVideo && isPathWithin(normalizedCurrentVideo, item.path)) {
     const nextItem = nextItems[nextIndex];
     usePlayerStore.getState().setPlayerState({
@@ -510,10 +457,7 @@ export async function deleteFileBrowserItem(
   }
 }
 
-export async function renameFileBrowserItem(
-  item: FileSystemItem,
-  newName: string,
-): Promise<void> {
+export async function renameFileBrowserItem(item: FileSystemItem, newName: string): Promise<void> {
   const result = await renameFileSystemItem({
     newName,
     path: item.path,
@@ -529,11 +473,7 @@ export async function renameFileBrowserItem(
           result.newPath,
           result.name,
         ),
-        rootPath: renamePath(
-          fileBrowser.fileTree.rootPath,
-          result.oldPath,
-          result.newPath,
-        ),
+        rootPath: renamePath(fileBrowser.fileTree.rootPath, result.oldPath, result.newPath),
       }
     : null;
 
@@ -542,18 +482,10 @@ export async function renameFileBrowserItem(
       ? renamePath(fileBrowser.currentPath, result.oldPath, result.newPath)
       : null,
     error: null,
-    expandedFolders: updatePathSet(
-      fileBrowser.expandedFolders,
-      result.oldPath,
-      result.newPath,
-    ),
+    expandedFolders: updatePathSet(fileBrowser.expandedFolders, result.oldPath, result.newPath),
     fileTree,
     focusedItemPath: result.newPath,
-    loadingFolders: updatePathSet(
-      fileBrowser.loadingFolders,
-      result.oldPath,
-      result.newPath,
-    ),
+    loadingFolders: updatePathSet(fileBrowser.loadingFolders, result.oldPath, result.newPath),
     originalPath: fileBrowser.originalPath
       ? renamePath(fileBrowser.originalPath, result.oldPath, result.newPath)
       : null,
@@ -574,9 +506,7 @@ export async function renameFileBrowserItem(
   );
 
   const currentVideo = usePlayerStore.getState().currentVideo;
-  const normalizedCurrentVideo = currentVideo
-    ? normalizeVideoPath(currentVideo)
-    : null;
+  const normalizedCurrentVideo = currentVideo ? normalizeVideoPath(currentVideo) : null;
   const renamedCurrentVideo = normalizedCurrentVideo
     ? renamePath(normalizedCurrentVideo, result.oldPath, result.newPath)
     : null;

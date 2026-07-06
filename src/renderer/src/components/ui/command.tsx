@@ -22,15 +22,11 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
-export function CommandDialog(
-  props: React.ComponentProps<typeof CommandDialogPrimitive.Root>,
-) {
+export function CommandDialog(props: React.ComponentProps<typeof CommandDialogPrimitive.Root>) {
   return <CommandDialogPrimitive.Root {...props} />;
 }
 
-export function CommandPopover(
-  props: React.ComponentProps<typeof CommandPopoverRoot>,
-) {
+export function CommandPopover(props: React.ComponentProps<typeof CommandPopoverRoot>) {
   return <CommandPopoverRoot {...props} />;
 }
 
@@ -47,12 +43,7 @@ export const CommandCreateHandle = CommandDialogPrimitive.createHandle;
 export function CommandDialogTrigger(
   props: CommandDialogPrimitive.Trigger.Props,
 ): React.ReactElement {
-  return (
-    <CommandDialogPrimitive.Trigger
-      data-slot="command-dialog-trigger"
-      {...props}
-    />
-  );
+  return <CommandDialogPrimitive.Trigger data-slot="command-dialog-trigger" {...props} />;
 }
 
 export function CommandDialogBackdrop({
@@ -125,9 +116,7 @@ export function CommandPopoverPopup({
       data-slot="command-popover-popup"
       {...props}
     >
-      <div className="flex flex-col min-h-0 h-115 max-h-(--available-height)">
-        {children}
-      </div>
+      <div className="flex h-115 max-h-(--available-height) min-h-0 flex-col">{children}</div>
     </CommandPopoverContent>
   );
 }
@@ -146,7 +135,7 @@ export function Command({
       open
       {...props}
     >
-      <div className="flex-1 min-h-0 flex flex-col">{children}</div>
+      <div className="flex min-h-0 flex-1 flex-col">{children}</div>
     </Autocomplete>
   );
 }
@@ -173,10 +162,7 @@ export function CommandInput({
   );
 }
 
-export function CommandList({
-  className,
-  ...props
-}: AutocompleteListProps): React.ReactElement {
+export function CommandList({ className, ...props }: AutocompleteListProps): React.ReactElement {
   return (
     <AutocompleteList
       className={cn("not-empty:p-2", className)}
@@ -219,13 +205,7 @@ export function CommandGroup({
   className,
   ...props
 }: React.ComponentProps<typeof AutocompleteGroup>): React.ReactElement {
-  return (
-    <AutocompleteGroup
-      className={className}
-      data-slot="command-group"
-      {...props}
-    />
-  );
+  return <AutocompleteGroup className={className} data-slot="command-group" {...props} />;
 }
 
 export function CommandGroupLabel({
@@ -233,11 +213,7 @@ export function CommandGroupLabel({
   ...props
 }: React.ComponentProps<typeof AutocompleteGroupLabel>): React.ReactElement {
   return (
-    <AutocompleteGroupLabel
-      className={className}
-      data-slot="command-group-label"
-      {...props}
-    />
+    <AutocompleteGroupLabel className={className} data-slot="command-group-label" {...props} />
   );
 }
 

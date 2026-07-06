@@ -10,22 +10,18 @@ import { PlaylistsPanel } from "./queue/PlaylistsPanel";
 import { QueuePanel } from "./queue/QueuePanel";
 
 export function Sidebar() {
-  const currentTab = useSidebarStore(state => state.currentTab);
-  const position = useSidebarStore(state => state.position);
-  const setSidebarTab = useSidebarStore(state => state.setSidebarTab);
-  const setSidebarDragging = useSidebarStore(
-    state => state.setSidebarDragging,
-  );
-  const setSettingsDialogOpen = useSettingsStore(
-    state => state.setSettingsDialogOpen,
-  );
+  const currentTab = useSidebarStore((state) => state.currentTab);
+  const position = useSidebarStore((state) => state.position);
+  const setSidebarTab = useSidebarStore((state) => state.setSidebarTab);
+  const setSidebarDragging = useSidebarStore((state) => state.setSidebarDragging);
+  const setSettingsDialogOpen = useSettingsStore((state) => state.setSettingsDialogOpen);
 
   const isLeft = position === "left";
 
   return (
     <Tabs
       className="group/sidebar relative flex h-full flex-col overflow-hidden"
-      onValueChange={value => setSidebarTab(value as SidebarTab)}
+      onValueChange={(value) => setSidebarTab(value as SidebarTab)}
       value={currentTab}
     >
       <div
@@ -46,16 +42,10 @@ export function Sidebar() {
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 pt-0">
-        <TabsContent
-          className="flex min-h-0 flex-1 flex-col"
-          value="file-browser"
-        >
+        <TabsContent className="flex min-h-0 flex-1 flex-col" value="file-browser">
           <FileBrowserPanel />
         </TabsContent>
-        <TabsContent
-          className="flex min-h-0 flex-1 flex-col"
-          value="playlists"
-        >
+        <TabsContent className="flex min-h-0 flex-1 flex-col" value="playlists">
           <PlaylistsPanel />
         </TabsContent>
         <TabsContent className="flex min-h-0 flex-1 flex-col" value="queue">
@@ -71,11 +61,11 @@ export function Sidebar() {
             setSidebarDragging(true);
           }}
         >
-          <div className="h-1 w-12 rounded-full bg-foreground/10 transition-all group-hover:w-16 group-hover:bg-primary/40 group-active:w-20 group-active:bg-primary/60" />
+          <div className="bg-foreground/10 group-hover:bg-primary/40 group-active:bg-primary/60 h-1 w-12 rounded-full transition-all group-hover:w-16 group-active:w-20" />
         </div>
 
         <Button
-          className="h-8 w-8 text-muted-foreground/60 transition-colors hover:bg-primary/10 hover:text-primary"
+          className="text-muted-foreground/60 hover:bg-primary/10 hover:text-primary h-8 w-8 transition-colors"
           onClick={() => setSettingsDialogOpen(true)}
           size="icon"
           variant="ghost"

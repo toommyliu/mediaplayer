@@ -17,8 +17,7 @@ export const UserDataLayer = Layer.effect(
   Effect.gen(function* () {
     const logger = yield* LoggerService;
 
-    const getStoreDirectory = (): string =>
-      join(app.getPath("userData"), USER_DATA_DIRECTORY);
+    const getStoreDirectory = (): string => join(app.getPath("userData"), USER_DATA_DIRECTORY);
 
     const getStorePath = (name: string): string | null => {
       if (!STORE_NAME_PATTERN.test(name)) {
@@ -31,8 +30,7 @@ export const UserDataLayer = Layer.effect(
 
     const writeStoreFile = async (name: string, value: string): Promise<void> => {
       const storePath = getStorePath(name);
-      if (!storePath)
-        return;
+      if (!storePath) return;
 
       const tempPath = `${storePath}.tmp`;
 
@@ -43,10 +41,7 @@ export const UserDataLayer = Layer.effect(
 
     const writeQueues = new Map<string, Promise<void>>();
 
-    const enqueueStoreWrite = (
-      name: string,
-      write: () => Promise<void>,
-    ): Promise<void> => {
+    const enqueueStoreWrite = (name: string, write: () => Promise<void>): Promise<void> => {
       const previousWrite = writeQueues.get(name) ?? Promise.resolve();
       const nextWrite = previousWrite
         .then(async () => {
@@ -61,16 +56,14 @@ export const UserDataLayer = Layer.effect(
     };
 
     return {
-      readPersistedStore: name =>
+      readPersistedStore: (name) =>
         Effect.promise(async () => {
           const storePath = getStorePath(name);
-          if (!storePath)
-            return null;
+          if (!storePath) return null;
 
           try {
             return await readFile(storePath, "utf8");
-          }
-          catch (error) {
+          } catch (error) {
             if (isNodeError(error) && error.code === "ENOENT") {
               return null;
             }
@@ -78,17 +71,15 @@ export const UserDataLayer = Layer.effect(
             return null;
           }
         }),
-      removePersistedStore: name =>
+      removePersistedStore: (name) =>
         Effect.promise(async () => {
           await enqueueStoreWrite(name, async () => {
             const storePath = getStorePath(name);
-            if (!storePath)
-              return;
+            if (!storePath) return;
 
             try {
               await unlink(storePath);
-            }
-            catch (error) {
+            } catch (error) {
               if (!isNodeError(error) || error.code !== "ENOENT") {
                 throw error;
               }

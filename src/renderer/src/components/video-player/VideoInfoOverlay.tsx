@@ -9,23 +9,20 @@ export interface VideoInfoOverlayProps {
 const EXTENSION_REGEX = /\.[^/.]+$/;
 
 export function VideoInfoOverlay({ visible }: VideoInfoOverlayProps) {
-  const videoInfoEnabled = useNotificationsStore(
-    state => state.videoInfoEnabled,
-  );
-  const index = useQueueStore(state => state.index);
-  const items = useQueueStore(state => state.items);
-  const currentItem = useQueueStore(state =>
+  const videoInfoEnabled = useNotificationsStore((state) => state.videoInfoEnabled);
+  const index = useQueueStore((state) => state.index);
+  const items = useQueueStore((state) => state.items);
+  const currentItem = useQueueStore((state) =>
     state.items.length > 0 ? (state.items[state.index] ?? null) : null,
   );
-  const upNextPosition = useNotificationsStore(state => state.upNextPosition);
+  const upNextPosition = useNotificationsStore((state) => state.upNextPosition);
   const isTop = upNextPosition.startsWith("top");
 
   function stripExtension(filename: string) {
     return filename.replace(EXTENSION_REGEX, "");
   }
 
-  if (!currentItem || !videoInfoEnabled)
-    return null;
+  if (!currentItem || !videoInfoEnabled) return null;
 
   return (
     <div
@@ -43,19 +40,11 @@ export function VideoInfoOverlay({ visible }: VideoInfoOverlayProps) {
         <h1 className="text-2xl font-bold text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
           {stripExtension(currentItem.name)}
         </h1>
-        {items.length > 1
-          ? (
-              <p className="text-sm font-medium text-white/75">
-                Video
-                {" "}
-                {index + 1}
-                {" "}
-                of
-                {" "}
-                {items.length}
-              </p>
-            )
-          : null}
+        {items.length > 1 ? (
+          <p className="text-sm font-medium text-white/75">
+            Video {index + 1} of {items.length}
+          </p>
+        ) : null}
       </div>
     </div>
   );

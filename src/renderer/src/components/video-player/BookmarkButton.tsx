@@ -4,11 +4,7 @@ import { BookmarkCheck, BookmarkIcon } from "lucide-react";
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent } from "@/components/ui/popover";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useBookmarksStore } from "@/stores/bookmarks";
 import { usePlayerStore } from "@/stores/player";
@@ -17,18 +13,17 @@ import { BookmarksPanel } from "./BookmarksPanel";
 function assignRef<T>(ref: React.Ref<T> | undefined, value: T | null) {
   if (typeof ref === "function") {
     ref(value);
-  }
-  else if (ref) {
+  } else if (ref) {
     ref.current = value;
   }
 }
 
 export function BookmarkButton() {
-  const currentVideo = usePlayerStore(state => state.currentVideo);
-  const currentTime = usePlayerStore(state => state.currentTime);
-  const addBookmark = useBookmarksStore(state => state.addBookmark);
-  const isPanelOpen = useBookmarksStore(state => state.isPanelOpen);
-  const setIsPanelOpen = useBookmarksStore(state => state.setIsPanelOpen);
+  const currentVideo = usePlayerStore((state) => state.currentVideo);
+  const currentTime = usePlayerStore((state) => state.currentTime);
+  const addBookmark = useBookmarksStore((state) => state.addBookmark);
+  const isPanelOpen = useBookmarksStore((state) => state.isPanelOpen);
+  const setIsPanelOpen = useBookmarksStore((state) => state.setIsPanelOpen);
   const lastAction = useBookmarksStore((state: BookmarksStore) => state.lastAction);
   const [animationStatus, setAnimationStatus] = React.useState<"new" | "duplicate" | null>(null);
   const isBookmarkDisabled = !currentVideo;
@@ -62,30 +57,29 @@ export function BookmarkButton() {
               {...mergeProps(tooltipProps, {
                 "aria-label": "Add bookmark",
                 "aria-disabled": isBookmarkDisabled,
-                "className": cn(
+                className: cn(
                   "group/bookmark-btn relative h-9 rounded-md border-0 bg-transparent px-3 text-white shadow-none transition-all duration-300 hover:bg-white/10 active:scale-90 focus-visible:ring-1 focus-visible:ring-white/20 sm:h-8",
-                  isBookmarkDisabled && "cursor-not-allowed opacity-64 hover:bg-transparent active:scale-100",
+                  isBookmarkDisabled &&
+                    "cursor-not-allowed opacity-64 hover:bg-transparent active:scale-100",
                 ),
-                "onClick": (e: React.MouseEvent<HTMLButtonElement>) => {
+                onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
                   if (isBookmarkDisabled) {
                     e.preventDefault();
                     return;
                   }
-                  if (e.button === 0)
-                    handleAddBookmark();
+                  if (e.button === 0) handleAddBookmark();
                 },
-                "onContextMenu": (e: React.MouseEvent<HTMLButtonElement>) => {
+                onContextMenu: (e: React.MouseEvent<HTMLButtonElement>) => {
                   e.preventDefault();
-                  if (isBookmarkDisabled)
-                    return;
+                  if (isBookmarkDisabled) return;
                   setIsPanelOpen(true);
                 },
-                "size": "icon" as const,
-                "style": {
+                size: "icon" as const,
+                style: {
                   transitionTimingFunction: "var(--ease-out)",
                 },
-                "type": "button" as const,
-                "variant": "ghost" as const,
+                type: "button" as const,
+                variant: "ghost" as const,
               })}
               ref={(node) => {
                 buttonRef.current = node;
@@ -93,26 +87,24 @@ export function BookmarkButton() {
               }}
             >
               <div className="relative flex items-center justify-center">
-                {animationStatus === "new"
-                  ? (
-                      <BookmarkCheck
-                        className="size-4 animate-pop-spring! text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]"
-                        style={{
-                          transitionTimingFunction: "var(--ease-out)",
-                        }}
-                      />
-                    )
-                  : (
-                      <BookmarkIcon
-                        className={cn(
-                          "size-4 transition-all duration-300 group-hover/bookmark-btn:scale-110",
-                          animationStatus === "duplicate" && "animate-recoil! text-amber-400",
-                        )}
-                        style={{
-                          transitionTimingFunction: "var(--ease-out)",
-                        }}
-                      />
+                {animationStatus === "new" ? (
+                  <BookmarkCheck
+                    className="animate-pop-spring! size-4 text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]"
+                    style={{
+                      transitionTimingFunction: "var(--ease-out)",
+                    }}
+                  />
+                ) : (
+                  <BookmarkIcon
+                    className={cn(
+                      "size-4 transition-all duration-300 group-hover/bookmark-btn:scale-110",
+                      animationStatus === "duplicate" && "animate-recoil! text-amber-400",
                     )}
+                    style={{
+                      transitionTimingFunction: "var(--ease-out)",
+                    }}
+                  />
+                )}
               </div>
 
               {/* Feedback Dot */}
@@ -138,16 +130,14 @@ export function BookmarkButton() {
           )}
         />
         <TooltipContent className="text-center" side="top">
-          {isBookmarkDisabled
-            ? (
-                <p>Open a video to add bookmarks</p>
-              )
-            : (
-                <>
-                  <p>Add bookmark</p>
-                  <p className="text-muted-foreground">Right-click for bookmarks</p>
-                </>
-              )}
+          {isBookmarkDisabled ? (
+            <p>Open a video to add bookmarks</p>
+          ) : (
+            <>
+              <p>Add bookmark</p>
+              <p className="text-muted-foreground">Right-click for bookmarks</p>
+            </>
+          )}
         </TooltipContent>
       </Tooltip>
       <PopoverContent

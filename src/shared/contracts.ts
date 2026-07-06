@@ -1,15 +1,15 @@
 import type { FileTreeItem } from "../shared";
 
-export type PickerResult
-  = | {
-    path: string;
-    type: "file";
-  }
+export type PickerResult =
   | {
-    rootPath: string;
-    tree: FileTreeItem[];
-    type: "folder";
-  };
+      path: string;
+      type: "file";
+    }
+  | {
+      rootPath: string;
+      tree: FileTreeItem[];
+      type: "folder";
+    };
 
 export interface DirectoryContents {
   currentPath: string;

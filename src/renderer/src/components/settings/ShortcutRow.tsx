@@ -31,9 +31,7 @@ export function ShortcutRow({
   onEdit,
   onCancel,
 }: ShortcutRowProps) {
-  const updateHotkeyInState = useHotkeysStore(
-    (state) => state.updateHotkeyInState,
-  );
+  const updateHotkeyInState = useHotkeysStore((state) => state.updateHotkeyInState);
 
   const recorder = useHotkeyRecorder({
     onRecord: (hotkey) => {
@@ -57,9 +55,7 @@ export function ShortcutRow({
 
   return (
     <div className="border-border/50 flex items-center justify-between gap-4 border-b px-3 py-2 last:border-b-0">
-      <div className="text-muted-foreground text-xs leading-relaxed">
-        {action.description}
-      </div>
+      <div className="text-muted-foreground text-xs leading-relaxed">{action.description}</div>
       <div className="flex items-center gap-2">
         <Kbd className="h-5 min-w-5 px-1 text-[10px]">
           {isEditing

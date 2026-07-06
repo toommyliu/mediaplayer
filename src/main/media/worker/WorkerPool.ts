@@ -47,8 +47,7 @@ export class WorkerPool {
   ) {
     this.poolSize = poolSize;
     this.workerPath = workerPath;
-    this.cacheMaxEntries =
-      options?.cacheMaxEntries ?? DEFAULT_CACHE_MAX_ENTRIES;
+    this.cacheMaxEntries = options?.cacheMaxEntries ?? DEFAULT_CACHE_MAX_ENTRIES;
     this.cacheTtlMs = options?.cacheTtlMs ?? DEFAULT_CACHE_TTL_MS;
   }
 
@@ -106,8 +105,7 @@ export class WorkerPool {
           const duration = await this.processFile(filePath);
           return [filePath, duration] as const;
         } catch (error) {
-          const workerError =
-            error instanceof Error ? error : new Error(String(error));
+          const workerError = error instanceof Error ? error : new Error(String(error));
           onError?.(filePath, workerError);
           return [filePath, 0] as const;
         }
@@ -159,8 +157,7 @@ export class WorkerPool {
       } catch (error) {
         this.activeTasks.delete(worker);
         this.availableWorkers.push(worker);
-        const workerError =
-          error instanceof Error ? error : new Error(String(error));
+        const workerError = error instanceof Error ? error : new Error(String(error));
         this.completeTask(task, undefined, workerError);
       }
     }
@@ -248,11 +245,7 @@ export class WorkerPool {
     this.availableWorkers = this.availableWorkers.filter((w) => w !== worker);
   }
 
-  private completeTask(
-    task: WorkerTask,
-    duration?: number,
-    error?: Error,
-  ): void {
+  private completeTask(task: WorkerTask, duration?: number, error?: Error): void {
     this.taskById.delete(task.id);
 
     if (error) {

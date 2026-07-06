@@ -13,12 +13,8 @@ import { useNotificationsStore } from "@/stores/notifications";
 export function UISection() {
   const upNextEnabled = useNotificationsStore((state) => state.upNextEnabled);
   const upNextPosition = useNotificationsStore((state) => state.upNextPosition);
-  const videoInfoEnabled = useNotificationsStore(
-    (state) => state.videoInfoEnabled,
-  );
-  const setNotificationSettings = useNotificationsStore(
-    (state) => state.setNotificationSettings,
-  );
+  const videoInfoEnabled = useNotificationsStore((state) => state.videoInfoEnabled);
+  const setNotificationSettings = useNotificationsStore((state) => state.setNotificationSettings);
 
   return (
     <div className="space-y-4">
@@ -51,9 +47,7 @@ export function UISection() {
       </div>
 
       <div>
-        <Label className="mb-1.5 block text-xs font-medium">
-          Up Next Position
-        </Label>
+        <Label className="mb-1.5 block text-xs font-medium">Up Next Position</Label>
         <Select
           value={upNextPosition}
           onValueChange={(value) =>
