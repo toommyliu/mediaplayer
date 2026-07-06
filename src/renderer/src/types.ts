@@ -1,14 +1,14 @@
 import type { FileTreeItem } from "../../shared";
 
-export type SidebarTab = "file-browser" | "queue";
+export type SidebarTab = "file-browser" | "playlists" | "queue";
 export type RepeatMode = "all" | "off" | "one";
 export type WindowBlurAction = "mute" | "none" | "pause";
 export type SidebarPosition = "left" | "right";
-export type NotificationPosition =
-  | "top-left"
-  | "top-right"
-  | "bottom-left"
-  | "bottom-right";
+export type NotificationPosition
+  = | "top-left"
+    | "top-right"
+    | "bottom-left"
+    | "bottom-right";
 export type AspectRatioMode = "contain" | "cover" | "fill";
 
 export interface QueueItem {
@@ -16,6 +16,15 @@ export interface QueueItem {
   id: string;
   name: string;
   path: string;
+}
+
+export interface Playlist {
+  createdAt: number;
+  id: string;
+  items: QueueItem[];
+  lastPlayedAt?: number;
+  name: string;
+  updatedAt: number;
 }
 
 export type FileSystemItem = FileTreeItem;
@@ -52,6 +61,7 @@ export interface AppState {
     expandedFolders: Set<string>;
     fileTree: FileTree | null;
     focusedItemPath: string | null;
+    contextMenuItemPaths: Set<string>;
     isAtRoot: boolean;
     isLoading: boolean;
     loadingFolders: Set<string>;
@@ -59,6 +69,8 @@ export interface AppState {
     originalPath: string | null;
     scrollTop: number;
     searchQuery: string;
+    selectedItemPaths: Set<string>;
+    selectionAnchorPath: string | null;
     sortBy: "duration" | "name";
     sortDirection: "asc" | "desc";
   };
@@ -95,6 +107,9 @@ export interface AppState {
     index: number;
     items: QueueItem[];
     repeatMode: RepeatMode;
+  };
+  playlists: {
+    playlists: Playlist[];
   };
   settings: {
     showDialog: boolean;

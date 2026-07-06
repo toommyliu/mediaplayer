@@ -3,7 +3,6 @@ import type { FileSystemItem } from "@/types";
 import { ChevronDown, Dot, Loader2 } from "lucide-react";
 
 import {
-  navigateToDirectory,
   playFileBrowserVideo,
   toggleFolder,
 } from "@/actions/library";
@@ -44,13 +43,21 @@ function hasCurrentVideoInFolder(
 export function FileBrowserItem({
   item,
   depth,
+  index,
+  visibleItems,
 }: {
   depth: number;
+  index: number;
   item: FileSystemItem;
+  visibleItems: FileSystemItem[];
 }) {
   const expandedFolders = useFileBrowserStore(state => state.expandedFolders);
   const loadingFolders = useFileBrowserStore(state => state.loadingFolders);
   const isFileBrowserLoading = useFileBrowserStore(state => state.isLoading);
+  const selectedItemPaths = useFileBrowserStore(state => state.selectedItemPaths);
+  const selectionAnchorPath = useFileBrowserStore(
+    state => state.selectionAnchorPath,
+  );
   const currentVideo = usePlayerStore(state => state.currentVideo);
   const setFileBrowserState = useFileBrowserStore(
     state => state.setFileBrowserState,
@@ -62,6 +69,7 @@ export function FileBrowserItem({
   const isExpanded = isFolder && expandedFolders.has(item.path);
   const isLoading = loadingFolders.has(item.path);
   const isPlaying = isCurrentVideo(item.path, currentVideo);
+  const isSelected = selectedItemPaths.has(item.path);
   const containsCurrent
     = isFolder && !isExpanded && hasCurrentVideoInFolder(item.path, currentVideo);
 
@@ -76,20 +84,62 @@ export function FileBrowserItem({
     next?.focus();
   }
 
+  function updateSelectionFromEvent(event: MouseEvent | KeyboardEvent): boolean {
+    const isModKeyPressed
+      = "metaKey" in event ? (isMac ? event.metaKey : event.ctrlKey) : false;
+
+    if (event.shiftKey) {
+      const anchorIndex = selectionAnchorPath
+        ? visibleItems.findIndex(item => item.path === selectionAnchorPath)
+        : -1;
+      const startIndex = anchorIndex === -1 ? index : Math.min(anchorIndex, index);
+      const endIndex = anchorIndex === -1 ? index : Math.max(anchorIndex, index);
+      const nextSelection = new Set(
+        visibleItems
+          .slice(startIndex, endIndex + 1)
+          .map(item => item.path),
+      );
+
+      setFileBrowserState({
+        selectedItemPaths: nextSelection,
+        selectionAnchorPath: selectionAnchorPath ?? item.path,
+      });
+      return true;
+    }
+
+    if (isModKeyPressed) {
+      const nextSelection = new Set(selectedItemPaths);
+      if (nextSelection.has(item.path)) {
+        nextSelection.delete(item.path);
+      }
+      else {
+        nextSelection.add(item.path);
+      }
+
+      setFileBrowserState({
+        selectedItemPaths: nextSelection,
+        selectionAnchorPath: item.path,
+      });
+      return true;
+    }
+
+    setFileBrowserState({
+      selectedItemPaths: new Set([item.path]),
+      selectionAnchorPath: item.path,
+    });
+    return false;
+  }
+
   function handleItemClick(event: MouseEvent | KeyboardEvent): void {
     if (isFileBrowserLoading)
       return;
 
+    if (updateSelectionFromEvent(event)) {
+      event.preventDefault();
+      return;
+    }
+
     if (isFolder) {
-      const isModKeyPressed
-        = "metaKey" in event ? (isMac ? event.metaKey : event.ctrlKey) : false;
-
-      if (isModKeyPressed) {
-        event.preventDefault();
-        void navigateToDirectory(item.path);
-        return;
-      }
-
       toggleFolder(item.path);
       return;
     }
@@ -104,6 +154,7 @@ export function FileBrowserItem({
           render={(defaultProps: ComponentProps<"div">) => {
             const {
               className: triggerClassName,
+              onContextMenu: triggerOnContextMenu,
               style: triggerStyle,
               ...triggerProps
             } = defaultProps;
@@ -114,17 +165,30 @@ export function FileBrowserItem({
                 data-slot="file-browser-item"
                 className={cn(
                   "group relative flex h-7 items-center rounded-md border px-2 transition-[background-color,border-color,color,box-shadow] duration-100 focus-within:ring-2 focus-within:ring-ring focus-within:ring-inset",
-                  isPlaying
+                  isPlaying || isSelected
                     ? "border-primary/20 bg-primary/10 text-primary"
                     : "hover:bg-muted/50 hover:text-foreground border-transparent",
                   triggerClassName,
                 )}
+                onContextMenu={(event) => {
+                  const contextMenuItemPaths = selectedItemPaths.has(item.path)
+                    ? new Set(selectedItemPaths)
+                    : new Set([item.path]);
+
+                  setFileBrowserState({
+                    contextMenuItemPaths,
+                    selectedItemPaths: contextMenuItemPaths,
+                    selectionAnchorPath: item.path,
+                  });
+                  triggerOnContextMenu?.(event);
+                }}
                 style={{
                   ...triggerStyle,
                   paddingLeft: `${depth * 14 + 8}px`,
                 }}
               >
                 <button
+                  aria-selected={isSelected}
                   className="flex h-7 min-w-0 flex-1 items-center gap-2.5 text-left outline-none"
                   data-item-trigger="true"
                   data-path={item.path}

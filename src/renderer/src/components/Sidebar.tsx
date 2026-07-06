@@ -6,17 +6,18 @@ import { cn } from "@/lib/utils";
 import { useSettingsStore } from "@/stores/settings";
 import { useSidebarStore } from "@/stores/sidebar";
 import { FileBrowserPanel } from "./file-browser/FileBrowserPanel";
+import { PlaylistsPanel } from "./queue/PlaylistsPanel";
 import { QueuePanel } from "./queue/QueuePanel";
 
 export function Sidebar() {
-  const currentTab = useSidebarStore((state) => state.currentTab);
-  const position = useSidebarStore((state) => state.position);
-  const setSidebarTab = useSidebarStore((state) => state.setSidebarTab);
+  const currentTab = useSidebarStore(state => state.currentTab);
+  const position = useSidebarStore(state => state.position);
+  const setSidebarTab = useSidebarStore(state => state.setSidebarTab);
   const setSidebarDragging = useSidebarStore(
-    (state) => state.setSidebarDragging,
+    state => state.setSidebarDragging,
   );
   const setSettingsDialogOpen = useSettingsStore(
-    (state) => state.setSettingsDialogOpen,
+    state => state.setSettingsDialogOpen,
   );
 
   const isLeft = position === "left";
@@ -24,7 +25,7 @@ export function Sidebar() {
   return (
     <Tabs
       className="group/sidebar relative flex h-full flex-col overflow-hidden"
-      onValueChange={(value) => setSidebarTab(value as SidebarTab)}
+      onValueChange={value => setSidebarTab(value as SidebarTab)}
       value={currentTab}
     >
       <div
@@ -37,8 +38,9 @@ export function Sidebar() {
       />
 
       <div className="px-4 pt-4 pb-1">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="file-browser">Files</TabsTrigger>
+          <TabsTrigger value="playlists">Playlists</TabsTrigger>
           <TabsTrigger value="queue">Queue</TabsTrigger>
         </TabsList>
       </div>
@@ -49,6 +51,12 @@ export function Sidebar() {
           value="file-browser"
         >
           <FileBrowserPanel />
+        </TabsContent>
+        <TabsContent
+          className="flex min-h-0 flex-1 flex-col"
+          value="playlists"
+        >
+          <PlaylistsPanel />
         </TabsContent>
         <TabsContent className="flex min-h-0 flex-1 flex-col" value="queue">
           <QueuePanel />

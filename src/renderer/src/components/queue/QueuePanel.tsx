@@ -4,9 +4,10 @@ import { RepeatButton } from "../RepeatButton";
 import { ShuffleButton } from "../ShuffleButton";
 import { QueueEmptyState } from "./QueueEmptyState";
 import { QueueList } from "./QueueList";
+import { SaveQueueAsPlaylistButton } from "./SaveQueueAsPlaylistButton";
 
 export function QueuePanel() {
-  const queueItemsLength = useQueueStore((state) => state.items.length);
+  const queueItemsLength = useQueueStore(state => state.items.length);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-2.5 pt-1">
@@ -16,7 +17,10 @@ export function QueuePanel() {
           <RepeatButton />
         </div>
 
-        <ClearQueueButton />
+        <div className="flex items-center gap-1">
+          <SaveQueueAsPlaylistButton />
+          <ClearQueueButton />
+        </div>
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col">

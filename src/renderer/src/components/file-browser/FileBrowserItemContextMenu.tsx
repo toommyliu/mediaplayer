@@ -1,11 +1,12 @@
 import type { FormEvent } from "react";
-import type { FileSystemItem } from "@/types";
+import type { FileSystemItem, QueueItem } from "@/types";
 import {
   CheckIcon,
   CopyIcon,
   ExternalLinkIcon,
   FolderIcon,
   FolderOpenIcon,
+  ListMusicIcon,
   ListPlusIcon,
   PlayIcon,
   PlusIcon,
@@ -35,6 +36,10 @@ import {
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuSeparator,
+  ContextMenuShortcut,
+  ContextMenuSub,
+  ContextMenuSubContent,
+  ContextMenuSubTrigger,
 } from "@/components/ui/context-menu";
 import {
   Dialog,
@@ -47,11 +52,134 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
+import { normalizeVideoPath } from "@/lib/media-path";
 import { cn } from "@/lib/utils";
+import { useFileBrowserStore } from "@/stores/file-browser";
+import { usePlaylistsStore } from "@/stores/playlists";
 import { useQueueStore } from "@/stores/queue";
+import { makeQueueId } from "@/stores/utils";
+import { flattenVideoFiles } from "../../../../shared";
 
 interface CopyPathMenuItemProps {
   path: string;
+}
+
+function collectItemsByPath(
+  items: FileSystemItem[],
+  paths: Set<string>,
+  selectedItems: FileSystemItem[] = [],
+): FileSystemItem[] {
+  for (const item of items) {
+    if (paths.has(item.path)) {
+      selectedItems.push(item);
+    }
+
+    if (item.files) {
+      collectItemsByPath(item.files, paths, selectedItems);
+    }
+  }
+
+  return selectedItems;
+}
+
+function toPlaylistItems(items: FileSystemItem[]): QueueItem[] {
+  const seenPaths = new Set<string>();
+  const playlistItems: QueueItem[] = [];
+  const videos = items.flatMap(item =>
+    item.type === "video" ? [item] : flattenVideoFiles([item]),
+  );
+
+  for (const video of videos) {
+    const normalizedPath = normalizeVideoPath(video.path);
+    if (seenPaths.has(normalizedPath))
+      continue;
+
+    seenPaths.add(normalizedPath);
+    playlistItems.push({
+      duration: video.duration ?? 0,
+      id: makeQueueId(video.path),
+      name: video.name,
+      path: video.path,
+    });
+  }
+
+  return playlistItems;
+}
+
+function getNewPlaylistItemCount(
+  playlistItems: QueueItem[],
+  existingItems: QueueItem[],
+): number {
+  const existingPaths = new Set(
+    existingItems.map(item => normalizeVideoPath(item.path)),
+  );
+  return playlistItems.filter(
+    item => !existingPaths.has(normalizeVideoPath(item.path)),
+  ).length;
+}
+
+function AddToPlaylistSubMenu({ items }: { items: FileSystemItem[] }) {
+  const playlists = usePlaylistsStore(state => state.playlists);
+  const addPlaylistItems = usePlaylistsStore(state => state.addPlaylistItems);
+  const playlistItems = toPlaylistItems(items);
+  const hasVideos = playlistItems.length > 0;
+  const triggerLabel
+    = playlistItems.length > 1
+      ? `Add ${playlistItems.length} videos to playlist`
+      : "Add to playlist";
+
+  return (
+    <ContextMenuSub>
+      <ContextMenuSubTrigger disabled={!hasVideos}>
+        <ListMusicIcon className="size-4" />
+        {triggerLabel}
+      </ContextMenuSubTrigger>
+      <ContextMenuSubContent className="min-w-52">
+        {playlists.length === 0
+          ? (
+              <ContextMenuItem disabled>
+                <ListMusicIcon className="size-4" />
+                No playlists
+              </ContextMenuItem>
+            )
+          : playlists.map((playlist) => {
+              const newItemCount = getNewPlaylistItemCount(
+                playlistItems,
+                playlist.items,
+              );
+              const isAlreadyAdded = hasVideos && newItemCount === 0;
+
+              return (
+                <ContextMenuItem
+                  disabled={isAlreadyAdded}
+                  key={playlist.id}
+                  onClick={() => addPlaylistItems(playlist.id, playlistItems)}
+                >
+                  {isAlreadyAdded
+                    ? (
+                        <CheckIcon className="text-primary size-4" />
+                      )
+                    : (
+                        <ListMusicIcon className="size-4" />
+                      )}
+                  <span className="truncate">{playlist.name}</span>
+                  {isAlreadyAdded
+                    ? <ContextMenuShortcut>Added</ContextMenuShortcut>
+                    : playlistItems.length > 1
+                      ? (
+                          <ContextMenuShortcut>
+                            {newItemCount}
+                            {" "}
+                            new
+                          </ContextMenuShortcut>
+                        )
+                      : null}
+                </ContextMenuItem>
+              );
+            })}
+      </ContextMenuSubContent>
+    </ContextMenuSub>
+  );
 }
 
 function CopyPathMenuItem({ path }: CopyPathMenuItemProps) {
@@ -314,14 +442,18 @@ function DeleteDialog({
 
 export interface FileBrowserItemContextMenuProps {
   item: FileSystemItem;
+  items?: FileSystemItem[];
   isExpanded: boolean;
 }
 
 // Folder
 function FolderItemContextMenu({
   item,
+  items,
   isExpanded,
 }: FileBrowserItemContextMenuProps) {
+  const playlistItems = items ?? [item];
+
   return (
     <>
       <ContextMenuItem
@@ -340,14 +472,23 @@ function FolderItemContextMenu({
         <FolderIcon className="size-4" />
         {isExpanded ? "Collapse folder" : "Expand folder"}
       </ContextMenuItem>
+      <ContextMenuSeparator />
+      <AddToPlaylistSubMenu items={playlistItems} />
     </>
   );
 }
 
 // File
-function FileItemContextMenu({ item }: FileBrowserItemContextMenuProps) {
-  const addQueueItem = useQueueStore(state => state.addQueueItem);
-  const addQueueItemNext = useQueueStore(state => state.addQueueItemNext);
+function FileItemContextMenu({ item, items }: FileBrowserItemContextMenuProps) {
+  const addQueueItemAtIndex = useQueueStore(state => state.addQueueItemAtIndex);
+  const addQueueItems = useQueueStore(state => state.addQueueItems);
+  const queueIndex = useQueueStore(state => state.index);
+  const playlistItems = items ?? [item];
+  const videoItems = toPlaylistItems(playlistItems);
+  const addToQueueLabel
+    = videoItems.length > 1 ? `Add ${videoItems.length} to queue` : "Add to queue";
+  const addNextLabel
+    = videoItems.length > 1 ? `Add ${videoItems.length} next` : "Add next";
 
   return (
     <>
@@ -362,28 +503,24 @@ function FileItemContextMenu({ item }: FileBrowserItemContextMenuProps) {
       <ContextMenuSeparator />
       <ContextMenuItem
         onClick={() => {
-          addQueueItem({
-            duration: item.duration,
-            name: item.name,
-            path: item.path,
-          });
+          addQueueItems(videoItems);
         }}
       >
         <PlusIcon className="size-4" />
-        Add to queue
+        {addToQueueLabel}
       </ContextMenuItem>
       <ContextMenuItem
         onClick={() => {
-          addQueueItemNext({
-            duration: item.duration,
-            name: item.name,
-            path: item.path,
-          });
+          for (const videoItem of [...videoItems].reverse()) {
+            addQueueItemAtIndex(videoItem, queueIndex + 1);
+          }
         }}
       >
         <ListPlusIcon className="size-4" />
-        Add next
+        {addNextLabel}
       </ContextMenuItem>
+      <ContextMenuSeparator />
+      <AddToPlaylistSubMenu items={playlistItems} />
     </>
   );
 }
@@ -393,6 +530,15 @@ export function FileBrowserItemContextMenu({
   isExpanded,
 }: FileBrowserItemContextMenuProps) {
   const isFolder = item.type === "folder";
+  const contextMenuItemPaths = useFileBrowserStore(
+    state => state.contextMenuItemPaths,
+  );
+  const fileTree = useFileBrowserStore(state => state.fileTree);
+  const selectedItems
+    = contextMenuItemPaths.size > 0 && fileTree
+      ? collectItemsByPath(fileTree.files, contextMenuItemPaths)
+      : [];
+  const contextItems = selectedItems.length > 0 ? selectedItems : [item];
   const [isRenameOpen, setIsRenameOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
@@ -401,10 +547,18 @@ export function FileBrowserItemContextMenu({
       <ContextMenuContent className="min-w-48">
         {isFolder
           ? (
-              <FolderItemContextMenu item={item} isExpanded={isExpanded} />
+              <FolderItemContextMenu
+                item={item}
+                items={contextItems}
+                isExpanded={isExpanded}
+              />
             )
           : (
-              <FileItemContextMenu item={item} isExpanded={isExpanded} />
+              <FileItemContextMenu
+                item={item}
+                items={contextItems}
+                isExpanded={isExpanded}
+              />
             )}
 
         <ContextMenuSeparator />

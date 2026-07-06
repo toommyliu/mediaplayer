@@ -122,6 +122,10 @@ export function FileBrowserList() {
 
     return result;
   }, [fileTree, expandedFolders, sortBy, sortDirection, searchQuery]);
+  const visibleFileItems = useMemo(
+    () => flattenedItems.map(row => row.item),
+    [flattenedItems],
+  );
 
   const showBackButton = !isAtRoot && currentPath && !searchQuery;
 
@@ -361,7 +365,12 @@ export function FileBrowserList() {
                   transform: `translateY(${virtualRow.start}px)`,
                 }}
               >
-                <FileBrowserItem item={row.item} depth={row.depth} />
+                <FileBrowserItem
+                  depth={row.depth}
+                  index={virtualRow.index}
+                  item={row.item}
+                  visibleItems={visibleFileItems}
+                />
               </div>
             );
           })}
