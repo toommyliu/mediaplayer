@@ -2,6 +2,7 @@ allowBuilds:
   "@ffmpeg-installer/darwin-arm64": true
   "@ffprobe-installer/darwin-arm64": true
   electron: true
+  electron-winstaller: true
   esbuild: true
   msgpackr-extract: false
   unrs-resolver: false
