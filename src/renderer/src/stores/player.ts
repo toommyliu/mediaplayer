@@ -2,6 +2,11 @@ import type { AspectRatioMode } from "@/types";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import {
+  isObjectRecord,
+  readDevSessionState,
+  registerDevSessionState,
+} from "@/stores/dev-session-storage";
+import {
   createUserDataStateStorage,
   registerPersistedStoreRehydration,
 } from "@/stores/user-data-storage";
@@ -40,6 +45,16 @@ export interface PlayerActions {
 export type PlayerStore = PlayerState & PlayerActions;
 
 type PlayerPersisted = Pick<PlayerState, "aspectRatio" | "playbackRate">;
+type PlayerDevSessionState = Pick<
+  PlayerState,
+  | "aspectRatio"
+  | "currentTime"
+  | "currentVideo"
+  | "duration"
+  | "isPlaying"
+  | "playbackRate"
+  | "seekUndoStack"
+>;
 
 const initialPlayerState: PlayerState = {
   aspectRatio: "contain",
@@ -100,10 +115,75 @@ function migratePlayerState(persistedState: unknown): PlayerPersisted {
   };
 }
 
+function reviveFiniteNumber(value: unknown, fallback: number): number {
+  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
+}
+
+function reviveSeekUndoStack(value: unknown): PlayerState["seekUndoStack"] {
+  if (!Array.isArray(value)) return [];
+
+  return value.flatMap((entry): PlayerState["seekUndoStack"] => {
+    if (!isObjectRecord(entry)) return [];
+
+    const { time, video } = entry;
+    if (typeof time !== "number" || !Number.isFinite(time)) return [];
+
+    return [
+      {
+        time,
+        video: typeof video === "string" ? video : null,
+      },
+    ];
+  });
+}
+
+function revivePlayerDevSessionState(value: unknown): Partial<PlayerState> | null {
+  if (!isObjectRecord(value)) return null;
+
+  return {
+    aspectRatio: ASPECT_RATIO_MODES.has(value.aspectRatio as AspectRatioMode)
+      ? (value.aspectRatio as AspectRatioMode)
+      : initialPlayerState.aspectRatio,
+    currentTime: Math.max(0, reviveFiniteNumber(value.currentTime, initialPlayerState.currentTime)),
+    currentVideo: typeof value.currentVideo === "string" ? value.currentVideo : null,
+    duration: Math.max(0, reviveFiniteNumber(value.duration, initialPlayerState.duration)),
+    error: null,
+    isFullscreen: false,
+    isHolding: false,
+    isLoading: false,
+    isPictureInPicture: false,
+    isPictureInPictureSupported: false,
+    isPlaying:
+      typeof value.isPlaying === "boolean" ? value.isPlaying : initialPlayerState.isPlaying,
+    isQuickJumpOpen: false,
+    playbackRate:
+      typeof value.playbackRate === "number" && Number.isFinite(value.playbackRate)
+        ? PLAYBACK_RATES[getPlaybackRateIndex(value.playbackRate)]
+        : initialPlayerState.playbackRate,
+    seekUndoStack: reviveSeekUndoStack(value.seekUndoStack),
+    showControls: true,
+  };
+}
+
+function serializePlayerDevSessionState(state: PlayerState): PlayerDevSessionState {
+  return {
+    aspectRatio: state.aspectRatio,
+    currentTime: state.currentTime,
+    currentVideo: state.currentVideo,
+    duration: state.duration,
+    isPlaying: state.isPlaying,
+    playbackRate: state.playbackRate,
+    seekUndoStack: state.seekUndoStack,
+  };
+}
+
+const devPlayerState = readDevSessionState("player-store", revivePlayerDevSessionState);
+
 export const usePlayerStore = create<PlayerStore>()(
   persist(
     (set, get) => ({
       ...initialPlayerState,
+      ...devPlayerState,
       setPlayerState: (patch) => set((state) => ({ ...state, ...patch })),
       resetPlayer: () =>
         set((state) => ({
@@ -171,3 +251,4 @@ export const usePlayerStore = create<PlayerStore>()(
 );
 
 registerPersistedStoreRehydration("player-store", () => usePlayerStore.persist.rehydrate());
+registerDevSessionState("player-store", usePlayerStore, serializePlayerDevSessionState);

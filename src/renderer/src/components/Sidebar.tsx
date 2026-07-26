@@ -1,5 +1,11 @@
 import type { SidebarTab } from "@/types";
-import { Settings } from "lucide-react";
+import {
+  Settings,
+  PanelLeftClose,
+  PanelLeftOpen,
+  PanelRightClose,
+  PanelRightOpen,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
@@ -12,6 +18,8 @@ import { QueuePanel } from "./queue/QueuePanel";
 export function Sidebar() {
   const currentTab = useSidebarStore((state) => state.currentTab);
   const position = useSidebarStore((state) => state.position);
+  const isOpen = useSidebarStore((state) => state.isOpen);
+  const toggleSidebar = useSidebarStore((state) => state.toggleSidebar);
   const setSidebarTab = useSidebarStore((state) => state.setSidebarTab);
   const setSidebarDragging = useSidebarStore((state) => state.setSidebarDragging);
   const setSettingsDialogOpen = useSettingsStore((state) => state.setSettingsDialogOpen);
@@ -54,6 +62,26 @@ export function Sidebar() {
       </div>
 
       <div className="flex items-center justify-between px-5 pt-3 pb-5">
+        <Button
+          className="text-muted-foreground/60 hover:bg-primary/10 hover:text-primary h-8 w-8 transition-colors"
+          onClick={toggleSidebar}
+          size="icon"
+          variant="ghost"
+          title={isOpen ? "Collapse Sidebar" : "Pin Sidebar"}
+        >
+          {isLeft ? (
+            isOpen ? (
+              <PanelLeftClose className="size-4" />
+            ) : (
+              <PanelLeftOpen className="size-4" />
+            )
+          ) : isOpen ? (
+            <PanelRightClose className="size-4" />
+          ) : (
+            <PanelRightOpen className="size-4" />
+          )}
+        </Button>
+
         <div
           className="group flex flex-1 cursor-grab items-center justify-center py-2 active:cursor-grabbing"
           onMouseDown={(e) => {
@@ -69,6 +97,7 @@ export function Sidebar() {
           onClick={() => setSettingsDialogOpen(true)}
           size="icon"
           variant="ghost"
+          title="Settings"
         >
           <Settings className="size-4" />
         </Button>

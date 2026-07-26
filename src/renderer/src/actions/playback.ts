@@ -130,6 +130,7 @@ export async function playNextVideo(): Promise<void> {
     currentVideo: toFileUrl(item.path),
     error: null,
     isLoading: true,
+    isPlaying: true,
     seekUndoStack: [],
   });
   useQueueStore.getState().setQueueIndex(nextIndex);
@@ -166,6 +167,7 @@ export async function playPreviousVideo(): Promise<void> {
     currentVideo: toFileUrl(item.path),
     error: null,
     isLoading: true,
+    isPlaying: true,
     seekUndoStack: [],
   });
   useQueueStore.getState().setQueueIndex(nextIndex);

@@ -1,6 +1,11 @@
 import type { QueueItem, RepeatMode } from "@/types";
 import { create } from "zustand";
 import { clamp } from "@/lib/clamp";
+import {
+  isObjectRecord,
+  readDevSessionState,
+  registerDevSessionState,
+} from "@/stores/dev-session-storage";
 import { makeQueueId } from "@/stores/utils";
 
 export type QueueInsertItem = Omit<QueueItem, "id">;
@@ -29,14 +34,61 @@ export interface QueueActions {
 
 export type QueueStore = QueueState & QueueActions;
 
+const initialQueueState: QueueState = {
+  index: 0,
+  items: [],
+  repeatMode: "off",
+};
+
+const REPEAT_MODES = new Set<RepeatMode>(["all", "off", "one"]);
+
+function reviveQueueItems(value: unknown): QueueItem[] {
+  if (!Array.isArray(value)) return [];
+
+  return value.flatMap((item): QueueItem[] => {
+    if (!isObjectRecord(item)) return [];
+
+    const { duration, id, name, path } = item;
+    if (typeof id !== "string" || typeof name !== "string" || typeof path !== "string") {
+      return [];
+    }
+
+    return [
+      {
+        duration: typeof duration === "number" && Number.isFinite(duration) ? duration : 0,
+        id,
+        name,
+        path,
+      },
+    ];
+  });
+}
+
+function reviveQueueState(value: unknown): QueueState | null {
+  if (!isObjectRecord(value)) return null;
+
+  const items = reviveQueueItems(value.items);
+  return {
+    index:
+      typeof value.index === "number" && Number.isFinite(value.index)
+        ? Math.round(clamp(value.index, 0, Math.max(0, items.length - 1)))
+        : initialQueueState.index,
+    items,
+    repeatMode: REPEAT_MODES.has(value.repeatMode as RepeatMode)
+      ? (value.repeatMode as RepeatMode)
+      : initialQueueState.repeatMode,
+  };
+}
+
+const devQueueState = readDevSessionState("queue-store", reviveQueueState);
+
 export function getCurrentQueueItemFromState(state: QueueState): QueueItem | null {
   return state.items.length > 0 ? (state.items[state.index] ?? null) : null;
 }
 
 export const useQueueStore = create<QueueStore>()((set, get) => ({
-  index: 0,
-  items: [],
-  repeatMode: "off",
+  ...initialQueueState,
+  ...devQueueState,
   setQueueState: (next) => set(next),
   setQueueIndex: (index) => set({ index }),
   setQueueItems: (items, index = 0) => set({ index, items }),
@@ -143,6 +195,16 @@ export const useQueueStore = create<QueueStore>()((set, get) => ({
     set({ index: 0, items: [currentItem, ...otherItems] });
   },
 }));
+
+registerDevSessionState(
+  "queue-store",
+  useQueueStore,
+  (state): QueueState => ({
+    index: state.index,
+    items: state.items,
+    repeatMode: state.repeatMode,
+  }),
+);
 
 export function useCurrentQueueItem(): QueueItem | null {
   return useQueueStore((state) => getCurrentQueueItemFromState(state));

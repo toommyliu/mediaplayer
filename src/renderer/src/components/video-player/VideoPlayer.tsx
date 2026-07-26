@@ -51,10 +51,22 @@ export default function VideoPlayer() {
   const holdTimerRef = useRef<number | null>(null);
   const holdIntervalRef = useRef<number | null>(null);
   const [showControls, setShowControls] = useState(false);
+  const isControlsHoveredRef = useRef(false);
   const [holdDirection, setHoldDirection] = useState<HoldDirection>(null);
 
   const syncPictureInPictureState = useCallback(() => {
     refreshPictureInPictureState();
+  }, []);
+
+  const restoreCurrentTime = useCallback((video: HTMLVideoElement): void => {
+    const currentTime = usePlayerStore.getState().currentTime;
+    if (!Number.isFinite(currentTime) || currentTime <= 0) return;
+
+    const duration = Number.isFinite(video.duration) ? video.duration : currentTime;
+    const nextTime = clamp(currentTime, 0, duration);
+    if (Math.abs(video.currentTime - nextTime) > 0.25) {
+      video.currentTime = nextTime;
+    }
   }, []);
 
   const setVideoElementRef = useCallback(
@@ -105,10 +117,13 @@ export default function VideoPlayer() {
     }
 
     setShowControls(true);
+    const isHovered = isControlsHoveredRef.current;
 
-    if (isPlaying) {
+    if (!isHovered && isPlaying) {
       hideTimerRef.current = window.setTimeout(() => {
-        setShowControls(false);
+        if (!isControlsHoveredRef.current) {
+          setShowControls(false);
+        }
       }, 3000);
     }
   }, [isPlaying]);
@@ -305,7 +320,7 @@ export default function VideoPlayer() {
           if (hideTimerRef.current) {
             window.clearTimeout(hideTimerRef.current);
           }
-          if (isPlaying) {
+          if (isPlaying && !isControlsHoveredRef.current) {
             setShowControls(false);
           }
         }}
@@ -344,12 +359,16 @@ export default function VideoPlayer() {
             setPlayerState({ error: null, isLoading: false });
             if (videoRef.current) {
               videoRef.current.playbackRate = playbackRate;
+              restoreCurrentTime(videoRef.current);
               setDuration(videoRef.current.duration);
-              void videoRef.current.play().catch(() => undefined);
+              if (usePlayerStore.getState().isPlaying) {
+                void videoRef.current.play().catch(() => undefined);
+              }
             }
           }}
           onLoadedMetadata={() => {
             if (videoRef.current) {
+              restoreCurrentTime(videoRef.current);
               setDuration(videoRef.current.duration);
             }
             refreshPictureInPictureState();
@@ -408,9 +427,11 @@ export default function VideoPlayer() {
         ) : null}
         <VideoPlayerControls
           onControlsMouseEnter={() => {
-            resetHideTimer();
+            isControlsHoveredRef.current = true;
+            setShowControls(true);
           }}
           onControlsMouseLeave={() => {
+            isControlsHoveredRef.current = false;
             resetHideTimer();
           }}
           visible={showControls}

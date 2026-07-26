@@ -1,6 +1,11 @@
 import type { DirectoryContents } from "@/lib/contracts";
 import type { AppState, FileSystemItem } from "@/types";
 import { create } from "zustand";
+import {
+  isObjectRecord,
+  readDevSessionState,
+  registerDevSessionState,
+} from "@/stores/dev-session-storage";
 import { sortFileTree } from "../../../shared";
 
 export type FileBrowserState = AppState["fileBrowser"];
@@ -36,8 +41,97 @@ const initialFileBrowserState: FileBrowserState = {
   sortDirection: "asc",
 };
 
+interface FileBrowserDevSessionState extends Omit<
+  FileBrowserState,
+  "contextMenuItemPaths" | "expandedFolders" | "loadingFolders" | "selectedItemPaths"
+> {
+  contextMenuItemPaths: string[];
+  expandedFolders: string[];
+  loadingFolders: string[];
+  selectedItemPaths: string[];
+}
+
+const FILE_BROWSER_SORTS = new Set<FileBrowserState["sortBy"]>(["date", "duration", "name"]);
+const SORT_DIRECTIONS = new Set<FileBrowserState["sortDirection"]>(["asc", "desc"]);
+
+function reviveNullableString(value: unknown): string | null {
+  return typeof value === "string" ? value : null;
+}
+
+function reviveStringSet(value: unknown): Set<string> {
+  if (!Array.isArray(value)) return new Set<string>();
+
+  return new Set(value.filter((item): item is string => typeof item === "string"));
+}
+
+function reviveFileTree(value: unknown): FileBrowserState["fileTree"] {
+  if (!isObjectRecord(value)) return null;
+  if (typeof value.rootPath !== "string" || !Array.isArray(value.files)) return null;
+
+  return value as unknown as FileBrowserState["fileTree"];
+}
+
+function reviveFileBrowserState(value: unknown): Partial<FileBrowserState> | null {
+  if (!isObjectRecord(value)) return null;
+
+  return {
+    contextMenuItemPaths: new Set<string>(),
+    currentPath: reviveNullableString(value.currentPath),
+    error: null,
+    expandedFolders: reviveStringSet(value.expandedFolders),
+    fileTree: reviveFileTree(value.fileTree),
+    focusedItemPath: reviveNullableString(value.focusedItemPath),
+    isAtRoot: typeof value.isAtRoot === "boolean" ? value.isAtRoot : false,
+    isLoading: false,
+    loadingFolders: new Set<string>(),
+    openContextMenu: null,
+    originalPath: reviveNullableString(value.originalPath),
+    scrollTop:
+      typeof value.scrollTop === "number" && Number.isFinite(value.scrollTop)
+        ? Math.max(0, value.scrollTop)
+        : initialFileBrowserState.scrollTop,
+    searchQuery:
+      typeof value.searchQuery === "string"
+        ? value.searchQuery
+        : initialFileBrowserState.searchQuery,
+    selectedItemPaths: reviveStringSet(value.selectedItemPaths),
+    selectionAnchorPath: reviveNullableString(value.selectionAnchorPath),
+    sortBy: FILE_BROWSER_SORTS.has(value.sortBy as FileBrowserState["sortBy"])
+      ? (value.sortBy as FileBrowserState["sortBy"])
+      : initialFileBrowserState.sortBy,
+    sortDirection: SORT_DIRECTIONS.has(value.sortDirection as FileBrowserState["sortDirection"])
+      ? (value.sortDirection as FileBrowserState["sortDirection"])
+      : initialFileBrowserState.sortDirection,
+  };
+}
+
+function serializeFileBrowserState(state: FileBrowserState): FileBrowserDevSessionState {
+  return {
+    contextMenuItemPaths: [],
+    currentPath: state.currentPath,
+    error: null,
+    expandedFolders: [...state.expandedFolders],
+    fileTree: state.fileTree,
+    focusedItemPath: state.focusedItemPath,
+    isAtRoot: state.isAtRoot,
+    isLoading: false,
+    loadingFolders: [],
+    openContextMenu: null,
+    originalPath: state.originalPath,
+    scrollTop: state.scrollTop,
+    searchQuery: state.searchQuery,
+    selectedItemPaths: [...state.selectedItemPaths],
+    selectionAnchorPath: state.selectionAnchorPath,
+    sortBy: state.sortBy,
+    sortDirection: state.sortDirection,
+  };
+}
+
+const devFileBrowserState = readDevSessionState("file-browser-store", reviveFileBrowserState);
+
 export const useFileBrowserStore = create<FileBrowserStore>()((set) => ({
   ...initialFileBrowserState,
+  ...devFileBrowserState,
   setFileBrowserState: (patch) => set((state) => ({ ...state, ...patch })),
   resetFileBrowser: () =>
     set((state) => ({
@@ -70,6 +164,8 @@ export const useFileBrowserStore = create<FileBrowserStore>()((set) => ({
   setExpandedFolders: (expandedFolders) => set({ expandedFolders }),
   setSearchQuery: (searchQuery) => set({ searchQuery }),
 }));
+
+registerDevSessionState("file-browser-store", useFileBrowserStore, serializeFileBrowserState);
 
 export function findFolderInFileSystem(
   items: FileSystemItem[],

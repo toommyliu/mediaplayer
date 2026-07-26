@@ -22,10 +22,6 @@ import { makeQueueId } from "@/stores/utils";
 import { getVideoElement } from "@/video-element";
 import { flattenVideoFiles } from "../../../shared";
 
-export function initializeQueue(): void {
-  useQueueStore.getState().resetQueue();
-}
-
 function toQueueItems(videos: QueueInsertItem[]): QueueItem[] {
   return videos.map((video) => ({
     duration: video.duration ?? 0,

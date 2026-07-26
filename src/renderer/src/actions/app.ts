@@ -1,4 +1,3 @@
-import { initializeQueue } from "@/actions/library";
 import { getPlatform } from "@/lib/ipc";
 import { usePlatformStore } from "@/stores/platform";
 
@@ -13,6 +12,5 @@ export async function loadPlatformInfo(): Promise<void> {
 }
 
 export async function bootstrapApp(): Promise<void> {
-  initializeQueue();
   await loadPlatformInfo();
 }
