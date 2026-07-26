@@ -3,80 +3,49 @@ import { extname } from "node:path";
 import { sortFileTree } from "../../shared";
 import { VIDEO_EXTENSIONS } from "../../shared/constants";
 
-const isHidden = (name: string): boolean => name.startsWith(".");
+export interface FileTreeEntry {
+  readonly duration?: number;
+  readonly files?: ReadonlyArray<FileTreeEntry>;
+  readonly modifiedAtMs?: number;
+  readonly name: string;
+  readonly path: string;
+  readonly type: "folder" | "video";
+}
 
-function normalizePath(path: string): string {
+export function normalizePath(path: string): string {
   return path.replace(/\\/g, "/");
 }
 
-function isVideoFile(filename: string): boolean {
-  const ext = extname(filename).replace(".", "").toLowerCase();
-  return ext ? VIDEO_EXTENSIONS.includes(ext) : false;
+export function isHidden(name: string): boolean {
+  return name.startsWith(".");
 }
 
-function createFileTreeItem(
-  name: string,
-  path: string,
-  type: "folder" | "video",
-  duration?: number,
-  modifiedAtMs?: number,
-  files?: FileTreeItem[],
-): FileTreeItem {
-  const item: FileTreeItem = {
-    name,
-    path: normalizePath(path),
-    type,
+export function isVideoFile(filename: string): boolean {
+  const extension = extname(filename).slice(1).toLowerCase();
+  return extension.length > 0 && VIDEO_EXTENSIONS.includes(extension);
+}
+
+function toFileTreeItem(entry: FileTreeEntry, sortOptions: SortOptions): FileTreeItem {
+  return {
+    name: entry.name,
+    path: normalizePath(entry.path),
+    type: entry.type,
+    ...(entry.duration === undefined ? {} : { duration: entry.duration }),
+    ...(entry.modifiedAtMs === undefined ? {} : { modifiedAtMs: entry.modifiedAtMs }),
+    ...(entry.type === "folder"
+      ? {
+          files: buildSortedFileTree(entry.files ?? [], sortOptions),
+        }
+      : {}),
   };
-
-  if (modifiedAtMs !== undefined) {
-    item.modifiedAtMs = modifiedAtMs;
-  }
-
-  if (type === "video" && duration !== undefined) {
-    item.duration = duration;
-  }
-
-  if (type === "folder") {
-    item.files = files || [];
-  }
-
-  return item;
 }
 
-function buildSortedFileTree(
-  entries: Array<{
-    name: string;
-    path: string;
-    type: "folder" | "video";
-    duration?: number;
-    modifiedAtMs?: number;
-    files?: Array<{
-      name: string;
-      path: string;
-      type: "folder" | "video";
-      duration?: number;
-      modifiedAtMs?: number;
-    }>;
-  }>,
+export function buildSortedFileTree(
+  entries: ReadonlyArray<FileTreeEntry>,
   sortOptions: SortOptions,
 ): FileTreeItem[] {
-  const items: FileTreeItem[] = entries.map((entry) =>
-    createFileTreeItem(
-      entry.name,
-      entry.path,
-      entry.type,
-      entry.duration,
-      entry.modifiedAtMs,
-      entry.files ? buildSortedFileTree(entry.files, sortOptions) : undefined,
-    ),
+  return sortFileTree(
+    entries.map((entry) => toFileTreeItem(entry, sortOptions)),
+    sortOptions,
   );
-
-  return sortFileTree(items, sortOptions);
 }
-
-export const FileTree = {
-  buildSortedFileTree,
-  isHidden,
-  isVideoFile,
-  normalizePath,
-} as const;

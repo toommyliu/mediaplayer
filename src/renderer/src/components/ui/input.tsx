@@ -20,6 +20,8 @@ export function Input({
   nativeInput = false,
   ...props
 }: InputProps): React.ReactElement {
+  const nativeProps = props as React.InputHTMLAttributes<HTMLInputElement> &
+    React.RefAttributes<HTMLInputElement>;
   const inputClassName = cn(
     "h-full w-full min-w-0 rounded-[inherit] px-[calc(--spacing(3)-1px)] leading-[inherit] outline-none [transition:background-color_5000000s_ease-in-out_0s] placeholder:text-muted-foreground/72",
     size === "sm" && "px-[calc(--spacing(2.5)-1px)]",
@@ -48,7 +50,7 @@ export function Input({
           className={inputClassName}
           data-slot="input"
           size={typeof size === "number" ? size : undefined}
-          {...props}
+          {...nativeProps}
         />
       ) : (
         <InputPrimitive

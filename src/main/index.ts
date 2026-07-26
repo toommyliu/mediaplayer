@@ -1,15 +1,15 @@
 import { Effect } from "effect";
-import { MainLayer } from "./MainLayer";
+import { app } from "electron";
 import { MainProgram } from "./MainProgram";
-
-const program = Effect.scoped(MainProgram.pipe(Effect.provide(MainLayer)));
+import { LoggingLayer } from "./observability/Logging";
 
 Effect.runFork(
-  program.pipe(
-    Effect.catch((error) =>
-      Effect.sync(() => {
-        console.error("Main process crashed", error);
-      }),
+  MainProgram.pipe(
+    Effect.catchCause((cause) =>
+      Effect.logFatal("Main process terminated unexpectedly", cause).pipe(
+        Effect.andThen(Effect.sync(() => app.exit(1))),
+      ),
     ),
+    Effect.provide(LoggingLayer),
   ),
 );

@@ -9,10 +9,12 @@
     "format:check": "oxfmt --check .",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
+    "test": "vitest run --config vitest.config.ts",
     "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
     "typecheck:web": "tsc --noEmit -p tsconfig.web.json --composite false",
     "typecheck": "npm run typecheck:node && npm run typecheck:web",
     "start": "electron-vite preview",
+    "predev": "install-electron --no",
     "dev": "electron-vite dev",
     "dev:watch": "electron-vite dev --watch",
     "build": "npm run typecheck && electron-vite build",
@@ -35,8 +37,7 @@
     "@tanstack/react-virtual": "^3.14.7",
     "@vitejs/plugin-react": "^6.0.3",
     "class-variance-authority": "^0.7.1",
-    "consola": "^3.4.2",
-    "effect": "4.0.0-beta.43",
+    "effect": "4.0.0-beta.100",
     "lucide-react": "^1.25.0",
     "next-themes": "^0.4.6",
     "react": "^19.2.8",
@@ -44,6 +45,7 @@
     "zustand": "^5.0.14"
   },
   "devDependencies": {
+    "@effect/vitest": "4.0.0-beta.100",
     "@electron-toolkit/tsconfig": "^2.0.0",
     "@rolldown/plugin-babel": "^0.2.3",
     "@tailwindcss/vite": "^4.3.3",
@@ -62,6 +64,7 @@
     "tailwindcss": "^4.3.3",
     "tw-animate-css": "^1.3.5",
     "typescript": "^7.0.2",
-    "vite": "^8.1.5"
+    "vite": "^8.1.5",
+    "vitest": "^4.1.10"
   }
 }

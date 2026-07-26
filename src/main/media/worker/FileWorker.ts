@@ -1,24 +1,12 @@
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
-import { parentPort } from "node:worker_threads";
-import ffprobeInstaller from "@ffprobe-installer/ffprobe";
+import { parentPort, workerData } from "node:worker_threads";
+import type { DurationWorkerData, DurationWorkerRequest, DurationWorkerResponse } from "./Protocol";
 
 const execFileAsync = promisify(execFile);
 const FFPROBE_TIMEOUT_MS = 20_000;
 
-interface WorkerMessage {
-  filePath: string;
-  id: number;
-}
-
-interface WorkerResponse {
-  id: number;
-  filePath: string;
-  duration?: number;
-  error?: string;
-}
-
-async function getVideoDuration(filePath: string): Promise<number> {
+async function getVideoDuration(ffprobePath: string, filePath: string): Promise<number> {
   try {
     const args = [
       "-v",
@@ -30,7 +18,7 @@ async function getVideoDuration(filePath: string): Promise<number> {
       filePath,
     ];
 
-    const { stdout } = (await execFileAsync(ffprobeInstaller.path, args, {
+    const { stdout } = (await execFileAsync(ffprobePath, args, {
       timeout: FFPROBE_TIMEOUT_MS,
       maxBuffer: 128 * 1024,
     })) as {
@@ -50,19 +38,24 @@ async function getVideoDuration(filePath: string): Promise<number> {
 }
 
 if (parentPort) {
-  parentPort.on("message", async (message: WorkerMessage) => {
-    const response: WorkerResponse = {
-      id: message.id,
-      filePath: message.filePath,
-    };
-
+  const { ffprobePath } = workerData as DurationWorkerData;
+  const port = parentPort;
+  parentPort.on("message", async (message: DurationWorkerRequest) => {
+    let response: DurationWorkerResponse;
     try {
-      const duration = await getVideoDuration(message.filePath);
-      response.duration = duration;
+      response = {
+        duration: await getVideoDuration(ffprobePath, message.filePath),
+        filePath: message.filePath,
+        id: message.id,
+      };
     } catch (error) {
-      response.error = error instanceof Error ? error.message : String(error);
+      response = {
+        error: error instanceof Error ? error.message : String(error),
+        filePath: message.filePath,
+        id: message.id,
+      };
     }
 
-    parentPort!.postMessage(response);
+    port.postMessage(response);
   });
 }
